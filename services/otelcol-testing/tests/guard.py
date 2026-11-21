@@ -1,4 +1,4 @@
-"""Hang guards (the validator's `tests/guard.py`, D13b ruling 36): a test whose
+"""Hang guards (the validator's `tests/guard.py`): a test whose
 code under test could hang runs
 that code where a hang can be seen and stopped, and a hang fails the test.
 

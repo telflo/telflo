@@ -41,11 +41,10 @@ import {
   ValidationRulesResponseSchema,
 } from "./validation-rules.js";
 
-// The validation pipelines' and rules' contracts (D15a decisions 12, 13 and
-// 16; details 24 and 27; plan Preflight rulings 5, 16 and 20): each schema's
-// accepted and refused shapes, the bounds migration 030's checks and the
-// evaluator's contract set (bytes, not characters, for a pattern, condition
-// or expression), and the error codes.
+// The validation pipelines' and rules' contracts: each schema's accepted
+// and refused shapes, the bounds migration 030's checks and the evaluator's
+// contract set (bytes, not characters, for a pattern, condition or
+// expression), and the error codes.
 
 const RULE_ID = "0190a1b2-c3d4-7e5f-8a9b-0c1d2e3f4a70";
 const PIPELINE_ID = "0190a1b2-c3d4-7e5f-8a9b-0c1d2e3f4a71";
@@ -63,7 +62,7 @@ function issuesOf(result: { success: boolean; error?: { issues: Array<{ path: Ar
 const ALL_RULE = { kind: "ottl", target: "output", ottl: { context: "log", quantifier: "all", condition: 'attributes["env"] == "prod"' } };
 
 describe("the limits, the words and the codes", () => {
-  it("are decision 13's and 16's, migration 030's and the evaluator's contract's", () => {
+  it("are the rules' caps, migration 030's and the evaluator's contract's", () => {
     expect(VALIDATION_RULES_PER_PIPELINE_MAXIMUM).toBe(200);
     expect(VALIDATION_RULE_TEXT_MAXIMUM_BYTES).toBe(8_192);
     expect(VALIDATION_RULE_NAME_MAXIMUM_LENGTH).toBe(200);
@@ -73,7 +72,7 @@ describe("the limits, the words and the codes", () => {
     expect(VALIDATION_RULE_KINDS).toEqual(["contains_text", "not_contains_text", "contains_regex", "not_contains_regex", "ottl"]);
   });
 
-  it("detail 24's codes, with its words exactly", () => {
+  it("the validation rules' codes, with their words exactly", () => {
     expect(VALIDATION_RULES_ERROR_CODES).toEqual([
       "validation_pipeline_not_found",
       "validation_rule_not_found",
@@ -92,7 +91,7 @@ describe("the limits, the words and the codes", () => {
     expect(RULES_UNAVAILABLE_RUN_MESSAGE).toBe("Validation rules couldn't be checked: the rule evaluator is unavailable.");
   });
 
-  it("no code is another module's: D13b's validation_unavailable and validation_rate_limited stay the validator's", () => {
+  it("no code is another module's: validation_unavailable and validation_rate_limited stay the validator's", () => {
     const others = new Set<string>([
       ...CONFIGURATION_ERROR_CODES,
       ...TESTING_ERROR_CODES,
@@ -107,12 +106,12 @@ describe("the limits, the words and the codes", () => {
     expect(others.has("validation_unavailable")).toBe(true);
     expect(others.has("validation_rate_limited")).toBe(true);
     for (const code of VALIDATION_RULES_ERROR_CODES) expect(others.has(code)).toBe(false);
-    // There is no cap on validation pipelines per version (the owner, decision 28).
+    // There is no cap on validation pipelines per version.
     expect(VALIDATION_RULES_ERROR_CODES).not.toContain("validation_pipeline_limit_reached");
   });
 });
 
-describe("the contexts each signal allows (Preflight ruling 16)", () => {
+describe("the contexts each signal allows", () => {
   it("are the evaluator's table (pkg/ottlassert's signalContexts), drawn from the seven", () => {
     expect(OTTL_CONTEXTS_BY_SIGNAL).toEqual({
       logs: ["log", "resource", "scope"],
@@ -247,7 +246,7 @@ describe("a rule's create request", () => {
     expect(isBlankRuleText("\u200b")).toBe(false);
   });
 
-  it("trims exactly isBlankRuleText's whitespace (trimRuleText, Ruling 56): U+0085 goes, U+FEFF stays, as Go's unicode.IsSpace", () => {
+  it("trims exactly isBlankRuleText's whitespace (trimRuleText): U+0085 goes, U+FEFF stays, as Go's unicode.IsSpace", () => {
     const goSpaces = "\t\n\v\f\r \u0085\u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u2028\u2029\u202f\u205f\u3000";
     expect(isBlankRuleText(goSpaces)).toBe(true);
     expect(trimRuleText(goSpaces)).toBe("");
@@ -370,7 +369,7 @@ describe("a rule's update request", () => {
     expect(UpdateValidationRuleRequestSchema.parse({ ...ALL_RULE, name: "x" }).ottl).toEqual(ALL_RULE.ottl);
   });
 
-  it("takes nothing to change ({}), as a suite's PATCH (D14b Ruling 30): the API answers the rule as it is", () => {
+  it("takes nothing to change ({}), as a suite's PATCH: the API answers the rule as it is", () => {
     expect(UpdateValidationRuleRequestSchema.parse({})).toEqual({});
   });
 
@@ -429,7 +428,7 @@ describe("a rule as the API answers it, and as a run snapshots it", () => {
   });
 });
 
-describe("a rule's result (Preflight ruling 5)", () => {
+describe("a rule's result", () => {
   const passed = { id: RULE_ID, passed: true, error: null, advisory: null, detail: null };
 
   it("accepts a pass, a pass with its advisory, an error, and each kind of failure's detail", () => {
@@ -472,7 +471,7 @@ describe("a rule's result (Preflight ruling 5)", () => {
     for (const result of results) expect(ValidationRuleResultSchema.parse(result)).toEqual(result);
   });
 
-  it("passed is strictly a boolean (D15a Ruling 32): never the string or the number", () => {
+  it("passed is strictly a boolean: never the string or the number", () => {
     for (const value of ["false", "true", 0, 1, null]) {
       expect(ValidationRuleResultSchema.safeParse({ ...passed, passed: value }).success).toBe(false);
     }

@@ -1,10 +1,10 @@
 """OpenTelemetry self-instrumentation bootstrap for the collector tester.
 
-A copy of the validator's `services/otelcol-validator/telemetry.py` (D14a
-spec decision 26: the tester's own telemetry is as the validator's, off
-unless configured), changed only in this paragraph. The service-specific
-choices (service name, excluded health URL, whether to instrument httpx) are
-arguments to :func:`setup_telemetry`; the tester passes its own.
+A copy of the validator's `services/otelcol-validator/telemetry.py` (the
+tester's own telemetry is as the validator's, off unless configured), changed
+only in this paragraph. The service-specific choices (service name, excluded
+health URL, whether to instrument httpx) are arguments to
+:func:`setup_telemetry`; the tester passes its own.
 
 Design rules:
 

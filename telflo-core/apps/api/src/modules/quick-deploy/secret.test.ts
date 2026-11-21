@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { QUICK_DEPLOY_SECRET_PATTERN, QUICK_DEPLOY_URL_PATTERN } from "@telflo/contracts";
 import { generateQuickDeploySecret, quickDeployLinkUrl, quickDeploySecretHash } from "./secret.js";
 
-describe("a quick-deploy link's secret (decision 23)", () => {
+describe("a quick-deploy link's secret", () => {
   it("is tqd_ and 32 random bytes in base64url, its hash the sha-256 of the whole secret", () => {
     const { secret, secretHash } = generateQuickDeploySecret();
     expect(secret).toMatch(QUICK_DEPLOY_SECRET_PATTERN);

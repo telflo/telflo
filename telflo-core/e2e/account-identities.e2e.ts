@@ -23,12 +23,12 @@ import {
 } from "./support/privacy.js";
 import { signInThroughForm, waitForHydration } from "./support/session.js";
 
-// Settings › Account's sign-in methods (D21 decisions 37-39), against the
-// fake OpenID Provider the E2E API's Google settings name
-// (start-fake-oidc-provider.ts, E2E_OIDC_ISSUER). Linking is by the
-// provider's subject, whatever its email: each test's Google account has an
-// address of its own, unlike the account's, so the card's "Linked as …" and a
-// later Google sign-in show it was linked by `sub`.
+// Settings › Account's sign-in methods, against the fake OpenID Provider the
+// E2E API's Google settings name (start-fake-oidc-provider.ts,
+// E2E_OIDC_ISSUER). Linking is by the provider's subject, whatever its email:
+// each test's Google account has an address of its own, unlike the account's,
+// so the card's "Linked as …" and a later Google sign-in show it was linked
+// by `sub`.
 //
 // The card is hidden when no provider is configured and the account has no
 // identity; the E2E API always configures the fake provider, so that case is
@@ -36,7 +36,7 @@ import { signInThroughForm, waitForHydration } from "./support/session.js";
 // routes/settings.account.test.tsx, "hidden with no provider and no
 // identity"), not here.
 //
-// Privacy (decision 45): the account's email and the linked identity's email
+// Privacy: the account's email and the linked identity's email
 // are visible text only, never in an attribute, a URL (the link's way back
 // carries a fixed code), a toast or browser storage.
 
@@ -184,7 +184,7 @@ test("unlinking Google asks for the current password, removes the sign-in, keeps
   await unlinkButton(page).click();
   const dialog = page.getByRole("dialog", { name: "Unlink Google", exact: true });
   const field = dialog.getByLabel("Current Password");
-  // The fake provider stands in for Google at Google's issuer: it re-links by email (Q126, Ruling 92).
+  // The fake provider stands in for Google at Google's issuer: it re-links by email.
   await expect(dialog).toContainText(
     "If your Telflo address is this Google account's address, signing in with Google links it again.",
   );
@@ -221,9 +221,8 @@ test("unlinking Google asks for the current password, removes the sign-in, keeps
   expect(toastsHolding(toasts, canaries)).toEqual([]);
 });
 
-// Ruling 89 (the coordinator's check): Back from the provider's page must
-// leave Settings › Account usable, whether the page comes back from the
-// back/forward cache or is loaded again.
+// Back from the provider's page must leave Settings › Account usable, whether
+// the page comes back from the back/forward cache or is loaded again.
 test("Back from the provider during a link with the password prompt leaves the page usable", async ({ page }) => {
   const user = await seedUser({ password: PASSWORD });
   await page.addInitScript(RECORD_PAGESHOW);
@@ -236,7 +235,7 @@ test("Back from the provider during a link with the password prompt leaves the p
   await noteHowThePageCameBack(page);
 
   const dialog = page.getByRole("dialog", { name: "Link Google", exact: true });
-  // Either the dialog is gone, or it can at least be cancelled.
+  // Either the dialog is gone, or it can at least be canceled.
   if ((await dialog.count()) > 0 && (await dialog.isVisible())) {
     await expect(dialog.getByRole("button", { name: "Cancel" })).toBeEnabled();
     await dialog.getByRole("button", { name: "Cancel" }).click();

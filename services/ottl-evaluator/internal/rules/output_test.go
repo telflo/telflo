@@ -1,7 +1,7 @@
-// New in D15a Task 2 (plan Preflight rulings 5, 7 and 10): what each kind
-// does with an absent output, a truncated one, one that isn't OTLP/JSON and
-// one too large for OTTL; the {"records":[…]} unwrap; the vacuous advisory;
-// and the deadline, through an injectable checkpoint (no sleeps).
+// What each kind does with an absent output, a truncated one, one that
+// isn't OTLP/JSON and one too large for OTTL; the {"records":[…]} unwrap;
+// the vacuous advisory; and the deadline, through an injectable checkpoint
+// (no sleeps).
 
 package rules
 

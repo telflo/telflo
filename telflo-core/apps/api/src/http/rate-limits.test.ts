@@ -22,7 +22,7 @@ import {
 const MINUTE_MS = 60_000;
 
 describe("RATE_LIMITS", () => {
-  it("are D2a decision 9's, D3 decision 6's, D6 decision 6's, D4 decision 4's, D13b decision 12's, D12 decision 6's, D14a decision 19's, D15a decision 16's, D16b Preflight ruling 12's, D17c-2 decision 9's, D22 decision 36's, D23-2 decision 48's, D25 decisions 26 and 33's, D27 decision 24's, D29 Preflight ruling 10's and D31-1 decision 19's numbers", () => {
+  it("are the production numbers", () => {
     // Written out, not derived, so changing a limit takes a deliberate edit here too.
     expect(RATE_LIMITS).toEqual({
       identityPerIp: { max: 30, windowMs: 5 * MINUTE_MS },
@@ -56,11 +56,11 @@ describe("RATE_LIMITS", () => {
       feedbackPerUser: { max: 10, windowMs: 60 * MINUTE_MS },
       publishedFlowReadsPerIp: { max: 60, windowMs: MINUTE_MS },
     });
-    // D27 decision 24: one at a time per address, four across every anonymous caller.
+    // One at a time per address, four across every anonymous caller.
     expect(ANONYMOUS_VALIDATIONS_IN_FLIGHT_PER_IP).toBe(1);
     expect(ANONYMOUS_VALIDATIONS_IN_FLIGHT).toBe(4);
-    // D17c-2 Preflight ruling 21: a fleet page's four reads, three tabs' 12,
-    // a write in each 15, within the 16.
+    // A fleet page's four reads, three tabs' 12, a write in each 15, within
+    // the 16.
     expect(FLEET_REQUESTS_IN_FLIGHT_PER_USER).toBe(16);
   });
 
@@ -75,12 +75,12 @@ describe("RATE_LIMITS", () => {
     for (const key of ["libraryFileDownloadsPerUser", "libraryFileLinksPerUser", "libraryLinksPerIp", "libraryLinkDownloadsPerLink"] as const) {
       expect(TEST_RATE_LIMITS[key]).toEqual({ max: 1_000_000, windowMs: MINUTE_MS });
     }
-    // The playground's browser tests read the open flow list and slugs from one address (D31-1 decision 19).
+    // The playground's browser tests read the open flow list and slugs from one address.
     expect(TEST_RATE_LIMITS.publishedFlowReadsPerIp).toEqual({ max: 1_000_000, windowMs: MINUTE_MS });
   });
 });
 
-describe("createAnonymousValidationLimiter (D27 decision 24, Preflight ruling 9)", () => {
+describe("createAnonymousValidationLimiter", () => {
   const limits = (perIp: number, overall: number) => ({
     anonymousValidationsPerIp: { max: perIp, windowMs: MINUTE_MS },
     anonymousValidations: { max: overall, windowMs: MINUTE_MS },
@@ -152,7 +152,7 @@ describe("createAnonymousValidationLimiter (D27 decision 24, Preflight ruling 9)
   });
 });
 
-describe("createPerUserLimiter (D14a decision 19; D14b Preflight ruling 22)", () => {
+describe("createPerUserLimiter", () => {
   const ACME = "0199e000-0000-7000-8000-00000000ac01";
   const GLOBEX = "0199e000-0000-7000-8000-00000000610b";
 
@@ -171,7 +171,7 @@ describe("createPerUserLimiter (D14a decision 19; D14b Preflight ruling 22)", ()
     expect(limiter.admit("a", ACME)).toMatchObject({ isAdmitted: true });
   });
 
-  it("counts the person alone (null, a route with no organization: D15b Preflight ruling 4) apart from each of their organizations", () => {
+  it("counts the person alone (null, a route with no organization) apart from each of their organizations", () => {
     const limiter = createPerUserLimiter({ max: 2, windowMs: MINUTE_MS }, { now: () => 0 });
     expect(limiter.admit("a", null)).toMatchObject({ isAdmitted: true });
     expect(limiter.admit("a", null)).toMatchObject({ isAdmitted: true });
@@ -185,7 +185,7 @@ describe("createPerUserLimiter (D14a decision 19; D14b Preflight ruling 22)", ()
     expect(limiter.admit("b", null)).toMatchObject({ isAdmitted: true });
   });
 
-  it("gives back an admission the caller refused for another reason, once (Ruling 39)", () => {
+  it("gives back an admission the caller refused for another reason, once", () => {
     let now = 0;
     const limiter = createPerUserLimiter({ max: 2, windowMs: MINUTE_MS }, { now: () => now });
     const first = limiter.admit("a", ACME);
@@ -198,7 +198,7 @@ describe("createPerUserLimiter (D14a decision 19; D14b Preflight ruling 22)", ()
     expect(limiter.admit("a", ACME)).toMatchObject({ isAdmitted: true });
     expect(limiter.admit("a", ACME)).toMatchObject({ isAdmitted: false });
 
-    // A refund after its window has ended gives nothing to the next window (Ruling 42).
+    // A refund after its window has ended gives nothing to the next window.
     const late = limiter.admit("b", ACME);
     now = MINUTE_MS;
     expect(limiter.admit("b", ACME)).toMatchObject({ isAdmitted: true });
@@ -207,7 +207,7 @@ describe("createPerUserLimiter (D14a decision 19; D14b Preflight ruling 22)", ()
     expect(limiter.admit("b", ACME)).toMatchObject({ isAdmitted: false });
   });
 
-  it("gives back only to the window the admission counted in, even when the clock ticks past its end during the admission (Ruling 45)", () => {
+  it("gives back only to the window the admission counted in, even when the clock ticks past its end during the admission", () => {
     // The clock, read by the limiter only: while `isTicking`, every reading
     // moves it on by 1 ms, as a real clock can between two readings.
     let now = 0;
@@ -261,7 +261,7 @@ describe("createPerUserLimiter (D14a decision 19; D14b Preflight ruling 22)", ()
   });
 });
 
-describe("createValidationLimiter (D13b decision 12, Ruling 37)", () => {
+describe("createValidationLimiter", () => {
   const calls = { callsValidator: true };
   const retired = { callsValidator: false };
 
@@ -321,7 +321,7 @@ describe("createValidationLimiter (D13b decision 12, Ruling 37)", () => {
   });
 });
 
-describe("createFleetLimiter (D16b decision 17, Preflight ruling 12)", () => {
+describe("createFleetLimiter", () => {
   const ACME = "0199e000-0000-7000-8000-00000000ac01";
   const GLOBEX = "0199e000-0000-7000-8000-00000000610b";
   const limits = {
@@ -385,7 +385,7 @@ describe("createFleetLimiter (D16b decision 17, Preflight ruling 12)", () => {
   });
 });
 
-describe("createPerKeyLimiter (D17c-2 decisions 9 and 27)", () => {
+describe("createPerKeyLimiter", () => {
   /** The 429 a refused count throws, or undefined when it was counted. */
   const refusal = (count: () => void): AppError | undefined => {
     try {
@@ -443,7 +443,7 @@ describe("createPerKeyLimiter (D17c-2 decisions 9 and 27)", () => {
   });
 });
 
-describe("createApiTokenFailureLimiter's attempts (D22 decision 36, Rulings 100 and 105)", () => {
+describe("createApiTokenFailureLimiter's attempts", () => {
   /** The 429's Retry-After when the address is blocked, or undefined when it isn't. */
   const retryAfter = (check: () => void): string | number | undefined => {
     try {
@@ -470,8 +470,8 @@ describe("createApiTokenFailureLimiter's attempts (D22 decision 36, Rulings 100 
   });
 
   it("begin → fail → refund: a refusal's finally-refund never lowers another request's attempt in flight", () => {
-    // The token check's refusal path (Ruling 110): fail() settles the
-    // attempt, then the finally's refund() must do nothing.
+    // The token check's refusal path: fail() settles the attempt, then the
+    // finally's refund() must do nothing.
     const limiter = createApiTokenFailureLimiter({ max: 2, windowMs: MINUTE_MS });
     const refused = limiter.begin("203.0.113.7");
     limiter.begin("203.0.113.7");
@@ -483,13 +483,12 @@ describe("createApiTokenFailureLimiter's attempts (D22 decision 36, Rulings 100 
 });
 
 /*
- * Sign-in's per-email limiter's session-keyed form (D21 decision 35,
- * Preflight ruling 9), on a bare server with no database: a stand-in for
- * `authenticate` sets the session's email from a header, so a test can send
- * a body naming another address. Real routes and Postgres are
- * rate-limits.integration.test.ts's.
+ * Sign-in's per-email limiter's session-keyed form, on a bare server with
+ * no database: a stand-in for `authenticate` sets the session's email from
+ * a header, so a test can send a body naming another address. Real routes
+ * and Postgres are rate-limits.integration.test.ts's.
  */
-describe("signInPerEmail's session-keyed form (D21 decision 35, Preflight ruling 9)", () => {
+describe("signInPerEmail's session-keyed form", () => {
   const MAX = 3;
   const servers: FastifyInstance[] = [];
 

@@ -29,38 +29,36 @@ import {
 
 /*
  * The stanza operators a filelog, journald or syslog receiver's `operators`
- * list takes (D9c decision 8; plan Task 5): their labels, descriptions,
- * categories and icons, and the seed Add Operator appends, as one table
- * (ADR 0018). The card and the selector both read this one.
+ * list takes: their labels, descriptions, categories and icons, and the
+ * seed Add Operator appends, as one table. The card and the selector both
+ * read this one.
  *
  * There are 26: the collector's 12 parsers and 14 transformers at contrib
- * v0.162.0, each `type` the collector's `operatorType` (D9c decision 1; the
- * seeds' test cites each).
+ * v0.162.0, each `type` the collector's `operatorType`
+ * (the seeds' test cites each).
  *
- * Changed:
- * - Icons are lucide components, so the selector shows every one (D9c Task
- *   5), including `List`, `Container`, `Circle`, `Replace`, `ShieldCheck`
+ * - Icons are lucide components, so the selector shows every one,
+ *   including `List`, `Container`, `Circle`, `Replace`, `ShieldCheck`
  *   and `Key`, never a `FileText` fallback. The regex parser's icon is
  *   `FileText`.
- * - The seeds the collector refuses or misreads are fixed (decision 3):
- *   router's route has no `output` (not `output: ""`, an output no
- *   operator has, `pipeline/directed.go:151-152`; a route without one
- *   builds, `router/config.go:48-86`, and drops what it matches until one is
- *   typed, Preflight ruling 18); regex_replace seeds `regex_name:
- *   ansi_control_sequences` (`regex: ""` is refused,
- *   `regexreplace/config.go:66-68`); flatten seeds `field: body.nested`
- *   (a bare `attributes` is refused, `entry/field.go:119-121`);
- *   recombine seeds `combine_field: body` (required,
- *   `recombine/config.go:97-99`; written, not only shown) and no
- *   `combine_with` (the collector's default is a newline, `config.go:24,
- *   43`; not the two characters `\n`; Preflight ruling 1);
- *   json_array_parser seeds `parse_to: body` (an array can't be the
- *   attributes' root without a header, `json_array_parser.md`).
- * - The time layouts' presets (`LAYOUT_PRESETS`) are per layout type
- *   (decision 7; Preflight ruling 14): the strptime ones, the first's label
- *   saying what it writes (not the Go notation); Go layouts under Go time
- *   (never strptime strings there); epoch's `s` and `s.us` (`%s` and
- *   `%s.%f` are refused, `helper/time.go:98-106`).
+ * - The seeds are ones the collector builds and reads as meant: router's
+ *   route has no `output` (not `output: ""`, an output no operator has,
+ *   `pipeline/directed.go:151-152`; a route without one builds,
+ *   `router/config.go:48-86`, and drops what it matches until one is typed);
+ *   regex_replace seeds `regex_name: ansi_control_sequences` (`regex: ""` is
+ *   refused, `regexreplace/config.go:66-68`); flatten seeds
+ *   `field: body.nested` (a bare `attributes` is refused,
+ *   `entry/field.go:119-121`); recombine seeds `combine_field: body`
+ *   (required, `recombine/config.go:97-99`; written, not only shown) and no
+ *   `combine_with` (the collector's default is a newline,
+ *   `config.go:24, 43`; not the two characters `\n`); json_array_parser
+ *   seeds `parse_to: body` (an array can't be the attributes' root without a
+ *   header, `json_array_parser.md`).
+ * - The time layouts' presets (`LAYOUT_PRESETS`) are per layout type: the
+ *   strptime ones, the first's label saying what it writes (not the Go
+ *   notation); Go layouts under Go time (never strptime strings there);
+ *   epoch's `s` and `s.us` (`%s` and `%s.%f` are refused,
+ *   `helper/time.go:98-106`).
  */
 
 export type OperatorCategory = "parser" | "field_parser" | "transform" | "flow";
@@ -172,7 +170,7 @@ export const OPERATOR_CATEGORIES: readonly { category: OperatorCategory; label: 
   { category: "flow", label: "Flow Control", description: "Control log routing and combination." },
 ];
 
-/** What Add Operator appends for `type`, with decision 3's fixes. */
+/** What Add Operator appends for `type`. */
 export function operatorSeed(type: OperatorType): Record<string, unknown> {
   switch (type) {
     case "json_parser":
@@ -208,25 +206,25 @@ export function operatorSeed(type: OperatorType): Record<string, unknown> {
     case "filter":
       return { type, expr: "body matches 'error'" };
     case "flatten":
-      // Fixed (decision 3): a sub-field; a bare `attributes` is refused.
+      // A sub-field; a bare `attributes` is refused.
       return { type, field: "body.nested" };
     case "router":
-      // Fixed (decision 3): no `output: ""`.
+      // No `output: ""`.
       return { type, routes: [{ expr: "true" }] };
     case "recombine":
-      // Fixed (decision 3; Preflight ruling 1): `combine_field` written; `combine_with` left to its default, a newline.
+      // `combine_field` written; `combine_with` left to its default, a newline.
       return { type, is_first_entry: "body matches '^\\\\d{4}-\\\\d{2}-\\\\d{2}'", combine_field: "body" };
     case "unquote":
       return { type, field: "body" };
     case "json_array_parser":
-      // Fixed (decision 3): `parse_to: body`; `attributes` without a header fails on every entry.
+      // `parse_to: body`; `attributes` without a header fails on every entry.
       return { type, parse_from: "body", parse_to: "body" };
     case "container":
       return { type, add_metadata_from_filepath: true };
     case "noop":
       return { type };
     case "regex_replace":
-      // Fixed (decision 3): the well-known pattern; `regex: ""` is refused.
+      // The well-known pattern; `regex: ""` is refused.
       return { type, field: "body", regex_name: "ansi_control_sequences", replace_with: "" };
     case "sanitize_utf8":
       return { type, field: "body" };
@@ -235,7 +233,7 @@ export function operatorSeed(type: OperatorType): Record<string, unknown> {
   }
 }
 
-// ── Time layouts (decision 7; Preflight ruling 14) ──
+// ── Time layouts ──
 
 export type LayoutType = "strptime" | "gotime" | "epoch";
 
@@ -254,7 +252,7 @@ export interface LayoutPreset {
  * Go ones are the strptime ones' times in Go's notation
  * (`internal/coreinternal/timeutils/internal/ctimefmt/ctimefmt.go:30-72`),
  * with the same labels; epoch's are the collector's own
- * (`helper/time.go:98-106`), labelled as two epoch presets.
+ * (`helper/time.go:98-106`), labeled as two epoch presets.
  */
 export const LAYOUT_PRESETS: Readonly<Record<LayoutType, readonly LayoutPreset[]>> = {
   strptime: [
@@ -283,8 +281,8 @@ export const LAYOUT_TYPES: readonly LayoutType[] = ["strptime", "gotime", "epoch
 
 /**
  * The collector's seven epoch layouts (`helper/time.go:99-100`), of which
- * the presets offer two: each counts as epoch's in a Layout Type switch (D9c
- * Ruling 63), so switching away from `ms` sets the new type's first preset.
+ * the presets offer two: each counts as epoch's in a Layout Type switch,
+ * so switching away from `ms` sets the new type's first preset.
  */
 export const EPOCH_LAYOUTS: readonly string[] = ["s", "ms", "us", "ns", "s.ms", "s.us", "s.ns"];
 
@@ -294,16 +292,16 @@ export function presetTypeOf(layout: string): LayoutType | undefined {
   return LAYOUT_TYPES.find((type) => LAYOUT_PRESETS[type].some((preset) => preset.value === layout));
 }
 
-/** The alert when a Layout Type switch set the layout (decision 7; Preflight ruling 15). */
+/** The alert when a Layout Type switch set the layout. */
 export function layoutSetMessage(type: LayoutType): string {
   return `Layout set to the first ${type} preset.`;
 }
 
 /**
- * What a switch of Layout Type to `to` does to `layout` (decision 7): a
- * preset of another type becomes `to`'s first preset; a custom layout, one of
- * `to`'s own, or none is kept (Preflight ruling 14: a custom layout is typed
- * text). Returns the new layout, or undefined to keep it.
+ * What a switch of Layout Type to `to` does to `layout`: a preset of another
+ * type becomes `to`'s first preset; a custom layout, one of `to`'s own, or
+ * none is kept (a custom layout is typed text). Returns the new layout, or
+ * undefined to keep it.
  */
 export function layoutAfterSwitch(layout: string | undefined, to: LayoutType): string | undefined {
   if (layout === undefined) return undefined;

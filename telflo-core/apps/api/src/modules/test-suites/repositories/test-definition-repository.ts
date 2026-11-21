@@ -5,24 +5,22 @@ import { createOrganizationScope } from "../../../tenancy/organization-scope.js"
 import { visibleTo } from "../../configurations/repositories/configuration-repository.js";
 
 /*
- * A suite's test definitions (D14b decisions 2 and 9, Preflight rulings 3
- * and 23), through the organization
- * scope, as the context's user sees them: a definition is visible exactly
- * when its configuration is (migration 029's select policy), and a deleted
+ * A suite's test definitions, through the organization scope, as the
+ * context's user sees them: a definition is visible exactly when its
+ * configuration is (migration 029's select policy), and a deleted
  * configuration's are hidden. Each is read with its input's file name, the
  * name a run from it takes.
  *
- * A definition is created and deleted, never changed (decision 2): there is
- * no update. Both writes are made under the configuration's lock (the
- * service's lockAsMember, then lockedConfiguration; Preflight ruling 7), the
- * delete answering the input it named, which the caller then frees if no
- * other definition names it.
+ * A definition is created and deleted, never changed: there is no update.
+ * Both writes are made under the configuration's lock (the service's
+ * lockAsMember, then lockedConfiguration), the delete answering the input it
+ * named, which the caller then frees if no other definition names it.
  */
 
 /** Whom the repository reads for: the organization, and the viewer whose drafts' definitions it shows. An `AuthContext` is one. */
 export type TestDefinitionViewerContext = Pick<AuthContext, "organizationId" | "userId">;
 
-/** A definition. Its name, description and input's name are configuration text (ADR 0024). */
+/** A definition. Its name, description and input's name are configuration text. */
 export interface TestDefinition {
   id: string;
   configurationId: string;
@@ -41,7 +39,7 @@ export interface TestDefinition {
   createdAt: Date;
 }
 
-/** A definition as a run from it reads it (D14b Preflight ruling 10): with its suite's name, for the run's breadcrumb. */
+/** A definition as a run from it reads it: with its suite's name, for the run's breadcrumb. */
 export interface TestDefinitionForRun extends TestDefinition {
   /** Its suite's name, as it is now. Configuration text. */
   suiteName: string;
@@ -73,14 +71,14 @@ export interface ITestDefinitionRepository {
   findInSuite(suiteId: string, id: string): Promise<TestDefinition | undefined>;
   /**
    * A definition the viewer can see on that configuration's version, with
-   * its suite's name: a run's source (D14b Preflight ruling 10). Undefined
-   * for anything else: another version's or configuration's, another
-   * member's draft's, a deleted configuration's, an unknown one.
+   * its suite's name: a run's source. Undefined for anything else:
+   * another version's or configuration's, another member's draft's, a
+   * deleted configuration's, an unknown one.
    */
   findForRun(configurationId: string, versionId: string, id: string): Promise<TestDefinitionForRun | undefined>;
-  /** How many definitions the suite has: the cap's count (Preflight ruling 23), read under the configuration's lock. */
+  /** How many definitions the suite has: the cap's count, read under the configuration's lock. */
   countInSuite(suiteId: string): Promise<number>;
-  /** The distinct inputs the suite's definitions name: a suite delete's candidates to free (Preflight ruling 7). */
+  /** The distinct inputs the suite's definitions name: a suite delete's candidates to free. */
   inputIdsOfSuite(suiteId: string): Promise<string[]>;
   /** A new definition; answered with `inputName`, its input's name, which the caller knows. */
   create(input: CreateTestDefinitionInput, inputName: string): Promise<TestDefinition>;

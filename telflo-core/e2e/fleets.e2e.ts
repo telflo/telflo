@@ -14,13 +14,12 @@ import { enrollFakeCollector, setFakeCollectorState } from "./support/fake-opamp
 import { isGetOf, nextPoll } from "./support/polling.js";
 import { signInThroughApi, switchOrganizationThroughApi, waitForHydration } from "./support/session.js";
 
-// The fleet list and the fleet's page (D17a decision 30; Preflight rulings 6,
-// 16 and 19), in the browser, against the E2E API and its fake
-// opamp-server. Each test works in an organization of its own (a new user's,
-// or a new group's), so tests and browsers run in parallel. Fleets the test
-// isn't about creating are made through the API (`page.request`, the CSRF
-// header set); the empty state needs none (the fake answers an organization
-// it doesn't know 404, which the API answers as an empty page).
+// The fleet list and the fleet's page, in the browser, against the E2E API and
+// its fake opamp-server. Each test works in an organization of its own (a new
+// user's, or a new group's), so tests and browsers run in parallel. Fleets the
+// test isn't about creating are made through the API (`page.request`, the CSRF
+// header set); the empty state needs none (the fake answers an organization it
+// doesn't know 404, which the API answers as an empty page).
 //
 // Collectors are enrolled, and their last-seen time set, through the fake's
 // control port (support/fake-opamp-server.ts). The list polls every 15 s:
@@ -89,7 +88,7 @@ function isCreate(request: Request): boolean {
   return request.method() === "POST" && FLEETS_PATH.test(new URL(request.url()).pathname);
 }
 
-/** The list's row for the fleet labelled `label`. */
+/** The list's row for the fleet labeled `label`. */
 function fleetRow(page: Page, label: string): Locator {
   return page.getByRole("row").filter({ has: page.getByRole("link", { name: label, exact: true }) });
 }
@@ -409,7 +408,7 @@ test("the fleet's page: its header, its tabs in ?tab=, and Fleet not found for a
   await expect(page.getByText("Active", { exact: true })).toBeVisible();
   await expect(page).toHaveTitle("Fleet - Telflo");
   await expect(page.getByRole("tab", { name: "Collectors" })).toHaveAttribute("aria-selected", "true");
-  // A server fleet's Collectors tab (D17b-1): an empty fleet's install state (D17c-1); its Groups tab (D17b-2) its groups.
+  // A server fleet's Collectors tab: an empty fleet's install state; its Groups tab its groups.
   await expect(page.getByRole("tabpanel").getByText("Install your first collector")).toBeVisible();
 
   await page.getByRole("tab", { name: "Groups" }).click();
@@ -436,7 +435,7 @@ test("the fleet's page: its header, its tabs in ?tab=, and Fleet not found for a
   await expect(page).toHaveURL(`/fleet-management/${fleet.id}`);
   await expect(page.getByRole("tab", { name: "Collectors" })).toHaveAttribute("aria-selected", "true");
 
-  // The strip's Token tile links to the Tokens tab (D17b-2 decision 22): the fleet's tokens.
+  // The strip's Token tile links to the Tokens tab: the fleet's tokens.
   await page.getByRole("link", { name: "Never (open the Tokens tab)", exact: true }).click();
   await expect(page).toHaveURL(`/fleet-management/${fleet.id}?tab=tokens`);
   await expect(page.getByRole("tab", { name: "Tokens" })).toHaveAttribute("aria-selected", "true");

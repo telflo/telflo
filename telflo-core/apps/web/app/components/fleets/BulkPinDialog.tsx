@@ -39,70 +39,61 @@ import {
 } from "./VariableGroupChoice.js";
 
 /*
- * "Pin collectors" (D17b-1 decisions 8, 12 and 27; Preflight rulings 5 and
- * 13; ADR 0018): a `max-w-2xl` dialog with a `<form>`, "Pin {n}" /
+ * "Pin collectors": a `max-w-2xl` dialog with a `<form>`, "Pin {n}" /
  * "Pinning…" and the toast "Pinned {n} collector(s)", over the grid's
- * selection. In the D17b-1 Parity Notes:
+ * selection.
  *
- * - No group step and no checkbox list: the collectors are the grid's
- *   selection.
- * - **Two choices** (D20 Q103, default 24; Preflight ruling 42), both
- *   starting at "Leave as is": **Version** — "Leave as is", "Follow each
- *   collector's group" (unpins), "A published version" (the picker,
- *   `CollectorPinPicker.tsx`); **Variable group** — "Leave as is", "Follow
- *   each collector's group" (clears the pinned variable group), or one of
- *   the organization's variable groups (read at the opening,
- *   `VariableGroupChoice`). Pin is enabled once either moves off "Leave as
- *   is" (a version chosen complete). The request carries only the choices
- *   moved: "Follow each collector's group" is a null, "Leave as is" a field
- *   left out (`pin`, `pinnedVariableGroupId`). No imported configuration
- *   (D16c removed importing).
- * - **"Variables used"** (D20 Q86; the group dialogs' part,
- *   `VariableGroupChoice`'s `VariablesUsed`): for "A published version",
- *   the chosen version's organization variables no variable defines, before
- *   Pin, with "Saving is refused until they are defined on the Variables
- *   page." (a version chosen is always sent).
- * - **The snapshot** (D17c-1 Ruling 66; Preflight ruling 33): the selected
- *   collectors (their ids sent) and the lists offered (the tab's groups, the
- *   variable groups) are taken at the opening; a grid's reload while it is
- *   open changes none of them.
- * - **"Follow the group" is never refused** (D16c decision 10: the owner's
- *   Q18 refusal went with importing), whether or not the tab's groups could
- *   be read. The dialog doesn't read the groups itself; they only mark a
+ * - The collectors are the grid's selection.
+ * - **Two choices**, both starting at "Leave as is": **Version** — "Leave
+ *   as is", "Follow each collector's group" (unpins), "A published version"
+ *   (the picker, `CollectorPinPicker.tsx`); **Variable group** — "Leave as
+ *   is", "Follow each collector's group" (clears the pinned variable
+ *   group), or one of the organization's variable groups (read at the
+ *   opening, `VariableGroupChoice`). Pin is enabled once either moves off
+ *   "Leave as is" (a version chosen complete). The request carries only the
+ *   choices moved: "Follow each collector's group" is a null, "Leave as is"
+ *   a field left out (`pin`, `pinnedVariableGroupId`).
+ * - **"Variables used"** (the group dialogs' part, `VariableGroupChoice`'s
+ *   `VariablesUsed`): for "A published version", the chosen version's
+ *   organization variables no variable defines, before Pin, with "Saving is
+ *   refused until they are defined on the Variables page." (a version
+ *   chosen is always sent).
+ * - **The snapshot**: the selected collectors (their ids sent) and the lists
+ *   offered (the tab's groups, the variable groups) are taken at the
+ *   opening; a grid's reload while it is open changes none of them.
+ * - **"Follow the group" is never refused**, whether or not the tab's groups
+ *   could be read. The dialog doesn't read the groups itself; they only mark a
  *   group's published version "(group default)".
- * - **One `POST …/collectors/pin`** (decision 12: a page holds at most 50,
- *   the route takes 500): success toasts what changed (Q103; Ruling 50), n
- *   the collectors updated: the version alone "Pinned {n} collector(s)." (or
- *   "Unpinned …"); the variable group alone "Variable group set on {n}
- *   collector(s)." or, for "Follow each collector's group", "{n}
- *   collector(s) follow their group's variable group."; both "Pin and
- *   variable group set on {n} collector(s).". With "{m} were deleted
- *   meanwhile." when the API found some gone (`notFound`). Fixed words and
- *   counts, never a name.
+ * - **One `POST …/collectors/pin`** (a page holds at most 50, the route
+ *   takes 500): success toasts what changed, n the collectors updated: the
+ *   version alone "Pinned {n} collector(s)." (or "Unpinned …"); the variable
+ *   group alone "Variable group set on {n} collector(s)." or, for "Follow
+ *   each collector's group", "{n} collector(s) follow their group's variable
+ *   group."; both "Pin and variable group set on {n} collector(s).". With
+ *   "{m} were deleted meanwhile." when the API found some gone (`notFound`).
+ *   Fixed words and counts, never a name.
  * - Refusals inline (`DialogErrorAlert`):
- *   `configuration_version_not_published`,
- *   `configuration_version_not_found`, a 429 and the fleet refusals (D20:
- *   `variable_group_not_found`; `variables_undefined` with its names, at
- *   most 100, then "… and N more"), else "Failed to pin collectors". `fleet_not_found` toasts the API's words
- *   (`fleetRefusalMessage`), closes and reloads. An unknown outcome (a 5xx,
- *   no connection, a reply that doesn't parse, the 30 s hang guard) shows
- *   the 503's words and keeps the dialog open: a retry sets the same pin;
- *   the dialog closed after one reloads. The organization's or the terms'
- *   refusal closes and revalidates the layout; a session ended is silent.
+ *   `configuration_version_not_published`, `configuration_version_not_found`,
+ *   a 429 and the fleet refusals (`variable_group_not_found`;
+ *   `variables_undefined` with its names, at most 100, then "… and N more"),
+ *   else "Failed to pin collectors". `fleet_not_found` toasts the API's words
+ *   (`fleetRefusalMessage`), closes and reloads. An unknown outcome (a 5xx, no
+ *   connection, a reply that doesn't parse, the 30 s hang guard) shows the
+ *   503's words and keeps the dialog open: a retry sets the same pin; the
+ *   dialog closed after one reloads. The organization's or the terms' refusal
+ *   closes and revalidates the layout; a session ended is silent.
  * - While pinning: Cancel disabled, no X, Escape and outside clicks do
  *   nothing; every field disabled; a double Enter sends once.
  * - Each opening is a new session (`useOpeningKey`); an answer after the
  *   dialog unmounted, or for an organization no longer active, does
  *   nothing (`useStillCurrent`).
  *
- * On a Kubernetes-supervisor fleet (D17d-1 decision 4; Preflight ruling 27)
- * the edit dialog's canary note sits under the Pin select, which it
- * describes (`aria-describedby`).
+ * On a Kubernetes-supervisor fleet the edit dialog's canary note sits under
+ * the Pin select, which it describes (`aria-describedby`).
  *
- * Privacy (decision 32): no name in the dialog but configuration names and
- * version labels as text, and the variable groups' names inside
- * `ph-no-capture` (Q88); every Select's item values are ids or the fixed
- * choices, never names.
+ * Privacy: no name in the dialog but configuration names and version labels
+ * as text, and the variable groups' names inside `ph-no-capture`; every
+ * Select's item values are ids or the fixed choices, never names.
  */
 
 export const PIN_COLLECTORS_FAILED_MESSAGE = "Failed to pin collectors";
@@ -110,7 +101,7 @@ export const PIN_COLLECTORS_FAILED_MESSAGE = "Failed to pin collectors";
 /**
  * The success toast: "Pinned 3 collectors.", "Unpinned 1 collector.", with
  * " 2 were deleted meanwhile." when some were gone. Full-stopped, as the
- * variable group's toasts are (Q103; D20 final review side 2's Nit).
+ * variable group's toasts are.
  */
 export function pinnedWords(pinned: number, unpinned: boolean, gone: number): string {
   const done = `${unpinned ? "Unpinned" : "Pinned"} ${pinned} collector${pinned === 1 ? "" : "s"}.`;
@@ -118,7 +109,7 @@ export function pinnedWords(pinned: number, unpinned: boolean, gone: number): st
   return `${done} ${gone} ${gone === 1 ? "was" : "were"} deleted meanwhile.`;
 }
 
-/** "Leave as is" and "Follow each collector's group": both choices' fixed item values (Q103), never an id. */
+/** "Leave as is" and "Follow each collector's group": both choices' fixed item values, never an id. */
 export const LEAVE_CHOICE = "leave";
 export const FOLLOW_CHOICE = "follow";
 
@@ -132,7 +123,7 @@ function isBulkPinChoice(value: string): value is BulkPinChoice {
   return value === LEAVE_CHOICE || value === FOLLOW_CHOICE || value === "version";
 }
 
-/** The Version choice's label (Q103's "Version"): the group dialogs' words, as the picker's own Select is "Version". */
+/** The Version choice's label: the group dialogs' words, as the picker's own Select is "Version". */
 export const BULK_VERSION_LABEL = "Published version";
 
 /** The Version Select's words. */
@@ -155,10 +146,10 @@ export interface BulkPinChange {
 }
 
 /**
- * The success toast (Q103; Ruling 50), fixed words and counts: the version
- * alone today's `pinnedWords`; the variable group alone "Variable group set
- * on 12 collectors." or "12 collectors follow their group's variable group.";
- * both "Pin and variable group set on 12 collectors.". With ". 2 were deleted
+ * The success toast, fixed words and counts: the version alone today's
+ * `pinnedWords`; the variable group alone "Variable group set on 12
+ * collectors." or "12 collectors follow their group's variable group."; both
+ * "Pin and variable group set on 12 collectors.". With ". 2 were deleted
  * meanwhile." when some were gone.
  */
 export function bulkPinWords(change: BulkPinChange, updated: number, gone: number): string {
@@ -187,7 +178,7 @@ export interface BulkPinDialogProps {
   fleetType?: FleetType;
   /** After the pin, the fleet found gone, or closing after an unknown outcome: the grid reloads its page and the fleet. */
   onChanged: () => void;
-  /** Where the focus goes once the dialog has closed (Radix's `onCloseAutoFocus`): the host gives it back to the opener (D14b Ruling 46). */
+  /** Where the focus goes once the dialog has closed (Radix's `onCloseAutoFocus`): the host gives it back to the opener. */
   onCloseAutoFocus?: ((event: Event) => void) | undefined;
 }
 
@@ -208,7 +199,7 @@ function BulkPinSession({
   onChanged,
   onCloseAutoFocus,
 }: BulkPinDialogProps) {
-  // The baseline is taken at the opening, never a live prop (D17c-1 Ruling 66; Preflight ruling 33): the selection
+  // The baseline is taken at the opening, never a live prop: the selection
   // (whose ids are sent) and the lists offered.
   const [collectors] = useState(liveCollectors);
   const [groups] = useState(liveGroups);
@@ -236,11 +227,11 @@ function BulkPinSession({
   const versions = useConfigurationVersions(read, organizationId, configurationId);
   // The picker's configurations chosen, kept while the Pin choice switches away and back.
   const pickerKept = useConfigurationPickerKept();
-  // The variable group (Q103): "Leave as is" first; the list read at the opening.
+  // The variable group: "Leave as is" first; the list read at the opening.
   const offeredVariableGroups = useOfferedVariableGroups(open, read, organizationId);
   const [variableGroupChoice, setVariableGroupChoice] = useState<string>(LEAVE_CHOICE);
   const [undefinedRefused, setUndefinedRefused] = useState<VariablesUndefinedDetails | null>(null);
-  // "Variables used" (Q86, the group dialogs' part): the published version chosen, before Pin.
+  // "Variables used" (the group dialogs' part): the published version chosen, before Pin.
   const references = useVersionReferences(
     read,
     organizationId,
@@ -309,7 +300,7 @@ function BulkPinSession({
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     if (savingRef.current || !canSubmit) return;
-    // Only the choices moved off "Leave as is" (Q103): a field left out leaves each collector's as it is.
+    // Only the choices moved off "Leave as is": a field left out leaves each collector's as it is.
     const request: PinCollectorsRequest = { collectorIds: collectors.map((collector) => collector.id) };
     if (pin !== undefined) request.pin = pin;
     if (variableGroupId !== undefined) request.pinnedVariableGroupId = variableGroupId;

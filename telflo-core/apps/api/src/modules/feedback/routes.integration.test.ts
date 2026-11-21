@@ -25,8 +25,7 @@ import { FEEDBACK_ADMIN_EMAIL_SUBJECT } from "./emails.js";
 import { createFeedbackService } from "./service.js";
 
 /*
- * "Contact us"'s `POST /api/v1/feedback` (D29 decisions 15, 22, 26, 32 and
- * 35; decision 44's feedback bullet): the item written in the sender's
+ * "Contact us"'s `POST /api/v1/feedback`: the item written in the sender's
  * active organization with its `feedback.created` row; the text trimmed and
  * capped; 10 an hour per person; after the response, each live, verified
  * human product admin emailed separately, with the sender's email and never
@@ -192,7 +191,7 @@ describe("POST /api/v1/feedback", () => {
       payload: { organizationId: group.organization.id },
     });
     expect(switched.statusCode).toBe(200);
-    // A no-op when the sign-in already landed there (D36-1 decision 56): no new cookie, the token sent stands.
+    // A no-op when the sign-in already landed there: no new cookie, the token sent stands.
     const access = switched.headers["set-cookie"] === undefined ? personalAccess : cookieValue(switched, "telflo_access");
     await person({ isProductAdmin: true });
     const marker = `feedback-marker-${randomUUID()}`;

@@ -36,27 +36,27 @@ import { UNCALLED_TESTING } from "../../testing/otelcol-testing.js";
 import { hashPassword } from "../identity/password.js";
 import { VARIABLES_UNAVAILABLE_MESSAGE } from "../variables/errors.js";
 
-// The opamp-server every server needs (D11b decision 8), and the collector
-// validator this file is about (D13b decision 12): its own fakes.
+// The opamp-server every server needs, and the collector validator this
+// file is about: its own fakes.
 const opamp = useFakeOpampServer();
 const validator = useFakeOtelcolValidator();
 
 const csrfHeaders = { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE };
 const PASSWORD = "a-sufficiently-long-password";
 
-/** Creating, migrating and dropping a database waits for checkpoints (D7 Ruling 15). */
+/** Creating, migrating and dropping a database waits for checkpoints. */
 const THROWAWAY_DATABASE_TIMEOUT = 30_000;
 
-/** The committed catalogue's distribution (D13a decision 1). */
+/** The committed catalog's distribution. */
 const CONTRIB = "otelcol-contrib";
-/** A Contrib version this file deprecates: a fixture's, never the committed catalogue's. */
+/** A Contrib version this file deprecates: a fixture's, never the committed catalog's. */
 const RETIRED = "0.1.0";
 /** A fixture distribution, and its versions: none of them is Contrib's. */
 const FIXTURE = "fixture-build";
 const FIXTURE_DEFAULT = "9.9.1";
 const FIXTURE_OTHER = "9.9.0";
 
-/** The spec's words, exactly (D13b decision 12, Ruling 37; D13a's; the envelope's). */
+/** The refusals' words, exactly: the validation's, the catalog's and the envelope's. */
 const MESSAGES = {
   unavailable: "Validation is unavailable. Your YAML was not checked — retry shortly.",
   perMinute: "Too many checks in the last minute. Checking again shortly.",
@@ -112,16 +112,15 @@ async function closedUrl(): Promise<string> {
 }
 
 /*
- * D13b decision 12 and Preflight rulings 17 and 18, Rulings 32 and 37,
- * against Postgres through the API as its own role, with the OpenAPI-checked
- * fake as the validator. The server's client is the fake's, wrapped in
- * process: every call is recorded, and a test can put a hook in front of it
- * (a gate, a look at the pool) or swap the client (a wrong secret, a short
- * timeout, nothing listening). A version of another distribution needs a
- * catalogue the committed one isn't, so the file runs on a throwaway
- * database it prepares (migrated and synced, as telflo_platform_test is) and drops
- * afterwards, with a fixture distribution and a deprecated Contrib version
- * (D13a Preflight ruling 11).
+ * The validation against Postgres through the API as its own role, with the
+ * OpenAPI-checked fake as the validator. The server's client is the fake's,
+ * wrapped in process: every call is recorded, and a test can put a hook in
+ * front of it (a gate, a look at the pool) or swap the client (a wrong secret,
+ * a short timeout, nothing listening). A version of another distribution needs
+ * a catalog the committed one isn't, so the file runs on a throwaway
+ * database it prepares (migrated and synced, as telflo_platform_test is) and
+ * drops afterwards, with a fixture distribution and a deprecated Contrib
+ * version.
  */
 describe("a version's validation", () => {
   let databases: TestDatabases;
@@ -155,7 +154,7 @@ describe("a version's validation", () => {
     },
   };
 
-  /** The organizations whose variables the server read from the opamp-server since the test began (D20). */
+  /** The organizations whose variables the server read from the opamp-server since the test began. */
   let variableReads: string[] = [];
 
   /** A server on the throwaway database, logging every line to `logLines`. */
@@ -301,7 +300,7 @@ describe("a version's validation", () => {
       payload: { organizationId },
     });
     expect(response.statusCode).toBe(200);
-    // A no-op when the sign-in already landed there (D36-1 decision 56): no new cookie, the token sent stands.
+    // A no-op when the sign-in already landed there: no new cookie, the token sent stands.
     return response.headers["set-cookie"] === undefined ? access : cookieValue(response, "telflo_access");
   };
 
@@ -396,7 +395,7 @@ describe("a version's validation", () => {
     audits: await ownerDb.selectFrom("audit_events").select(["id", "action"]).orderBy("id").execute(),
   });
 
-  describe("the answers (decision 12)", () => {
+  describe("the answers", () => {
     it("valid: 200 with the saved pin, no errors, and the requirements; cached nowhere", async () => {
       const subject = await personalWithVersion();
       const yaml = textWith().replace("debug: {}", 'debug:\n    verbosity: "${env:LEVEL}"');
@@ -455,7 +454,7 @@ describe("a version's validation", () => {
       expect(await snapshot()).toEqual(before);
     });
 
-    it("retired: a saved pin the catalogue deprecated answers 200 retired without asking the validator", async () => {
+    it("retired: a saved pin the catalog deprecated answers 200 retired without asking the validator", async () => {
       const subject = await personalWithVersion({ collectorVersion: RETIRED });
 
       const response = await validateAs(subject, { yaml: INVALID_TEXT });
@@ -484,7 +483,7 @@ describe("a version's validation", () => {
       expect(calls).toHaveLength(1);
     });
 
-    it("400 collector_version_unknown for a version the catalogue doesn't have, asking nothing", async () => {
+    it("400 collector_version_unknown for a version the catalog doesn't have, asking nothing", async () => {
       const subject = await personalWithVersion();
 
       expectRefusal(
@@ -516,7 +515,7 @@ describe("a version's validation", () => {
     });
   });
 
-  describe("the distribution is always the configuration's (decision 12)", () => {
+  describe("the distribution is always the configuration's", () => {
     it("sends the configuration's distribution, a fixture's here, with its own version", async () => {
       const subject = await personalWithVersion({ distribution: FIXTURE });
 
@@ -548,7 +547,7 @@ describe("a version's validation", () => {
     });
   });
 
-  describe("503 validation_unavailable for every failure of the validator (Preflight ruling 18)", () => {
+  describe("503 validation_unavailable for every failure of the validator", () => {
     it.each<FakeOtelcolValidatorFault>([
       "invalid_request",
       "not_found",
@@ -573,7 +572,7 @@ describe("a version's validation", () => {
       expectRefusal(await validateAs(subject, { yaml: textWith() }), 503, "validation_unavailable", MESSAGES.unavailable);
     });
 
-    it("an answer over the client's cap (Ruling 69)", async () => {
+    it("an answer over the client's cap", async () => {
       const subject = await personalWithVersion();
       const capped = createOtelcolValidatorClient({ url: validator.fake.url, secret: validator.fake.secret, maxReplyBytes: 64 });
       delegate = () => capped;
@@ -620,7 +619,7 @@ describe("a version's validation", () => {
     });
   });
 
-  describe("the person's limits (decision 12, Ruling 37)", () => {
+  describe("the person's limits", () => {
     it("allows 60 checks a minute, a retired answer counted too, then 429 validation_rate_limited with Retry-After", async () => {
       const limited = await serverWith({ ...TEST_RATE_LIMITS, validationsPerUser: RATE_LIMITS.validationsPerUser });
       const retired = await personalWithVersion({ collectorVersion: RETIRED });
@@ -703,7 +702,7 @@ describe("a version's validation", () => {
     });
   });
 
-  describe("a person's two sessions share the limits (Ruling 55)", () => {
+  describe("a person's two sessions share the limits", () => {
     it("counts both sessions' checks against one per-minute limit", async () => {
       const limited = await serverWith({ ...TEST_RATE_LIMITS, validationsPerUser: { max: 2, windowMs: 60_000 } });
       const subject = await personalWithVersion();
@@ -752,7 +751,7 @@ describe("a version's validation", () => {
     });
   });
 
-  describe("outside any transaction (Preflight ruling 17)", () => {
+  describe("outside any transaction", () => {
     it("asks the validator after the read committed, holding no database connection", async () => {
       const subject = await personalWithVersion();
       const seen: Array<{ total: number; idle: number; waiting: number }> = [];
@@ -786,7 +785,7 @@ describe("a version's validation", () => {
     });
   });
 
-  describe("who may check (D11b's draft rules, the terms gate)", () => {
+  describe("who may check (the draft rules, the terms gate)", () => {
     it("answers another member's draft 404 configuration_not_found, as one that doesn't exist, asking nothing", async () => {
       const a = await memberActiveInGroup("contributor");
       const b = await memberActiveInGroup("admin", a.group.id);
@@ -849,7 +848,7 @@ describe("a version's validation", () => {
       expect(calls).toEqual([]);
     });
 
-    it("answers a soft-deleted configuration's version 404 configuration_not_found, asking nothing (Ruling 55)", async () => {
+    it("answers a soft-deleted configuration's version 404 configuration_not_found, asking nothing", async () => {
       const subject = await personalWithVersion();
       await ownerDb
         .updateTable("configurations")
@@ -866,7 +865,7 @@ describe("a version's validation", () => {
       expect(calls).toEqual([]);
     });
 
-    it("answers another organization's configuration, named under the caller's own, 404 configuration_not_found, asking nothing (Ruling 55)", async () => {
+    it("answers another organization's configuration, named under the caller's own, 404 configuration_not_found, asking nothing", async () => {
       const subject = await personalWithVersion();
       const stranger = await personalUser();
 
@@ -938,7 +937,7 @@ describe("a version's validation", () => {
     });
   });
 
-  describe("the body (Preflight ruling 17)", () => {
+  describe("the body", () => {
     it("takes 262,144 characters and refuses one more, an empty text and a missing one with 400 invalid_request", async () => {
       const subject = await personalWithVersion();
       const at = `# ${"x".repeat(262_142)}`;
@@ -952,7 +951,7 @@ describe("a version's validation", () => {
       expect(calls).toHaveLength(1);
     });
 
-    it("refuses a C0 control character other than tab, line feed and carriage return with 400 invalid_request, asking nothing (Ruling 55)", async () => {
+    it("refuses a C0 control character other than tab, line feed and carriage return with 400 invalid_request, asking nothing", async () => {
       const subject = await personalWithVersion();
 
       for (const character of ["\u0001", "\u0007", "\u000b", "\u001b", "\u001f"]) {
@@ -966,7 +965,7 @@ describe("a version's validation", () => {
     });
   });
 
-  describe("the organization's values, filled in by the validator before its checks (D20 decisions 13 and 27)", () => {
+  describe("the organization's values, filled in by the validator before its checks", () => {
     /** Values no log line may hold, and a name. */
     const VALUE_MARKER = "value-marker-b81e$x";
     const NAME_MARKER = "NAME_MARKER_5C2D";
@@ -1126,7 +1125,7 @@ describe("a version's validation", () => {
     });
   });
 
-  describe("nothing of the text, the answer or the secret in the log (decision 12, ADR 0024)", () => {
+  describe("nothing of the text, the answer or the secret in the log", () => {
     /** The log lines, parsed. */
     const logged = () => logLines.map((line) => JSON.parse(line) as Record<string, unknown>);
 
@@ -1183,8 +1182,8 @@ describe("a version's validation", () => {
         { level: 40, result: "unavailable", reason: "validator_busy", status: 503, ...ids, collectorVersion: contribDefault },
         // A deployment to fix: at error, naming the reason only.
         { level: 50, result: "unavailable", reason: "malformed_reply", status: 200, ...ids, collectorVersion: contribDefault },
-        // A reply over the cap: any member's text once made one (Rulings 69 and 71); the
-        // validator now answers at most 2,290,356 bytes, under the 4 MiB cap. At warn.
+        // A reply over the cap: any member's text once made one; the validator
+        // now answers at most 2,290,356 bytes, under the 4 MiB cap. At warn.
         { level: 40, result: "unavailable", reason: "oversized_reply", status: 200, ...ids, collectorVersion: contribDefault },
         { level: 50, result: "unavailable", reason: "unauthorized", status: 401, ...ids, collectorVersion: contribDefault },
       ]);

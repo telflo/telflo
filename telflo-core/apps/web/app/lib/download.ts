@@ -21,13 +21,13 @@ export function downloadTextFile(
 }
 
 /**
- * Trigger a browser download of `blob` as `filename` (D14a Preflight ruling
- * 14): a test run's files, as their bytes, so a UTF-16 input survives.
+ * Trigger a browser download of `blob` as `filename`: a test run's files,
+ * as their bytes, so a UTF-16 input survives.
  *
  * The anchor stays detached: it is never appended to `<body>`, where session
  * replay would record it, its `download` attribute naming the file, which
- * can be private text (ADR 0024). A detached anchor's click downloads in
- * every browser the app supports (proved in Chromium, Firefox and WebKit).
+ * can be private text. A detached anchor's click downloads in every browser
+ * the app supports (proved in Chromium, Firefox and WebKit).
  */
 export function downloadBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob);

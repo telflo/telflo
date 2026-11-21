@@ -9,11 +9,10 @@ export interface EditorPosition {
 }
 
 /**
- * Where each of the collector's component paths is in a text (D13b decision
- * 3, Preflight ruling 6), for the status bar's rows that jump. The text is
- * the one on screen, parsed once here with a `LineCounter` (never the
- * store's document, which in manual edit mode is the text from before the
- * typing).
+ * Where each of the collector's component paths is in a text, for the status
+ * bar's rows that jump. The text is the one on screen, parsed once here with a
+ * `LineCounter` (never the store's document, which in manual edit mode is the
+ * text from before the typing).
  *
  * A path is `::`-separated, with the whole id kept (`exporters::otlp/2`,
  * `service::pipelines::traces/2`). It is walked through the text's mappings

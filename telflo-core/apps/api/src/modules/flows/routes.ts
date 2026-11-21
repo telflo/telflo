@@ -30,12 +30,12 @@ import { createFlowRepository, type Flow, type FlowCard } from "./repositories/f
 import { createFlowService, type FlowReader, type FlowWriter, type WithFlowTransaction } from "./service.js";
 import { auditUserAgent } from "../../http/audit-user-agent.js";
 
-/** What the flows service is built from, once, in buildServer (D25 decision 15, Preflight ruling 4). */
+/** What the flows service is built from, once, in buildServer. */
 export interface FlowServicesDependencies extends ServerDependencies {
   now: () => Date;
 }
 
-/** The flows service, one instance shared by the browser routes here and the public routes (D25 decision 15). */
+/** The flows service, one instance shared by the browser routes here and the public routes. */
 export interface FlowServices {
   service: ReturnType<typeof createFlowService>;
 }
@@ -46,9 +46,8 @@ export interface FlowRoutesDependencies extends FlowServicesDependencies {
 }
 
 /**
- * The flows service (D25 Preflight ruling 4), moved verbatim from the
- * routes: built once in buildServer and shared by the browser and the
- * public routes. Flows are global: no database context.
+ * The flows service: built once in buildServer and shared by the browser and
+ * the public routes. Flows are global: no database context.
  */
 export function createFlowServices(deps: FlowServicesDependencies): FlowServices {
   const { db, now } = deps;
@@ -81,29 +80,26 @@ const FLOW_WRITE_BODY_LIMIT = 4 * 1024 * 1024;
  */
 const FLOW_LINT_BODY_LIMIT = 2 * 1024 * 1024;
 
-// The three routes with these limits (a flow's create, change and lint)
-// check the session in `onRequest`, before Fastify reads the body (D36-1
-// decision 42, Preflight ruling 9): a request without a valid session is
-// 401 whatever its body, never 413 (only the server-wide CSRF guard runs
-// before it). The product-admin check (and the lint's limit after it) stays
-// in `preHandler`.
+// The three routes with these limits (a flow's create, change and lint) check
+// the session in `onRequest`, before Fastify reads the body: a request without
+// a valid session is 401 whatever its body, never 413 (only the server-wide
+// CSRF guard runs before it). The product-admin check (and the lint's limit
+// after it) stays in `preHandler`.
 
 /**
  * The signed-in reads and the writes answer with flows in full, which a
- * product admin's include hidden ones (an admin's draft, whose YAML the
- * lint exists to check for pasted secrets), and the lint answers with
- * configuration text: no cache keeps a copy, as for a configuration's YAML
- * (docs/conventions/security.md). The showcase's cards
- * have no YAML and no hidden flow, and carry no cache header (Preflight
- * ruling 6), so a hide shows at once.
+ * product admin's include hidden ones (an admin's draft, whose YAML the lint
+ * exists to check for pasted secrets), and the lint answers with configuration
+ * text: no cache keeps a copy, as for a configuration's YAML
+ * (docs/conventions/security.md). The showcase's cards have no YAML and no
+ * hidden flow, and carry no cache header, so a hide shows at once.
  */
 const NO_STORE = "no-store";
 
 /**
- * The open flow read's every reply (D31-1 decision 34, Preflight ruling 1):
- * the 200s, the 404 and the limiter's 429. Each 200 carries a flow's YAML,
- * and a flow hidden since must never be answered from a cache, as for every
- * YAML-carrying flow read.
+ * The open flow read's every reply: the 200s, the 404 and the limiter's
+ * 429. Each 200 carries a flow's YAML, and a flow hidden since must never
+ * be answered from a cache, as for every YAML-carrying flow read.
  */
 const noStore: onSendHookHandler = async (_request, reply, payload) => {
   void reply.header("cache-control", NO_STORE);
@@ -191,48 +187,47 @@ function writerOf(request: FastifyRequest): FlowWriter {
 }
 
 /**
- * D12 decisions 10 and 11 (Preflight rulings 6 and 19):
+ * The flows routes:
  *
  *   * `GET /api/v1/flow-showcase`: no session, no rate limit and no cache
- *     header (Ruling 6, as `/api/v1/auth/oidc-providers`): the web server
+ *     header (as `/api/v1/auth/oidc-providers`): the web server
  *     calls it for every landing view from its own address, so a per-IP
  *     limit would throttle every visitor. The published flows' cards only,
  *     never the YAML. Its own path, not `/api/v1/flows/showcase`, which would
  *     hide a flow slugged `showcase`.
- *   * `GET /api/v1/published-flows` and `/api/v1/published-flows/:slug`
- *     (D31-1 decisions 5, 19 and 34, Preflight rulings 1 and 2): the open
- *     flow read, for the playground's gallery and a flow's page, read from
- *     the visitor's browser only. No session, whatever the cookie: the
- *     non-admin reader (`publicFlowReader`), so the published flows only,
- *     a hidden one 404 `flow_not_found` as an unknown one. The flows in
- *     full, YAML included, but their id, `published`, `sortOrder` and
- *     `createdAt`. 60 requests a minute per address over both routes
- *     together (`publishedFlowReadsPerIp`, an `onRequest` hook, so every
- *     request counts, an unknown slug's included; 429 `rate_limited` with
- *     Retry-After); every reply `Cache-Control: no-store`; the request
- *     line logs the route's pattern only (http/request-log.ts); no audit.
- *     The showcase above keeps no limit.
- *   * Those three are the anonymous reads TELFLO_PUBLIC_FLOWS switches
- *     (D36-1 decisions 27 and 31, Preflight ruling 7): off, the open
- *     source's default, each answers as a path nothing serves (404
- *     `not_found`), first in its `onRequest` (before the per-address
- *     limit). The signed-in reads below are everyone's, whatever it says.
+ *   * `GET /api/v1/published-flows` and `/api/v1/published-flows/:slug`:
+ *     the open flow read, for the playground's gallery and a flow's page, read
+ *     from the visitor's browser only. No session, whatever the cookie: the
+ *     non-admin reader (`publicFlowReader`), so the published flows only, a
+ *     hidden one 404 `flow_not_found` as an unknown one. The flows in full,
+ *     YAML included, but their id, `published`, `sortOrder` and `createdAt`.
+ *     60 requests a minute per address over both routes together
+ *     (`publishedFlowReadsPerIp`, an `onRequest` hook, so every request
+ *     counts, an unknown slug's included; 429 `rate_limited` with
+ *     Retry-After); every reply `Cache-Control: no-store`; the request line
+ *     logs the route's pattern only (http/request-log.ts); no audit. The
+ *     showcase above keeps no limit.
+ *   * Those three are the anonymous reads TELFLO_PUBLIC_FLOWS switches:
+ *     off, the open source's default, each answers as a path nothing
+ *     serves (404 `not_found`), first in its `onRequest` (before the
+ *     per-address limit). The signed-in reads below are everyone's,
+ *     whatever it says.
  *   * `GET /api/v1/flows` and `/api/v1/flows/:slug`: signed in, without the
- *     current terms (the catalogue's rule: the terms gate data endpoints, and
+ *     current terms (the catalog's rule: the terms gate data endpoints, and
  *     flows are no one's data). The published flows, and the hidden ones too
  *     for a product admin. The list carries each flow's YAML.
  *   * `POST /api/v1/flows`, `PATCH` and `DELETE /api/v1/flows/:id`: a
  *     product admin only (403 `product_admin_required`), each audited. Not
  *     rate limited, as no other signed-in write but the invitations' email
- *     and the validation is (D2c decision 7).
- *   * `POST /api/v1/flows/lint` (decision 6, Preflight ruling 3): the flow
+ *     and the validation is.
+ *   * `POST /api/v1/flows/lint`: the flow
  *     lint over the YAML sent, a product admin only, 20 a minute per product
  *     admin (429 `rate_limited`). It changes
  *     nothing, so nothing is audited; the YAML, the findings and the
  *     destinations are configuration text and reach no log line.
  *
- * Flows are global (ADR 0008): every read and write goes through the API's
- * role with no database context and no row-level security.
+ * Flows are global: every read and write goes through the API's role with no
+ * database context and no row-level security.
  */
 export function registerFlowRoutes(
   server: FastifyInstance,
@@ -246,7 +241,7 @@ export function registerFlowRoutes(
   const flowLintLimit: preHandlerAsyncHookHandler = async (request) =>
     rateLimiters.flowLintsPerUser(requireAuthentication(request).context.userId);
   const typed = server.withTypeProvider<ZodTypeProvider>();
-  // The anonymous reads' switch (D36-1 decision 31): first in each one's onRequest.
+  // The anonymous reads' switch: first in each one's onRequest.
   const publicFlowsOff = notFoundWhen(!deps.settings.site.publicFlows);
 
   typed.get(
@@ -258,7 +253,7 @@ export function registerFlowRoutes(
     },
   );
 
-  // One hook instance over both routes: one per-address count (Preflight ruling 2).
+  // One hook instance over both routes: one per-address count.
   const publishedFlowReadLimit = rateLimiters.publishedFlowReadsPerIp;
 
   typed.get(

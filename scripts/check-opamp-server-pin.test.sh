@@ -1,33 +1,30 @@
 #!/usr/bin/env bash
-# Verifies scripts/check-opamp-server-pin.sh (D26 decision 36): it passes on
-# the pinned state and fails, with its own message, when either half breaks:
-# the sibling checkout (missing, not a checkout, a subfolder, the tag missing,
-# moved, or only a branch of that name), the vendored files, the vendored
-# chart (D33-1 decision 21: a changed, added or removed file, committed or
-# not; a version that differs among the parent's dependency, the vendored
-# Chart.yaml and the PIN; the PIN's chart-tree), the PIN, or compose's two
-# services (as text, and as `docker compose config` reads them), and the
-# same for the Compose install (deploy/compose/compose.yaml, read with its
-# own folder as the project's and a placeholder env file; its bootstrap's
-# own command; its copy of bootstrap.sql). Also --refresh both ways and
-# --restore.
+# Verifies scripts/check-opamp-server-pin.sh: it passes on the pinned state
+# and fails, with its own message, when either half breaks: the sibling
+# checkout (missing, not a checkout, a subfolder, the tag missing, moved, or
+# only a branch of that name), the vendored files, the vendored chart (a
+# changed, added or removed file, committed or not; a version that differs
+# among the parent's dependency, the vendored Chart.yaml and the PIN; the
+# PIN's chart-tree), the PIN, or compose's two services (as text, and as
+# `docker compose config` reads them), and the same for the Compose install
+# (deploy/compose/compose.yaml, read with its own folder as the project's and
+# a placeholder env file; its bootstrap's own command; its copy of
+# bootstrap.sql). Also --refresh both ways and --restore.
 #
 # Needs no network, no daemon and no opamp-server clone, but the docker CLI
 # with its compose plugin for the cases where the check must pass or where
 # only Compose's own reading catches the break: without it those cases print
 # SKIP (the check fails closed without it, which a case shows), and the rest
-# still run. Each case builds a
-# throwaway sibling repository from the platform's vendored files (one
-# commit, an annotated tag v<version>, the vendored chart at
-# charts/opamp-server)
-# and a throwaway platform beside it, a git repository with one commit,
-# holding the script, the platform's docker-compose.yml with its pinned
-# reference rewritten to a test digest, the vendored files, the platform
-# chart's Chart.yaml and vendored chart, and a PIN naming that commit and
-# that chart's tree (git's tree ids are its content's, so the throwaway
-# chart's is the real PIN's). The version is the real PIN's, read from it,
-# never written here (D36-1 decision 18), so a pin bump needs no edit here.
-# Bash 3.2 runs it.
+# still run. Each case builds a throwaway sibling repository from the
+# platform's vendored files (one commit, an annotated tag v<version>, the
+# vendored chart at charts/opamp-server) and a throwaway platform beside it,
+# a git repository with one commit, holding the script, the platform's
+# docker-compose.yml with its pinned reference rewritten to a test digest,
+# the vendored files, the platform chart's Chart.yaml and vendored chart,
+# and a PIN naming that commit and that chart's tree (git's tree ids are its
+# content's, so the throwaway chart's is the real PIN's). The version is the
+# real PIN's, read from it, never written here, so a pin bump needs no edit
+# here. Bash 3.2 runs it.
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 1
 PLATFORM=$(pwd)
@@ -245,7 +242,7 @@ printf '# note' >>"$V/PIN"
 expect_fail "a PIN with a comment line lacking its newline" "must be exactly four lines"
 fresh
 edit "$V/PIN" sed '/^chart-tree=/d'
-expect_fail "a PIN without its chart-tree line (the three lines before D33-1)" "must be exactly four lines"
+expect_fail "a PIN without its chart-tree line (the older three-line form)" "must be exactly four lines"
 fresh
 edit "$V/PIN" sed 's/^chart-tree=\(.\{39\}\).*/chart-tree=\1/'
 expect_fail "a PIN whose chart-tree is short" "must be exactly four lines"
@@ -257,7 +254,7 @@ other=$(printf '%040d' 0)
 edit "$V/PIN" sed "s/^commit=.*/commit=$other/"
 expect_fail "a PIN naming another commit" "but the PIN says $other"
 
-# The vendored chart (D33-1 decision 21, Preflight ruling 5).
+# The vendored chart.
 P="$WORK/platform"
 VC="$P/$CHART_REL"
 if [ "$(sed -n 's/^chart-tree=//p' "$VENDOR_SRC/PIN")" = "$(git -C "$PLATFORM" rev-parse 'HEAD:'"$CHART_REL" 2>/dev/null)" ]; then
@@ -587,7 +584,7 @@ fresh
 rm "$C"
 expect_fail "compose missing" "docker-compose.yml is missing"
 
-# The Compose install (D36-2 decisions 88 and 89; Preflight ruling 1).
+# The Compose install.
 fresh
 edit "$I" awk -v ref="$REF" 'index($0, ref) && !done { sub(/@sha256:[0-9a-f]*/, "@sha256:" sprintf("%064d", 0)); done = 1 } { print }'
 expect_fail "the install's image line with another digest" "deploy/compose/compose.yaml's opamp-migrate image is 'ghcr.io/telflo/opamp-server:$VERSION@sha256:$(printf '%064d' 0)'"

@@ -6,25 +6,22 @@ import { isGroup } from "~/lib/graph/canvas-operations.js";
 import { useEditorStore } from "~/lib/stores/editor-store.js";
 
 /*
- * The editor tour (ADR 0018; D9a decision 14), with its two step sets: one
- * for a canvas with components, one for an empty canvas. The differences are
- * in the D9a Parity Notes:
- * - the AI step and "Use the AI tab" are dropped (ADR 0007);
+ * The editor tour, with its two step sets: one for a canvas with
+ * components, one for an empty canvas.
+ * - there is no AI step and no "Use the AI tab";
  * - "Version History" is always the last step, the picker being always in
- *   the toolbar. Its sentence includes publishing, since D11b brought it
- *   back (D10 decision 15 had ended it at "create copies"). The picker
- *   can't be used while it is highlighted, so a choice
- *   mid-tour can't take the toolbar it points at away;
+ *   the toolbar. Its sentence includes publishing. The picker can't be used
+ *   while it is highlighted, so a choice mid-tour can't take the toolbar it
+ *   points at away;
  * - "YAML View" and "Configuration & YAML" have the validation bar's
- *   sentence again (D13b decision 16; D9a had removed it until the bar
- *   came), and "YAML View" says the typed text reaches the canvas through
- *   Apply, not that changes sync back; "Toolbar Actions" no
- *   longer offers a download the toolbar doesn't have;
+ *   sentence, and "YAML View" says the typed text reaches the canvas
+ *   through Apply, not that changes sync back; "Toolbar Actions" offers no
+ *   download, which the toolbar doesn't have;
  * - the page starts it only once the configuration has loaded, so the set
  *   is chosen from the configuration's own canvas;
  * - completion is remembered as `telflo-tour-completed`, and storage that
  *   refuses is survived;
- * - D6's theme (`tour-popover`) is reused.
+ * - the shared tour theme (`tour-popover`) is reused.
  *
  * driver.js renders titles and descriptions as HTML: every word here is
  * fixed text, and nothing a person wrote (a label, a name, the YAML) may
@@ -106,11 +103,11 @@ const TOOLBAR_ACTIONS: DriveStep = {
   },
 };
 
-/** The last step, on the version picker (D10 decision 15). */
+/** The last step, on the version picker. */
 const VERSION_HISTORY: DriveStep = {
   element: '[data-tour-step="version-select"]',
   // Even if the tour's own setting changes: a version chosen mid-tour would
-  // load another version under the step (the D10 Task 3 review's handoff).
+  // load another version under the step.
   disableActiveInteraction: true,
   popover: {
     title: "Version History",
@@ -126,8 +123,8 @@ const ADD_PIPELINE_DESCRIPTION =
 
 /**
  * What a tour holds beyond its fixed steps. `versionHistory` (default true)
- * ends it on the version picker; an editor without one (D31-1's blank
- * public editor, Ruling 280) leaves that step out.
+ * ends it on the version picker; an editor without one (the blank
+ * public editor) leaves that step out.
  */
 export interface EditorTourOptions {
   versionHistory?: boolean;
@@ -262,10 +259,10 @@ export function stepsEmpty(options: EditorTourOptions = {}): DriveStep[] {
 }
 
 /**
- * Starts the tour after its delay, with the set the canvas calls
- * for. Closing it or finishing it leaves the Configuration tab showing with
+ * Starts the tour after its delay, with the set the canvas calls for.
+ * Closing it or finishing it leaves the Configuration tab showing with
  * nothing selected, and marks it completed. The function returned stops it:
- * a pending start is cancelled, and a running tour is taken down without
+ * a pending start is canceled, and a running tour is taken down without
  * being marked completed (the page is going). `options` as the steps take
  * them: `{ versionHistory: false }` where the editor has no version picker.
  */

@@ -2,16 +2,14 @@ import type { Collector } from "@telflo/contracts";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "~/components/ui/tooltip.js";
 
 /*
- * A collector's Status (D17b-1 decisions 11 and 23; D17d-2 Ruling 55, the
- * owner's Q58): a dot and words from the server's `liveness` (Online,
- * Warning, Unknown, Offline), never recomputed in the browser. Until Ruling 55
- * the column showed the configuration's sync (now the Configuration column,
- * `CollectorConfigurationCell`) and the liveness was only a dot beside Last
- * seen: a collector whose token was revoked kept a green "In sync" while
- * it went unseen. Its window (D17a's `OnlineBar` windows, as the server
- * reckons them) is tooltip text on a focusable trigger and screen-reader
- * text (a tooltip never shows on touch), never a `title` or an
- * `aria-label`. Fixed words only.
+ * A collector's Status: a dot and words from the server's `liveness`
+ * (Online, Warning, Unknown, Offline), never recomputed in the browser. The
+ * configuration's sync is the Configuration column
+ * (`CollectorConfigurationCell`), so a collector whose token was revoked
+ * shows as unseen, never a green "In sync". Its window (the `OnlineBar`
+ * windows, as the server reckons them) is tooltip text on a focusable
+ * trigger and screen-reader text (a tooltip never shows on touch), never a
+ * `title` or an `aria-label`. Fixed words only.
  */
 
 type Liveness = Collector["liveness"];
@@ -40,7 +38,7 @@ export const LIVENESS_WINDOWS: Record<Liveness, string> = {
   offline: `offline: ${LIVENESS_MEANINGS.offline}`,
 };
 
-/** The dot's colour: ok online, warning warning, muted unknown, fail offline. */
+/** The dot's color: ok online, warning warning, muted unknown, fail offline. */
 export const LIVENESS_DOT_CLASSES: Record<Liveness, string> = {
   online: "bg-ok",
   warning: "bg-warn",

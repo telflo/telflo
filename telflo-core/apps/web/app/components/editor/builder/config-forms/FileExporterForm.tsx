@@ -6,31 +6,27 @@ import { useAdjustments } from "./shared/AdjustmentAlert.js";
 import type { ValuePath } from "~/lib/graph/text-edits.js";
 
 /*
- * The file exporter's form (ADR 0018), over the form's fields
- * (D9d decision 2, D9b's contract): each field writes its own key.
- * Collector claims are contrib v0.162.0's `exporter/fileexporter`.
+ * The file exporter's form, over the form's fields: each field writes its own
+ * key. Collector claims are contrib v0.162.0's `exporter/fileexporter`.
  *
- * - Fixed (decision 4): rotation is on exactly while `rotation` is in the
- *   text, whatever it holds (`config.go:195-199`): `rotation: {}` is still
- *   on (100 MB, 100 backups). The three
- *   fields sit in a pruning scope: clearing the last key removes
- *   `rotation`; a key no field shows (`localtime`) keeps it. `ROTATION_HINT`
- *   says so.
- * - Fixed (D9b decision 4): each is a `NumberField`, so 0 can be typed
- *   (Max Days 0 keeps every file).
- * - Changed (decision 7): a rotation value written while the text has
- *   `append: true` removes `append` in the same change, with
- *   `APPEND_TOAST`: the collector refuses the two together
- *   (`config.go:126-128`). The form has no Append control.
- * - File Path cleared removes the key (D9b's contract; `""` is refused
- *   either way, `config.go:123-125`).
+ * - Rotation is on exactly while `rotation` is in the text, whatever it
+ *   holds (`config.go:195-199`): `rotation: {}` is still on (100 MB, 100
+ *   backups). The three fields sit in a pruning scope: clearing the last key
+ *   removes `rotation`; a key no field shows (`localtime`) keeps it.
+ *   `ROTATION_HINT` says so.
+ * - Each is a `NumberField`, so 0 can be typed (Max Days 0 keeps every file).
+ * - A rotation value written while the text has `append: true` removes
+ *   `append` in the same change, with `APPEND_TOAST`: the collector refuses
+ *   the two together (`config.go:126-128`). The form has no Append control.
+ * - File Path cleared removes the key, as clearing any field does (`""` is
+ *   refused either way, `config.go:123-125`).
  *
- * Ids are fixed (decision 13).
+ * Ids are fixed.
  */
 
-/** Under Rotation (Parity Notes). */
+/** Under Rotation. */
 export const ROTATION_HINT = "Setting any of these turns rotation on; with none set, the file isn't rotated.";
-/** The append cascade's toast (decision 7). */
+/** The append cascade's toast. */
 export const APPEND_TOAST = "Removed append: it can't be used with rotation.";
 
 const ROTATION: ValuePath = ["rotation"];

@@ -51,8 +51,8 @@ describe("deriveSignals", () => {
   });
 });
 
-describe("isPinOffered (D12 decision 16)", () => {
-  it("is true for a pin the catalogue offers", () => {
+describe("isPinOffered", () => {
+  it("is true for a pin the catalog offers", () => {
     expect(isPinOffered(TAIL_SAMPLING, CATALOGUE)).toBe(true);
   });
 
@@ -61,13 +61,13 @@ describe("isPinOffered (D12 decision 16)", () => {
     expect(isPinOffered(makeFlow({ collectorVersion: "9.9.9" }), [CONTRIB, ACME])).toBe(false);
   });
 
-  it("can't say while the catalogue is unread, or for a distribution it doesn't list", () => {
+  it("can't say while the catalog is unread, or for a distribution it doesn't list", () => {
     expect(isPinOffered(makeFlow({ collectorVersion: RETIRED_VERSION }), null)).toBeNull();
     expect(isPinOffered(makeFlow({ collectorDistribution: "gone" }), CATALOGUE)).toBeNull();
   });
 });
 
-describe("changedFields: an edit's PATCH (D12 Preflight ruling 19)", () => {
+describe("changedFields: an edit's PATCH", () => {
   it("is empty when nothing changed, the signals in another order included", () => {
     expect(changedFields(TAIL_SAMPLING, { ...fieldsOf(), signals: ["metrics", "traces"] })).toEqual({});
   });

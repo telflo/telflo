@@ -1,5 +1,5 @@
 {
-  "description": "The regex library's seeded entries, from migration 1700000000031's seededTestRegexes (D15b decision 7, Preflight ruling 2). Generated: never edit by hand.",
+  "description": "The regex library's seeded entries, from migration 1700000000031's seededTestRegexes. Generated: never edit by hand.",
   "script": "npm run fixture:seeded-test-regexes --workspace @telflo/db",
   "testRegexes": [
     {

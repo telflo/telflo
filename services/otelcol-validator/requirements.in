@@ -1,5 +1,5 @@
-# The validator's runtime dependencies (D13b Preflight ruling 10). The lock,
-# requirements.txt, is made from this file with
+# The validator's runtime dependencies. The lock, requirements.txt, is made
+# from this file with
 #   pip-compile --generate-hashes --allow-unsafe --strip-extras \
 #     --output-file=requirements.txt requirements.in
 # and installed with `pip install --require-hashes -r requirements.txt`.

@@ -21,36 +21,33 @@ import type { ComponentType, OTelNode } from "~/lib/graph/types.js";
 import { selectIsEditingLocked, useEditorStore, type EditorState } from "~/lib/stores/editor-store.js";
 
 /*
- * The Configuration tab (D9a decision 9; ADR 0018), without organization
- * variables (D20). Its states, in order: the multi-selection summary,
- * "No node selected", a pipeline group (`PipelineGroupConfigPanel`), and a
- * component: the identity header (icon, label, Docs link, help text), then
- * one of two layouts (D9b decision 6):
+ * The Configuration tab, without organization variables. Its states, in
+ * order: the multi-selection summary, "No node selected", a pipeline group
+ * (`PipelineGroupConfigPanel`), and a component: the identity header
+ * (icon, label, Docs link, help text), then one of two layouts:
  * - a component with a form (`config-forms/registry.ts`, by its type and
  *   palette sub-type): the form, then the collapsed "Advanced: Instance &
  *   YAML" section holding the instance name and the Raw YAML box (260 px,
  *   "Edits sync with the form fields above.");
  * - a component without one, or whose value is neither a mapping nor empty
- *   (`otlp: [a]`, whose box is the way to fix it; Preflight ruling 17): the
- *   Raw YAML box (360 px) and the collapsed "Advanced" section with the
- *   instance name.
+ *   (`otlp: [a]`, whose box is the way to fix it): the Raw YAML box
+ *   (360 px) and the collapsed "Advanced" section with the instance name.
  * The form and the box both write the text, and each shows what the other
  * wrote on the next render. An undeclared component's form is disabled,
  * with `UNDECLARED_COMPONENT_MESSAGE` under the header, as text, once: its
- * box in "Advanced" doesn't say it again (Ruling 51).
+ * box in "Advanced" doesn't say it again.
  *
  * Delete, Backspace and Cmd/Ctrl+D pressed anywhere in the tab are its
- * controls' own, never the canvas's (`OWN_KEYS_PROPS`; Preflight ruling 23).
+ * controls' own, never the canvas's (`OWN_KEYS_PROPS`).
  *
- * Changed (decision 4): the YAML box shows the component's own text from
- * the document, comments included, and keeps what is typed. 300 ms after
- * the typing stops (Preflight ruling 22), or when the box loses focus, the
- * component's value in the text becomes the box's, if the box reads as a
- * mapping or is empty; while it doesn't, a message shows under the box as
- * text (never a toast on every keystroke, nor a dropped keystroke), and
- * nothing is written. The box follows the text when the
- * component's value changes elsewhere (undo, the YAML tab's Apply), never
- * while the person is typing.
+ * The YAML box shows the component's own text from the document, comments
+ * included, and keeps what is typed. 300 ms after the typing stops, or
+ * when the box loses focus, the component's value in the text becomes the
+ * box's, if the box reads as a mapping or is empty; while it doesn't, a
+ * message shows under the box as text (never a toast on every keystroke,
+ * nor a dropped keystroke), and nothing is written. The box follows the
+ * text when the component's value changes elsewhere (undo, the YAML tab's
+ * Apply), never while the person is typing.
  *
  * A component the text names in a pipeline but doesn't declare has no value
  * to edit: its box is disabled, with a hint as text. A box that defines an
@@ -69,13 +66,13 @@ import { selectIsEditingLocked, useEditorStore, type EditorState } from "~/lib/s
  * commits it first and then reaches the page, whose save flushes every held
  * edit too; the field commits when it goes; and closing or reloading the
  * tab asks the browser's question. A navigation elsewhere in the app writes
- * every held edit before the page's navigation guard judges it (ruling 36),
+ * every held edit before the page's navigation guard judges it,
  * blurred or not (Back), so the guard sees the change. Neither field ever
- * writes into a configuration loaded after its edit began (ruling 37).
+ * writes into a configuration loaded after its edit began.
  *
- * Labels, instance names and values are text only, never an attribute
- * (decision 7). While the canvas is locked the fields are disabled, and on
- * a published version, whose tab opens for inspection (D11b decision 4).
+ * Labels, instance names and values are text only, never an attribute. While
+ * the canvas is locked the fields are disabled, and on a published version,
+ * whose tab opens for inspection.
  */
 
 /** The message shown under the box. */
@@ -95,7 +92,7 @@ export const FALLBACK_BOX_HINT = "No form for this component yet. Edit its YAML 
 /** Under the box in a form's "Advanced: Instance & YAML" section. */
 export const FORM_BOX_HINT = "Edits sync with the form fields above.";
 
-/** How long after the last keystroke the box writes (Preflight ruling 22). */
+/** How long after the last keystroke the box writes. */
 export const BOX_WRITE_DELAY_MS = 300;
 
 /** The multi-selection summary lists this many labels. */
@@ -180,8 +177,8 @@ function PanelContent() {
     return <PipelineGroupConfigPanel />;
   }
 
-  // Keyed by the load too (D9c Preflight ruling 8): node ids restart with each configuration loaded, and a
-  // form's local state (an empty held row, a pending filter side) mustn't pass to another text's component.
+  // Keyed by the load too: node ids restart with each configuration loaded, and a form's local state (an
+  // empty held row, a pending filter side) mustn't pass to another text's component.
   return <ComponentConfiguration key={`${loadCount}:${selectedNode.id}`} node={selectedNode} />;
 }
 
@@ -237,8 +234,8 @@ function ComponentConfiguration({ node }: { node: OTelNode }) {
 
   return (
     // The component's settings, its instance name and its raw YAML are
-    // configuration text: replay never records the panel (decision 39 of
-    // D31-1, Ruling 301; the signed-in editor's too).
+    // configuration text: replay never records the panel (the playground's
+    // or the signed-in editor's).
     <div className="flex-1 flex flex-col p-4 overflow-y-auto ph-no-capture">
       {/* Component identity header — mirrors the canvas node card: type-tinted
           icon chip, title, Docs link, then what the component actually does. */}
@@ -347,7 +344,7 @@ function InstanceNameInput({ nodeId, instanceName, disabled }: { nodeId: string;
   return (
     <Input
       id="instance-name"
-      // A component's name is configuration text: replay never records the field (Ruling 301).
+      // A component's name is configuration text: replay never records the field.
       className="ph-no-capture"
       value={draft ?? instanceName}
       onChange={(e) => setDraftValue(e.target.value)}
@@ -371,7 +368,7 @@ function InstanceNameInput({ nodeId, instanceName, disabled }: { nodeId: string;
 }
 
 /**
- * The Raw YAML box (decision 4). `synced` is the component's text the box
+ * The Raw YAML box. `synced` is the component's text the box
  * last agreed with: what it was filled from, or what its own write left in
  * the text. When the text's value differs from it, the value changed
  * elsewhere, and the box follows unless a write is waiting (the person is
@@ -390,7 +387,7 @@ function RawYamlBox({
   nodeKey: string;
   disabled: boolean;
   undeclared: boolean;
-  /** Whether the box says why it's disabled when undeclared; under a form, the form's header says it once (Ruling 51). */
+  /** Whether the box says why it's disabled when undeclared; under a form, the form's header says it once. */
   explainUndeclared: boolean;
   /** The heights: 360 px alone, 260 px under a form. */
   heightClass: "h-[360px]" | "h-[260px]";
@@ -415,7 +412,7 @@ function RawYamlBox({
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   /**
    * The load the held edit began in, null while none is held: an edit never
-   * writes into a configuration loaded since (ruling 37), whose nodes can
+   * writes into a configuration loaded since, whose nodes can
    * have the same ids, as the instance name's draft never renames one.
    */
   const editLoad = useRef<number | null>(null);

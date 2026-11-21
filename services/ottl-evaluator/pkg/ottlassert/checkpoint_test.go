@@ -1,6 +1,5 @@
-// New in D15a Task 2 (plan Preflight ruling 10): every record loop calls its
-// Checkpoint, in every context, and stops with its error; a miss's snippet
-// is built only for the misses kept.
+// Every record loop calls its Checkpoint, in every context, and stops with
+// its error; a miss's snippet is built only for the misses kept.
 
 package ottlassert
 

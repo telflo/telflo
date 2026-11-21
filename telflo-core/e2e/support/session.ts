@@ -27,7 +27,7 @@ export async function signInThroughForm(page: Page, { email, password }: Credent
   await page.goto("/login");
   await waitForHydration(page);
   await page.getByLabel("Email").fill(email);
-  // The show/hide toggle is also labelled "…password", so match exactly.
+  // The show/hide toggle is also labeled "…password", so match exactly.
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Sign In" }).click();
   await page.waitForURL("/app");
@@ -97,10 +97,10 @@ export async function expireAccessToken(context: BrowserContext): Promise<void> 
 }
 
 /**
- * Saves preferences without Settings (D21 decision 20), for tests about
- * something else: the API stores them and, for a theme, sets the
- * `telflo_theme` cookie in the page's cookie jar. Stays on whatever page is
- * open, which shows the change at its next navigation.
+ * Saves preferences without Settings, for tests about something else: the
+ * API stores them and, for a theme, sets the `telflo_theme` cookie in the
+ * page's cookie jar. Stays on whatever page is open, which shows the change
+ * at its next navigation.
  */
 export async function savePreferencesThroughApi(page: Page, preferences: Record<string, unknown>): Promise<void> {
   const response = await page.request.patch("/api/v1/auth/me/preferences", {
@@ -110,7 +110,7 @@ export async function savePreferencesThroughApi(page: Page, preferences: Record<
   expect(response.status()).toBe(200);
 }
 
-/** The `telflo_theme` cookie's word in `context` (D21 decision 23), or undefined when it holds none. */
+/** The `telflo_theme` cookie's word in `context`, or undefined when it holds none. */
 export async function themeCookie(context: BrowserContext): Promise<string | undefined> {
   return (await context.cookies()).find((cookie) => cookie.name === THEME_COOKIE_NAME)?.value;
 }
@@ -127,10 +127,9 @@ export async function setThemeCookie(context: BrowserContext, value: string): Pr
 
 /**
  * What `path`'s server HTML gives `<html>` as its class, before any script
- * runs (D21 decision 22, Preflight ruling 39): read in a second context with
- * JavaScript off and `from`'s cookies, so no script of the page can have set
- * it. Answers the address the page landed on too (after the server's
- * redirects) and an empty class as "".
+ * runs: read in a second context with JavaScript off and `from`'s cookies,
+ * so no script of the page can have set it. Answers the address the page
+ * landed on too (after the server's redirects) and an empty class as "".
  */
 export async function serverHtmlClass(
   browser: Browser,
@@ -150,13 +149,13 @@ export async function serverHtmlClass(
 }
 
 /**
- * A client-side navigation to the open page's own address with `search`, through
- * React Router (its data router, `window.__reactRouterDataRouter`): the page's
- * routes stay mounted, and the signed-in layout's loaders run again (its
- * `shouldRevalidate`), as on any navigation. For the D21 checks that a
+ * A client-side navigation to the open page's own address with `search`,
+ * through React Router (its data router, `window.__reactRouterDataRouter`):
+ * the page's routes stay mounted, and the signed-in layout's loaders run again
+ * (its `shouldRevalidate`), as on any navigation. For the checks that a
  * preference saved in another tab reaches a page that stays open, an open
- * Monaco included (Preflight ruling 51); going back to the page would mount
- * it anew and prove nothing.
+ * Monaco included; going back to the page would mount it anew and prove
+ * nothing.
  */
 export async function navigateToSearch(page: Page, search: string): Promise<void> {
   const target = new URL(page.url());
@@ -169,8 +168,7 @@ export async function navigateToSearch(page: Page, search: string): Promise<void
 
 /**
  * Marks the editor's tour as done in every page `context` opens, for tests
- * that aren't about the tour: it would cover the page on a first visit
- * (D9a decision 14).
+ * that aren't about the tour: it would cover the page on a first visit.
  */
 export async function skipEditorTour(context: BrowserContext): Promise<void> {
   await context.addInitScript(`try { localStorage.setItem("telflo-tour-completed", "true"); } catch {}`);

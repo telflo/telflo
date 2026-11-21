@@ -10,17 +10,17 @@ import { createDatabaseSessionService } from "../sessions/routes.js";
 import { createFeedbackService } from "./service.js";
 
 /*
- * "Contact us" (D29 decisions 6, 15, 26, 32 and 35; Task 4):
- * `POST /api/v1/feedback` `{ text }` for any signed-in person with the
- * current terms (`[authenticate, requireCurrentTerms]`, as any member
- * route; CSRF is global), in their active organization: 201 `{ id }`. The
- * text trimmed, 1 to 5,000 characters; 10 an hour per person
- * (`feedbackPerUser`, 429 with Retry-After). Writes the row (the id from
- * `select uuidv7()`, no RETURNING: the API's role may only insert) and
- * `feedback.created` in the person's organization, then emails every
- * product admin after the response (the sender's email, never the text).
- * The recipients' query lives in this module's repository alone (decision
- * 26; a test pins it). The limit counts after validation and the guards.
+ * "Contact us": `POST /api/v1/feedback` `{ text }` for any signed-in
+ * person with the current terms (`[authenticate, requireCurrentTerms]`,
+ * as any member route; CSRF is global), in their active organization: 201
+ * `{ id }`. The text trimmed, 1 to 5,000 characters; 10 an hour per
+ * person (`feedbackPerUser`, 429 with Retry-After). Writes the row (the
+ * id from `select uuidv7()`, no RETURNING: the API's role may only
+ * insert) and `feedback.created` in the person's organization, then
+ * emails every product admin after the response (the sender's email,
+ * never the text). The recipients' query lives in this module's
+ * repository alone (a test pins it). The limit counts after validation
+ * and the guards.
  */
 export function registerFeedbackRoutes(
   server: FastifyInstance,

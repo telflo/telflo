@@ -9,22 +9,22 @@ import { useCurrentUser } from "~/lib/use-current-user.js";
 import { GroupDialog } from "./GroupDialog.js";
 
 /*
- * A server fleet's setup checklist (D17c-1 decisions 13 and 44; Preflight
- * rulings 19 to 22; ADR 0018): three steps, between the stats strip and the
- * tabs. The route mounts it while the active fleet has no collectors (the
- * summary's count), or while the header's "Setup guide" has reopened it.
+ * A server fleet's setup checklist: three steps, between the stats strip
+ * and the tabs. The route mounts it while the active fleet has no
+ * collectors (the summary's count), or while the header's "Setup guide" has
+ * reopened it.
  *
  * - "Set up this fleet", with "Disappears once your first collector
  *   connects", or, reopened, a close button "Hide setup guide"
  *   (`onDismiss`: the route puts the focus back on "Setup guide").
- * - **Assign a published version** (required: Q28, no "skip"): done once the
- *   Default group has a published version (Ruling 61: every install entry
- *   here opens the Default group, which needs one; another group's version
- *   doesn't count); "Assign" opens the group dialog for the Default group.
- *   The checklist reads the fleet's groups itself (`useGroupsTab`, polled as
- *   the Groups tab, quiet: a read failing over groups shown never toasts, the
- *   Groups tab's toast is enough), and reads them again when `groupsChanged`
- *   moves (an assignment made in the install dialog); its own save calls
+ * - **Assign a published version** (required, no "skip"): done once the
+ *   Default group has a published version (every install entry here opens the
+ *   Default group, which needs one; another group's version doesn't count);
+ *   "Assign" opens the group dialog for the Default group. The checklist
+ *   reads the fleet's groups itself (`useGroupsTab`, polled as the Groups
+ *   tab, quiet: a read failing over groups shown never toasts, the Groups
+ *   tab's toast is enough), and reads them again when `groupsChanged` moves
+ *   (an assignment made in the install dialog); its own save calls
  *   `onGroupsChanged` (the Groups tab follows) and `onFleetChanged`. A first
  *   read that failed shows "Failed to load groups" under the step with "Try
  *   again".
@@ -39,13 +39,13 @@ import { GroupDialog } from "./GroupDialog.js";
  * - Names (the Default group's) appear only in the group dialog's title,
  *   as text.
  *
- * A Kubernetes-supervisor fleet's (D17d-2 decision 24; Preflight ruling 29):
- * the same card, shown and hidden alike, its steps the Helm install's:
- * **Assign published versions to your groups** (done once any group has a
- * published version; "Assign" chooses the Groups tab, `onGroupsTab`, no
- * dialog), **Install a group with Helm** (done once installing started in
- * this visit or a collector exists; "Install" opens the Helm install dialog,
- * `onInstall`), **First collector connects** (worded for pods).
+ * A Kubernetes-supervisor fleet's: the same card, shown and hidden alike,
+ * its steps the Helm install's: **Assign published versions to your groups**
+ * (done once any group has a published version; "Assign" chooses the Groups
+ * tab, `onGroupsTab`, no dialog), **Install a group with Helm** (done once
+ * installing started in this visit or a collector exists; "Install" opens
+ * the Helm install dialog, `onInstall`), **First collector connects**
+ * (worded for pods).
  */
 
 export const CHECKLIST_TITLE = "Set up this fleet";
@@ -59,7 +59,7 @@ export const INSTALL_STEP = {
   title: "Install a collector",
   detail: "Generate a copy-paste install command and run it on a host.",
 };
-/** A Kubernetes-supervisor fleet's steps (D17d-2 decision 24; Preflight ruling 29). */
+/** A Kubernetes-supervisor fleet's steps. */
 export const KUBERNETES_ASSIGN_STEP = {
   title: "Assign published versions to your groups",
   detail: "Give the Agent, the Cluster or a gateway pool a published version on the Groups tab.",
@@ -144,7 +144,7 @@ function Step({ index, title, detail, done, action, waitingLabel, problem }: Ste
   );
 }
 
-/** The sign-up prompt's words for a server fleet's "Assign" in the playground (D31-1 decisions 24 and 35). */
+/** The sign-up prompt's words for a server fleet's "Assign" in the playground. */
 export const ASSIGN_LOCKED_WORDS = "assign a configuration to a group";
 
 export interface SetupChecklistProps {
@@ -202,8 +202,8 @@ export function SetupChecklist({
 
   const kubernetes = fleet.type === "kubernetes-supervisor";
   const defaultGroup = groups?.find((group) => group.isDefault) ?? null;
-  // Every server install entry opens the Default group, and an install needs its published version (Q28; Ruling 61); a
-  // Kubernetes fleet's Helm dialog installs any group with one.
+  // Every server install entry opens the Default group, and an install needs its published version; a Kubernetes
+  // fleet's Helm dialog installs any group with one.
   const assigned = kubernetes ? (groups?.some((group) => group.assignedVersion !== null) ?? false) : defaultGroup?.assignedVersion != null;
   const connected = fleet.summary.collectors > 0;
   const installDone = installStarted || connected;

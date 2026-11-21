@@ -1,16 +1,16 @@
 /**
- * The first product admin (D36-1 decisions 32 and 36; Preflight rulings 2
- * and 14; D30-1's preflight A's draft).
+ * The first product admin.
  *
  *   * bootstrap_first_product_admin(p_user_id, p_at): the one way the API's
  *     role can make a product admin without being one. `telflo-admin
  *     bootstrap` (apps/api/src/admin/) calls it once, in the transaction
  *     that creates the account, through
  *     identity/repositories/user-repository.ts (a test scans the source).
- *     Migration 041's pattern: SECURITY DEFINER, owned by the migration
- *     role (the tables' owner, so D12's owner-only trigger lets it set the
- *     flag), search_path pg_catalog, platform with schema-qualified tables,
- *     EXECUTE revoked from public and granted to telflo_platform_runtime only.
+ *     Migration 041's pattern: SECURITY DEFINER, owned by the migration role
+ *     (the tables' owner, so migration 026's owner-only trigger lets it set
+ *     the flag), search_path pg_catalog, platform with schema-qualified
+ *     tables, EXECUTE revoked from public and granted to
+ *     telflo_platform_runtime only.
  *     In order:
  *       - 22023 when either argument is null;
  *       - a transaction advisory lock on one constant key
@@ -30,13 +30,13 @@
  *     Its messages are fixed words: never an email or an id.
  *   * users.accepted_terms_version's comment: the current version is the
  *     site's setting (TELFLO_TERMS_VERSION), no longer a constant of the
- *     code, and a site without one asks for none (decision 32). Migration
- *     007's comment named CURRENT_TERMS_VERSION, which D36-1 removed.
+ *     code, and a site without one asks for none. Migration 007's comment
+ *     named CURRENT_TERMS_VERSION, which no longer exists.
  *   * users.is_product_admin's comment names the bootstrap beside the grant
  *     and the revoke.
  *
  * down drops the function and restores migration 007's and migration
- * 041's comments: migration 042's catalogue exactly.
+ * 041's comments: migration 042's catalog exactly.
  */
 
 const signature = "bootstrap_first_product_admin(uuid, timestamptz)";
@@ -48,17 +48,17 @@ const migration007TermsComment = `
        accepted none (an account created through a provider, until the terms
        dialog). The current version is CURRENT_TERMS_VERSION in
        @telflo/contracts; any other value means the terms must be accepted
-       again (D2c decision 6).';
+       again.';
 `;
 
 /** Migration 041's comment on users.is_product_admin, exactly: what down restores. */
 const migration041FlagComment = `
     comment on column users.is_product_admin is
-      'a product admin (D12 decision 3): writes the flows and reaches
+      'a product admin: writes the flows and reaches
        /product-admin. False by default; set and cleared only as the
        tables'' owner (users_product_admin_owner_only): by an operator''s SQL,
        and by another product admin through product_admin_grant and
-       product_admin_revoke (D29 decision 27), which run as the owner. Read
+       product_admin_revoke, which run as the owner. Read
        on every request, so a revocation takes effect at once.';
 `;
 
@@ -68,19 +68,18 @@ export const up = (pgm) => {
       'the terms version the user last accepted, or null for one who has
        accepted none (an account created through a provider, until the terms
        dialog, or on a site that asks for no Terms). The current version is
-       the site''s setting, TELFLO_TERMS_VERSION (D36-1 decision 32): any
-       other value means the terms must be accepted again (D2c decision 6),
-       and a site whose setting is empty asks for none.';
+       the site''s setting, TELFLO_TERMS_VERSION: any other value means the
+       terms must be accepted again, and a site whose setting is empty asks
+       for none.';
 
     comment on column users.is_product_admin is
-      'a product admin (D12 decision 3): writes the flows and reaches
+      'a product admin: writes the flows and reaches
        /product-admin. False by default; set and cleared only as the
        tables'' owner (users_product_admin_owner_only): by an operator''s SQL,
        by another product admin through product_admin_grant and
-       product_admin_revoke (D29 decision 27), and once, while no user holds
-       it, by bootstrap_first_product_admin (D36-1 decision 36), which run
-       as the owner. Read on every request, so a revocation takes effect at
-       once.';
+       product_admin_revoke, and once, while no user holds it, by
+       bootstrap_first_product_admin, which run as the owner. Read on every
+       request, so a revocation takes effect at once.';
 
     create function bootstrap_first_product_admin(p_user_id uuid, p_at timestamptz)
     returns void
@@ -115,7 +114,7 @@ export const up = (pgm) => {
     $$;
 
     comment on function ${signature} is
-      'makes the first product admin (D36-1 decision 36): 22023 for a null
+      'makes the first product admin: 22023 for a null
        argument; under a transaction advisory lock (one constant key), so
        concurrent calls run one after the other, 42501 with HINT
        telflo_product_admin_exists when any user holds the flag (deleted

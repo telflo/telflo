@@ -9,33 +9,32 @@ import { useOrgVariables } from "~/lib/org-variables.js";
 import { cn } from "~/lib/utils.js";
 
 /*
- * An input (ADR 0018; D9b decision 5) with the `$` picker of organization
- * variables and the pinned `${env:}` row. Its rows are the active
- * organization's variables' names and descriptions, from
- * `lib/org-variables.ts`'s one shared read (D20 default 26; Preflight ruling
- * 34): ten inputs on a page read them once. While that read is under way the
- * picker says "Loading organization variables..." above the env row (shown
- * meanwhile, so what Enter picks is visible); a failed read says so, above
- * the env row, and the picker's next opening reads again. A pick inserts
- * `${org:NAME}`; the `${env:}` row stays pinned below the list.
+ * An input with the `$` picker of organization variables and the pinned
+ * `${env:}` row. Its rows are the active organization's variables' names and
+ * descriptions, from `lib/org-variables.ts`'s one shared read: ten inputs on a
+ * page read them once. While that read is under way the picker says "Loading
+ * organization variables..." above the env row (shown meanwhile, so what Enter
+ * picks is visible); a failed read says so, above the env row, and the
+ * picker's next opening reads again. A pick inserts `${org:NAME}`; the
+ * `${env:}` row stays pinned below the list.
  *
- * The caller's handlers are composed with the picker's (decision 5; Preflight
- * ruling 24), so a caller's `onKeyDown` never switches the picker's keys off
- * and a caller's `onBlur` never replaces its closing: the picker handles a
- * key first, and a key it consumes (arrows, Enter, Escape while open) doesn't
- * reach the caller, so Enter picks a row rather than committing the field;
- * every other key, Cmd/Ctrl+S among them, reaches the caller. The caller's
- * `onBlur` runs unless focus moved into the picker (a row being clicked; the
- * input takes focus back). A forwarded ref may be a callback; the cursor
- * placement holds then too.
+ * The caller's handlers are composed with the picker's, so a caller's
+ * `onKeyDown` never switches the picker's keys off and a caller's `onBlur`
+ * never replaces its closing: the picker handles a key first, and a key it
+ * consumes (arrows, Enter, Escape while open) doesn't reach the caller, so
+ * Enter picks a row rather than committing the field; every other key,
+ * Cmd/Ctrl+S among them, reaches the caller. The caller's `onBlur` runs unless
+ * focus moved into the picker (a row being clicked; the input takes focus
+ * back). A forwarded ref may be a callback; the cursor placement holds then
+ * too.
  *
  * The picker's rows are text inside a Radix popover in `<body>`, which the
- * signed-in layout masks (decision 10); the popover is also `ph-no-capture`
- * (D20's privacy review: its names and descriptions are configuration text
- * shown in a field's dropdown, so replay records nothing of them).
+ * signed-in layout masks; the popover is also `ph-no-capture` (its names
+ * and descriptions are configuration text shown in a field's dropdown, so
+ * replay records nothing of them).
  *
- * The delayed close's timer is cleared when the input unmounts (D9c's fix
- * wave: one left running after a test's teardown failed a unit-suite run).
+ * The delayed close's timer is cleared when the input unmounts (one
+ * left running after a test's teardown can fail a unit-suite run).
  */
 
 /**
@@ -50,8 +49,8 @@ export interface VaultAwareChange {
 
 /**
  * The picker's words when the organization's variables couldn't be read: the
- * family's (D20 Ruling 78), the variables routes' and Validate's 503 words.
- * Its "Try again" is the picker's next opening, which reads again.
+ * family's, the variables routes' and Validate's 503 words. Its "Try again"
+ * is the picker's next opening, which reads again.
  */
 export const ORG_VARIABLES_UNREAD_MESSAGE = VARIABLES_UNAVAILABLE_MESSAGE;
 

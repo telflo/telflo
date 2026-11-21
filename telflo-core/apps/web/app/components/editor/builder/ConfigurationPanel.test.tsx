@@ -30,12 +30,9 @@ const COMMENTS = corpusText("comments.yaml");
  * The fallback layout's cases use `count`, a type outside the palette (the
  * collector's count is a connector; here, as a receiver, processor or
  * exporter, it stands for any component without a form): every palette
- * entry gets a form by D9d, so only such a type keeps the
- * fallback (Preflight ruling 7; D9c Preflight ruling 3, which moved these
- * cases off `filelog`, which has a form since D9c Task 8, and off
- * `transform` and the `file` exporter, which get theirs in D9d).
+ * entry gets a form, so only such a type keeps the fallback.
  */
-/** The instance-names corpus with its attributes processor spelled `count` (the attributes processor has a form since D9b Task 7). */
+/** The instance-names corpus with its attributes processor spelled `count` (the attributes processor has a form). */
 const INSTANCE_NAMES = corpusText("instance-names.yaml").replaceAll("attributes/enricher", "count/enricher");
 /** The starter with a `count` processor in batch's place, so the box shows at once. */
 const COUNT = STARTER.replace(
@@ -44,7 +41,7 @@ const COUNT = STARTER.replace(
 ).replaceAll("processors: [batch]", "processors: [count]");
 /** The count processor's box, as COUNT writes it. */
 const COUNT_BOX = "error_mode: 'ignore'\nflatten_data: false";
-/** The comments corpus with its receiver spelled `count` (the OTLP receiver has a form since D9b Task 6): its box shows at once, comments and all. */
+/** The comments corpus with its receiver spelled `count` (the OTLP receiver has a form): its box shows at once, comments and all. */
 const COMMENTS_COUNT = COMMENTS.replace("  otlp:\n", "  count:\n").replace("receivers: [otlp]", "receivers: [count]");
 const initialState = useEditorStore.getState();
 
@@ -86,7 +83,7 @@ describe("ConfigurationPanel's states", () => {
     expect(screen.getByText("Select a node to configure it")).toHaveClass("text-xs");
   });
 
-  it("summarises a multi-selection: the count, five labels, how many more, and the hint", () => {
+  it("summarizes a multi-selection: the count, five labels, how many more, and the hint", () => {
     openText(STARTER);
     render(<ConfigurationPanel />);
     const components = builderStore().graph.nodes.filter((n) => n.type !== "pipelineGroup");
@@ -153,7 +150,7 @@ describe("ConfigurationPanel's states", () => {
   });
 
   it("shows help text's `code` in mono, and no Docs link for a component without one", () => {
-    // The memory_limiter extension keeps the fallback layout (Preflight ruling 7; bearertokenauth has a form since D9b Task 8).
+    // The memory_limiter extension keeps the fallback layout (bearertokenauth has a form).
     openText("receivers:\n  count: {}\nextensions:\n  memory_limiter:\n    check_interval: 1s\n");
     render(<ConfigurationPanel />);
     select(componentNamed("extensions.memory_limiter").id);
@@ -205,7 +202,7 @@ describe("ConfigurationPanel's states", () => {
   });
 });
 
-describe("the Raw YAML box (decision 4)", () => {
+describe("the Raw YAML box", () => {
   it("shows the component's own text, its comments included", () => {
     openText(COMMENTS_COUNT);
     render(<ConfigurationPanel />);
@@ -327,7 +324,7 @@ describe("the Raw YAML box (decision 4)", () => {
     select(componentNamed("exporters.otlp", "traces").id);
 
     expect(configOf(builderStore().text).processors!.count).toEqual({ error_mode: "silent" });
-    // The OTLP exporter has a form (D9b Task 6): its box is under "Advanced: Instance & YAML".
+    // The OTLP exporter has a form: its box is under "Advanced: Instance & YAML".
     fireEvent.click(screen.getByRole("button", { name: "Advanced: Instance & YAML" }));
     expect(box().value).toBe("endpoint: 'otelcol:4317'\ntls:\n  insecure: true");
   });
@@ -394,7 +391,7 @@ describe("the Raw YAML box (decision 4)", () => {
     expect(screen.queryByText(UNDECLARED_COMPONENT_MESSAGE)).toBeNull();
   });
 
-  it("never writes an edit into a configuration loaded after it began, whose nodes have the same ids (ruling 37)", () => {
+  it("never writes an edit into a configuration loaded after it began, whose nodes have the same ids", () => {
     vi.useFakeTimers();
     openText(COUNT);
     render(<ConfigurationPanel />);
@@ -444,7 +441,7 @@ describe("the Raw YAML box (decision 4)", () => {
   });
 });
 
-describe("the instance name (decision 9)", () => {
+describe("the instance name", () => {
   /** Opens "Advanced", or a form's "Advanced: Instance & YAML". */
   async function openAdvanced() {
     const user = userEvent.setup();
@@ -550,7 +547,7 @@ describe("the instance name (decision 9)", () => {
   });
 });
 
-describe("the instance name commits on blur or Enter (fix wave F1)", () => {
+describe("the instance name commits on blur or Enter", () => {
   /** Opens "Advanced", or a form's "Advanced: Instance & YAML". */
   async function openAdvanced() {
     const user = userEvent.setup();
@@ -649,7 +646,7 @@ describe("the instance name commits on blur or Enter (fix wave F1)", () => {
   });
 });
 
-describe("an edit a field holds is saved by Cmd/Ctrl+S and guarded (fix wave follow-up)", () => {
+describe("an edit a field holds is saved by Cmd/Ctrl+S and guarded", () => {
   /**
    * The page's Cmd/Ctrl+S, as routes/editor.tsx listens on `window`: it
    * saves the store's text then (recorded here, and marked saved as a save
@@ -765,9 +762,9 @@ describe("an edit a field holds is saved by Cmd/Ctrl+S and guarded (fix wave fol
   });
 });
 
-describe("privacy (decision 7)", () => {
+describe("privacy", () => {
   // The fallback layout (`count`, outside the palette), and a form's layout (batch's; its box is
-  // under "Advanced: Instance & YAML"): D9c Preflight ruling 3 moved the fallback case off `filelog`.
+  // under "Advanced: Instance & YAML").
   it.each([
     ["the fallback layout", "receivers", "count", "include", "Advanced"],
     ["a form's layout", "processors", "batch", "timeout", "Advanced: Instance & YAML"],
@@ -810,7 +807,7 @@ describe("privacy (decision 7)", () => {
   });
 });
 
-describe("the layout with a form (D9b decision 6)", () => {
+describe("the layout with a form", () => {
   /** A form's hint line, by its whole text ("… · Default 200ms" spans elements). */
   const hintLine = (whole: string) =>
     screen.getByText((_content, element) => element?.tagName === "P" && element.textContent === whole);
@@ -889,7 +886,7 @@ describe("the layout with a form (D9b decision 6)", () => {
     expect(builderStore().text).toBe(text);
   });
 
-  it("gives the pprof and zpages endpoints the collector's default, localhost (Preflight ruling 8)", () => {
+  it("gives the pprof and zpages endpoints the collector's default, localhost", () => {
     openText(STARTER);
     render(<ConfigurationPanel />);
     const cases = [
@@ -939,7 +936,7 @@ describe("the layout with a form (D9b decision 6)", () => {
     ["a list", "[timeout, 1s]"],
     ["a number", "5"],
     ["a string", "fast"],
-  ])("keeps the fallback for a component whose value is %s: its box is the way to fix it (Preflight ruling 17)", (_what, value) => {
+  ])("keeps the fallback for a component whose value is %s: its box is the way to fix it", (_what, value) => {
     const text = `processors:\n  batch: ${value}\nexporters:\n  debug:\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      processors: [batch]\n      exporters: [debug]\n`;
     openText(text);
     render(<ConfigurationPanel />);
@@ -972,7 +969,7 @@ describe("the layout with a form (D9b decision 6)", () => {
 
     await userEvent.setup().click(screen.getByRole("button", { name: "Advanced: Instance & YAML" }));
     expect(box()).toBeDisabled();
-    // Said once, under the header: not again under the box (Ruling 51).
+    // Said once, under the header: not again under the box.
     expect(screen.getAllByText(UNDECLARED_COMPONENT_MESSAGE)).toEqual([message]);
     expect(builderStore().text).toBe(text);
   });
@@ -989,7 +986,7 @@ describe("the layout with a form (D9b decision 6)", () => {
     expect(screen.getByRole("textbox", { name: "Timeout" })).toHaveValue("10s");
   });
 
-  it("the form follows a YAML box edit, and the box follows a form edit (decision 6)", async () => {
+  it("the form follows a YAML box edit, and the box follows a form edit", async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     openText(STARTER);
     render(<ConfigurationPanel />);
@@ -1009,7 +1006,7 @@ describe("the layout with a form (D9b decision 6)", () => {
   });
 });
 
-describe("opening a form writes nothing (D9b decision 2)", () => {
+describe("opening a form writes nothing", () => {
   /** Opens every collapsed section, again until none is left (a section can hold another). */
   function openEverySection() {
     for (let round = 0; round < 5; round++) {
@@ -1046,11 +1043,11 @@ describe("opening a form writes nothing (D9b decision 2)", () => {
       expect(selectIsDirty(builderStore())).toBe(false);
       expect(builderStore().history.past).toHaveLength(0);
     },
-    // The logs corpus opens D9c's logs forms and their operator cards: its own time limit (D9c Ruling 54).
+    // The logs corpus opens the logs forms and their operator cards: its own time limit.
     20_000,
   );
 
-  it("the corpus opens every one of D9b Task 5's forms", () => {
+  it("the corpus opens the batch, memory_limiter, debug, forward, health_check, pprof and zpages forms", () => {
     const opened = new Set<string>();
     for (const { text } of CORPUS) {
       openText(text);
@@ -1074,7 +1071,7 @@ describe("opening a form writes nothing (D9b decision 2)", () => {
   });
 });
 
-describe("the canvas's shortcuts stay out of the tab (Preflight ruling 23)", () => {
+describe("the canvas's shortcuts stay out of the tab", () => {
   function WithShortcuts() {
     useUndoRedo();
     return <ConfigurationPanel />;
@@ -1107,7 +1104,7 @@ describe("the canvas's shortcuts stay out of the tab (Preflight ruling 23)", () 
   });
 });
 
-describe("a component dropped from the palette opens its form on either spelling (D13b decision 5)", () => {
+describe("a component dropped from the palette opens its form on either spelling", () => {
   const BASE = [
     "receivers:",
     "  otlp:",

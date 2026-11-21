@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { readCapped, TOO_LARGE } from "./read-capped.js";
 
-// The shared capped reader (D16b Preflight ruling 2): every internal
-// service's client reads its replies with it.
+// The shared capped reader: every internal service's client reads its
+// replies with it.
 
 const encoder = new TextEncoder();
 

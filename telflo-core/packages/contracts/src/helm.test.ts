@@ -34,8 +34,7 @@ import {
   type HelmValuesInput,
 } from "./helm.js";
 
-// D17d-2 decisions 15 to 18; Preflight rulings 1, 4, 6, 7 and 8: a
-// Kubernetes group's install facts, the values file and the Helm commands.
+// A Kubernetes group's install facts, the values file and the Helm commands.
 // Every shell probe is harmless (`$(echo EXPANDED)`, never a command with an
 // effect).
 
@@ -48,7 +47,7 @@ const HTTP_URL = `http://host.docker.internal:50080/telflo/api/v1/quick-deploy/$
 const GATEWAY_52 = "traces-sampling-pool-in-the-eu-west-region-number-01";
 const NAMESPACE_63 = "observability-collectors-for-the-production-cluster-in-eu-west1";
 const MIRROR = "oci://registry.example:5000/mirror/charts/telflo-supervisor-collector";
-/** The two example fleets' ids (D18 Preflight ruling 11's goldens). */
+/** The two example fleets' ids, as the goldens use them. */
 const FLEET_ID = "3f9a1c2e-5b7d-4e8f-9a01-23456789abcd";
 const OTHER_FLEET_ID = "7b20d4aa-0c1e-4f2a-8b3c-4d5e6f708192";
 
@@ -177,8 +176,8 @@ function parsedBoth(yaml: string): unknown[] {
   return [parse(yaml), parse(yaml, { version: "1.1" })];
 }
 
-describe("the chart settings' rules (Preflight ruling 6)", () => {
-  // D18 decisions 9 and 10: the platform's own chart.
+describe("the chart settings' rules", () => {
+  // The platform's own chart.
   it("takes the defaults, the platform's own chart, and a mirror's reference with a port", () => {
     expect(DEFAULT_HELM_CHART_REFERENCE).toBe("oci://ghcr.io/telflo/telflo/charts/supervisor-collector");
     expect(DEFAULT_HELM_CHART_VERSION).toBe("0.1.0");
@@ -208,7 +207,7 @@ describe("the chart settings' rules (Preflight ruling 6)", () => {
     expect(HELM_CHART_VERSION_PATTERN.test(version)).toBe(false);
   });
 
-  it("keeps the image repository's rule and the agent endpoint's as D17c-1 set them", () => {
+  it("keeps the image repository's rule and the agent endpoint's", () => {
     expect(COLLECTOR_IMAGE_REPOSITORY_PATTERN.test("ghcr.io/telflo/collector")).toBe(true);
     expect(COLLECTOR_IMAGE_REPOSITORY_PATTERN.test("ghcr.io/telflo/telflo/collector")).toBe(true);
     expect(COLLECTOR_IMAGE_REPOSITORY_PATTERN.test("registry.internal:5000/mirror/telflo-collector")).toBe(true);
@@ -224,7 +223,7 @@ describe("the chart settings' rules (Preflight ruling 6)", () => {
   });
 });
 
-describe("the variables a Helm install can carry (Preflight ruling 4)", () => {
+describe("the variables a Helm install can carry", () => {
   it("names the four the chart sets itself", () => {
     expect(HELM_CHART_ENV_NAMES).toEqual(["POD_NAMESPACE", "POD_NAME", "NODE_NAME", "HOST_IP"]);
   });
@@ -234,9 +233,9 @@ describe("the variables a Helm install can carry (Preflight ruling 4)", () => {
   });
 });
 
-// D18 decision 21; Preflight ruling 11: the fleet id's first 8 characters and
-// the group's name's slug, never a trailing hyphen.
-describe("helmFullnameOverride (D18 Preflight ruling 11)", () => {
+// The fleet id's first 8 characters and the group's name's slug, never a
+// trailing hyphen.
+describe("helmFullnameOverride", () => {
   const slug = (name: string) => helmFullnameOverride(FLEET_ID, "node", name)!.slice("3f9a1c2e-".length);
 
   it("is the fleet id's first 8 characters, -, and the group's name's slug: the Default group and the Cluster (goldens)", () => {
@@ -316,8 +315,8 @@ describe("helmReleaseName", () => {
   });
 });
 
-// Ruling 36: one file per release, so a group's install never reads another group's (or an older) values.
-describe("helmValuesFileName (Ruling 36)", () => {
+// One file per release, so a group's install never reads another group's (or an older) values.
+describe("helmValuesFileName", () => {
   it("is <release>-values.yaml for each role, and the public download's name stays values.yaml", () => {
     expect(helmValuesFileName(helmReleaseName("node", "node"))).toBe("telflo-node-values.yaml");
     expect(helmValuesFileName(helmReleaseName("cluster", "cluster"))).toBe("telflo-cluster-values.yaml");
@@ -334,8 +333,8 @@ describe("helmValuesFileName (Ruling 36)", () => {
   );
 });
 
-// Ruling 37: the printed command reads exactly the file THIS browser download saved.
-describe("a browser download's values file name (Ruling 37)", () => {
+// The printed command reads exactly the file THIS browser download saved.
+describe("a browser download's values file name", () => {
   it("is <release>-values-<fragment>.yaml with a fragment, and two downloads' fragments are two names", () => {
     expect(helmValuesFileName("telflo-node", "0a1b2c3d")).toBe("telflo-node-values-0a1b2c3d.yaml");
     expect(helmValuesFileName("telflo-cluster", "ffffffff")).toBe("telflo-cluster-values-ffffffff.yaml");
@@ -409,7 +408,7 @@ describe("a browser download's values file name (Ruling 37)", () => {
       ["telflo-node", "values.yaml"],
       ["telflo-node", "./telflo-node-values.yaml"],
       ["telflo-node", "telflo-node-values.yaml.yaml"],
-      // Another release's own names of THIS release's length (Ruling 48): only the prefix tells them apart.
+      // Another release's own names of THIS release's length: only the prefix tells them apart.
       ["telflo-node", "telflo-edge-values.yaml"],
       ["telflo-node", "gw-abcdefgh-values-0a1b2c3d.yaml"],
       ["telflo-cluster", "gw-abcdefghijk-values.yaml"],
@@ -443,7 +442,7 @@ const FACTS: HelmInstallFacts = {
   },
 };
 
-describe("HelmInstallFactsSchema (Preflight ruling 1)", () => {
+describe("HelmInstallFactsSchema", () => {
   const AGENT_HELM = { ...FACTS.helm, release: "telflo-node", fullnameOverride: "3f9a1c2e-default", role: "node", replicas: null, volumes: [] };
   const CLUSTER_HELM = { ...FACTS.helm, release: "telflo-cluster", fullnameOverride: "7b20d4aa-cluster", role: "cluster", replicas: null, volumes: [] };
 
@@ -453,7 +452,7 @@ describe("HelmInstallFactsSchema (Preflight ruling 1)", () => {
     for (const facts of [FACTS, agent, cluster]) expect(HelmInstallFactsSchema.parse(facts)).toEqual(facts);
   });
 
-  // D18 Preflight ruling 10: the override's shape per role (the facts carry no fleet id: the API's tests check it against the fleet).
+  // The override's shape per role (the facts carry no fleet id: the API's tests check it against the fleet).
   it("takes the Agent's override of up to 49 characters, any slug, and helmFullnameOverride's own", () => {
     for (const fullnameOverride of [
       `3f9a1c2e-${"a".repeat(40)}`,
@@ -532,7 +531,7 @@ describe("HelmInstallFactsSchema (Preflight ruling 1)", () => {
     expect(HelmInstallFactsSchema.safeParse(facts).success).toBe(false);
   });
 
-  // D18 decision 23: the platform's chart quotes collectorEnv's keys.
+  // The platform's chart quotes collectorEnv's keys.
   it("offers a YAML word's name like any other", () => {
     expect(HelmInstallFactsSchema.parse({ ...FACTS, envVarNames: ["ON", "Null", "yes"] }).envVarNames).toEqual(["ON", "Null", "yes"]);
   });
@@ -565,7 +564,7 @@ describe("helmValuesInputOf", () => {
     );
   });
 
-  // Ruling 36 (c): a broken entry is the backstop's refusal at its index, never a TypeError.
+  // A broken entry is the backstop's refusal at its index, never a TypeError.
   it.each<[string, unknown, string]>([
     ["a null entry", [{ name: "_A1", value: "x" }, null], "collectorEnv.1"],
     ["a string entry", ["CANARY-7f3a"], "collectorEnv.0"],
@@ -576,7 +575,7 @@ describe("helmValuesInputOf", () => {
   });
 });
 
-// Ruling 48: the public download logs a typed variable's refusal at warn, every other field's at error.
+// The public download logs a typed variable's refusal at warn, every other field's at error.
 describe("HelmBuildError's source", () => {
   const refusal = (build: () => unknown): HelmBuildError => {
     try {
@@ -615,7 +614,7 @@ describe("HelmBuildError's source", () => {
   });
 });
 
-describe("helmValuesYaml (Preflight ruling 7)", () => {
+describe("helmValuesYaml", () => {
   it("renders the Agent's values: two volumes and collectorEnv (golden)", () => {
     expect(helmValuesYaml(AGENT)).toBe(AGENT_GOLDEN);
     for (const document of parsedBoth(AGENT_GOLDEN)) expect(document).toEqual(documentOf(AGENT));
@@ -650,7 +649,7 @@ describe("helmValuesYaml (Preflight ruling 7)", () => {
     }
   });
 
-  // D18 decision 23: a YAML 1.1 word is a variable like any other; its key quoted, read back as itself under YAML 1.1.
+  // A YAML 1.1 word is a variable like any other; its key quoted, read back as itself under YAML 1.1.
   it("writes a YAML 1.1 word's variable like any other, a quoted key Helm's parser reads as the name (golden)", () => {
     const input: HelmValuesInput = {
       ...CLUSTER,
@@ -713,7 +712,7 @@ describe("helmValuesYaml (Preflight ruling 7)", () => {
     ["the Agent's group not node", { ...AGENT, group: CANARY }, "group"],
     ["a gateway's group with a capital", { ...GATEWAY, group: `Gw-${CANARY}` }, "group"],
     ["a gateway's group reserved", { ...GATEWAY, group: "telflo-node" }, "group"],
-    // D18 Preflight ruling 12: the public download renders without the facts' schema, so the backstop checks the override.
+    // The public download renders without the facts' schema, so the backstop checks the override.
     ["a gateway with a fullnameOverride", { ...GATEWAY, fullnameOverride: `${CANARY.toLowerCase()}-x` }, "fullnameOverride"],
     ["a gateway with the Agent's fullnameOverride", { ...GATEWAY, fullnameOverride: "3f9a1c2e-default" }, "fullnameOverride"],
     ["the Agent without a fullnameOverride", { ...AGENT, fullnameOverride: null }, "fullnameOverride"],
@@ -760,7 +759,7 @@ describe("helmValuesYaml (Preflight ruling 7)", () => {
   });
 });
 
-describe("the Helm commands (Preflight ruling 8)", () => {
+describe("the Helm commands", () => {
   const AGENT_INSTALL: HelmInstallParts = {
     release: "telflo-node",
     chartReference: DEFAULT_HELM_CHART_REFERENCE,
@@ -789,7 +788,7 @@ describe("the Helm commands (Preflight ruling 8)", () => {
   --wait --timeout=120s`);
   });
 
-  it("names the file the browser's download saved, quoted once (golden, Ruling 37)", () => {
+  it("names the file the browser's download saved, quoted once (golden)", () => {
     expect(helmInstallCommand({ ...AGENT_INSTALL, valuesFile: helmValuesFileName("telflo-node", "0a1b2c3d") })).toBe(String.raw`helm upgrade --install 'telflo-node' 'oci://ghcr.io/telflo/telflo/charts/supervisor-collector' \
   --version '0.1.0' \
   -n 'observability' --create-namespace \
@@ -801,7 +800,7 @@ describe("the Helm commands (Preflight ruling 8)", () => {
     expect(first).not.toBe(second);
   });
 
-  it("downloads and installs the fragment-less name on the Quick Deploy path, whatever valuesFile says (Ruling 37)", () => {
+  it("downloads and installs the fragment-less name on the Quick Deploy path, whatever valuesFile says", () => {
     expect(helmQuickDeployCommand(HTTPS_URL, { ...AGENT_INSTALL, valuesFile: "telflo-node-values-0a1b2c3d.yaml" })).toBe(
       helmQuickDeployCommand(HTTPS_URL, AGENT_INSTALL),
     );
@@ -948,7 +947,7 @@ describe.each(SHELLS)("the Helm commands in %s", (shell) => {
     expect(run(helmUninstallCommand(install), shell).calls[0]).toEqual(["helm", "uninstall", GATEWAY_52, "-n", NAMESPACE_63]);
   });
 
-  it("hands helm a browser download's file name as one word (Ruling 37)", () => {
+  it("hands helm a browser download's file name as one word", () => {
     const downloaded = helmValuesFileName(GATEWAY_52, "0a1b2c3d");
     const { calls, status } = run(helmInstallCommand({ ...install, valuesFile: downloaded }), shell);
     expect({ calls: calls.map(normalized), status }).toEqual({ calls: [helmArgv.map((word) => (word === file ? downloaded : word)), ["after:022"]], status: 0 });

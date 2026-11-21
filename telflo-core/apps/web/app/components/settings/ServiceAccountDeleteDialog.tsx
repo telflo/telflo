@@ -27,28 +27,27 @@ import {
 } from "~/lib/service-accounts.js";
 
 /*
- * Deleting a service account (D22 decisions 28, 44, 46 and 49), from the
- * list's row (default 15):
+ * Deleting a service account, from the list's row:
  *
  * - "Delete service account: {name}", the name as visible text in the
  *   masked shell; the token sentence by the listed count (none, one, more);
  *   no list of deleted things (the platform deletes nothing else); the kept
  *   work, of which configurations and their versions "still show its
- *   address as their creator" (Ruling 107: no other screen shows a creator).
+ *   address as their creator" (no other screen shows a creator).
  * - "This cannot be undone. Type the account's name to confirm." labels the
  *   field (no placeholder holds the name). The field is inside
- *   `ph-no-capture` and uncontrolled (Preflight ruling 25): no `value`
- *   attribute ever holds the typed name. "Permanently delete" is enabled once
- *   the typed text, trimmed, equals the name.
+ *   `ph-no-capture` and uncontrolled: no `value` attribute ever holds the
+ *   typed name. "Permanently delete" is enabled once the typed text, trimmed,
+ *   equals the name.
  * - The account is the one the row held when the dialog opened (the
  *   parent's snapshot; a list's reload doesn't change it).
  * - Success toasts "Service account deleted" and reports back (the list
  *   reads again). `404 service_account_not_found` (deleted meanwhile, in
  *   another tab) toasts its fixed message and reports back too, so the
  *   dialog closes and the list reads again, as a revoke's
- *   `api_token_not_found` does (Ruling 102). Any other refusal toasts its
- *   fixed message and keeps the dialog; a refusal saying management is lost
- *   leaves through `useLeaveManagement`. Unclosable while it deletes.
+ *   `api_token_not_found` does. Any other refusal toasts its fixed message
+ *   and keeps the dialog; a refusal saying management is lost leaves
+ *   through `useLeaveManagement`. Unclosable while it deletes.
  */
 
 export interface ServiceAccountDeleteDialogProps {

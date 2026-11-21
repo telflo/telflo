@@ -18,11 +18,10 @@ import {
 
 /*
  * The public surface's request and response shapes for test runs (routes
- * 26–28) (D25 decisions 17, 18, 40, 41, 42 and 43; Q168): strict Zod
- * schemas, camelCase, reusing the platform's contracts where they already
- * hold a field (a run's text, pipeline, signal and duration; the collector
- * version's and the distribution's formats; the rule shape; a run's
- * results).
+ * 26–28): strict Zod schemas, camelCase, reusing the platform's contracts
+ * where they already hold a field (a run's text, pipeline, signal and
+ * duration; the collector version's and the distribution's formats; the rule
+ * shape; a run's results).
  *
  * A rule is the platform's (`kind`, `target`, `pattern` or `ottl`, `name`,
  * `description`). Statuses are the platform's (`queued`, `running`,
@@ -37,12 +36,12 @@ export const PUBLIC_TEST_RUN_RULES_MAXIMUM = 20;
 export const PUBLIC_TEST_RUN_DEFAULT_DURATION_SECONDS = 5;
 
 /**
- * The sample's most bytes once decoded, UTF-8 (decision 40): a pasted
- * sample's limit. Over it, 413 `payload_too_large`.
+ * The sample's most bytes once decoded, UTF-8: a pasted sample's limit. Over
+ * it, 413 `payload_too_large`.
  */
 export const PUBLIC_TEST_RUN_SAMPLE_MAXIMUM_BYTES = TEST_SAMPLE_MAXIMUM_BYTES;
 
-/** The sample's file name in the caller's test files (decision 41). */
+/** The sample's file name in the caller's test files. */
 export const PUBLIC_TEST_RUN_SAMPLE_FILE_NAME = "api-sample.json";
 
 /** A sample over PUBLIC_TEST_RUN_SAMPLE_MAXIMUM_BYTES (413 `payload_too_large`): fixed words. */
@@ -65,7 +64,7 @@ export const PUBLIC_TEST_RUN_PIPELINE_NOT_IN_CONFIGURATION_MESSAGE = "The config
 /**
  * A version's run with `useSavedRules` whose version has no saved rules for
  * its pipeline and signal (422 `configuration_invalid`, its one error at the
- * root; D25 Ruling 178). Fixed words: never the name.
+ * root). Fixed words: never the name.
  */
 export const PUBLIC_TEST_RUN_NO_SAVED_RULES_MESSAGE = "The version has no saved validation rules for this pipeline.";
 
@@ -77,14 +76,14 @@ export const PUBLIC_TEST_RUN_NO_SAVED_RULES_MESSAGE = "The version has no saved 
 export const PUBLIC_TEST_RUN_TEXT_NOT_RUNNABLE_MESSAGE = "The version's YAML can't be run.";
 
 /**
- * `POST /test-runs` (decision 40): exactly one source, the version
- * `{ configurationId, versionNumber }` or the text `{ yaml }`; the sample
- * (at most 1 MiB decoded, checked by the route: 413); the signal and the
+ * `POST /test-runs`: exactly one source, the version
+ * `{ configurationId, versionNumber }` or the text `{ yaml }`; the sample (at
+ * most 1 MiB decoded, checked by the route: 413); the signal and the
  * pipeline, whose first part is the signal; the duration (1–60, 5); the
- * collector version and distribution (a version's pin and its
- * configuration's distribution by default, the catalogue's defaults for a
- * text); and exactly one of `rules` (1–20) and `useSavedRules: true` (a
- * version's run only; D25 Ruling 178). Strict.
+ * collector version and distribution (a version's pin and its configuration's
+ * distribution by default, the catalog's defaults for a text); and exactly
+ * one of `rules` (1–20) and `useSavedRules: true` (a version's run only).
+ * Strict.
  */
 export const PublicQueueTestRunRequestSchema = z
   .object({
@@ -126,12 +125,12 @@ export const PublicQueuedTestRunSchema = z.object({ id: z.string().uuid(), statu
 export type PublicQueuedTestRun = z.infer<typeof PublicQueuedTestRunSchema>;
 
 /**
- * `GET /test-runs/{runId}` (decision 43): a run, mapped one for one from
- * the platform's. `success` is null until it has ended, then whether it
- * succeeded; `durationMs` the tester's measure of the whole run, null until
- * it has one; `validationResults` one per rule in the rules' order, null
- * until checked (or for a run with none); `mutations` and `compatibility`
- * the tester's findings, null until it ran; `createdAt` when it was queued.
+ * `GET /test-runs/{runId}`: a run, mapped one for one from the platform's.
+ * `success` is null until it has ended, then whether it succeeded;
+ * `durationMs` the tester's measure of the whole run, null until it has
+ * one; `validationResults` one per rule in the rules' order, null until
+ * checked (or for a run with none); `mutations` and `compatibility` the
+ * tester's findings, null until it ran; `createdAt` when it was queued.
  */
 export const PublicTestRunSchema = z
   .object({

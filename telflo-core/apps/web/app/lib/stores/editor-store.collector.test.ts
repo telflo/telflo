@@ -7,10 +7,9 @@ import { RETIRED_NOTE, RETIRED_VERSION } from "~/test/collector-distributions.js
 import { GROUP_ID, MINE, PUBLISHED_FIELDS, versionFixture } from "~/test/configurations.js";
 
 /*
- * The open version's collector version in the editor's store (D13a decision
- * 8; Preflight ruling 18): the pin on screen and the pin last loaded or
- * saved, an unsaved change while they differ, restored by everything that
- * restores the text.
+ * The open version's collector version in the editor's store: the pin on
+ * screen and the pin last loaded or saved, an unsaved change while they
+ * differ, restored by everything that restores the text.
  */
 
 const STARTER = corpusText("starter.yaml");
@@ -35,7 +34,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe("the collector version in the editor's store (D13a decision 8)", () => {
+describe("the collector version in the editor's store", () => {
   it("has none before a load; a load takes the version's pin, on screen and saved, clean", () => {
     expect(store()).toMatchObject({ collectorVersion: null, savedCollectorVersion: null });
 
@@ -60,7 +59,7 @@ describe("the collector version in the editor's store (D13a decision 8)", () => 
     expect(selectIsDirty(store())).toBe(false);
   });
 
-  it("refuses a pick on a published version, which is read-only (D11b decision 4), and with no version open", () => {
+  it("refuses a pick on a published version, which is read-only, and with no version open", () => {
     store().setCollectorVersion("0.161.0");
     expect(store().collectorVersion).toBeNull();
 
@@ -88,7 +87,7 @@ describe("the collector version in the editor's store (D13a decision 8)", () => 
     expect(selectIsDirty(store())).toBe(false);
   });
 
-  it("a pick during the save that picks the old saved pin back still counts as a pick: it stays on screen, unsaved (Ruling 37)", () => {
+  it("a pick during the save that picks the old saved pin back still counts as a pick: it stays on screen, unsaved", () => {
     open();
     store().setCollectorVersion("0.161.0");
     // The save sent 0.161.0; the person picks the old saved pin, 0.162.0, back before its answer.
@@ -101,7 +100,7 @@ describe("the collector version in the editor's store (D13a decision 8)", () => 
     expect(selectIsDirty(store())).toBe(true);
   });
 
-  it("an untouched picker takes the pin a save answers, a teammate's the server kept (Ruling 37)", () => {
+  it("an untouched picker takes the pin a save answers, a teammate's the server kept", () => {
     open(
       versionFixture({
         yamlContent: STARTER,
@@ -144,7 +143,7 @@ describe("the collector version in the editor's store (D13a decision 8)", () => 
     expect(selectIsDirty(store())).toBe(false);
   });
 
-  it("a deprecated pin is kept until another is picked, and Discard puts it back (decision 4)", () => {
+  it("a deprecated pin is kept until another is picked, and Discard puts it back", () => {
     open(
       versionFixture({
         yamlContent: STARTER,
@@ -203,7 +202,7 @@ describe("the collector version in the editor's store (D13a decision 8)", () => 
   });
 });
 
-describe("the pin on a version published under the editor (D11b Rulings 34 and 35)", () => {
+describe("the pin on a version published under the editor", () => {
   // A teammate changed the text, picked 0.160.0, saved and published: a text
   // and a pin this tab never loaded.
   const TEAMMATE_TEXT = `${STARTER}# Ben's published change\n`;
@@ -236,7 +235,7 @@ describe("the pin on a version published under the editor (D11b Rulings 34 and 3
     expect(selectIsDirty(store())).toBe(false);
   });
 
-  it("a stale tab's typed text and pick both stay on screen, dirty against the published text and pin; Undo All then puts back both (Ruling 34)", () => {
+  it("a stale tab's typed text and pick both stay on screen, dirty against the published text and pin; Undo All then puts back both", () => {
     open();
     const typed = `${STARTER}# typed before the teammate published\n`;
     store().setText(typed);
@@ -259,7 +258,7 @@ describe("the pin on a version published under the editor (D11b Rulings 34 and 3
     expect(selectIsDirty(store())).toBe(false);
   });
 
-  it("a stale tab that only picked (no typing) shows the teammate's published text with its pick, dirty by the pin alone; Discard puts back the published pin (Ruling 41)", () => {
+  it("a stale tab that only picked (no typing) shows the teammate's published text with its pick, dirty by the pin alone; Discard puts back the published pin", () => {
     open();
     store().setCollectorVersion("0.161.0");
 
@@ -279,7 +278,7 @@ describe("the pin on a version published under the editor (D11b Rulings 34 and 3
     expect(selectIsDirty(store())).toBe(false);
   });
 
-  it("a stale tab that only picked, in a clean manual edit mode (saved there): leaves the mode for the published text, as a clean load would, its pick kept (Ruling 41)", () => {
+  it("a stale tab that only picked, in a clean manual edit mode (saved there): leaves the mode for the published text, as a clean load would, its pick kept", () => {
     open();
     const typed = `${STARTER}# typed and saved\n`;
     store().setText(typed);
@@ -298,7 +297,7 @@ describe("the pin on a version published under the editor (D11b Rulings 34 and 3
     expectDirtyByThePinOnly();
   });
 
-  it("a stale tab's unsaved canvas move and pick both stay, dirty; Discard puts back the published text, layout and pin (Ruling 41)", () => {
+  it("a stale tab's unsaved canvas move and pick both stay, dirty; Discard puts back the published text, layout and pin", () => {
     open();
     const node = store().graph.nodes.find((n) => n.type !== "pipelineGroup")!;
     store().applyNodeChanges([
@@ -321,7 +320,7 @@ describe("the pin on a version published under the editor (D11b Rulings 34 and 3
     expect(selectIsDirty(store())).toBe(false);
   });
 
-  it("a stale tab's typed text with an untouched picker: the picker takes the teammate's published pin, the text stays, dirty; Undo All puts back the published text (Rulings 35 and 37)", () => {
+  it("a stale tab's typed text with an untouched picker: the picker takes the teammate's published pin, the text stays, dirty; Undo All puts back the published text", () => {
     open();
     const typed = `${STARTER}# typed before the teammate published\n`;
     store().setText(typed);

@@ -15,9 +15,8 @@ import {
 } from "./organization-variables.js";
 
 /*
- * D20's port of the opamp-server's fill-in (store/orgvariables/render.go),
- * held to it by the shared corpus (decision 36), read by a path relative to
- * this file (Global constraints).
+ * The port of the opamp-server's fill-in (store/orgvariables/render.go),
+ * held to it by the shared corpus, read by a path relative to this file.
  */
 
 const CORPUS = resolve(
@@ -35,7 +34,7 @@ const valuesOf = (vars: Record<string, string>) => new Map(Object.entries(vars))
 /** What the collector's confmap makes of a filled-in scalar: each `$$` collapsed to `$`, left to right. */
 const collapsed = (text: string) => text.replaceAll("$$", () => "$");
 
-describe("the fill-in, against the corpus (decision 36)", () => {
+describe("the fill-in, against the corpus", () => {
   it("reads the corpus' rows", () => {
     expect(corpus.render.length).toBeGreaterThan(20);
     expect(corpus.extract.length).toBeGreaterThan(5);
@@ -61,7 +60,7 @@ describe("the fill-in, against the corpus (decision 36)", () => {
   });
 });
 
-describe("the fill-in (decisions 8 and 16)", () => {
+describe("the fill-in", () => {
   it("fills in each live reference whose name is known, inside a larger scalar too, behind an odd run of $ too", () => {
     const values = new Map([
       ["PROD_OTLP", "https://otlp.example:4318"],
@@ -109,7 +108,7 @@ describe("the fill-in (decisions 8 and 16)", () => {
     expect(render(text, new Map([["constructor", "c"]]))).toBe("a: c\nb: ${org:__proto__}\nc: ${org:toString}\n");
   });
 
-  it("counts UTF-16 code units, the unit TEST_RUN_YAML_MAXIMUM_LENGTH counts (docs review (12))", () => {
+  it("counts UTF-16 code units, the unit TEST_RUN_YAML_MAXIMUM_LENGTH counts", () => {
     // 😀 is one code point, two code units; é and € one each.
     const values = new Map([["U", "é€😀$"]]);
     const text = "a: ${org:U} ${org:U}\n";
@@ -141,10 +140,10 @@ describe("the fill-in (decisions 8 and 16)", () => {
     }
   });
 
-  it("measures an oversized fill-in without building it (Preflight ruling 12)", () => {
-    // About 466,000 references to a value of 1,024 $ (Q104's longest) in 4
-    // Mi code units: 954 million code units filled in, past the longest
-    // string V8 can build, so the length can only have been counted.
+  it("measures an oversized fill-in without building it", () => {
+    // About 466,000 references to a value of 1,024 $ (the longest a value can
+    // be) in 4 Mi code units: 954 million code units filled in, past the
+    // longest string V8 can build, so the length can only have been counted.
     const reference = "${org:P}\n";
     const count = Math.floor(4 * 1_048_576 / reference.length);
     const text = reference.repeat(count);
@@ -174,7 +173,7 @@ function variable(name: string, value: string) {
   return { id: "0190a1b2-0000-7000-8000-0000000000aa", name, value, description: null, changedBy: null, changedAt: "2026-10-20T00:00:00Z" };
 }
 
-describe("opampOrganizationVariables (decision 38)", () => {
+describe("opampOrganizationVariables", () => {
   it("reads the organization's values from listVariables, NAME to value", async () => {
     const client = listing({ kind: "listed", variables: [variable("A", "a$1"), variable("B", "")] });
     const read = await opampOrganizationVariables(client).read(ORGANIZATION_ID);
@@ -209,7 +208,7 @@ function source(read: OrganizationVariablesRead): IOrganizationVariables & { rea
   return counted;
 }
 
-describe("fillInRunText (Preflight ruling 28)", () => {
+describe("fillInRunText", () => {
   const options = { maximumLength: 100, build: true };
 
   it("reads nothing for a text with no live reference, an escaped or a legacy one included", async () => {

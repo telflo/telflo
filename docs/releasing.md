@@ -17,10 +17,10 @@ request, and for the maintainer who tags it. What each workflow guards is
 ## What a release is
 
 A release is one version, `MAJOR.MINOR.PATCH` (digits only, no leading
-zeros, nothing after: `0.1.0`, `0.1.12`, `1.0.0`), tagged `v<version>` on
-a commit of `main`. There are no release-candidate tags (the owner's
-Q279): the workflow tests the exact bytes before it publishes them, so a
-run that fails has published nothing.
+zeros, nothing after: `0.1.0`, `0.1.12`, `1.0.0`), tagged `v<version>` on a
+commit of `main`. There are no release-candidate tags: the workflow tests
+the exact bytes before it publishes them, so a run that fails has published
+nothing.
 
 The version is written in these places, all equal, and
 `scripts/release/check-version.sh` (a static gate) holds them so:
@@ -116,7 +116,7 @@ order. Each `gh api` line runs with that admin's own GitHub CLI login.
    by the workflow's own token and linked to this repository; no access
    grant is needed. Each is public (Package settings › Change
    visibility), so an install needs no registry login.
-4. **Turn GitHub Actions on**, in this order (decision 105), so the old
+4. **Turn GitHub Actions on**, in this order, so the old
    `ci.yml` never runs:
    1. Disable `ci.yml` first:
 
@@ -152,7 +152,7 @@ order. Each `gh api` line runs with that admin's own GitHub CLI login.
       Then set them, with neither GitHub's own nor verified creators'
       actions allowed beyond it. The command repeats `-f
       'patterns_allowed[]=…'` once for each line of that list; for the
-      workflows as of D36-2 (seven actions), it is:
+      workflows as they are (seven actions), it is:
 
       ```sh
       gh api -X PUT repos/telflo/telflo/actions/permissions/selected-actions \
@@ -196,9 +196,9 @@ order. Each `gh api` line runs with that admin's own GitHub CLI login.
 
    A workflow file changed later needs its allow-list changed with it
    when it names another action or SHA.
-5. **The collector images first** (decision 111): the collector workflow
+5. **The collector images first**: the collector workflow
    with `all` and `publish: true` (below), so `ghcr.io/telflo/telflo/
-   collector` holds every version the catalogue offers and the
+   collector` holds every version the catalog offers and the
    supervisor-collector chart 0.1.0 is published. The release's first job
    fails otherwise (`run the collector workflow for <version>`). After
    steps 1, 2 and 4 (the publish job runs in the `release` environment),
@@ -224,20 +224,21 @@ order. Each `gh api` line runs with that admin's own GitHub CLI login.
    A failed job: [When a run fails](#when-a-run-fails), or "Re-run failed
    jobs" on the run's page (nothing published is overwritten).
 6. **Postgres's pin current:** 18.7 (`postgres:18.7`'s index digest,
-   `sha256:9f4fd4aa…`). A re-pin, through a pull request: the then-current 18.x tag's index
-   digest (`crane digest docker.io/library/postgres:18.<n>`, with
-   `scripts/release/tools.sh fetch crane`) in
-   `charts/telflo/values.yaml`'s `postgres.image.digest` (and the comment
-   above it), both `postgres` lines of `deploy/compose/compose.yaml`,
-   `scripts/release/tools.lock`'s `postgres` row (its version too),
+   `sha256:9f4fd4aa…`). A re-pin, through a pull request: the then-current
+   18.x tag's index digest
+   (`crane digest docker.io/library/postgres:18.<n>`, with
+   `scripts/release/tools.sh fetch crane`) in `charts/telflo/values.yaml`'s
+   `postgres.image.digest` (and the comment above it), both `postgres`
+   lines of `deploy/compose/compose.yaml`, `scripts/release/tools.lock`'s
+   `postgres` row (its version too),
    `charts/telflo/tests/profiles/full.yaml`, the digest's prefix in
-   `scripts/release/check-compose-install.test.sh`, the README's
-   "tested with" row and ADR 0019's row. Find the old digest's other
-   copies with `git grep <old digest>`. The vendored opamp-server chart's
-   own pin is never edited: its Postgres is off in this chart, and the pin
-   changes with an opamp-server release. The render tests (against
-   `tools.lock`) and `scripts/release/check-compose-install.sh` (the
-   Compose file against the chart) hold the copies equal.
+   `scripts/release/check-compose-install.test.sh`, the README's "tested
+   with" row. Find the old digest's other copies with
+   `git grep <old digest>`. The vendored opamp-server chart's own pin is
+   never edited: its Postgres is off in this chart, and the pin changes
+   with an opamp-server release. The render tests (against `tools.lock`)
+   and `scripts/release/check-compose-install.sh` (the Compose file against
+   the chart) hold the copies equal.
 
 ## The collector workflow
 
@@ -247,24 +248,23 @@ types with its attestations, and the supervisor-collector chart,
 `oci://ghcr.io/telflo/telflo/charts/supervisor-collector`, when its
 `Chart.yaml` version isn't published yet (a published chart version is
 never pushed again). It is started by hand, from `main`, with two inputs:
-- `collector_version`: a version the catalogue
+- `collector_version`: a version the catalog
   (`catalog/distributions/otelcol-contrib.json`) offers and hasn't
   deprecated, or `all` for every offered version, one job each;
 - `publish`: `false` by default (build and test only); `true` publishes,
   after the tests pass, in the `release` environment.
 
-With `publish: true`, a version already on GHCR is never pushed again
-(Ruling 399): an explicit `collector_version` that is published already
-is refused before anything builds; `all` builds, tests and publishes only
-the offered versions not yet published, naming the others in the check
-job's log; and when every offered version is published, the check job
-says so in a notice and the run has no image to build or publish: the
-build, test and publish jobs are skipped, and the supervisor-collector
-chart's job still runs, so a chart version bump alone is published by
-`all` with `publish: true` (Ruling 401; the chart job runs after a
-publish that passed, or one skipped because there was nothing to build,
-never after a failed or cancelled test or publish). With `publish:
-false`, `all` builds and tests every offered version.
+With `publish: true`, a version already on GHCR is never pushed again: an
+explicit `collector_version` that is published already is refused before
+anything builds; `all` builds, tests and publishes only the offered
+versions not yet published, naming the others in the check job's log; and
+when every offered version is published, the check job says so in a notice
+and the run has no image to build or publish: the build, test and publish
+jobs are skipped, and the supervisor-collector chart's job still runs, so a
+chart version bump alone is published by `all` with `publish: true` (the
+chart job runs after a publish that passed, or one skipped because there
+was nothing to build, never after a failed or canceled test or publish).
+With `publish: false`, `all` builds and tests every offered version.
 
 ```sh
 gh workflow run collector.yml -R telflo/telflo --ref main -f collector_version=all -f publish=true
@@ -276,10 +276,10 @@ Then follow it:
 gh run watch -R telflo/telflo
 ```
 
-Run it, on the owner's yes each time (a run with `publish: false` still
+Run it, on a maintainer's yes each time (a run with `publish: false` still
 spends minutes):
 - before the first release, with `all` (above);
-- when the catalogue offers a new collector version, before any group's
+- when the catalog offers a new collector version, before any group's
   published version uses it (and before the next release, which checks
   every offered version);
 - when `charts/supervisor-collector/Chart.yaml`'s version is bumped (with
@@ -297,17 +297,16 @@ scripts run on a laptop against a throwaway registry.
 
 `scripts/release/rehearse.sh` runs the release's own scripts, in the
 release workflow's order, on this machine, with a throwaway registry on
-127.0.0.1 standing in for GHCR (decision 103; the owner's Q294). It is the
-release's end-to-end test: run it before a release's pull request merges
-(step 1 of "Cutting a release"), and again whenever the pipeline, a
-Dockerfile, the chart or the Compose install changes. Nothing it does
-reaches GitHub or GHCR. Its header (`scripts/release/rehearse.sh`) holds
-every rule below.
+127.0.0.1 standing in for GHCR. It is the release's end-to-end test: run it
+before a release's pull request merges (step 1 of "Cutting a release"), and
+again whenever the pipeline, a Dockerfile, the chart or the Compose install
+changes. Nothing it does reaches GitHub or GHCR. Its header
+(`scripts/release/rehearse.sh`) holds every rule below.
 
 **What it proves**, on the commit checked out:
 - the tag's check (`verify-tag.sh`) passes for `v<version>`, in a throwaway
   clone whose `main` is that commit, with a local annotated tag;
-- every collector version the catalogue offers builds for amd64 and arm64
+- every collector version the catalog offers builds for amd64 and arm64
   with its attestations, runs, is pushed and pulled back by digest; the
   supervisor-collector chart is published; the release's collector checks
   find them all;
@@ -384,11 +383,11 @@ scripts/release/rehearse.sh --cleanup --work <the run's folder>
 ```
 
 While a rehearsal is running (its marker volume `telflo-rehearse-run`
-and its registry are labelled with its work folder and process), another
+and its registry are labeled with its work folder and process), another
 one refuses to start and `--cleanup` refuses to remove anything. Neither a
 run's end nor `--cleanup` ever prunes, and neither removes anything but
 the `telflo-rehearse-*` names, the `telflo-release` builder the run made
-and the images its `rehearse.state` names; an object labelled for another
+and the images its `rehearse.state` names; an object labeled for another
 rehearsal that is running is left alone. The smokes' own objects carry no
 label: they are removed by their `telflo-rehearse-*` names, which no other
 run can hold while one runs. The private tools (`.tools/` and
@@ -418,7 +417,7 @@ step's output, already redacted, is in `<work>/logs/`, and all of it in
 - what the builds download, as on a runner: the Dockerfiles' base images
   by digest, npm, Go and Debian packages, and, for each collector version,
   the upstream otelcol-contrib and OpAMP supervisor releases (sha256-pinned
-  in the catalogue); inside the kind node, the chart's Postgres by digest.
+  in the catalog); inside the kind node, the chart's Postgres by digest.
 
 It never pulls or re-tags an image the smokes run by tag (`postgres:18`,
 `axllent/mailpit:v1.31`, `nginx:1.27-alpine` at the chart's digest,
@@ -485,7 +484,7 @@ step if one isn't there.
    ended. The workflow's runs share one concurrency group that never
    cancels a running one, but GitHub keeps only one *waiting* run per
    group: a newer tag's run cancels an older one still waiting, and that
-   cancelled run must be re-run by hand (Actions › the run › "Re-run all
+   canceled run must be re-run by hand (Actions › the run › "Re-run all
    jobs").
 
 4. **Follow the run** (`gh run watch -R telflo/telflo`). Its first job
@@ -573,8 +572,8 @@ release is made from `main`.
 
 - Each image's package lists the version's tag and, beside it, tags named
   `sha256-<digest>`: crane's fallback for the OCI referrers API, pointing
-  at the image's attestations (Ruling 389). They are expected; leave them
-  (and delete them with their image, if that version is ever deleted).
+  at the image's attestations. They are expected; leave them (and delete
+  them with their image, if that version is ever deleted).
 - There is no `latest` tag: an install always names its version.
 - The packages are public: pulling them needs no login.
 - The old public packages under `ghcr.io/telflo/platform/` (the collector

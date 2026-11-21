@@ -10,44 +10,40 @@ import { SortableHandle, type DragHandleProps } from "~/components/ui/sortable/i
 import type { ValueView } from "~/lib/graph/value-view.js";
 
 /*
- * The operator card (ADR 0018): one operator of a receiver's `operators`
- * list, over the form (D9c decision 8). The card sits under its
- * item's scope (`FormScope` at `operators.<index>`, given by the pipeline),
- * so its fields write the operator's own keys, and keys no field shows
- * (`output`, `body`, …) stay.
+ * The operator card: one operator of a receiver's `operators` list, over
+ * the form. The card sits under its item's scope (`FormScope` at
+ * `operators.<index>`, given by the pipeline), so its fields write the
+ * operator's own keys, and keys no field shows (`output`, `body`, …) stay.
  *
  * - The header: the drag handle (the shared `SortableHandle`), the card's
  *   number, the type chip (the catalog's icon and label), `id: <id>` as
  *   text when set, expand/collapse and delete. Cards start expanded; the
  *   expanded state is the card's own, and the card is keyed by its item
- *   (`useCardKeys`), so it follows the card when it moves and after an undo
- *   (Preflight ruling 25; D9c Ruling 35), not the position.
+ *   (`useCardKeys`), so it follows the card when it moves and after an undo,
+ *   not the position.
  * - The common fields: Operator ID, On Error, Condition (if). Then the
- *   type's form (`OPERATOR_FORMS`, Tasks 6 and 7), when it has one.
- * - Every id is the card's: `op-<index>-<field>` (decision 8; the type forms
+ *   type's form (`OPERATOR_FORMS`), when it has one.
+ * - Every id is the card's: `op-<index>-<field>` (the type forms
  *   take theirs from `useOperatorId`).
- *
- * Fixed:
  * - On Error offers the collector's four values, `send`, `send_quiet`,
  *   `drop`, `drop_quiet` (`helper/transformer.go:43-51, 214-224`), as "Send
  *   (continue)", "Send quietly (continue, debug log)", "Drop entry", "Drop
- *   quietly (debug log)" (decisions 3 and 6; the quiet modes log at debug,
- *   `:142-173`); never `silent`, which the collector refuses.
- *   Unset shows the collector's `send` (`:25`) as its placeholder and
- *   "Default send" (D9b decision 3; Ruling 31); a value outside the four
- *   shows as an extra option.
- * - A router shows neither On Error nor Condition (decision 4): a router is
- *   a `BasicConfig` (`transformer/router/config.go:34-38`), and the
- *   collector ignores both keys there (`operator/config.go:111`).
+ *   quietly (debug log)" (the quiet modes log at debug, `:142-173`); never
+ *   `silent`, which the collector refuses. Unset shows the collector's
+ *   `send` (`:25`) as its placeholder and "Default send"; a value outside
+ *   the four shows as an extra option.
+ * - A router shows neither On Error nor Condition: a router is a
+ *   `BasicConfig` (`transformer/router/config.go:34-38`), and the collector
+ *   ignores both keys there (`operator/config.go:111`).
  * - The Operator ID's placeholder is the operator's type when it is one of
- *   the catalog's 26, a fixed name, else "Operator ID" (Preflight ruling 9;
- *   never the type as written in the attribute).
- * - An item the catalog doesn't know (Preflight ruling 20): a mapping with
- *   another `type` shows its common fields and "Unknown operator type"
- *   (the default case); an item that isn't a mapping shows its
- *   number and "Unknown operator type", no fields. Both can be removed and
- *   moved. The chip shows a type the catalog doesn't know as written, in
- *   text (the fallback label), and no chip for an item without one.
+ *   the catalog's 26, a fixed name, else "Operator ID" (never
+ *   the type as written in the attribute).
+ * - An item the catalog doesn't know: a mapping with another `type` shows
+ *   its common fields and "Unknown operator type" (the default case); an
+ *   item that isn't a mapping shows its number and "Unknown operator
+ *   type", no fields. Both can be removed and moved. The chip shows a type
+ *   the catalog doesn't know as written, in text (the fallback label), and
+ *   no chip for an item without one.
  * - The collapse and delete buttons are `type="button"` with fixed labels
  *   ("Collapse operator"/"Expand operator", with `aria-expanded`; "Remove
  *   operator").
@@ -93,9 +89,9 @@ const ON_ERROR_OPTIONS = [
 export const UNKNOWN_OPERATOR_TYPE = "Unknown operator type";
 
 /**
- * The header's contents: the grip, number, type chip and `id:`, then
- * the controls. The drag overlay draws it alone (Preflight ruling 25), with a
- * still grip and no controls, so no field's id is drawn twice.
+ * The header's contents: the grip, number, type chip and `id:`, then the
+ * controls. The drag overlay draws it alone, with a still grip and no
+ * controls, so no field's id is drawn twice.
  */
 export function OperatorCardHeader({ index, item, handle, controls }: { index: number; item: OperatorItem; handle: ReactNode; controls?: ReactNode }) {
   const Icon = item.meta?.icon ?? FileText;

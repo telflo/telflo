@@ -9,30 +9,29 @@ import { libraryLinkPath, type LibraryLinks } from "./link.js";
 import type { ILibraryFileRepository, LibraryFile, LibraryFileChanges } from "./repositories/library-file-repository.js";
 
 /*
- * The library API (D23-2 decisions 5, 11, 19 to 22, 41 to 45; Q152, Q154,
- * Q161): Telflo's own helper files, global as test templates are (ADR 0008).
+ * The library API: Telflo's own helper files, global as test templates are.
  *
  * Whether the caller may write is decided before the service is reached
  * (`requireProductAdmin` on the routes); the product admin's create, change
  * and delete are audited in no organization, with ids and field names only
- * (Q161: links and downloads are not audited).
+ * (links and downloads are not audited).
  *
- * Creating one (decisions 21 and 43): its id is chosen first
- * (`prepareCreate`), before any byte is read; then the parts, in order (the
- * routes); then the bytes stream into the file store at
- * global/library-files/<id> (any type: no type check), and only once they
- * are whole, at most 10 MiB and followed by nothing (`finish`), one
- * transaction inserts the row and its audit row. Whatever was written is
- * removed on every path but success, so a row always has its bytes.
+ * Creating one: its id is chosen first (`prepareCreate`), before any byte
+ * is read; then the parts, in order (the routes); then the bytes stream
+ * into the file store at global/library-files/<id> (any type: no type
+ * check), and only once they are whole, at most 10 MiB and followed by
+ * nothing (`finish`), one transaction inserts the row and its audit row.
+ * Whatever was written is removed on every path but success, so a row
+ * always has its bytes.
  *
- * Deleting one (decision 44, Q154 fix 2): one transaction deletes the row
- * and writes the audit row; it commits; then the bytes are removed, a
- * failure logged (its code and syscall only) and never thrown. The row goes
- * before the bytes, so a failure never leaves a row without its bytes.
+ * Deleting one: one transaction deletes the row and writes the audit row;
+ * it commits; then the bytes are removed, a failure logged (its code and
+ * syscall only) and never thrown. The row goes before the bytes, so a
+ * failure never leaves a row without its bytes.
  *
- * The link (decision 45): made for a member for a file that exists (its
- * `path`, the link a secret); checked by link.ts; only the file's id goes
- * on from a checked link.
+ * The link: made for a member for a file that exists (its `path`, the
+ * link a secret); checked by link.ts; only the file's id goes on from a
+ * checked link.
  *
  * Names, descriptions, file names, bytes and links reach no log line and no
  * audit row.
@@ -126,7 +125,7 @@ export interface ILibraryFileService {
   openLinkedFile(fileId: string): Promise<OpenedLibraryFile>;
 }
 
-/** The file store's key of a library file's bytes (D23-2 decision 18). */
+/** The file store's key of a library file's bytes. */
 export function libraryFileKey(fileId: string): FileKey {
   return { kind: "library-file", fileId };
 }
@@ -134,7 +133,7 @@ export function libraryFileKey(fileId: string): FileKey {
 /** The fields a change compares and audits, in the contract's order. */
 const FIELDS = ["name", "description"] as const satisfies readonly (keyof LibraryFileChanges)[];
 
-/** An audit row about a file (Q161): global, so in no organization; ids and field names only. */
+/** An audit row about a file: global, so in no organization; ids and field names only. */
 function auditEvent(writer: LibraryFileWriter, fileId: string, action: string, metadata: Record<string, unknown>): AuditEvent {
   return {
     action,

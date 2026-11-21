@@ -37,7 +37,7 @@ describe("matchLayout", () => {
     expect(matchLayout(graph, { nodes: [], edges: [], pipelines: [] })).toBe(graph);
   });
 
-  it("takes positions, group sizes and colours by pipeline name and component key, never by id", () => {
+  it("takes positions, group sizes and colors by pipeline name and component key, never by id", () => {
     const graph = parsed(STARTER);
     let layout = moved(graph, group(graph, "logs").id, { x: 7, y: 9 });
     layout = moved(layout, component(graph, "exporters.otlp", "logs").id, { x: 31, y: 42 });
@@ -56,7 +56,7 @@ describe("matchLayout", () => {
     const matched = matchLayout(graph, stored);
 
     expect(group(matched, "logs")).toMatchObject({ position: { x: 7, y: 9 }, style: { width: 1234, height: 567 } });
-    // The pipeline's colour wins over its group's.
+    // The pipeline's color wins over its group's.
     expect(group(matched, "logs").data.color).toBe("#06b6d4");
     expect(matched.pipelines.find((p) => p.name === "logs")?.color).toBe("#06b6d4");
     expect(component(matched, "exporters.otlp", "logs").position).toEqual({ x: 31, y: 42 });
@@ -110,7 +110,7 @@ describe("matchLayout", () => {
     expect(component(matchLayout(graph, layout), "connectors.forward").position).toEqual({ x: -400, y: 900 });
   });
 
-  it("brings back a component dragged out of a pipeline while others still use it, where it was left (Ruling 40)", () => {
+  it("brings back a component dragged out of a pipeline while others still use it, where it was left", () => {
     const before = parsed(STARTER);
     const otlp = component(before, "receivers.otlp", "traces");
     const { parentId: _parent, ...ungrouped } = { ...otlp, position: { x: 1500, y: 40 } };

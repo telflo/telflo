@@ -1,6 +1,5 @@
-// New in D15a Task 2 (plan Preflight ruling 10): the child processes' entry
-// points, run in-process over pipes; internal/server's tests run them as
-// real processes.
+// The child processes' entry points, run in-process over pipes;
+// internal/server's tests run them as real processes.
 
 package rules
 

@@ -3,16 +3,14 @@ import { Link } from "react-router";
 import { Rocket } from "lucide-react";
 
 /*
- * The fleet list's first-run card (D17a decision 23), shown when the
- * organization has no fleet at all ("All fleets" and nothing). As the D17a
- * Parity Notes say:
+ * The fleet list's first-run card, shown when the organization has no fleet
+ * at all ("All fleets" and nothing):
  * - the "editor" link opens `/app`, the configurations list;
  * - it says "group", never "deploy group", and "served", never "deployed"
- *   (decision 6: never "deployments").
- * A published version comes before installing (D17c-1 Preflight ruling 22;
- * Q28: a group's published version's collector version picks what an
- * install installs). The "New Fleet" button is the page's, passed in as
- * `action`.
+ *   (never "deployments").
+ * A published version comes before installing (a group's published version's
+ * collector version picks what an install installs). The "New Fleet" button
+ * is the page's, passed in as `action`.
  */
 
 const STEPS: { title: string; detail: ReactNode }[] = [

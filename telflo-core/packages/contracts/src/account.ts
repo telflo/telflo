@@ -4,17 +4,15 @@ import { OidcProviderSchema } from "./sessions.js";
 import { PASSWORD_MAXIMUM_LENGTH } from "./shared.js";
 
 /**
- * The account's own security routes (D21 decisions 35-40): changing the
- * password, the sign-in methods, linking and unlinking a provider, and the
- * sessions list. Every refusal is a fixed message (decision 21); no reply
- * carries a raw user agent (decision 40).
+ * The account's own security routes: changing the password, the sign-in
+ * methods, linking and unlinking a provider, and the sessions list. Every
+ * refusal is a fixed message; no reply carries a raw user agent.
  */
 
 /**
- * The error codes the account routes return in the error envelope (D21
- * decision 21's table, in its order), named once so a misspelled code is a
- * type error. An unknown provider is the OIDC start's `404 not_found`, and a
- * limit the existing `429 rate_limited`.
+ * The error codes the account routes return in the error envelope, named once
+ * so a misspelled code is a type error. An unknown provider is the OIDC
+ * start's `404 not_found`, and a limit the existing `429 rate_limited`.
  */
 export const ACCOUNT_ERROR_CODES = [
   "current_password_incorrect",
@@ -35,7 +33,7 @@ export type AccountErrorCode = (typeof ACCOUNT_ERROR_CODES)[number];
  */
 const CurrentPasswordSchema = z.string().min(1).max(PASSWORD_MAXIMUM_LENGTH);
 
-/** `PUT /api/v1/auth/me/password` (D21 decision 35). */
+/** `PUT /api/v1/auth/me/password`. */
 export const ChangePasswordRequestSchema = z
   .object({
     currentPassword: CurrentPasswordSchema,
@@ -46,12 +44,12 @@ export const ChangePasswordRequestSchema = z
 
 export type ChangePasswordRequest = z.infer<typeof ChangePasswordRequestSchema>;
 
-/** The browser families the API's user-agent parser names (D21 decision 40). */
+/** The browser families the API's user-agent parser names. */
 export const SESSION_BROWSERS = ["firefox", "chrome", "edge", "safari", "opera", "other"] as const;
 export const SessionBrowserSchema = z.enum(SESSION_BROWSERS);
 export type SessionBrowser = z.infer<typeof SessionBrowserSchema>;
 
-/** The operating system families the API's user-agent parser names (D21 decision 40). */
+/** The operating system families the API's user-agent parser names. */
 export const SESSION_SYSTEMS = ["macos", "windows", "linux", "ios", "android", "chromeos", "other"] as const;
 export const SessionSystemSchema = z.enum(SESSION_SYSTEMS);
 export type SessionSystem = z.infer<typeof SessionSystemSchema>;
@@ -96,10 +94,10 @@ export const IDENTITY_PROVIDER_ID_PATTERN = /^[a-z0-9-]{1,64}$/;
 
 /**
  * A linked identity: its provider's id (listed even when that provider is no
- * longer configured, Preflight ruling 16), the provider's email at link time,
- * when it was linked, and whether a sign-in with that provider links it again
- * by the account's own address after an unlink (`relinksByEmail`: the
- * provider is configured and has an email-authority rule; Q126, Ruling 92).
+ * longer configured), the provider's email at link time, when it was linked,
+ * and whether a sign-in with that provider links it again by the account's
+ * own address after an unlink (`relinksByEmail`: the provider is configured
+ * and has an email-authority rule).
  */
 export const LinkedIdentitySchema = z
   .object({
@@ -112,7 +110,7 @@ export const LinkedIdentitySchema = z
 
 export type LinkedIdentity = z.infer<typeof LinkedIdentitySchema>;
 
-/** `GET /api/v1/auth/me/sign-in-methods` (D21 decision 37). */
+/** `GET /api/v1/auth/me/sign-in-methods`. */
 export const SignInMethodsResponseSchema = z
   .object({
     hasPassword: z.boolean(),
@@ -124,8 +122,8 @@ export const SignInMethodsResponseSchema = z
 export type SignInMethodsResponse = z.infer<typeof SignInMethodsResponseSchema>;
 
 /**
- * `POST /api/v1/auth/me/identity-link-requests` (D21 decision 38). The
- * current password is required when the account has one; the API decides.
+ * `POST /api/v1/auth/me/identity-link-requests`. The current password is
+ * required when the account has one; the API decides.
  */
 export const IdentityLinkRequestSchema = z
   .object({
@@ -141,7 +139,7 @@ export const IdentityLinkResponseSchema = z.object({ authorizationUrl: z.string(
 
 export type IdentityLinkResponse = z.infer<typeof IdentityLinkResponseSchema>;
 
-/** `DELETE /api/v1/auth/me/identities/{provider}`'s body (D21 decision 39). */
+/** `DELETE /api/v1/auth/me/identities/{provider}`'s body. */
 export const UnlinkIdentityRequestSchema = z.object({ currentPassword: CurrentPasswordSchema }).strict();
 
 export type UnlinkIdentityRequest = z.infer<typeof UnlinkIdentityRequestSchema>;

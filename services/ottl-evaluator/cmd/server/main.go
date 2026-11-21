@@ -1,6 +1,5 @@
-// Dispatches subcommands, as the opamp-server's main does (D15a plan
-// Preflight rulings 10, 12 and 13; D25 Task 3 added lint-child, the public
-// API's OTTL lint):
+// Dispatches subcommands, as the opamp-server's main does (lint-child is
+// the public API's OTTL lint):
 //
 //	ottl-evaluator serve            the API (internal/server)
 //	ottl-evaluator healthcheck      asks a running server's /health, for the

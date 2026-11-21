@@ -2,8 +2,6 @@
 wait for it to bind, replay the user's pre-framed fixture as raw bytes, hold,
 stop.
 
-D14a Task 4; Preflight ruling 2:
-
 - The port is leased for the whole run (`_shared._hold_free_port`), so an
   overlapping run can't be given it.
 - The push is bounded by the replay's 30 s budget; a push that can't
@@ -12,9 +10,9 @@ D14a Task 4; Preflight ruling 2:
 - The fixture is streamed from the staged input's own bytes.
 - The strategy is split into its phases (`app/executors/base.py`).
 - A pipeline with a Kubernetes processor waits for its informer before the
-  push (``wait_for_cluster``, as the OTLP replay does; Ruling 30): a
-  connection from 127.0.0.1 is the seed pod's, which ``from: connection``
-  resolves only once the informer has listed it.
+  push (``wait_for_cluster``, as the OTLP replay does): a connection from
+  127.0.0.1 is the seed pod's, which ``from: connection`` resolves only once
+  the informer has listed it.
 
 The fixture is already syslog-framed (RFC3164/5424) — ``_replay_syslog_tcp``
 streams it byte-for-byte without reframing.

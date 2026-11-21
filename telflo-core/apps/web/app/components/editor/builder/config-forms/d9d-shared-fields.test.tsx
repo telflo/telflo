@@ -28,14 +28,14 @@ import { useEditorStore } from "~/lib/stores/editor-store.js";
 import { builderStore, componentNamed, openText } from "~/test/builder-store.js";
 
 /*
- * D9d's shared fields in `form-context.tsx` and the promoted native select
- * (Task 2; spec decision 12; Preflight rulings 7, 14, 21, 23): the pruning
- * scope, SelectField's unset option, NativeSelectField, CheckboxField's
- * checkedRemoves, CheckboxSetField's `""` item, NumberField's writeSame,
- * numeric list rows, StringListField's extra writes, and privacy.
+ * The shared fields in `form-context.tsx` and the promoted native select:
+ * the pruning scope, SelectField's unset option, NativeSelectField,
+ * CheckboxField's checkedRemoves, CheckboxSetField's `""` item,
+ * NumberField's writeSame, numeric list rows, StringListField's extra
+ * writes, and privacy.
  */
 
-const TEXT = `# D9d's shared fields.
+const TEXT = `# The shared fields.
 exporters:
   file:
     path: /var/log/out.json
@@ -128,7 +128,7 @@ async function pick(user: UserEvent, name: string, option: string) {
   await user.click(screen.getByRole("option", { name: option }));
 }
 
-describe("the pruning scope (decision 12; Preflight ruling 23)", () => {
+describe("the pruning scope", () => {
   it("clearing the block's last key removes the block in the same write", async () => {
     const user = userEvent.setup();
     const calls = spyWrites();
@@ -230,7 +230,7 @@ function SetAndClear() {
   );
 }
 
-describe("SelectField's unset option (decision 12; Preflight ruling 21)", () => {
+describe("SelectField's unset option", () => {
   const LEVELS = [
     { value: "basic", label: "Basic" },
     { value: "detailed", label: "Detailed" },
@@ -288,7 +288,7 @@ describe("SelectField's unset option (decision 12; Preflight ruling 21)", () => 
   });
 });
 
-describe("SelectField's disabled options and ignoreCase (D9d Task 10)", () => {
+describe("SelectField's disabled options and ignoreCase", () => {
   const LEVELS = [
     { value: "basic", label: "Basic" },
     { value: "detailed", label: "Detailed", disabled: true },
@@ -342,7 +342,7 @@ describe("SelectField's disabled options and ignoreCase (D9d Task 10)", () => {
   });
 });
 
-describe("NativeSelectField (decision 12)", () => {
+describe("NativeSelectField", () => {
   const OPTIONS = [
     { value: "always", label: "Always" },
     { value: "never", label: "Never" },
@@ -405,7 +405,7 @@ describe("NativeSelectField (decision 12)", () => {
   });
 });
 
-describe("CheckboxField's checkedRemoves (decision 12)", () => {
+describe("CheckboxField's checkedRemoves", () => {
   it("ticking removes the key (the default is true); unticking writes false", async () => {
     const user = userEvent.setup();
     const calls = spyWrites();
@@ -427,7 +427,7 @@ describe("CheckboxField's checkedRemoves (decision 12)", () => {
   });
 });
 
-describe("CheckboxSetField's empty item (Preflight ruling 7)", () => {
+describe("CheckboxSetField's empty item", () => {
   const ALGORITHMS = [
     { value: "gzip", label: "gzip" },
     { value: "zstd", label: "zstd" },
@@ -460,7 +460,7 @@ describe("CheckboxSetField's empty item (Preflight ruling 7)", () => {
   });
 });
 
-describe("NumberField's writeSame (Preflight ruling 14)", () => {
+describe("NumberField's writeSame", () => {
   it("retyping a quoted number writes it plain, a splice keeping the comment; without it, nothing", async () => {
     const user = userEvent.setup();
     const calls = spyWrites();
@@ -485,7 +485,7 @@ describe("NumberField's writeSame (Preflight ruling 14)", () => {
   });
 });
 
-describe("MultiValueField's numeric rows (decision 12)", () => {
+describe("MultiValueField's numeric rows", () => {
   it("a row typed as a number is written plain as typed; a reference as a string; held rows too", () => {
     vi.useFakeTimers();
     const calls = spyWrites();
@@ -505,7 +505,7 @@ describe("MultiValueField's numeric rows (decision 12)", () => {
   });
 });
 
-describe("StringListField's extra writes (decision 12)", () => {
+describe("StringListField's extra writes", () => {
   it("alsoOnAppend's changes go in the append's write; onEmptied's replace the last removal", async () => {
     const user = userEvent.setup();
     const calls = spyWrites();
@@ -537,7 +537,7 @@ describe("StringListField's extra writes (decision 12)", () => {
   });
 });
 
-describe("privacy (decision 13)", () => {
+describe("privacy", () => {
   it("no attribute holds a value: an off-list native select, an unset-token text, a numeric row, a pruned scope's field", () => {
     const MARK = "MARKER";
     openText(

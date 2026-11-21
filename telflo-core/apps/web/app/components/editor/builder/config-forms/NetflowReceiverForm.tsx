@@ -4,55 +4,51 @@ import { InlineAlert } from "./InlineAlert.js";
 import type { ValueChange } from "~/lib/graph/text-edits.js";
 
 /*
- * The NetFlow receiver's form (ADR 0018), over the form's fields
- * (D9c decision 2, D9b's contract): each field writes its own key.
+ * The NetFlow receiver's form, over the form's fields: each field writes its
+ * own key.
  *
- * - Flow Protocol is native radios (`RadioField`, D9c decision
- *   9). Unset shows NetFlow checked, the collector's default
- *   (`receiver/netflowreceiver/factory.go:29-37` at contrib v0.162.0;
- *   Preflight ruling 23). A scheme
- *   outside the two (`flow`, which Validate refuses, `config.go:49-60`) checks
- *   none and is read-only with D9b decision 3's hint (Preflight ruling 9).
- * - Changed (D9b's "a person's own config isn't lost"): a scheme change sets
+ * - Flow Protocol is native radios (`RadioField`). Unset shows NetFlow
+ *   checked, the collector's default
+ *   (`receiver/netflowreceiver/factory.go:29-37` at contrib v0.162.0). A
+ *   scheme outside the two (`flow`, which Validate refuses, `config.go:49-60`)
+ *   checks none and is read-only with `UNSHOWABLE_VALUE_MESSAGE`.
+ * - Changed, so a person's own config isn't lost: a scheme change sets
  *   the port to the scheme's usual one (2055, 6343) only when
  *   the port is unset or the other scheme's; a port of the person's own is
  *   kept.
- * - Port's default is the collector's 2055 for both schemes (D9c decision 4;
- *   `factory.go:32`): "Default 2055", placeholder 2055.
- * - Queue Size below 1000 is a warning, not an error (D9c decision 4): the
- *   collector keeps a queue of 1 to 999 and replaces only 0 or less with
- *   1000 (`config.go:70-72`). The alert, for 1 to 999 only (Ruling 74), is
- *   a `warn` box, with "Below the recommended minimum of
- *   1000.", read from the text; the input takes the warn border
- *   (not a red `border-fail`). The section is open while it shows
- *   (`forceOpen`). For 0 or less, a hint says "The collector
+ * - Port's default is the collector's 2055 for both schemes
+ *   (`factory.go:32`): "Default 2055", placeholder 2055.
+ * - Queue Size below 1000 is a warning, not an error: the collector keeps a
+ *   queue of 1 to 999 and replaces only 0 or less with 1000
+ *   (`config.go:70-72`). The alert, for 1 to 999 only, is a `warn` box, with
+ *   "Below the recommended minimum of 1000.", read from the text; the input
+ *   takes the warn border (not a red `border-fail`). The section is open
+ *   while it shows (`forceOpen`). For 0 or less, a hint says "The collector
  *   uses 1000."
- * - Copy (Ruling 72, decision 4): Flow Protocol's hint says the port changes
- *   only while it is a protocol's default; Queue Size's says 1000 or more is
- *   recommended.
- * - Unset shows the collector's default (D9b decision 3; `config.go:10-17`,
+ * - Copy: Flow Protocol's hint says the port changes only while it is a
+ *   protocol's default; Queue Size's says 1000 or more is recommended.
+ * - Unset shows the collector's default (`config.go:10-17`,
  *   `factory.go:29-37`): Hostname 0.0.0.0 (the collector's `""` binds every
- *   interface, as 0.0.0.0 does), Listening Sockets 1,
- *   Worker Threads 2, Queue Size 1000, as placeholders and "Default" hints.
- *   Clearing a field removes its key (never writing `NaN`, YAML `null`).
- *   The numbers are D9b's
+ *   interface, as 0.0.0.0 does), Listening Sockets 1, Worker Threads 2,
+ *   Queue Size 1000, as placeholders and "Default" hints. Clearing a field
+ *   removes its key (never writing `NaN`, YAML `null`). The numbers are
  *   number fields (text inputs, a number or a reference as typed; no
  *   `min`/`max`, which aren't the collector's limits).
  * - Send Raw Messages writes `true` or `false`.
  *
- * Ids are fixed (`hostname`, `port`, …; the radios
- * `scheme-<index>`); no value reaches an attribute (decision 10).
+ * Ids are fixed (`hostname`, `port`, …; the radios `scheme-<index>`); no
+ * value reaches an attribute.
  */
 
 /** Below this queue size the warning shows (`config.go:15-16`, the collector's default and the README's minimum). */
 const RECOMMENDED_QUEUE = 1000;
 
 export const QUEUE_WARNING = "Below the recommended minimum of 1000.";
-/** Under Queue Size while it is 0 or less: the collector replaces it (`config.go:70-72`; Ruling 74). */
+/** Under Queue Size while it is 0 or less: the collector replaces it (`config.go:70-72`). */
 export const QUEUE_REPLACED = "The collector uses 1000.";
-/** Flow Protocol's hint (Ruling 72): a port of the person's own is kept on a switch. */
+/** Flow Protocol's hint: a port of the person's own is kept on a switch. */
 export const SCHEME_HINT = "Switching protocol changes the port only while it is a protocol's default.";
-/** Queue Size's hint (Ruling 72): 1 to 999 is accepted, below the recommendation. */
+/** Queue Size's hint: 1 to 999 is accepted, below the recommendation. */
 export const QUEUE_HINT = "Buffer for incoming packets; 1000 or more is recommended.";
 
 const SCHEMES = [

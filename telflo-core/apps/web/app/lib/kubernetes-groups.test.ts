@@ -18,7 +18,7 @@ import {
   volumeRecipesFor,
 } from "./kubernetes-groups.js";
 
-// D17d-1 decisions 6 and 23; Preflight rulings 24 and 25: a Kubernetes fleet's groups as its screens name and order them.
+// A Kubernetes fleet's groups as its screens name and order them.
 
 describe("groupLabel", () => {
   it("names a Kubernetes fleet's Agent and Cluster by role, a gateway by its name", () => {
@@ -97,14 +97,14 @@ describe("kubernetesRowName and kubernetesRowKey", () => {
     expect(kubernetesRowKey(agent!)).toBe(collectorGroup().id);
     expect(kubernetesRowKey(cluster!)).toBe("role-cluster");
     expect(kubernetesRowKey(gateway!)).toBe(gatewaysGroup().id);
-    // Its first Assign keeps the key (Ruling 55): the row and its controls stay, and the focus with them.
+    // Its first Assign keeps the key: the row and its controls stay, and the focus with them.
     const [, assigned] = kubernetesGroupRows([collectorGroup(), clusterGroup(), gatewaysGroup()]);
     expect(assigned!.group).not.toBeNull();
     expect(kubernetesRowKey(assigned!)).toBe("role-cluster");
   });
 });
 
-describe("kubernetesSettingsOf and sameShownKubernetes (Preflight ruling 32)", () => {
+describe("kubernetesSettingsOf and sameShownKubernetes", () => {
   it("reads a group's settings, none for no group or no key, unreadable for a shape Telflo can't read", () => {
     expect(kubernetesSettingsOf(null)).toEqual({ readable: true, kubernetes: null });
     expect(kubernetesSettingsOf(collectorGroup())).toEqual({ readable: true, kubernetes: null });
@@ -124,8 +124,8 @@ describe("kubernetesSettingsOf and sameShownKubernetes (Preflight ruling 32)", (
   });
 });
 
-// D17d-2 Rulings 44 and 49: where a group's release runs, as the API's helmFactsOf installs it, and nothing where helmFactsOf
-// refuses the group (409 collector_group_settings_unreadable): the reviewer's table, row by row.
+// Where a group's release runs, as the API's helmFactsOf installs it, and nothing where helmFactsOf refuses the group
+// (409 collector_group_settings_unreadable): a table, row by row.
 describe("releaseNamespaceOf and helmUninstallOf", () => {
   const edge = kubernetesAnnotations({ namespace: "edge" });
   it.each([

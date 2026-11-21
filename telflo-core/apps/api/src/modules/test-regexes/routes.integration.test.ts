@@ -35,8 +35,8 @@ import { UNCALLED_OTELCOL_VALIDATOR } from "../../testing/otelcol-validator.js";
 import { UNCALLED_OTTL_EVALUATOR, useFakeOttlEvaluator } from "../../testing/ottl-evaluator.js";
 import { hashPassword } from "../identity/password.js";
 
-// The opamp-server every server needs (D11b decision 8), and the OTTL
-// evaluator's OpenAPI-checked fake (D15a Task 5): this file's own.
+// The opamp-server every server needs, and the OTTL evaluator's
+// OpenAPI-checked fake: this file's own.
 const opamp = useFakeOpampServer();
 const evaluator = useFakeOttlEvaluator();
 
@@ -44,7 +44,7 @@ const csrfHeaders = { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE };
 const PASSWORD = "a-sufficiently-long-password";
 const TEST_REGEXES = "/api/v1/test-regexes";
 
-/** Markers no log line, URL or audit row may hold: an entry's name, category, description and regex (ADR 0024). */
+/** Markers no log line, URL or audit row may hold: an entry's name, category, description and regex. */
 const NAME_MARKER = "regex-name-marker-4b8e";
 const CATEGORY_MARKER = "regex-category-marker-91d0";
 const DESCRIPTION_MARKER = "regex-description-marker-c27f";
@@ -81,10 +81,9 @@ const realSetTimeout = globalThis.setTimeout;
 const LOGGER_FIELDS = new Set(["level", "time", "pid", "hostname", "reqId", "msg"]);
 
 /*
- * D15b Task 2: the regex library's API (decisions 7 and 8; details 17 and
- * 18; Preflight rulings 3 and 4), against Postgres as the API's own role,
- * with the OTTL evaluator's fake (its markers steer its answers, nextFault
- * queues failures). truncateAll empties test_regex: a test that needs the 35
+ * The regex library's API, against Postgres as the API's own role, with the
+ * OTTL evaluator's fake (its markers steer its answers, nextFault queues
+ * failures). truncateAll empties test_regex: a test that needs the 35
  * seeded entries inserts them (insertSeededTestRegexes).
  */
 describe("the regex library API", () => {
@@ -214,7 +213,7 @@ describe("the regex library API", () => {
       email: account.user.email,
       organizationId: organization.id,
       personalOrganizationId: account.organization.id,
-      // A no-op when the sign-in already landed there (D36-1 decision 56): no new cookie, the token sent stands.
+      // A no-op when the sign-in already landed there: no new cookie, the token sent stands.
       access: (switched.headers["set-cookie"] === undefined ? cookieValue(signedIn, "telflo_access") : cookieValue(switched, "telflo_access")),
     };
   };
@@ -231,7 +230,7 @@ describe("the regex library API", () => {
       payload: { organizationId },
     });
     expect(switched.statusCode).toBe(200);
-    // A no-op when the sign-in already landed there (D36-1 decision 56): no new cookie, the token sent stands.
+    // A no-op when the sign-in already landed there: no new cookie, the token sent stands.
     return { ...who, organizationId, access: (switched.headers["set-cookie"] === undefined ? who.access : cookieValue(switched, "telflo_access")) };
   };
 
@@ -398,7 +397,7 @@ describe("the regex library API", () => {
       expect(testRegexes.find((each) => each.name === "US Social Security Number")!.regex).toBe("\\d{3}-\\d{2}-\\d{4}");
       expect(testRegexes.find((each) => each.id === mine[1]!.id)).toEqual(mine[1]);
 
-      // en_US.utf8, as localeCompare (Preflight ruling 3): "Credit Card" before "CVV Code" (under "C" they swap).
+      // en_US.utf8, as localeCompare: "Credit Card" before "CVV Code" (under "C" they swap).
       const expected = [...testRegexes].sort(
         (a, b) => a.category.localeCompare(b.category, "en-US") || a.name.localeCompare(b.name, "en-US"),
       );
@@ -471,7 +470,7 @@ describe("the regex library API", () => {
       expect((await rows()).map((row) => [row.id, row.name, row.category, row.description, row.regex])).toEqual([
         [testRegex.id, testRegex.name, testRegex.category, testRegex.description, " \\b[a-z]+@example\\.com\\b "],
       ]);
-      // RE2 doesn't depend on the signal or target: a placeholder of each (Preflight ruling 4).
+      // RE2 doesn't depend on the signal or target: a placeholder of each.
       expect(validations().map((request) => request.body)).toEqual([
         { signal: "logs", rule: { kind: "contains_regex", target: "output", pattern: " \\b[a-z]+@example\\.com\\b " } },
       ]);
@@ -505,7 +504,7 @@ describe("the regex library API", () => {
       expect(await auditRows()).toEqual([]);
     });
 
-    it("refuses every create while the evaluator can't check it: down, failing, busy, refusing the request or answering malformed (503 rules_unavailable, decision 8's words)", async () => {
+    it("refuses every create while the evaluator can't check it: down, failing, busy, refusing the request or answering malformed (503 rules_unavailable, in fixed words)", async () => {
       const admin = await productAdmin();
       for (const fault of ["reset", ...ANSWERED_UNAVAILABLE] as const) {
         evaluator.fake.nextFault(fault);
@@ -535,7 +534,7 @@ describe("the regex library API", () => {
       expect(checkLines().map((line) => line.result)).toEqual(["unavailable"]);
     });
 
-    it("refuses a name another entry has, a seeded one included, before the check (409 test_regex_name_taken, decision 8's words); names are compared case and all", async () => {
+    it("refuses a name another entry has, a seeded one included, before the check (409 test_regex_name_taken, in fixed words); names are compared case and all", async () => {
       await insertSeededTestRegexes(databases.ownerDb);
       const admin = await productAdmin();
       const first = await created(admin, { name: "Diners Club" });
@@ -919,7 +918,7 @@ describe("the regex library API", () => {
     });
   });
 
-  describe("the checks' limit (RATE_LIMITS: each admin's own 30 checked saves a minute, Preflight ruling 4)", () => {
+  describe("the checks' limit (RATE_LIMITS: each admin's own 30 checked saves a minute)", () => {
     it("counts every create and regex change the evaluator is asked about, refused or not, and never gives one back: the 31st is 429; a name-only PATCH and a duplicate name aren't counted", async () => {
       const limited = await serverWith({ rateLimits: RATE_LIMITS });
       const admin = await productAdmin();
@@ -1008,7 +1007,7 @@ describe("the regex library API", () => {
     });
   });
 
-  describe("privacy (ADR 0024)", () => {
+  describe("privacy", () => {
     it("puts no entry's name, category, description or regex in any audit row or log line; a check's line names the entry's id and its result only, and an unavailable one the client's reason, status and code", async () => {
       const admin = await productAdmin();
       const member = await person();
@@ -1043,8 +1042,8 @@ describe("the regex library API", () => {
 
       // Each check's line: {testRegexId, result} (a create has no id yet), an
       // unavailable one's the client's reason, and its status and envelope's
-      // code when the evaluator answered (as D15a's rule check), and nothing
-      // else of its own.
+      // code when the evaluator answered (as a validation rule's check), and
+      // nothing else of its own.
       const lines = checkLines();
       expect(lines.map((line) => [line.result, line.testRegexId ?? null])).toEqual([
         ["valid", null],

@@ -14,8 +14,7 @@ or an AI coding agent. It talks to a Telflo server's public API
 
 This version (0.3.0) isn't on npm yet: it is installed from its package
 file (`telflo-cli-0.3.0.tgz`, made with `npm pack`). Install it into a
-folder of its own, so it can't clash with another `telflo` on your PATH
-(an older `telflo` from npm installs a command of the same name):
+folder of its own, so it can't clash with another `telflo` on your PATH:
 
 ```bash
 npm install -g --prefix ~/.local/telflo-cli ./telflo-cli-0.3.0.tgz
@@ -349,8 +348,7 @@ The login is stored in `credentials.json`:
 The file holds the server, the token, its name and kind, and the
 organization. It's written with mode 0600 in a folder of mode 0700; a file
 others can read, or a folder others can write, is refused (with the `chmod`
-to run). `telflo logout` removes it. The older Telflo CLI's
-`~/.telflo/credentials.json` is never read.
+to run). `telflo logout` removes it.
 
 ## Support
 

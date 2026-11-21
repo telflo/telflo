@@ -15,10 +15,9 @@
 # reaches any other registry. The script runs from
 # committed throwaway git repositories holding what it reads (itself, the
 # charts, the contracts' helm.ts; for telflo the PIN, the PIN check
-# and the files its render tests read): it publishes only what is committed
-# (Ruling 31), so the checkout's own state never decides a case. Sections 1
-# to 6 are D18's, the default chart's (supervisor-collector); section 7 is
-# telflo's row (D33-1 decision 31, Preflight ruling 18) and checks
+# and the files its render tests read): it publishes only what is committed,
+# so the checkout's own state never decides a case. Sections 1 to 6 are the
+# default chart's (supervisor-collector); section 7 is telflo's row and checks
 # that the default's output is --chart supervisor-collector's.
 # Run:  bash scripts/publish-chart.test.sh
 # bash 3.2 compatible (macOS's /bin/bash).
@@ -268,7 +267,7 @@ out="$(env -u TELFLO_HELM_CHART_REFERENCE TMPDIR="$tmp/scratch" HELM_REGISTRY_CO
 check "the caller's HELM_REGISTRY_CONFIG and DOCKER_CONFIG used as given (crane reads DOCKER_CONFIG); other HELM_* settings unset" \
   "[ $rc -eq 0 ] && grep -qx 'HELM_REGISTRY_CONFIG=$tmp/caller-registry.json' '$logs/package-env' && grep -qx '$tmp/caller-docker' '$logs/crane-config.log' && grep -qx 'HELM_DEBUG=' '$logs/package-env' && grep -qE '^HELM_CONFIG_HOME=$tmp/scratch/publish-chart\.[A-Za-z0-9]+/helm/config\$' '$logs/package-env' && [ ! -e '$tmp/caller-helm-config' ]"
 
-# --- 3. the registry's answers (crane manifest; Preflight ruling 6) ---------------------
+# --- 3. the registry's answers (crane manifest) ---------------------
 STANDIN_CRANE=present run --dry-run
 check "a version the registry holds refused (dry run): nothing printed" \
   "[ $rc -eq 1 ] && has 'is published already' && [ -z \"\$printed\" ]"
@@ -378,7 +377,7 @@ run_script "$copy/scripts/publish-chart.sh" --dry-run
 check "a failing render test stops it: nothing linted by the script, packaged, asked or pushed" \
   "[ $rc -eq 1 ] && has 'render tests failed' && helm_ran template && ! helm_ran package && no_crane && ! helm_ran push && [ -z \"\$printed\" ]"
 
-# --- 5b. what is published is exactly what is committed (Ruling 31) ---------------------------
+# --- 5b. what is published is exactly what is committed ---------------------------
 dirty_case() { # <name> <path relative to the repository> <append|new> [mode]
   local name="$1" path="$2" how="$3" mode="${4:---dry-run}"
   if [ "$how" = append ]; then cp "$repo/$path" "$tmp/saved"; echo "# a change" >>"$repo/$path"; else echo "# new" >"$repo/$path"; fi
@@ -404,7 +403,7 @@ run_script "$parent/nested/scripts/publish-chart.sh" --dry-run
 check "a copy nested in another repository that ignores it refused (the toplevel must be its own)" \
   "[ -z \"\$(git -C '$parent' status --porcelain)\" ] && [ $rc -eq 1 ] && has 'needs a git checkout' && no_helm && [ -z \"\$printed\" ]"
 
-# --- 5c. the chart is taken from the commit itself (Ruling 32) -------------------------------
+# --- 5c. the chart is taken from the commit itself -------------------------------
 mkdir -p "$repo/charts/supervisor-collector/build"
 echo "IGNORED=c4n4ry" >"$repo/charts/supervisor-collector/.env"
 echo ignored >"$repo/charts/supervisor-collector/.DS_Store"
@@ -418,7 +417,7 @@ check "lint and package ran on the extraction, not the working tree" \
   "! grep -qF '$repo/charts' '$logs/helm-calls.log' && grep -qE '^package [^ ]+/source/charts/supervisor-collector ' '$logs/helm-calls.log'"
 rm -rf "$repo/charts/supervisor-collector/build" "$repo/charts/supervisor-collector/.env" "$repo/charts/supervisor-collector/.DS_Store"
 
-# --- 5d. credential files the caller named (Rulings 32 and 34) ------------------------------
+# --- 5d. credential files the caller named ------------------------------
 # The valid shape names a registry in a non-empty "auths"; Docker and oras
 # read keys case-insensitively.
 cred_case() { # <name> <variable> <content, "-" for no file, "-unreadable" for mode 000> <expected words>
@@ -452,7 +451,7 @@ for variable in HELM_REGISTRY_CONFIG DOCKER_CONFIG; do
   cred_case "$variable: an AUTHS key refused" $variable '{"auths":{"x.invalid":{}},"AUTHS":{"c4n4ry.invalid":{}}}' 'spelled like \"auths\"'
 done
 
-# --- 5e. inputs flagged for git not to check (Ruling 34) --------------------------------------
+# --- 5e. inputs flagged for git not to check --------------------------------------
 cp "$repo/charts/supervisor-collector/values.yaml" "$tmp/saved-values"
 git -C "$repo" update-index --assume-unchanged charts/supervisor-collector/values.yaml
 echo "# a hidden change" >>"$repo/charts/supervisor-collector/values.yaml"
@@ -468,7 +467,7 @@ check "an input flagged skip-worktree refused, the flag named" \
 git -C "$repo" update-index --no-skip-worktree "$HELM_TS"
 check "the throwaway repository is clean again (no flag)" "[ -z \"\$(git -C '$repo' status --porcelain)\" ] && ! git -C '$repo' ls-files -v | grep -q '^[a-zS]'"
 
-# --- 5f. HEAD's raw blobs, whatever the local git setup (Ruling 36) ---------------------------
+# --- 5f. HEAD's raw blobs, whatever the local git setup ---------------------------
 # A local smudge filter (on values.yaml and the templates: a YAML comment
 # appended) and core.autocrlf=true change what `git archive` writes; the
 # package must hold HEAD's blobs byte for byte (Chart.yaml aside: Helm
@@ -506,7 +505,7 @@ run_script "$copy/scripts/publish-chart.sh" --dry-run
 check "a symlink in HEAD's chart refused, named, before Helm runs" \
   "[ -z \"\$(git -C '$copy' status --porcelain)\" ] && [ $rc -eq 1 ] && has \"HEAD's charts/supervisor-collector/values-link.yaml is a symlink\" && no_helm && [ -z \"\$printed\" ]"
 
-# --- 5g. local git objects and untracked files (Ruling 37) ----------------------------------
+# --- 5g. local git objects and untracked files ----------------------------------
 make_copy; rrepo="$copy"
 real_blob="$(git -C "$rrepo" rev-parse HEAD:charts/supervisor-collector/values.yaml)"
 fake_blob="$(cat "$rrepo/charts/supervisor-collector/values.yaml" <(echo '# replaced') | git -C "$rrepo" hash-object -w --stdin)"
@@ -519,7 +518,7 @@ cp "${printed%% *}" "$logs/pushed.tgz" 2>/dev/null
 tar -xzf "$logs/pushed.tgz" -C "$tmp/pushed-r" 2>/dev/null
 check "the pushed values.yaml is HEAD's real blob, not the replacement" \
   "[ -z \"\$(git -C '$rrepo' status --porcelain)\" ] && [ $rc -eq 0 ] && cmp -s '$tmp/pushed-r/supervisor-collector/values.yaml' <(GIT_NO_REPLACE_OBJECTS=1 git -C '$rrepo' cat-file blob '$real_blob')"
-# A tampered object store (Ruling 39): values.yaml's loose object overwritten
+# A tampered object store: values.yaml's loose object overwritten
 # with Chart.yaml's. git cat-file hands over the other blob's bytes and git
 # status stays clean; only the hash check sees it.
 make_copy; trepo="$copy"
@@ -539,7 +538,7 @@ echo "# new" >"$copy/charts/supervisor-collector/templates/hidden.yaml"
 run_script "$copy/scripts/publish-chart.sh" --dry-run
 check "an untracked chart file refused even with status.showUntrackedFiles=no" \
   "[ -z \"\$(git -C '$copy' status --porcelain)\" ] && [ $rc -eq 1 ] && has 'refuses uncommitted changes' && has 'charts/supervisor-collector/templates/hidden.yaml' && no_helm"
-# A git error midway through HEAD's listing (Ruling 334): the templates/
+# A git error midway through HEAD's listing: the templates/
 # tree object made unreadable. git status stays clean; git ls-tree lists
 # Chart.yaml and then fails. The script refuses: no truncated chart packaged.
 make_copy
@@ -581,7 +580,7 @@ check "the real helm push takes the script's argv (--plain-http, the package, th
   "[ $rc -ne 0 ] && [ \"\$(tr '\n' ' ' <'$logs/push-args')\" = 'push --plain-http $the_package oci://127.0.0.1:1/telflo/telflo/charts ' ] && has 'connection refused' && has 'helm push failed' && ! printf '%s\n' \"\$out\" | grep -qiE 'unknown (flag|command|shorthand)|usage:|accepts .* arg'"
 [ "$failures" -eq "$before" ] || explain
 
-# --- 7. telflo's row (D33-1 decision 31, Preflight ruling 18) -------------------------
+# --- 7. telflo's row -------------------------
 PLATFORM=charts/telflo
 # The platform chart's real version (its Chart.yaml; the copies are of this tree).
 PLATFORM_VERSION="$(awk '$1 == "version:" { print $2; exit }' "$root/$PLATFORM/Chart.yaml")"
@@ -592,7 +591,7 @@ PIN=vendor/opamp-server/PIN
 prun() { run "$@" --chart telflo; }
 pin_tree_of() { sed -n 's/^chart-tree=//p' "$1/$PIN"; }
 # The pinned opamp-server version, read from the real PIN, never written
-# here (D36-1 decision 18, Ruling 344), and two others for the mismatch
+# here, and two others for the mismatch
 # cases, never equal to it.
 OPAMP_VERSION="$(sed -n 's/^version=\([0-9][0-9.]*\)$/\1/p' "$root/$PIN")"
 [ -n "$OPAMP_VERSION" ] || { echo "FAIL - $PIN names no version"; exit 1; }
@@ -686,7 +685,7 @@ vendoring_refused "telflo: a vendored Chart.yaml version not the PIN's refused (
 make_copy; edit "$copy/$PLATFORM/Chart.yaml" 's#^    repository: oci://ghcr.io/telflo/charts$#    repository: oci://ghcr.io/telflo/other#'; commit_copy
 vendoring_refused "telflo: a dependency declared at another repository refused" \
   "opamp-server dependency is at 'oci://ghcr.io/telflo/other', not oci://ghcr.io/telflo/charts"
-# A tampered tree object (Ruling 37's kind): the vendored chart's loose tree
+# A tampered tree object: the vendored chart's loose tree
 # overwritten with its templates/ tree. rev-parse still names the PIN's id
 # and git status stays clean, but the tree no longer lists the chart (git
 # reports a hash mismatch reading it, and the extraction's listing loses the
@@ -707,7 +706,7 @@ make_copy; printf '# reads "$REPO_DIR/../outside.txt"\n' >>"$copy/$PLATFORM/test
 vendoring_refused "telflo: a render-test read outside the repository refused" \
   "the render tests read '../outside.txt' beside the chart: refused"
 
-# 7e. uncommitted changes in telflo's inputs refused (Ruling 31)
+# 7e. uncommitted changes in telflo's inputs refused
 pdirty_case() { # <name> <path relative to the repository> <append|new>
   local name="$1" path="$2" how="$3"
   if [ "$how" = append ]; then cp "$repo/$path" "$tmp/saved"; echo "# a change" >>"$repo/$path"; else echo "# new" >"$repo/$path"; fi
@@ -722,7 +721,7 @@ pdirty_case "telflo: a changed PIN check refused" scripts/check-opamp-server-pin
 pdirty_case "telflo: a changed publish-chart.sh refused" scripts/publish-chart.sh append
 check "the repository is clean again (telflo's inputs)" "[ -z \"\$(git -C '$repo' status --porcelain 2>&1)\" ]"
 
-# 7f. the default is D18's, unchanged: its own lines exactly, the same as
+# 7f. the default is supervisor-collector, unchanged: its own lines exactly, the same as
 # --chart supervisor-collector's, and telflo's inputs aren't its
 own_lines() { printf '%s\n' "$out" | grep -E '^(publish-chart: |helm push )' | sed -E "s#$tmp/scratch/publish-chart\.[A-Za-z0-9]+#<tmp>#g"; }
 default_want="helm push '<tmp>/package/supervisor-collector-0.1.0.tgz' 'oci://ghcr.io/telflo/telflo/charts'
@@ -736,7 +735,7 @@ publish-chart: dry run: nothing pushed (--package makes the package, --push-pack
 run --dry-run
 default_lines="$(own_lines)"
 default_all="$(printf '%s\n' "$out" | sed -E "s#$tmp/scratch/publish-chart\.[A-Za-z0-9]+#<tmp>#g")"
-check "the default (no --chart): exactly D18's lines" "[ $rc -eq 0 ] && [ \"\$default_lines\" = \"\$default_want\" ]"
+check "the default (no --chart): exactly supervisor-collector's lines" "[ $rc -eq 0 ] && [ \"\$default_lines\" = \"\$default_want\" ]"
 run --dry-run --chart supervisor-collector
 check "--chart supervisor-collector: the default's output, byte for byte" \
   "[ $rc -eq 0 ] && [ \"\$(printf '%s\n' \"\$out\" | sed -E \"s#$tmp/scratch/publish-chart\.[A-Za-z0-9]+#<tmp>#g\")\" = \"\$default_all\" ]"

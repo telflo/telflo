@@ -34,11 +34,11 @@ import {
 } from "~/test/service-accounts.js";
 
 /*
- * A service account's page (D22 decisions 9, 41, 43 and 49): the tokens
- * read for the account in the path (a session always has an organization),
- * the Expired badge, the reveal's lifetime and the failed reads. Tokens
- * are built at run time and compared as booleans only (Ruling 99), and
- * failed queries print no DOM while one may be on the page.
+ * A service account's page: the tokens read for the account in the path (a
+ * session always has an organization), the Expired badge, the reveal's
+ * lifetime and the failed reads. Tokens are built at run time and compared
+ * as booleans only, and failed queries print no DOM while one may be on
+ * the page.
  */
 
 const ACCOUNT = serviceAccount({ tokenCount: 2 });
@@ -120,7 +120,7 @@ describe("ServiceAccountDetailSection", () => {
     expect(within(read!).queryByText("Expired")).not.toBeInTheDocument();
     expect(within(write!).getByText("Read & Write")).toHaveClass("text-warn");
     expect(screen.getByText(`${READ_TOKEN.prefix}…`)).toHaveClass("font-mono");
-    // The icons (Preflight ruling 30).
+    // The icons.
     expect(screen.getByRole("link", { name: "Service Accounts" }).querySelector("svg")?.getAttribute("class")).toContain("lucide-arrow-left");
     expect(screen.getByRole("heading", { name: "ci-pipeline" }).querySelector("svg")?.getAttribute("class")).toContain("lucide-bot");
     expect(screen.getByRole("button", { name: "Rename" }).querySelector("svg")?.getAttribute("class")).toContain("lucide-pencil");
@@ -255,7 +255,7 @@ describe("ServiceAccountDetailSection", () => {
     await user.click(within(reveal).getByRole("button", { name: "Done" }));
 
     await waitFor(() => expect(error.mock.calls.length, "toasts after the reveal").toBeGreaterThan(0));
-    // Booleans first (Ruling 99): no toast holds the token, then the toast's words.
+    // Booleans first: no toast holds the token, then the toast's words.
     expect(holdsText(error.mock.calls, token), "a toast holding the token").toBe(false);
     expect(error).toHaveBeenCalledWith(API_TOKENS_REFRESH_FAILED_MESSAGE);
     expect(API_TOKENS_REFRESH_FAILED_MESSAGE).toBe("Token created, but the list could not refresh");
@@ -276,7 +276,7 @@ describe("ServiceAccountDetailSection", () => {
     expect(screen.queryByRole("dialog", { name: "Copy your token" })).toBeNull();
   });
 
-  it("revokes after the confirm with Q137's words, and reads the list again", async () => {
+  it("revokes after the confirm with its fixed words, and reads the list again", async () => {
     const { getTokens } = servePage([ACCOUNT, ACCOUNT], [[READ_TOKEN, WRITE_TOKEN], [WRITE_TOKEN]]);
     const revoke = vi.spyOn(apiClient, "revokeApiToken").mockResolvedValue(undefined);
     const user = renderDetail();

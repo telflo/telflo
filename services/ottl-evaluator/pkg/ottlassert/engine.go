@@ -1,4 +1,4 @@
-// The evaluation engine (D15a plan Preflight rulings 2, 8 and 10):
+// The evaluation engine:
 //
 //   - each context's transform context is pooled and closed through each
 //     record's close; ottlscope's takes the resource's schema-URL item (rs,
@@ -12,9 +12,9 @@
 //     every rule (EvaluateRule); Evaluate is built on them;
 //   - each rule's condition is parsed before its records are collected;
 //   - ParseCondition and ParseValueExpression check a text with the same
-//     converters-only parsers the evaluation uses (Preflight ruling 8);
+//     converters-only parsers the evaluation uses;
 //   - a failing any lists its first maxMisses records ("condition evaluated
-//     to false"), as all does (the controller's Ruling 34).
+//     to false"), as all does.
 
 package ottlassert
 

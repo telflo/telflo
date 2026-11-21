@@ -4,11 +4,11 @@ import userEvent from "@testing-library/user-event";
 import { CHOOSER_FOOTER_NOTE, FleetTypeChooserDialog } from "./FleetTypeChooserDialog.js";
 
 /*
- * The fleet-type chooser: no bridge card and no "Private Preview" flags
- * (D17a decisions 4 and 24), one test says so.
+ * The fleet-type chooser: no bridge card and no "Private Preview"
+ * flags, one test says so.
  */
 
-describe("FleetTypeChooserDialog (D17a decision 24)", () => {
+describe("FleetTypeChooserDialog", () => {
   it("renders both fleet-type boxes and a Cancel button", () => {
     render(<FleetTypeChooserDialog open onOpenChange={() => {}} onSelect={() => {}} />);
     expect(screen.getByRole("dialog", { name: "Create a new fleet" })).toBeInTheDocument();

@@ -44,12 +44,12 @@ const monaco = {
 const monacoModel = {
   uri: "inmemory://model/1",
   value: "",
-  // The tab size goes on the model (YamlEditor; D21 Preflight ruling 30).
+  // The tab size goes on the model (YamlEditor).
   updateOptions: () => undefined,
   getValue: () => monacoModel.value,
   getFullModelRange: () => ({ startLineNumber: 1, startColumn: 1, endLineNumber: 1, endColumn: 1 }),
   pushStackElement: () => undefined,
-  // A load under the mounted editor sets the text afresh (YamlEditor; D10 Ruling 22), firing the change event.
+  // A load under the mounted editor sets the text afresh (YamlEditor), firing the change event.
   setValue: (value: string) => {
     monacoModel.value = value;
     fake.props?.onChange?.(monacoModel.value, undefined as never);
@@ -142,9 +142,9 @@ const EDITED = `${YAML}# edited\n`;
 const VERSION = versionFixture({ yamlContent: YAML });
 
 /**
- * The graph a save sends: the one on the canvas, as stored (D9a decision 6).
- * Typing leaves it as it was loaded: the text's graph, laid out, since the
- * version stores none.
+ * The graph a save sends: the one on the canvas, as stored. Typing leaves
+ * it as it was loaded: the text's graph, laid out, since the version
+ * stores none.
  */
 const LOADED_GRAPH = (() => {
   const parsed = parse(YAML);
@@ -196,9 +196,9 @@ function EditorWithControls() {
 
 /**
  * The page under the signed-in layout, at the version's address by default
- * (D10 Preflight ruling 4: `/editor/{id}`'s replace is another navigation,
- * which the layout's loader would count). The layout's loader answers each
- * load with the next of `answers`, the last repeating.
+ * (`/editor/{id}`'s replace is another navigation, which the layout's
+ * loader would count). The layout's loader answers each load with the next
+ * of `answers`, the last repeating.
  */
 function renderPage(
   answers: CurrentUserResponse[] = [signedInMember()],
@@ -293,22 +293,21 @@ async function acceptTerms(user: ReturnType<typeof userEvent.setup>) {
 }
 
 describe("the editor page (/editor/{id}/{versionId})", () => {
-  /** The selection's write (D10 decision 9), answered at once unless a test says otherwise. */
+  /** The selection's write, answered at once unless a test says otherwise. */
   let selectConfigurationVersion: MockInstance<typeof apiClient.selectConfigurationVersion>;
-  /** The collector catalogue's read (D13a decision 8), answered at once. */
+  /** The collector catalog's read, answered at once. */
   let readCatalogue: MockInstance<typeof apiClient.getCollectorDistributions>;
   /**
-   * The collector validator's check (D13b decision 13), answered valid at
-   * once for the pin it was sent (as the API answers; Ruling 58) unless a
-   * test says otherwise.
+   * The collector validator's check, answered valid at once for the pin it
+   * was sent (as the API answers) unless a test says otherwise.
    */
   let validateVersion: MockInstance<typeof apiClient.validateVersion>;
 
   beforeEach(() => {
     vi.restoreAllMocks();
-    // The Testing tab, kept mounted, reads the version's runs (D14a Task 10): none here.
+    // The Testing tab, kept mounted, reads the version's runs: none here.
     vi.spyOn(apiClient, "getTestRuns").mockResolvedValue({ runs: [] });
-    // The builder's fields read the organization's variables' names once, for their $ picker (D20 Task 13): none here.
+    // The builder's fields read the organization's variables' names once, for their $ picker: none here.
     forgetOrgVariableNames();
     vi.spyOn(apiClient, "getOrganizationVariables").mockResolvedValue([]);
     selectConfigurationVersion = vi.spyOn(apiClient, "selectConfigurationVersion").mockResolvedValue(undefined);
@@ -324,9 +323,9 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
       }));
     useUserStore.getState().clear();
     useEditorStore.setState(initialEditorState, true);
-    // D8's tests work in the YAML tab, which Configuration now precedes: the
-    // panel remembers the tab, as a person's would (Preflight ruling 7). The
-    // builder's own tests ("the builder", below) open on Configuration.
+    // Most tests here work in the YAML tab, which Configuration precedes: the
+    // panel remembers the tab, as a person's would. The builder's own tests
+    // ("the builder", below) open on Configuration.
     useEditorStore.setState({ activeTab: "yaml" });
     fake.props = null;
     fake.commands = [];
@@ -379,7 +378,7 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
       expect(getConfiguration).toHaveBeenCalledTimes(1);
     });
 
-    it("reads the collector catalogue once for the page, and the toolbar shows the distribution, locked, and the version's pin (D13a decision 8)", async () => {
+    it("reads the collector catalog once for the page, and the toolbar shows the distribution, locked, and the version's pin", async () => {
       serveConfiguration();
       renderPage();
 
@@ -389,13 +388,13 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
       expect(readCatalogue).toHaveBeenCalledOnce();
     });
 
-    it("checks the opened version's text at once with the collector validator, and the YAML tab's bar shows the answer (D13b decision 13)", async () => {
+    it("checks the opened version's text at once with the collector validator, and the YAML tab's bar shows the answer", async () => {
       serveConfiguration();
       renderPage();
 
       await loaded();
       await waitFor(() => expect(validateVersion).toHaveBeenCalledOnce());
-      // With the pin on screen, always (Ruling 57).
+      // With the pin on screen, always.
       expect(validateVersion).toHaveBeenCalledWith(PERSONAL_ID, MINE.id, VERSION.id, {
         yaml: YAML,
         collectorVersion: VERSION.collectorVersion,
@@ -425,7 +424,7 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
       ["a path segment", ".."],
       ["a UUID without its hyphens", "0199a0000000700080000000000000001"],
       ["a UUID in braces", `{${MINE.id}}`],
-    ])('shows "Configuration not found" for an id that is %s, and sends nothing (Preflight ruling 17)', async (_why, id) => {
+    ])('shows "Configuration not found" for an id that is %s, and sends nothing', async (_why, id) => {
       const getConfiguration = serveConfiguration();
       renderPage([signedInMember()], { path: `/editor/${encodeURIComponent(id)}` });
 
@@ -434,7 +433,7 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
       expect(getConfiguration).not.toHaveBeenCalled();
     });
 
-    it("asks for an uppercase UUID, which is canonical, and keeps it as typed when it names the version (D10 Preflight ruling 5)", async () => {
+    it("asks for an uppercase UUID, which is canonical, and keeps it as typed when it names the version", async () => {
       const getConfiguration = serveConfiguration();
       renderPage([signedInMember()], { path: `/editor/${MINE.id.toUpperCase()}` });
 
@@ -448,7 +447,7 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
       expect(useEditorStore.getState().loadCount).toBe(1);
     });
 
-    it("toasts nothing when the load finds the session over (401 unauthenticated), and says so in the page (D12 Ruling 39)", async () => {
+    it("toasts nothing when the load finds the session over (401 unauthenticated), and says so in the page", async () => {
       serveConfiguration(() => {
         throw new ApiError("unauthenticated", "You need to sign in.", { status: 401 });
       });
@@ -549,7 +548,7 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
       await loaded();
       typeInMonaco(EDITED);
 
-      // Another configuration is another path: the guard holds it (decision 15).
+      // Another configuration is another path: the guard holds it.
       await user.click(screen.getByRole("link", { name: "Open another" }));
       const held = await screen.findByRole("alertdialog", { name: "Unsaved Changes" });
       await user.click(within(held).getByRole("button", { name: "Discard Changes" }));
@@ -570,7 +569,7 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
     });
   });
 
-  describe("the organization (Preflight ruling 4)", () => {
+  describe("the organization", () => {
     it("loads again when the active organization changes while the editor is clean", async () => {
       const group = deferred<ConfigurationWithVersionResponse>();
       const getConfiguration = serveConfiguration((organizationId) =>
@@ -593,7 +592,7 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
       expect(useEditorStore.getState().configuration).toBeNull();
     });
 
-    it("the reload in the new organization, of the same text and pin, is checked at once: never stuck at validating (Ruling 57)", async () => {
+    it("the reload in the new organization, of the same text and pin, is checked at once: never stuck at validating", async () => {
       serveConfiguration(() => answerFor(MINE, VERSION));
       const { user } = renderPage([signedInMember(PERSONAL_ID), signedInMember(GROUP_ID)]);
       await loaded();
@@ -852,7 +851,7 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
       expect(error).not.toHaveBeenCalled();
     });
 
-    it("keeps the text when the terms are accepted after a save refused for them (Preflight ruling 4)", async () => {
+    it("keeps the text when the terms are accepted after a save refused for them", async () => {
       vi.spyOn(apiClient, "acceptTerms").mockResolvedValue(undefined);
       const getConfiguration = serveConfiguration();
       let termsAccepted = false;
@@ -981,7 +980,7 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
       expect(screen.getByText("Unsaved")).toBeInTheDocument();
     });
 
-    it("refuses text holding U+0000 without a request, keeping it (D8 decision 5)", async () => {
+    it("refuses text holding U+0000 without a request, keeping it", async () => {
       serveConfiguration();
       const saveConfigurationVersion = saving();
       const error = vi.spyOn(toast, "error");
@@ -1064,7 +1063,7 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
     });
   });
 
-  describe("the unsaved-changes guard (decision 15)", () => {
+  describe("the unsaved-changes guard", () => {
     async function held() {
       return screen.findByRole("alertdialog", { name: "Unsaved Changes" });
     }
@@ -1093,7 +1092,7 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
       expect(screen.getByText("Unsaved")).toBeInTheDocument();
     });
 
-    it("renders the dialog through the layout's dialogs slot (D8 decision 8)", async () => {
+    it("renders the dialog through the layout's dialogs slot", async () => {
       const layout = vi.spyOn(editorLayout, "EditorLayout");
       serveConfiguration();
       renderPage();
@@ -1175,7 +1174,7 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
         await user.click(within(await held()).getByRole("button", { name: "Save & Continue" }));
 
         await waitFor(() => expect(error).toHaveBeenCalledWith(message));
-        // No "Failed to save. Please try again." after it: one message (D8 decision 15).
+        // No "Failed to save. Please try again." after it: one message.
         await act(async () => {});
         expect(error.mock.calls.map(([called]) => called)).toEqual([message]);
         expect(saveConfigurationVersion).toHaveBeenCalledTimes(requests);
@@ -1245,7 +1244,7 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
       expect(unloading().prevented).toBe(false);
     });
 
-    it("lets the terms dialog's Cancel sign out while dirty, and goes to /login (Preflight ruling 18)", async () => {
+    it("lets the terms dialog's Cancel sign out while dirty, and goes to /login", async () => {
       serveConfiguration();
       saving(async () => {
         throw new ApiError("terms_acceptance_required", "Accept the current Terms of Service to continue.");
@@ -1267,7 +1266,7 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
     });
   });
 
-  describe("the tour (D9a decision 14)", () => {
+  describe("the tour", () => {
     it("starts only once the configuration has loaded", async () => {
       const answer = deferred<ConfigurationWithVersionResponse>();
       serveConfiguration(() => answer.promise);
@@ -1327,10 +1326,10 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
     });
   });
 
-  describe("the builder (D9a)", () => {
+  describe("the builder", () => {
     const STARTER = corpusText("starter.yaml");
 
-    // React Flow's jsdom mocks for this block alone (Preflight ruling 17).
+    // React Flow's jsdom mocks for this block alone.
     let restoreReactFlow: () => void;
     beforeAll(() => {
       restoreReactFlow = installReactFlowMocks();
@@ -1453,12 +1452,12 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
       expect(screen.getByRole("tab", { name: "YAML" })).toHaveAttribute("aria-selected", "true");
     });
 
-    it("Cmd/Ctrl+S saves an edit a Configuration field still holds, though the key isn't the field's (held edits, D9b)", async () => {
+    it("Cmd/Ctrl+S saves an edit a Configuration field still holds, though the key isn't the field's (held edits)", async () => {
       const saveConfigurationVersion = saving();
       await openStarter();
       const batch = useEditorStore.getState().graph.nodes.find((node) => node.data.componentSubType === "batch")!;
       act(() => useEditorStore.getState().selectNode(batch.id));
-      // Batch has a form: its box is in the collapsed "Advanced: Instance & YAML" (D9b decision 6).
+      // Batch has a form: its box is in the collapsed "Advanced: Instance & YAML".
       fireEvent.click(screen.getByRole("button", { name: "Advanced: Instance & YAML" }));
 
       fireEvent.change(screen.getByRole("textbox", { name: "Raw YAML" }), { target: { value: "timeout: 2s\n" } });
@@ -1475,13 +1474,13 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
 
     it.each([
       {
-        way: "a link clicked without blurring the box (the review's reproducer)",
+        way: "a link clicked without blurring the box",
         leave: () => fireEvent.click(screen.getByRole("link", { name: "Open another" })),
       },
       { way: "Back (the router going -1, a pop)", leave: () => act(() => void navigateInPage!(-1)) },
       { way: "a programmatic navigate", leave: () => act(() => void navigateInPage!(`/editor/${THEIRS.id}`)) },
     ])(
-      "writes a Raw YAML edit the box holds before $way to another configuration is judged, which holds it; the next configuration never gets it (ruling 36)",
+      "writes a Raw YAML edit the box holds before $way to another configuration is judged, which holds it; the next configuration never gets it",
       async ({ leave }) => {
         const theirs = deferred<ConfigurationWithVersionResponse>();
         serveConfiguration((_organizationId, configurationId) =>
@@ -1522,7 +1521,7 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
       },
     );
 
-    describe("the Configuration tab kept mounted (Ruling 86)", () => {
+    describe("the Configuration tab kept mounted", () => {
       const FILELOG_TEXT = [
         "receivers:",
         "  filelog:",
@@ -1563,7 +1562,7 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
         await user.click(screen.getByRole("button", { name: /^Metadata/ }));
         const removes = screen.queryAllByRole("button", { name: "Remove" });
         await user.click(screen.getAllByRole("button", { name: "Add Attribute" })[0]!);
-        // The held row, by its Remove: empty, it isn't written (D9b decision 9).
+        // The held row, by its Remove: empty, it isn't written.
         const withHeld = screen.getAllByRole("button", { name: "Remove" });
         expect(withHeld).toHaveLength(removes.length + 1);
         await user.click(screen.getByRole("button", { name: /^Operators/ }));
@@ -1616,7 +1615,7 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
         expect(screen.getByTestId("monaco-stub").textContent).toContain("    poll_interval: 2s\n");
       });
 
-      it("a programmatic switch to the YAML tab (the tour's) writes an edit a field still holds first (Ruling 89)", async () => {
+      it("a programmatic switch to the YAML tab (the tour's) writes an edit a field still holds first", async () => {
         await openFilelog();
         const pollInterval = document.getElementById("poll-interval") as HTMLInputElement;
         pollInterval.focus();
@@ -1636,7 +1635,7 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
         expect(useEditorStore.getState().history.past.length).toBe(entries);
       });
 
-      it("puts no config value in an attribute while hidden (decision 10)", async () => {
+      it("puts no config value in an attribute while hidden", async () => {
         const { user } = await openFilelog();
         await user.click(screen.getByRole("tab", { name: "YAML" }));
         await loaded();
@@ -1660,7 +1659,7 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
       expect(screen.getByRole("tab", { name: "Configuration" })).toBeDisabled();
       expect(screen.getByText("In Manual Edit Mode. Exit Manual Edit mode to resume canvas updates.")).toBeInTheDocument();
       expect(within(canvasColumn()).getByRole("button", { name: "Add pipeline" })).toBeDisabled();
-      // Apply waits for the collector validator's answer for the typed text, 2 s after the typing (D13b decision 2).
+      // Apply waits for the collector validator's answer for the typed text, 2 s after the typing.
       expect(screen.getByRole("button", { name: "Apply" })).toBeDisabled();
       expect(await screen.findByText("Yaml is Valid")).toBeInTheDocument();
       expect(validateVersion).toHaveBeenLastCalledWith(PERSONAL_ID, MINE.id, VERSION.id, {
@@ -1676,12 +1675,12 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
       expect(screen.queryByText("In Manual Edit Mode. Exit Manual Edit mode to resume canvas updates.")).toBeNull();
     });
 
-    describe("the Testing tab (D14a decision 21)", () => {
+    describe("the Testing tab", () => {
       it("is disabled with Configuration in manual edit mode, and enabled with it after Apply; its content kept mounted, hidden", async () => {
         const { user } = await openStarter();
         const testing = screen.getByRole("tab", { name: "Testing" });
         expect(testing).toBeEnabled();
-        // Kept mounted while another tab shows (D8's keepMounted): its Play is
+        // Kept mounted while another tab shows (keepMounted): its Play is
         // there, hidden from the accessibility tree.
         expect(screen.getByRole("button", { name: "Configure and run", hidden: true })).toBeInTheDocument();
         expect(screen.queryByRole("button", { name: "Configure and run" })).toBeNull();
@@ -1750,7 +1749,7 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
     });
   });
 
-  describe("the version in the address (D10 decision 9)", () => {
+  describe("the version in the address", () => {
     const VERSION_2 = versionFixture({
       id: "0199c000-0000-7000-8000-000000000012",
       versionNumber: 2,
@@ -1795,7 +1794,7 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
     /**
      * Every "Loading configuration…" the page shows from now on: the text of
      * each node added and each text changed, as the DOM records them, so a
-     * flash removed before the observer's callback is still seen (D10 Ruling 24).
+     * flash removed before the observer's callback is still seen.
      */
     function watchForLoading(): { seen: () => boolean; stop: () => void } {
       let seen = false;
@@ -1903,7 +1902,7 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
       expect(selectConfigurationVersion).toHaveBeenCalledTimes(1);
     });
 
-    it("records each settled version once under StrictMode's double effects (Preflight ruling 17)", async () => {
+    it("records each settled version once under StrictMode's double effects", async () => {
       serveVersions();
       renderPage([signedInMember()], { strict: true });
 
@@ -1913,7 +1912,7 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
       expect(selectConfigurationVersion).toHaveBeenCalledWith(PERSONAL_ID, MINE.id, { versionId: VERSION.id });
     });
 
-    it("a switch abandoned before its answer, back to the version recorded, records nothing again (Preflight ruling 17)", async () => {
+    it("a switch abandoned before its answer, back to the version recorded, records nothing again", async () => {
       const second = deferred<ConfigurationWithVersionResponse>();
       const { getConfigurationVersion } = serveVersions({ [VERSION_2.id]: () => second.promise });
       renderPage();
@@ -1959,7 +1958,7 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
       expect(before.selectedNode).not.toBeNull();
       expect(selectIsDirty(before)).toBe(false);
 
-      // The picker's switch replaces the address (Task 4); a clean editor isn't held.
+      // The picker's switch replaces the address; a clean editor isn't held.
       act(() => void navigateInPage!(versionsPath(VERSION_2.id), { replace: true }));
 
       // While it loads, the version before is gone, and nothing of it is editable.
@@ -2038,7 +2037,7 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
       layoutLoader.mockImplementationOnce((() => pushed.promise) as never);
       const loading = watchForLoading();
 
-      // The create hook's order (Task 4): adopt, then push.
+      // The create hook's order: adopt, then push.
       act(() => {
         useEditorStore.getState().adoptCreatedVersion(VERSION_3);
         void navigateInPage!(versionsPath(VERSION_3.id));
@@ -2066,7 +2065,7 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
       expect(useEditorStore.getState().version).toEqual(VERSION);
     });
 
-    it("a create while dirty, with the layout's loader deferred, never calls getConfigurationVersion (Preflight ruling 4)", async () => {
+    it("a create while dirty, with the layout's loader deferred, never calls getConfigurationVersion", async () => {
       const { getConfiguration, getConfigurationVersion } = serveVersions();
       const { layoutLoader } = renderPage();
       await loaded();
@@ -2105,7 +2104,7 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
       expect(selectConfigurationVersion).toHaveBeenLastCalledWith(PERSONAL_ID, MINE.id, { versionId: created.id });
     });
 
-    it("a create's push abandoned for the source's address loads the source, never leaving the created version under it (D10 Ruling 21)", async () => {
+    it("a create's push abandoned for the source's address loads the source, never leaving the created version under it", async () => {
       const { getConfiguration, getConfigurationVersion } = serveVersions();
       const { layoutLoader } = renderPage();
       await loaded();
@@ -2145,14 +2144,14 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
       expect(screen.getByTestId("monaco-stub").textContent).toBe(VERSION_3.yamlContent);
     });
 
-    describe("the picker's choice of the source while a create's push waits, with text typed in the created version (D10 Ruling 27)", () => {
+    describe("the picker's choice of the source while a create's push waits, with text typed in the created version", () => {
       const TYPED = `${VERSION_3.yamlContent}# typed in the created version\n`;
 
       /**
        * A create adopted (the hook's order: adopt, then push), its push
        * waiting on the layout's loader, text typed in the created version,
        * then the picker's choice of the source: the address the page is still
-       * on, which the page would fetch the source for (D10 Ruling 21).
+       * on, which the page would fetch the source for.
        */
       async function chooseTheSourceWhileDirty() {
         const reads = serveVersions();
@@ -2230,7 +2229,7 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
       });
     });
 
-    it("an organization change on a clean editor after a create's push landed reloads the created version's address, not the source (D10 Ruling 21)", async () => {
+    it("an organization change on a clean editor after a create's push landed reloads the created version's address, not the source", async () => {
       const { getConfigurationVersion } = serveVersions();
       const { user } = renderPage([signedInMember(PERSONAL_ID), signedInMember(PERSONAL_ID), signedInMember(GROUP_ID)]);
       await loaded();
@@ -2253,7 +2252,7 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
       expect(address()).toBe(versionsPath(VERSION_3.id));
     });
 
-    it("Create New Version from the picker at an upper-case address, while dirty: the created version opens at its address as typed, nothing fetched (Task 4)", async () => {
+    it("Create New Version from the picker at an upper-case address, while dirty: the created version opens at its address as typed, nothing fetched", async () => {
       const upper = MINE.id.toUpperCase();
       const { getConfigurationVersion } = serveVersions();
       const created = { ...VERSION_3, yamlContent: EDITED, label: "From the picker" };
@@ -2411,7 +2410,7 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
     });
   });
 
-  it("puts no name, YAML or email in any attribute, loaded, dirty, renaming, or after a toast (ADR 0024)", async () => {
+  it("puts no name, YAML or email in any attribute, loaded, dirty, renaming, or after a toast", async () => {
     const name = "Marker name 4c1f";
     const yaml = "marker-yaml-9e2d:\n  secret: s3cr3t-8a7b\n";
     const configuration: Configuration = { ...MINE, name, createdBy: { userId: MINE.createdBy!.userId, email: MEMBER_EMAIL } };
@@ -2455,7 +2454,7 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
     assertNoAttributeCarries();
   });
 
-  describe("a published version (D11b decision 4; Preflight rulings 11 and 12)", () => {
+  describe("a published version", () => {
     const STARTER = corpusText("starter.yaml");
     const BANNER = "Version 1 is published and can't be changed.";
     const PUBLISHED_VERSION = { ...VERSION, yamlContent: STARTER, ...PUBLISHED_FIELDS };
@@ -2544,7 +2543,7 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
       expect(screen.getByRole("button", { name: "Publish" })).toBeDisabled();
     });
 
-    it("a teammate's save since the tab loaded: Publish is refused as changed, and the version opens again with the newer text, nothing published (Ruling 30)", async () => {
+    it("a teammate's save since the tab loaded: Publish is refused as changed, and the version opens again with the newer text, nothing published", async () => {
       const NEWER = { ...VERSION, yamlContent: `${STARTER}# a teammate's save\n`, updatedAt: "2026-10-04T12:30:00.000Z" };
       let teammateSaved = false;
       const reads = serveConfiguration(() => answerFor(MINE, teammateSaved ? NEWER : { ...VERSION, yamlContent: STARTER }));
@@ -2581,7 +2580,7 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
       expect(screen.getByRole("button", { name: "Publish" })).toBeEnabled();
     });
 
-    it("a Publish refused as changed whose re-read holds the same text and pin is checked again at once: never stuck at validating (Ruling 57)", async () => {
+    it("a Publish refused as changed whose re-read holds the same text and pin is checked again at once: never stuck at validating", async () => {
       // A teammate's save that changed only the layout: the same text, a newer updatedAt.
       const SAME_TEXT = { ...VERSION, yamlContent: STARTER, updatedAt: "2026-10-04T12:30:00.000Z" };
       let teammateSaved = false;
@@ -2610,7 +2609,7 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
     it.each([
       ["outside Monaco", () => fireEvent.keyDown(window, { key: "s", metaKey: true })],
       ["in Monaco's own command", () => fake.commands[0]!()],
-    ])("Cmd/Ctrl+S on a published version %s says it is published and sends nothing (Ruling 31)", async (_where, press) => {
+    ])("Cmd/Ctrl+S on a published version %s says it is published and sends nothing", async (_where, press) => {
       serveConfiguration(() => answerFor(MINE, PUBLISHED_VERSION));
       const saveConfigurationVersion = vi.spyOn(apiClient, "saveConfigurationVersion");
       const error = vi.spyOn(toast, "error");
@@ -2628,7 +2627,7 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
       expect(saveConfigurationVersion).not.toHaveBeenCalled();
     });
 
-    it("a stale tab locked in manual edit mode can Undo All, leaving the mode: the Configuration tab opens and a node can be inspected, still read-only (Ruling 31)", async () => {
+    it("a stale tab locked in manual edit mode can Undo All, leaving the mode: the Configuration tab opens and a node can be inspected, still read-only", async () => {
       let publishedElsewhere = false;
       serveConfiguration(() => answerFor(MINE, publishedElsewhere ? PUBLISHED_VERSION : { ...VERSION, yamlContent: STARTER }));
       vi.spyOn(apiClient, "saveConfigurationVersion").mockImplementation(async () => {
@@ -2663,7 +2662,7 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
       expect(screen.getByText(BANNER)).toBeInTheDocument();
     });
 
-    it("a canvas change made before the typing and never saved: Undo All on the locked tab puts back what was published, Unsaved goes, and leaving asks nothing (Ruling 34)", async () => {
+    it("a canvas change made before the typing and never saved: Undo All on the locked tab puts back what was published, Unsaved goes, and leaving asks nothing", async () => {
       let publishedElsewhere = false;
       serveConfiguration(() => answerFor(MINE, publishedElsewhere ? PUBLISHED_VERSION : { ...VERSION, yamlContent: STARTER }));
       vi.spyOn(apiClient, "saveConfigurationVersion").mockImplementation(async () => {
@@ -2743,7 +2742,7 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
       expect(await screen.findByText("landed on /app")).toBeInTheDocument();
     });
 
-    describe("a teammate published content this tab never loaded (Ruling 35)", () => {
+    describe("a teammate published content this tab never loaded", () => {
       const TEAMMATE_TEXT = STARTER.replace("timeout: '10s'", "timeout: '3s'");
       const TEAMMATE_PUBLISHED = {
         ...VERSION,

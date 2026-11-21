@@ -1,9 +1,8 @@
 """Regression tests for the subprocess concurrency cap and stderr buffer cap.
 
-They close a security review's findings #3 (no concurrency cap) and #4
-(unbounded stderr buffer). The two are tested together because they live in
-the same code path (the runner). D13b ruling 33 reads the pipes through one
-subprocess protocol, `_Pipes`.
+They cover a concurrency cap and a bounded stderr buffer. The two are tested
+together because they live in the same code path (the runner), which reads
+the pipes through one subprocess protocol, `_Pipes`.
 """
 from __future__ import annotations
 

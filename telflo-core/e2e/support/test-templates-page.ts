@@ -12,14 +12,14 @@ import { open } from "./editor-page.js";
 import { E2E_WEB_URL } from "./environment.js";
 import type { PickedFile } from "./test-runs-page.js";
 
-// Test templates (D14b Tasks 5, 7 and 8) for the browser tests: the product
-// admin's /product-admin/test-templates page, and the templates' API as a
-// product admin, for tests about what members do with a template.
+// Test templates for the browser tests: the product admin's
+// /product-admin/test-templates page, and the templates' API as a product
+// admin, for tests about what members do with a template.
 //
 // Templates are global, as flows are: every parallel test sees what another
 // wrote. So each test names its own `e2e-<uuid>`, asserts only on its own
 // rows (never a count or the empty state), and deletes them as the tables'
-// owner when it ends (deleteTestTemplates, D14b Preflight ruling 27).
+// owner when it ends (deleteTestTemplates).
 
 /** A template name no other test uses, with the clean-up's prefix. */
 export function uniqueTemplateName(): string {
@@ -82,10 +82,10 @@ export function templateDialog(page: Page, title: "New Test Template" | "Edit Te
 }
 
 /**
- * The admin nav's items as their text reads, in order (D29 decision 36,
- * Preflight ruling 14): User Feedback with its pending count (any integer,
- * or none when it couldn't be read: other workers' feedback moves it), then
- * the other pages in their order, then Product admins.
+ * The admin nav's items as their text reads, in order: User Feedback with its
+ * pending count (any integer, or none when it couldn't be read: other workers'
+ * feedback moves it), then the other pages in their order, then Product
+ * admins.
  */
 export const ADMIN_NAV_ITEMS: Array<string | RegExp> = [
   /^User Feedback\s*\d*$/,

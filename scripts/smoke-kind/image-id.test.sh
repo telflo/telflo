@@ -1,6 +1,6 @@
 #!/bin/bash
 # Tests for scripts/smoke-kind/image-id.sh (the kind smoke's step-4 image-id
-# check, D36-2 Ruling 394) and its store switch through scripts/release/
+# check) and its store switch through scripts/release/
 # oci.sh's telflo_engine_store, offline: a stand-in `docker` first on PATH
 # answers `info` (the classic or containerd image store), `image inspect`
 # (the host's id) and `exec <node> crictl|ctr` (the node's record) from the
@@ -89,7 +89,7 @@ export SD_STORE=containerd
 check "telflo_engine_store: containerd" "[ \"\$(telflo_engine_store)\" = containerd ]"
 # On containerd's store the host's id is the manifest digest; the node's .status.id stays the config digest.
 export SD_HOST_ID=$manifest SD_NODE_CONFIG=$config SD_NODE_TAGS=$api SD_NODE_NAME=$api SD_NODE_TARGET=$manifest
-check "containerd store: the comparison the classic store makes would refuse a good load (the ruling's case)" "! ids $api classic"
+check "containerd store: the comparison the classic store makes would refuse a good load" "! ids $api classic"
 check "containerd store: the host's manifest digest equals the node's record of that name: loaded" "ids $api containerd"
 export SD_NODE_TARGET=$other
 check "containerd store: the node's record targets another manifest: refused" "! ids $api containerd && [ \"\$SK_NODE_ID\" = $other ]"

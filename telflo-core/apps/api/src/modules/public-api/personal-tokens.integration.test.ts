@@ -28,9 +28,8 @@ import { apiActorOf } from "./actor.js";
 import { createApiTokenOrganizationCheck, createApiTokenStore, createAuthenticateApiToken } from "./authenticate-api-token.js";
 
 /*
- * A person's own `tf_` token on the public surface (D25 decisions 3, 21,
- * 24, 26, 30 and 53; Rulings 160 and 161), through the real server as the
- * API's own role:
+ * A person's own `tf_` token on the public surface, through the real server
+ * as the API's own role:
  *   - X-Telflo-Org's three answers on a route that needs it: missing or not
  *     a uuid → 400 organization_required; a non-member, a deleted and an
  *     unknown organization → the one 403 organization_access_denied;
@@ -55,7 +54,7 @@ const opamp = useFakeOpampServer();
 const csrfHeaders = { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE };
 const PASSWORD = "a-sufficiently-long-password";
 const P = "/api/public/v1";
-/** On the root, outside /api/public/v1 (where the root guard refuses any route but the plugin's: Ruling 163). */
+/** On the root, outside /api/public/v1 (where the root guard refuses any route but the plugin's). */
 const ADMIN_PROBE_ROUTE = "/test-only/personal-token-admin";
 
 const ORGANIZATION_REQUIRED = JSON.stringify({
@@ -74,7 +73,7 @@ function cookieValue(response: LightMyRequestResponse, name: string): string {
   return line.slice(name.length + 1, line.indexOf(";"));
 }
 
-describe("a personal token on the public surface (D25 decisions 21, 24 and 30)", () => {
+describe("a personal token on the public surface", () => {
   let settings: AppSettings;
   let db: Kysely<Database>;
   let ownerDb: Kysely<Database>;
@@ -168,7 +167,7 @@ describe("a personal token on the public surface (D25 decisions 21, 24 and 30)",
       payload: { organizationId: organization.id },
     });
     expect(switched.statusCode).toBe(200);
-    // A no-op when the sign-in already landed there (D36-1 decision 56): no new cookie, the token sent stands.
+    // A no-op when the sign-in already landed there: no new cookie, the token sent stands.
     return { id: organization.id, name, adminId: admin.user.id, access: (switched.headers["set-cookie"] === undefined ? cookieValue(signIn, "telflo_access") : cookieValue(switched, "telflo_access")) };
   };
 
@@ -286,7 +285,7 @@ describe("a personal token on the public surface (D25 decisions 21, 24 and 30)",
     expect((await configurations(ben.token, team.id)).json<{ items: Array<{ id: string }> }>().items.map((item) => item.id)).toEqual([bens]);
   });
 
-  it("a refused organization spends the token's per-token minute, and never the address's failure limit (Ruling 160, decision 24)", async () => {
+  it("a refused organization spends the token's per-token minute, and never the address's failure limit", async () => {
     const limited = serverWith({
       ...TEST_RATE_LIMITS,
       publicApiPerToken: { max: 3, windowMs: 60_000 },
@@ -334,7 +333,7 @@ describe("a personal token on the public surface (D25 decisions 21, 24 and 30)",
     expect(refused.json<{ error: { code: string } }>().error.code).toBe("invalid_api_token");
   });
 
-  describe("/whoami and /orgs for a person (decision 30)", () => {
+  describe("/whoami and /orgs for a person", () => {
     const whoami = (token: string, organizationId?: string) => call(`${P}/whoami`, token, organizationId);
     const orgs = (token: string, organizationId?: string) => call(`${P}/orgs`, token, organizationId);
 

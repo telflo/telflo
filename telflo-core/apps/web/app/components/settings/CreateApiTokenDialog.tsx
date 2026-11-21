@@ -16,8 +16,7 @@ import { useOpeningKey } from "~/lib/hooks/use-opening-key.js";
 import { API_TOKEN_CREATE_FAILED_MESSAGE, useServiceAccountTokenCalls } from "~/lib/service-accounts.js";
 
 /*
- * "Create API token" (D22 decisions 8, 31, 43 and 48; Preflight rulings 25,
- * 26, 30 and 31):
+ * "Create API token":
  *
  * - "Name" (placeholder "e.g. CI pipeline"), typed inside `ph-no-capture`,
  *   uncontrolled: no `value` attribute holds it. "Create token" is enabled
@@ -26,8 +25,8 @@ import { API_TOKEN_CREATE_FAILED_MESSAGE, useServiceAccountTokenCalls } from "~/
  * - "Expires in (days, optional)", placeholder "Never": blank is never;
  *   otherwise a whole number from 1 to 3650, checked before sending ("Enter
  *   a whole number of days from 1 to 3650."). A text field with a numeric
- *   keyboard (Preflight ruling 31), not `type="number"`, which gives `""`
- *   for mistyped input, so a typo can't read as "never".
+ *   keyboard, not `type="number"`, which gives `""` for mistyped input, so
+ *   a typo can't read as "never".
  * - The create's reply is the only place the token crosses the API. It is
  *   handed to `onCreated` and kept nowhere here: the page holds it for the
  *   reveal only.
@@ -36,10 +35,9 @@ import { API_TOKEN_CREATE_FAILED_MESSAGE, useServiceAccountTokenCalls } from "~/
  *   "Failed to create token" and the page reads the list again (a token
  *   made then can only be revoked); a refusal saying management is lost
  *   leaves through `useLeaveManagement`. Unclosable while it creates.
- * - Whose token (D25 Preflight ruling 22): a service account's (its
- *   organization and id, D22's callers unchanged), or anyone's given as
- *   `calls` (the Account page's own tokens): the create, whether its answer
- *   still belongs on screen, and the failure words.
+ * - Whose token: a service account's (its organization and id), or anyone's
+ *   given as `calls` (the Account page's own tokens): the create, whether
+ *   its answer still belongs on screen, and the failure words.
  */
 
 interface CreateApiTokenDialogBaseProps {
@@ -51,7 +49,7 @@ interface CreateApiTokenDialogBaseProps {
   onUnknownOutcome: () => void;
 }
 
-/** A service account's (D22), or the tokens' owner's calls (D25). */
+/** A service account's, or the tokens' owner's calls. */
 export type CreateApiTokenDialogProps = CreateApiTokenDialogBaseProps &
   (
     | { organizationId: string; serviceAccountId: string; calls?: never }

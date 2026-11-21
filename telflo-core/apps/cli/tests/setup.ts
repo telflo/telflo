@@ -1,10 +1,9 @@
 /*
- * Every cli test file starts away from any real login (D27 Preflight
- * ruling 4; brief rules: the owner's `~/.telflo/` and `~/.config/telflo/`
- * are never opened): no `TELFLO_TOKEN`, `TELFLO_SERVER` or `TELFLO_ORG` from
- * the shell, no `TELFLO_CONFIG_DIR` (the older CLI's, never read: Ruling
- * 232), and `TELFLO_CLI_CONFIG_DIR`, `XDG_CONFIG_HOME` and `HOME` in a
- * temporary folder of the file's own, removed afterwards.
+ * Every cli test file starts away from any real login (a developer's own
+ * `~/.telflo/` and `~/.config/telflo/` are never opened): no `TELFLO_TOKEN`,
+ * `TELFLO_SERVER` or `TELFLO_ORG` from the shell, no `TELFLO_CONFIG_DIR`
+ * (never read), and `TELFLO_CLI_CONFIG_DIR`, `XDG_CONFIG_HOME` and `HOME` in
+ * a temporary folder of the file's own, removed afterwards.
  */
 
 import { mkdirSync, mkdtempSync, rmSync } from "node:fs";

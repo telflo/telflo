@@ -6,7 +6,7 @@ import { formatDateTime } from "~/lib/format.js";
 import { FLEET_ID } from "~/test/fleets.js";
 import { ARCHIVED_TOOLTIP, expiryBucket, SUSPENDED_TOOLTIP, TOKEN_LINK_SUFFIX, TokenCell, tokenBucket, tokenTooltipLines } from "./TokenCell.js";
 
-// The Token column (D17a decision 21, Preflight rulings 4 and 12).
+// The Token column.
 
 const NOW = Date.parse("2026-10-14T12:00:00.000Z");
 const SECOND = 1000;
@@ -25,7 +25,7 @@ function renderCell(rotateToken: FleetRotateToken | null, status: FleetStatus = 
   );
 }
 
-describe("tokenBucket (Preflight ruling 12)", () => {
+describe("tokenBucket", () => {
   it("is Suspended (outline) with no valid rotate token, and Never (secondary) for one that never expires", () => {
     expect(tokenBucket(null, NOW)).toEqual({ variant: "outline", label: "Suspended" });
     expect(tokenBucket({ expiresAt: null, graceEndsAt: null, validCount: 1 }, NOW)).toEqual({ variant: "secondary", label: "Never" });
@@ -47,7 +47,7 @@ describe("tokenBucket (Preflight ruling 12)", () => {
     ["345 days", 345 * DAY, "success", "1y"],
     ["547 days", 547 * DAY, "success", "1y"],
     ["548 days", 548 * DAY, "success", "2y"],
-    // Each create preset (Task 5), read 2 s after it was made.
+    // Each create preset, read 2 s after it was made.
     ["180 days less 2 s (the preset)", 180 * DAY - 2 * SECOND, "success", "6mo"],
     ["1 year less 2 s (the preset)", 365 * DAY - 2 * SECOND, "success", "1y"],
     ["2 years less 2 s (the preset)", 730 * DAY - 2 * SECOND, "success", "2y"],
@@ -56,7 +56,7 @@ describe("tokenBucket (Preflight ruling 12)", () => {
   });
 });
 
-describe("expiryBucket (D17b-2 decision 26, Preflight ruling 12)", () => {
+describe("expiryBucket", () => {
   it("is Never (secondary) for no expiry, and never Suspended", () => {
     expect(expiryBucket(null, NOW)).toEqual({ variant: "secondary", label: "Never" });
   });
@@ -77,7 +77,7 @@ describe("expiryBucket (D17b-2 decision 26, Preflight ruling 12)", () => {
   });
 });
 
-describe("tokenTooltipLines (Preflight rulings 4 and 12)", () => {
+describe("tokenTooltipLines", () => {
   it("says the valid count and the current token's expiry", () => {
     const expiresAt = new Date(NOW + 90 * DAY).toISOString();
     expect(tokenTooltipLines({ expiresAt, graceEndsAt: null, validCount: 1 }, "active")).toEqual([
@@ -106,9 +106,9 @@ describe("tokenTooltipLines (Preflight rulings 4 and 12)", () => {
     );
   });
 
-  // The final review's Minor: the agent endpoint refuses an archived fleet's
-  // every collector (403, or 401 for a dead token), so neither the Suspended words nor the grace's
-  // move to the current token is true of it; the factual lines stay.
+  // The agent endpoint refuses an archived fleet's every collector (403, or 401 for a dead token),
+  // so neither the Suspended words nor the grace's move to the current token is true of it; the
+  // factual lines stay.
   describe("for an archived fleet", () => {
     it("says its collectors are refused in place of the Suspended words", () => {
       expect(tokenTooltipLines(null, "archived")).toEqual([ARCHIVED_TOOLTIP]);
@@ -142,8 +142,8 @@ describe("tokenTooltipLines (Preflight rulings 4 and 12)", () => {
 });
 
 describe("TokenCell", () => {
-  // One route for every type (decision 7).
-  it("links the badge to the fleet's Tokens tab, its name saying where it goes (Ruling 25)", () => {
+  // One route for every type.
+  it("links the badge to the fleet's Tokens tab, its name saying where it goes", () => {
     renderCell(expiringIn(400 * DAY));
     expect(screen.getByRole("link", { name: "1y (open the Tokens tab)" })).toHaveAttribute("href", `/fleet-management/${FLEET_ID}?tab=tokens`);
     expect(TOKEN_LINK_SUFFIX).toBe(" (open the Tokens tab)");
@@ -155,7 +155,7 @@ describe("TokenCell", () => {
     [expiringIn(3 * DAY), "3d left", "text-fail"],
     [expiringIn(20 * DAY), "20d left", "text-warn"],
     [expiringIn(400 * DAY), "1y", "text-ok"],
-  ] as const)("shows the bucket's badge in its colour (%#)", (rotateToken, label, colour) => {
+  ] as const)("shows the bucket's badge in its color (%#)", (rotateToken, label, colour) => {
     renderCell(rotateToken);
     expect(screen.getByText(label)).toHaveClass(colour);
     expect(screen.queryByText("Rotating →")).toBeNull();

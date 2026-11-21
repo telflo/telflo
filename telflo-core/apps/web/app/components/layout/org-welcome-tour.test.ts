@@ -6,7 +6,7 @@ import {
   startOrgWelcomeTour,
 } from "./org-welcome-tour.js";
 
-// The callout's four behaviours, each a test (D6 Parity Notes).
+// The callout's four behaviors, each a test.
 
 describe("orgWelcomeMessage", () => {
   it("includes the org name and the switcher hint", () => {
@@ -31,7 +31,7 @@ describe("orgWelcomeMessage", () => {
   });
 });
 
-describe("orgWelcomeMessage's name for a personal workspace (D36-1 Q264)", () => {
+describe("orgWelcomeMessage's name for a personal workspace", () => {
   it("says <email>'s organization for one named by its owner's email, the email and 's in bold", () => {
     expect(orgWelcomeMessage("owner@example.com", "personal")).toEqual({
       title: "Welcome to owner@example.com's organization",

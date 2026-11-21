@@ -5,7 +5,7 @@ import { runCli, type CliRun } from "../../tests/run-cli.js";
 import { deleteCredentials, saveCredentials } from "../credentials.js";
 import { describeRule, NO_PIPELINES_MESSAGE } from "./config-rules.js";
 
-/* telflo config rules (D27 decision 27, route 13). */
+/* telflo config rules (route 13). */
 
 const SERVER = "https://telflo.example";
 const ORGANIZATION = "0b7e8a9c-1d2e-4f30-8a4b-5c6d7e8f9a0b";
@@ -112,7 +112,7 @@ describe("telflo config rules", () => {
   });
 });
 
-describe("terminal text (Ruling 237)", () => {
+describe("terminal text", () => {
   it("strips control characters from every server string it prints", async () => {
     const escape = "\u001b]0;title\u0007\u009b2J";
     const hostile = {

@@ -1,9 +1,8 @@
-# A hosted install's site values (D36-1 decision 27): open registration, the
-# playground and the anonymous reads on, the Terms asked with their URLs,
-# the sales inquiries on with their address, Settings › Notifications on
-# (Q270); mail over implicit TLS with a login and a private CA; and the
-# marketing site's / and /home/ through
-# gateway.extraRoutes (decision 24: tests/expected/extra-routes.conf).
+# A hosted install's site values: open registration, the playground and the
+# anonymous reads on, the Terms asked with their URLs, the sales inquiries on
+# with their address, Settings › Notifications on; mail over implicit TLS with
+# a login and a private CA; and the website's / and /home/ through
+# gateway.extraRoutes (tests/expected/extra-routes.conf).
 publicUrl: https://telflo.example.com
 site:
   registration: open
@@ -35,9 +34,9 @@ gateway:
   extraRoutes:
     - path: /
       match: exact
-      service: telflo-site
+      service: website
       port: 8081
     - path: /home/
       match: prefix
-      service: telflo-site
+      service: website
       port: 8081

@@ -19,18 +19,18 @@ import {
 
 /*
  * The public surface's request and response shapes for fleets, their groups
- * and install (routes 17–23) (D25 decisions 17, 18, 19 and 35–38; Preflight
- * rulings 10 and 11): strict Zod schemas, camelCase, reusing the platform's contracts where they
- * already hold a field (the label, the type, a group's name, namespace and
- * replicas, the install's arch, root path and variables).
+ * and install (routes 17–23): strict Zod schemas, camelCase, reusing the
+ * platform's contracts where they already hold a field (the label, the type, a
+ * group's name, namespace and replicas, the install's arch, root path and
+ * variables).
  *
  * A fleet's deployments are its collector groups (`/groups`); an install's
  * variables are `[{ name, value }]`. Fleet types are the platform's.
  *
  * A fleet's label and a group's name are organization content; a bearer,
  * a quick-deploy link's secret and a Helm link's secret are secrets: only
- * install's reply carries one, inside `command` (decision 38), and no
- * other reply here holds any.
+ * install's reply carries one, inside `command`, and no other reply here
+ * holds any.
  */
 
 const uuid = z.string().uuid();
@@ -53,9 +53,9 @@ export const PUBLIC_FLEET_TOKEN_EXPIRY_DAYS: Readonly<Record<PublicFleetTokenExp
 };
 
 /**
- * `POST /fleets` (decision 35): the label (unique in the organization: a
- * taken one is 409 `fleet_label_taken`), the type, and the rotate token's
- * lifetime (`never` when left out).
+ * `POST /fleets`: the label (unique in the organization: a taken one is
+ * 409 `fleet_label_taken`), the type, and the rotate token's lifetime
+ * (`never` when left out).
  */
 export const PublicCreateFleetRequestSchema = z
   .object({
@@ -68,9 +68,9 @@ export const PublicCreateFleetRequestSchema = z
 export type PublicCreateFleetRequest = z.input<typeof PublicCreateFleetRequestSchema>;
 
 /**
- * A fleet's create, 201: the fleet and its rotate token's id
- * and expiry (null for never). NO bearer (decision 15): a fleet's tokens are
- * revealed in the browser, and install answers a ready command.
+ * A fleet's create, 201: the fleet and its rotate token's id and expiry (null
+ * for never). NO bearer: a fleet's tokens are revealed in the browser, and
+ * install answers a ready command.
  */
 export const PublicFleetCreatedSchema = z
   .object({
@@ -97,15 +97,15 @@ export const PublicFleetSchema = z
 
 export type PublicFleet = z.infer<typeof PublicFleetSchema>;
 
-/** `GET /fleets`: a page, newest first (decision 19); `nextCursor` null on the last. */
+/** `GET /fleets`: a page, newest first; `nextCursor` null on the last. */
 export const PublicFleetsPageSchema = z.object({ items: z.array(PublicFleetSchema), nextCursor: z.string().nullable() }).strict();
 
 export type PublicFleetsPage = z.infer<typeof PublicFleetsPageSchema>;
 
 /**
- * `GET /fleets`' query (decision 19, Preflight ruling 11): `limit` 1–100
- * (50 when left out) and `cursor` a previous page's `nextCursor`. Strict:
- * anything else is 400 `invalid_request`.
+ * `GET /fleets`' query: `limit` 1–100 (50 when left out) and `cursor` a
+ * previous page's `nextCursor`. Strict: anything else is 400
+ * `invalid_request`.
  */
 export const PublicListFleetsQuerySchema = z
   .object({
@@ -147,7 +147,7 @@ export const PublicCollectorGroupSchema = z
 
 export type PublicCollectorGroup = z.infer<typeof PublicCollectorGroupSchema>;
 
-/** `GET /fleets/{fleetId}/groups`: every group, the Default group first, in one page (decision 19). */
+/** `GET /fleets/{fleetId}/groups`: every group, the Default group first, in one page. */
 export const PublicCollectorGroupsSchema = z.object({ items: z.array(PublicCollectorGroupSchema), nextCursor: z.null() }).strict();
 
 export type PublicCollectorGroups = z.infer<typeof PublicCollectorGroupsSchema>;
@@ -156,14 +156,13 @@ export type PublicCollectorGroups = z.infer<typeof PublicCollectorGroupsSchema>;
 const VersionNumberSchema = z.number().int().min(1).max(999_999_999);
 
 /**
- * `POST /fleets/{fleetId}/groups` (decision 35): a name,
- * and the configuration's version to assign, which must be published (422
- * `configuration_version_not_published`). On a Kubernetes-supervisor fleet
- * the group is the Cluster (named `cluster`) or a gateway pool (any other
- * name, a DNS-1035 label): `role`, when sent, must be that; `namespace`
- * (`telflo-collectors` when left out) and a gateway's `replicas` (1 when
- * left out) are its settings. A server fleet's group takes none of the
- * three (400 at the field).
+ * `POST /fleets/{fleetId}/groups`: a name, and the configuration's version to
+ * assign, which must be published (422 `configuration_version_not_published`).
+ * On a Kubernetes-supervisor fleet the group is the Cluster (named `cluster`)
+ * or a gateway pool (any other name, a DNS-1035 label): `role`, when sent,
+ * must be that; `namespace` (`telflo-collectors` when left out) and a
+ * gateway's `replicas` (1 when left out) are its settings. A server fleet's
+ * group takes none of the three (400 at the field).
  */
 export const PublicCreateCollectorGroupRequestSchema = z
   .object({
@@ -179,15 +178,14 @@ export const PublicCreateCollectorGroupRequestSchema = z
 export type PublicCreateCollectorGroupRequest = z.infer<typeof PublicCreateCollectorGroupRequestSchema>;
 
 /**
- * `PATCH /fleets/{fleetId}/groups/{groupId}` (decision 35, Preflight ruling
- * 11), a merge: `configurationId` with `versionNumber` reassigns,
- * `versionNumber` alone moves to another version of the configuration
- * assigned, `configurationId: null` clears the assignment (with no
- * `versionNumber`), and `configurationId` without `versionNumber` is 400
- * `invalid_request`. A Kubernetes group's `namespace` (null: the default)
+ * `PATCH /fleets/{fleetId}/groups/{groupId}`, a merge: `configurationId` with
+ * `versionNumber` reassigns, `versionNumber` alone moves to another version of
+ * the configuration assigned, `configurationId: null` clears the assignment
+ * (with no `versionNumber`), and `configurationId` without `versionNumber` is
+ * 400 `invalid_request`. A Kubernetes group's `namespace` (null: the default)
  * and a gateway's `replicas` (null: 1) are merged into its settings; a
- * Kubernetes group is never renamed (409 `collector_group_name_fixed`).
- * `role` isn't patchable. At least one field.
+ * Kubernetes group is never renamed (409 `collector_group_name_fixed`). `role`
+ * isn't patchable. At least one field.
  */
 export const PublicUpdateCollectorGroupRequestSchema = z
   .object({
@@ -213,19 +211,19 @@ export const PublicUpdateCollectorGroupRequestSchema = z
 export type PublicUpdateCollectorGroupRequest = z.infer<typeof PublicUpdateCollectorGroupRequestSchema>;
 
 // ---------------------------------------------------------------------------
-// Install (route 19; decisions 37 and 38).
+// Install (route 19).
 
 /**
- * `collector_group_required`'s words (422; D25 decision 37): the public
- * install named no group, and the Kubernetes-supervisor fleet holds more
- * than one. The ids are in `details.groupIds`; the words name no group.
+ * `collector_group_required`'s words (422): the public install named no
+ * group, and the Kubernetes-supervisor fleet holds more than one. The ids are
+ * in `details.groupIds`; the words name no group.
  */
 export const COLLECTOR_GROUP_REQUIRED_MESSAGE = "This fleet has several groups: name the group to install in groupId.";
 
 /**
  * The public install's platform that doesn't suit the fleet's type (422
- * `fleet_type_not_installable`; D25 decision 37): the words of the API,
- * not the dialogs' (FLEET_TYPE_NOT_INSTALLABLE_MESSAGE names their buttons).
+ * `fleet_type_not_installable`): the words of the API, not the dialogs'
+ * (FLEET_TYPE_NOT_INSTALLABLE_MESSAGE names their buttons).
  */
 export const INSTALL_PLATFORM_NOT_SUITED_MESSAGE =
   "This platform doesn't suit the fleet's type: a server fleet installs with docker or linux, a kubernetes-supervisor fleet with kubernetes.";
@@ -236,11 +234,11 @@ export const PUBLIC_INSTALL_PLATFORMS = ["docker", "linux", "kubernetes"] as con
 export type PublicInstallPlatform = (typeof PUBLIC_INSTALL_PLATFORMS)[number];
 
 /**
- * The variables to set (D25 Ruling 174): at most 50, each named once, each
- * value TRIMMED, as the install dialog trims it (InstallDialog's `included`),
- * then the platform's rule on the trimmed value (1 to 4,096 characters, no
- * control character, no lone surrogate: a blank one is 400), so the command
- * and a link's sealed values are the dialog's for the same typing.
+ * The variables to set: at most 50, each named once, each value TRIMMED, as
+ * the install dialog trims it (InstallDialog's `included`), then the
+ * platform's rule on the trimmed value (1 to 4,096 characters, no control
+ * character, no lone surrogate: a blank one is 400), so the command and a
+ * link's sealed values are the dialog's for the same typing.
  */
 const InstallEnvSchema = z
   .array(
@@ -259,7 +257,7 @@ const InstallEnvSchema = z
   )
   .max(INSTALL_ENV_MAXIMUM, `At most ${INSTALL_ENV_MAXIMUM} variables.`);
 
-/** The collector's display name (D17c-1 decision 41): trimmed; empty is none; else 1 to 80 letters, digits, spaces, dots, dashes and underscores. */
+/** The collector's display name: trimmed; empty is none; else 1 to 80 letters, digits, spaces, dots, dashes and underscores. */
 const InstallDisplayNameSchema = z
   .string()
   .max(1000)
@@ -279,9 +277,9 @@ function eachVariableOnce(request: { env?: readonly { name: string }[] | undefin
 }
 
 /**
- * `POST /fleets/{fleetId}/install` (decision 37): a strict union on
- * `platform`. `groupId` left out is a server fleet's Default group, or a
- * Kubernetes fleet's only group (422 `collector_group_required` with
+ * `POST /fleets/{fleetId}/install`: a strict union on `platform`.
+ * `groupId` left out is a server fleet's Default group, or a Kubernetes
+ * fleet's only group (422 `collector_group_required` with
  * `details.groupIds` when it has several). Only the variables the group's
  * published version reads can be set (400 at `env.N.name`).
  *   - docker: the container command (`docker run`), the display name
@@ -326,14 +324,13 @@ export type PublicInstallRequest = z.infer<typeof PublicInstallRequestSchema>;
 export type PublicInstallRequestInput = z.input<typeof PublicInstallRequestSchema>;
 
 /**
- * Install's reply (decisions 37 and 38), `no-store`: the command the web's
- * dialog shows for the same choices, built by the shared builders. It is a
- * SECRET: docker's holds the fleet's default token's bearer, linux's the
- * bearer and a quick-deploy link's secret, kubernetes' a Helm values link's
- * secret, whose download answers the bearer. `notes` are fixed words (and
- * the names of the variables the version reads that weren't given);
- * `expiresAt` is the link's expiry (linux, kubernetes: 24 hours), null for
- * docker.
+ * Install's reply, `no-store`: the command the web's dialog shows for the
+ * same choices, built by the shared builders. It is a SECRET: docker's
+ * holds the fleet's default token's bearer, linux's the bearer and a
+ * quick-deploy link's secret, kubernetes' a Helm values link's secret,
+ * whose download answers the bearer. `notes` are fixed words (and the names
+ * of the variables the version reads that weren't given); `expiresAt` is
+ * the link's expiry (linux, kubernetes: 24 hours), null for docker.
  */
 export const PublicInstallReplySchema = z
   .object({

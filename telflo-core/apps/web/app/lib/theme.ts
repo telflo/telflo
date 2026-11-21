@@ -6,10 +6,10 @@ import { useUserStore } from "~/lib/stores/user-store.js";
 import type { AppLayoutData } from "~/routes/app-layout.js";
 
 /**
- * The app's theme on every page (D21 decisions 2, 5 and 22). `<html>`'s
- * class is in the server's HTML, so there is no script and no flash: root's
- * `Layout` picks the theme from the matched routes (`usePageTheme`), and the
- * Toaster takes the same. Nothing here touches browser storage.
+ * The app's theme on every page. `<html>`'s class is in the server's HTML,
+ * so there is no script and no flash: root's `Layout` picks the theme from
+ * the matched routes (`usePageTheme`), and the Toaster takes the same.
+ * Nothing here touches browser storage.
  */
 
 /** The theme's class: Light no class, Dark `dark`, Navy `dark navy`. */
@@ -26,7 +26,7 @@ export function themeClassName(theme: Theme): string {
 
 /**
  * A route's `handle` that marks it as one of the seven auth screens: it
- * renders the theme this browser was last told (decision 22's third row).
+ * renders the theme this browser was last told (`pageTheme`'s third row).
  */
 export type ThemeHandle = { theme: "remembered" };
 
@@ -60,8 +60,8 @@ function subscribe(listener: () => void): () => void {
 /**
  * The remembered theme, or null when there is none. Null during a server
  * render and during hydration too (the server snapshot): the null is what
- * keeps the hydrating render equal to the server's HTML (Preflight ruling
- * 26), so it is load-bearing, not a fallback.
+ * keeps the hydrating render equal to the server's HTML, so it is
+ * load-bearing, not a fallback.
  */
 export function useRememberedTheme(): Theme | null {
   return useSyncExternalStore(
@@ -72,12 +72,12 @@ export function useRememberedTheme(): Theme | null {
 }
 
 /**
- * The theme a signed-in page renders (decision 22's first row, Preflight
- * ruling 48): the user store's, once the store holds this user (Appearance's
- * optimistic choice included), else the stored theme from the layout's
- * `/me`. The store is empty on the server and while hydrating (it is seeded
- * in an effect), so both render the stored theme. Null when there is no
- * signed-in user. Reads no router hook.
+ * The theme a signed-in page renders (`pageTheme`'s first row): the user
+ * store's, once the store holds this user (Appearance's optimistic choice
+ * included), else the stored theme from the layout's `/me`. The store is empty
+ * on the server and while hydrating (it is seeded in an effect), so both
+ * render the stored theme. Null when there is no signed-in user. Reads no
+ * router hook.
  */
 export function useSignedInTheme(currentUser: CurrentUserResponse | null): Theme | null {
   const userId = currentUser?.user.id;
@@ -88,12 +88,11 @@ export function useSignedInTheme(currentUser: CurrentUserResponse | null): Theme
 }
 
 /**
- * The signed-in theme for components that sit only under the signed-in
- * layout and render outside any router, such as every Monaco (Preflight
- * ruling 47): the user store's, or contracts' default before the store is
- * seeded. Inside the playground, the visitor's (the theme on screen; D31-1
- * Preflight ruling 13), so Monaco follows the playground's toggle. Reads no
- * router hook.
+ * The signed-in theme for components that sit only under the signed-in layout
+ * and render outside any router, such as every Monaco: the user store's, or
+ * contracts' default before the store is seeded. Inside the playground, the
+ * visitor's (the theme on screen), so Monaco follows the playground's toggle.
+ * Reads no router hook.
  */
 export function useAppTheme(): Theme {
   const visitor = usePlaygroundVisitor();
@@ -101,7 +100,7 @@ export function useAppTheme(): Theme {
   return visitor?.preferences.theme ?? stored;
 }
 
-/** What decision 22's table reads, gathered by `usePageTheme`. */
+/** What `pageTheme`'s table reads, gathered by `usePageTheme`. */
 export type PageThemeInputs = {
   /** The signed-in layout's status, when the page is under it and its loader answered. */
   layout: AppLayoutData["status"] | undefined;
@@ -116,16 +115,16 @@ export type PageThemeInputs = {
 };
 
 /**
- * Decision 22's table (with Preflight rulings 24, 25 and 48). The same
- * inputs give the server's column and the client's: on the server and while
- * hydrating, the remembered value is null and the store empty.
+ * The page's theme, by this table. The same inputs give the server's column
+ * and the client's: on the server and while hydrating, the remembered value
+ * is null and the store empty.
  *
  * - Under the signed-in layout, `signed_in`: the signed-in theme.
  * - Under it, `refresh_needed` (the blank placeholder): the cookie's, until
  *   the client loader's `/me` answers and the layout is `signed_in`.
  * - An auth screen: the remembered value, else the cookie's; an error
- *   thrown on it too, since its route is still matched (Ruling 84).
- * - Anything else (a 404, a failed layout loader): `dark`, as before D21.
+ *   thrown on it too, since its route is still matched.
+ * - Anything else (a 404, a failed layout loader): `dark`.
  */
 export function pageTheme({ layout, signedIn, remembers, cookie, remembered }: PageThemeInputs): Theme {
   if (layout === "signed_in" && signedIn !== null) return signedIn;
@@ -141,7 +140,7 @@ type RootThemeData = { theme: Theme };
  * The theme this page renders: root's `Layout` puts its class on `<html>`,
  * and the Toaster follows it. Reads the matches, root's loader data and the
  * signed-in layout's, all safe on the server, on the client and around the
- * error boundary (Preflight ruling 24). Only inside a data router.
+ * error boundary. Only inside a data router.
  */
 export function usePageTheme(): Theme {
   const matches = useMatches();

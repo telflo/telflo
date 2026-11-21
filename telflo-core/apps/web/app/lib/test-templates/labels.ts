@@ -2,9 +2,8 @@ import type { TestRunSignal } from "@telflo/contracts";
 import { findPaletteEntry } from "~/lib/graph/palette.js";
 
 /*
- * How a test template's receiver type and signal show (D14b Preflight
- * ruling 12, Ruling 40): in the Templates step's filters and details, and on
- * the Test Templates admin page.
+ * How a test template's receiver type and signal show: in the Templates step's
+ * filters and details, and on the Test Templates admin page.
  */
 
 /** Each signal's words: "Traces", "Logs", "Metrics". */

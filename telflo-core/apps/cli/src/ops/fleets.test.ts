@@ -32,8 +32,8 @@ import {
 } from "./fleets.js";
 
 /*
- * The fleet calls (D27 decision 28), on the platform's names, against a stub
- * fetch. Install's command is a SECRET: checked with boolean canaries only.
+ * The fleet calls, on the platform's names, against a stub fetch. Install's
+ * command is a SECRET: checked with boolean canaries only.
  */
 
 const SERVER = "https://telflo.example";
@@ -58,7 +58,7 @@ async function refusalOf(promise: Promise<unknown>): Promise<unknown> {
   throw new Error("expected a refusal");
 }
 
-describe("the choices copied from the contracts (Preflight ruling 23)", () => {
+describe("the choices copied from the contracts", () => {
   it("match the contracts' values", () => {
     expect(FLEET_TYPES).toEqual(CONTRACTS_FLEET_TYPES);
     expect(FLEET_TOKEN_EXPIRIES).toEqual(PUBLIC_FLEET_TOKEN_EXPIRIES);
@@ -184,7 +184,7 @@ describe("installFleet", () => {
     expect(calls).toHaveLength(0);
   });
 
-  it("says a group-less fleet needs telflo deploy, and lists the ids of several groups (Preflight ruling 8)", async () => {
+  it("says a group-less fleet needs telflo deploy, and lists the ids of several groups", async () => {
     const other = randomUUID();
     const answers: Answer[] = [
       { status: 422, json: envelope("collector_group_required", "This fleet has several groups: name the group to install in groupId.", { groupIds: [] }) },
@@ -206,7 +206,7 @@ describe("installFleet", () => {
     expect(await refusalOf(installFleet(client, FLEET, { platform: "kubernetes" }))).toMatchObject({ message: NO_GROUP_MESSAGE });
   });
 
-  it("rewords only the words: the exit code, code and status are the refusal's own ending (Ruling 243)", async () => {
+  it("rewords only the words: the exit code, code and status are the refusal's own ending", async () => {
     const { client } = clientOf({
       [`POST /fleets/${FLEET}/install`]: { status: 403, json: envelope("collector_group_required", "Refused.", { groupIds: [] }) },
     });

@@ -1,27 +1,26 @@
 /**
- * Quick-deploy links (D17c-2 decisions 3, 5, 7 and 22; Preflight rulings 1
- * to 5).
+ * Quick-deploy links.
  *
  *   * A link is an organization's row: a member made it for one of the
- *     organization's `server` fleets (the opamp-server's ids, no foreign
- *     key: the fleet, its group and its default token live there, ADR
- *     0026), with the bundle request's validated fields (`choices`), the
- *     typed values sealed (`env_ciphertext`, AES-256-GCM under the API's
- *     key `env_key_id`), its lifetime and its downloads. Its secret is
- *     stored only as its sha-256 (`secret_hash`), as an invitation's token.
+ *     organization's `server` fleets (the opamp-server's ids, no foreign key:
+ *     the fleet, its group and its default token live there), with the bundle
+ *     request's validated fields (`choices`), the typed values sealed
+ *     (`env_ciphertext`, AES-256-GCM under the API's key `env_key_id`), its
+ *     lifetime and its downloads. Its secret is stored only as its sha-256
+ *     (`secret_hash`), as an invitation's token.
  *   * Row-level security has migration 013's shape: every operation, for
  *     telflo_platform_runtime, is limited to the organization the database
  *     context names. No `force`, so the owner and the function below stay
  *     exempt.
- *   * Whoever holds a link downloads without signing in, so the secret has
- *     to find its link before any context can be set:
+ *   * Whoever holds a link downloads without signing in, so the secret has to
+ *     find its link before any context can be set:
  *     quick_deploy_link_by_secret_hash is SECURITY DEFINER and keyed by the
- *     secret's hash (ADR 0023's rule: 256 random bits, stored as a hash,
- *     matched exactly), the second such function after migration 013's. It
- *     answers only what the caller needs to go on (the link's id, its
- *     organization and whether that organization is live); everything after
- *     sets the context to that organization and goes through the policies,
- *     the counter's update included.
+ *     secret's hash (256 random bits, stored as a hash, matched exactly), the
+ *     second such function after migration 013's. It answers only what the
+ *     caller needs to go on (the link's id, its organization and whether that
+ *     organization is live); everything after sets the context to that
+ *     organization and goes through the policies, the counter's update
+ *     included.
  *   * Rows are never deleted by the API but with their fleet's delete; an
  *     organization's hard delete cascades. Timestamps have no default: the
  *     API writes them from its clock. The id's default is for fixtures: the
@@ -77,7 +76,7 @@ export const up = (pgm) => {
     );
 
     comment on table quick_deploy_links is
-      'a quick-deploy link (D17c-2): whoever holds its secret downloads the
+      'a quick-deploy link: whoever holds its secret downloads the
        install it was made for, rendered at each download from choices and
        the group''s current published version, until it expires or is
        revoked. Rows go only with their fleet''s delete or their
@@ -97,7 +96,7 @@ export const up = (pgm) => {
       'the opamp-server''s collector group the install enrolls into.';
     comment on column quick_deploy_links.default_token_id is
       'the fleet''s default token whose bearer the link''s command carries: a
-       download is refused once that token is revoked (decision 6).';
+       download is refused once that token is revoked.';
     comment on column quick_deploy_links.created_by_user_id is
       'the member who made it, or null once their account is hard-deleted.';
     comment on column quick_deploy_links.secret_hash is
@@ -191,7 +190,7 @@ export const up = (pgm) => {
       for delete to telflo_platform_runtime
       using (organization_id = ${contextOrganization});
 
-    -- The download's only way past the policies (ADR 0023's rule): the link
+    -- The download's only way past the policies: the link
     -- whose hash matches, in any state, with its organization and whether
     -- that organization is live; nothing else. The caller then sets the
     -- context to that organization and reads the link through the policies.
@@ -216,10 +215,10 @@ export const up = (pgm) => {
 
     comment on function quick_deploy_link_by_secret_hash(text) is
       'the link a secret''s hash names, past row-level security: whoever holds
-       a quick-deploy link downloads without signing in (D17c-2). Keyed by a
-       secret of 256 random bits rather than by the database context, as
-       organization_invitation_by_token_hash (ADR 0023). Only
-       telflo_platform_runtime may run it, and the API calls it from one place,
+       a quick-deploy link downloads without signing in. Keyed by a secret of
+       256 random bits rather than by the database context, as
+       organization_invitation_by_token_hash. Only telflo_platform_runtime may
+       run it, and the API calls it from one place,
        findQuickDeployLinkBySecretHash.';
 
     revoke execute on function quick_deploy_link_by_secret_hash(text) from public;

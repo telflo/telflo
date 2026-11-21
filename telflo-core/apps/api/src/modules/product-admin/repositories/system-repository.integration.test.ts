@@ -6,16 +6,15 @@ import { addUserFeedback, createUserWithOrganization, openTestDatabases, truncat
 import { createSystemRepository, type ISystemRepository, type ProductAdminActor } from "./system-repository.js";
 
 /*
- * The SystemRepository (D29 decisions 19 and 20; Rulings 257 and 258): each
- * method through the real product-admin functions as the API's role, and
- * the audit row it writes in the same transaction: in no organization, the
- * actor's columns, `metadata` holding ids, counts and fixed values only
- * (never an email, a search term or a feedback's text, checked as
- * booleans); a write's refusals as `product_admin.refused` `{ operation,
- * outcome }`, a grant of an admin as `product_admin.grant_unchanged`; the
- * pending count unaudited; the gate's 42501 answered 403
- * `product_admin_required` with nothing written. The functions' search,
- * blocks and races are the tasks' suites' and
+ * The SystemRepository: each method through the real product-admin
+ * functions as the API's role, and the audit row it writes in the same
+ * transaction: in no organization, the actor's columns, `metadata` holding
+ * ids, counts and fixed values only (never an email, a search term or a
+ * feedback's text, checked as booleans); a write's refusals as
+ * `product_admin.refused` `{ operation, outcome }`, a grant of an admin as
+ * `product_admin.grant_unchanged`; the pending count unaudited; the gate's
+ * 42501 answered 403 `product_admin_required` with nothing written. The
+ * functions' search, blocks and races are the routes' suites' and
  * tenancy/product-admin-functions.integration.test.ts's.
  */
 
@@ -163,7 +162,7 @@ describe("the SystemRepository", () => {
     expect((await metadataHolds(text)) || (await metadataHolds(ben.email))).toBe(false);
   });
 
-  it("reads one row past the page to say whether another follows, and audits the rows returned: a full page its size, the last page its real count (Ruling 264)", async () => {
+  it("reads one row past the page to say whether another follows, and audits the rows returned: a full page its size, the last page its real count", async () => {
     const ana = await person(true);
     const people = [ana.userId];
     for (let index = 0; index < 2; index += 1) people.push((await person()).userId);
@@ -197,7 +196,7 @@ describe("the SystemRepository", () => {
     ]);
   });
 
-  it("changes who may create an organization and audits it with from and to, an unchanged value as organization_creation_unchanged, in no organization with no subject (D36-1 decision 51)", async () => {
+  it("changes who may create an organization and audits it with from and to, an unchanged value as organization_creation_unchanged, in no organization with no subject", async () => {
     const ana = await person(true);
     const stored = async () =>
       (await ownerDb.selectFrom("site_settings").select("organization_creation").executeTakeFirstOrThrow()).organization_creation;
@@ -258,7 +257,7 @@ describe("the SystemRepository", () => {
     expect((await ownerDb.selectFrom("site_settings").select("organization_creation").executeTakeFirstOrThrow()).organization_creation).toBe("everyone");
   });
 
-  it("answers 403 only the gate's own 42501 (its hint): another 42501 inside the context, the audit row's insert refused, stays the database's error and writes nothing (Ruling 260)", async () => {
+  it("answers 403 only the gate's own 42501 (its hint): another 42501 inside the context, the audit row's insert refused, stays the database's error and writes nothing", async () => {
     const ana = await person(true);
     // Taken for this test only; the global setup's restoreRevokedGrantLeftovers grants it back after a killed run.
     await sql`revoke insert on audit_events from telflo_platform_runtime`.execute(ownerDb);

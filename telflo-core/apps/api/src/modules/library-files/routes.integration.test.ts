@@ -33,7 +33,7 @@ import { UNCALLED_OTELCOL_VALIDATOR } from "../../testing/otelcol-validator.js";
 import { hashPassword } from "../identity/password.js";
 import { createLibraryLinks } from "./link.js";
 
-// The opamp-server every server needs (D11b decision 8): this file's own fake.
+// The opamp-server every server needs: this file's own fake.
 const opamp = useFakeOpampServer();
 
 const csrfHeaders = { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE };
@@ -96,7 +96,7 @@ function multipartBody(parts: Part[]): { payload: Buffer; headers: Record<string
   return { payload: Buffer.concat(chunks), headers: { "content-type": `multipart/form-data; boundary=${boundary}` } };
 }
 
-/** The bidirectional controls and invisible characters a file's name may not hold (D23-2 Rulings 146 and 153). */
+/** The bidirectional controls and invisible characters a file's name may not hold. */
 const REFUSED_FORMAT_CHARACTERS: [string, string][] = [
   ["U+061C", "\u061C"],
   ["U+200B", "\u200B"],
@@ -149,14 +149,13 @@ const sha256Of = (data: Buffer) => createHash("sha256").update(data).digest("hex
 const newKey = () => Buffer.from(randomBytes(32).toString("base64url"), "utf8");
 
 /*
- * D23-2 Task 3: the library API (decisions 5, 11, 19 to 22, 41 to 48; Q152,
- * Q154, Q161, Q162), against Postgres as the API's own role, with a real
+ * The library API, against Postgres as the API's own role, with a real
  * file store on a temporary directory. Product admins write; members list,
  * download and make links; anyone holding a link downloads the file.
  *
- * A link made with a real key is a secret (decision 59): every check on one
- * is a boolean, and none is printed. `linkLeaked` checks the log lines and
- * every audit row for any link this file made.
+ * A link made with a real key is a secret: every check on one is a boolean,
+ * and none is printed. `linkLeaked` checks the log lines and every audit row
+ * for any link this file made.
  */
 describe("the library API", () => {
   let databases: TestDatabases;
@@ -307,7 +306,7 @@ describe("the library API", () => {
     if (options.hasAcceptedTerms === false) {
       await ownerDb.updateTable("users").set({ accepted_terms_version: "2025-01-01" }).where("id", "=", account.user.id).execute();
     }
-    // A no-op when the sign-in already landed there (D36-1 decision 56): no new cookie, the token sent stands.
+    // A no-op when the sign-in already landed there: no new cookie, the token sent stands.
     return { userId: account.user.id, email: account.user.email, access: (switched.headers["set-cookie"] === undefined ? cookieValue(signedIn, "telflo_access") : cookieValue(switched, "telflo_access")) };
   };
   const productAdmin = (options: { hasAcceptedTerms?: boolean } = {}) => person({ ...options, isProductAdmin: true });
@@ -345,9 +344,9 @@ describe("the library API", () => {
 
   /**
    * A refusal on a route whose success may be a link's 201 `{ path }` (POST
-   * …/link; Ruling 139): booleans only, so a refusal that breaks prints no
-   * link (decision 59). The body is checked for a link first, then the
-   * status, the code and the message, each compared as a boolean.
+   * …/link): booleans only, so a refusal that breaks prints no link. The
+   * body is checked for a link first, then the status, the code and the
+   * message, each compared as a boolean.
    */
   function expectRefusalHoldingNoLink(response: LightMyRequestResponse, statusCode: number, code: string, message: string): void {
     let parsed: unknown;
@@ -513,7 +512,7 @@ describe("the library API", () => {
       ["a file name holding a tab", fileParts(data, { filename: "a\tb.txt" })],
       ["a file name holding U+0001", fileParts(data, { filename: "a\u0001b.txt" })],
       ["a file name holding DEL", fileParts(data, { filename: "a\u007fb.txt" })],
-      // The bidirectional and invisible characters (D23-2 Rulings 146 and 153), in UTF-8 through filename and filename*.
+      // The bidirectional and invisible characters, in UTF-8 through filename and filename*.
       ...REFUSED_FORMAT_CHARACTERS.flatMap(([label, character]): [string, Part[]][] => [
         [`a file name holding ${label} (filename)`, [nameField, descriptionField, { ...file, filename: `a${character}b.txt` }]],
         [
@@ -546,7 +545,7 @@ describe("the library API", () => {
       ["a Persian name's zero-width non-joiner", "\u0645\u06CC\u200C\u062E\u0648\u0627\u0647\u0645.txt"],
       ["an emoji ZWJ sequence", "\u{1F469}\u200D\u{1F4BB} notes.txt"],
       ["a soft hyphen", "re\u00ADsume.pdf"],
-    ])("reads filename and filename* as UTF-8, and stores a name with %s as sent (Ruling 153)", async (_label, fileName) => {
+    ])("reads filename and filename* as UTF-8, and stores a name with %s as sent", async (_label, fileName) => {
       const admin = await productAdmin();
       const [name, description] = fileParts(data) as [Part, Part];
       for (const part of [
@@ -790,7 +789,7 @@ describe("the library API", () => {
       });
       // No person's text in a header.
       expect(JSON.stringify(response.headers).includes(FILE_MARKER)).toBe(false);
-      // Not audited (Q161).
+      // Not audited.
       expect(await auditRows()).toHaveLength(1);
     });
 
@@ -1015,7 +1014,7 @@ describe("the library API", () => {
       const streaming = Array.from({ length: PUBLIC_DOWNLOAD_RENDERS_IN_FLIGHT }, () => fetchLink(path));
       // Every handler has returned and its stream is open, the bytes not yet sent: waited for on that
       // condition (each read goes through the database and the file store, so no count of event-loop turns
-      // bounds it), with a wall-clock hang guard well under vitest's 5 s (Ruling 153).
+      // bounds it), with a wall-clock hang guard well under vitest's 5 s.
       await vi.waitFor(
         () => {
           if (holding.length < PUBLIC_DOWNLOAD_RENDERS_IN_FLIGHT) throw new Error("not every read is held yet");

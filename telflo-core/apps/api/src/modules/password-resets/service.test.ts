@@ -289,7 +289,7 @@ describe("requestReset", () => {
       await harness.service.requestReset({ email: user.email.toUpperCase(), ...origin });
 
       // The user's row locked, then the earlier tokens consumed, then the new
-      // one written: only the newest link works (D3 Ruling 16).
+      // one written: only the newest link works.
       const { consumeAllForUser, create } = harness.resetTokenRepository;
       const { lockForUpdate } = harness.userRepository;
       expect(lockForUpdate).toHaveBeenCalledWith(user.id);
@@ -348,7 +348,7 @@ describe("requestReset", () => {
   });
 });
 
-describe("issueResetLink (D36-1 decision 54)", () => {
+describe("issueResetLink", () => {
   it("writes requestReset's token (hashed, 60 minutes, the earlier ones consumed) and hands back its link, sending no email; the audit row holds no link", async () => {
     const harness = buildHarness();
     const user = harness.addUser({ isVerified: false });
@@ -387,7 +387,7 @@ describe("issueResetLink (D36-1 decision 54)", () => {
     await expectInvalidResetToken(harness.service.completeReset({ token, password: NEW_PASSWORD, ...origin }));
   });
 
-  it("records the operator's command in the audit row when it asked (telflo-admin reset-link, Q258)", async () => {
+  it("records the operator's command in the audit row when it asked (telflo-admin reset-link)", async () => {
     const harness = buildHarness();
     const user = harness.addUser();
 
@@ -522,7 +522,7 @@ describe("completeReset", () => {
     });
   });
 
-  it("finds the token's user, locks the user's row, and only then consumes the token (D3 Ruling 17)", async () => {
+  it("finds the token's user, locks the user's row, and only then consumes the token", async () => {
     // requestReset locks the user's row and then consumes tokens; consuming
     // before locking here would take the two in the reverse order and let a
     // concurrent request and completion deadlock.

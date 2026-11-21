@@ -10,16 +10,15 @@ import {
 } from "@telflo/contracts";
 import { E2E_API_URL } from "./environment.js";
 
-// Service accounts and their `tf_` tokens in the browser tests (D22
-// decision 53; Preflight ruling 27). Accounts and tokens a test isn't about
-// are made through the E2E API as the page's session (`page.request`, the
-// CSRF header set); `/whoami` is called as a CLI or a CI job calls it, by a
-// request context made fresh with no cookies, at the API's own E2E port.
+// Service accounts and their `tf_` tokens in the browser tests. Accounts and
+// tokens a test isn't about are made through the E2E API as the page's session
+// (`page.request`, the CSRF header set); `/whoami` is called as a CLI or a CI
+// job calls it, by a request context made fresh with no cookies, at the API's
+// own E2E port.
 //
-// A token is a secret (decision 48): built by the API at run time, never a
-// literal here (Preflight ruling 32), and never printed. Nothing here
-// asserts on a body or a string that could hold one; callers check a
-// reply with booleans before comparing it (Ruling 99).
+// A token is a secret: built by the API at run time, never a literal here,
+// and never printed. Nothing here asserts on a body or a string that could
+// hold one; callers check a reply with booleans before comparing it.
 
 const CSRF = { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE };
 
@@ -77,12 +76,12 @@ export interface WhoAmIAnswer {
   body: unknown;
 }
 
-/** A person's own tokens' path under the E2E API (D25 decision 28). */
+/** A person's own tokens' path under the E2E API. */
 export const PERSONAL_API_TOKENS_API_PATH = "/api/v1/auth/me/api-tokens";
 
 /**
  * One of the signed-in person's own tokens made through the API, as the
- * Account page's create would (D25): its id and the token from the create's
+ * Account page's create would: its id and the token from the create's
  * reply. The token's shape is checked as a boolean, so a failure prints
  * nothing of it.
  */
@@ -101,8 +100,8 @@ export async function createPersonalApiTokenThroughApi(
  * `GET /api/public/v1/whoami` with `Authorization: Bearer <token>` (and,
  * for a personal token, `X-Telflo-Org` when `organizationId` is given),
  * from a request context made fresh for it at the API's E2E port, holding
- * no cookie and sending none (Preflight ruling 27): the public surface as a
- * CLI reaches it. Never asserts on the answer; the caller checks it.
+ * no cookie and sending none: the public surface as a CLI reaches it.
+ * Never asserts on the answer; the caller checks it.
  */
 export async function whoami(
   playwright: { request: { newContext: (options?: { baseURL?: string }) => Promise<APIRequestContext> } },

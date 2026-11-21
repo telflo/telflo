@@ -1,15 +1,14 @@
-"""kwok's fake cluster (D14a spec decision 6, Preflight ruling 5).
+"""kwok's fake cluster.
 
 Unmarked: the baked kwokctl configuration and how ``KwokCluster`` uses it
 (``-c`` on every kwokctl call, ``--timeout 60s``, no kubectl cache seeded),
 every command bounded and given only the allowlisted environment, and a
 failed start cleaned up. kwok's binaries are fakes here.
 
-Marked ``kwok`` (deselected by default; D14a Task 5 runs them in the image,
-as uid 10001, with no network and a read-only root): the cluster's
-lifecycle (3) and the end-to-end gate (1), on the image's binaries and
-configuration (Preflight ruling 6). They never skip:
-in the image, everything they need is there.
+Marked ``kwok`` (deselected by default; run in the image, as uid 10001, with
+no network and a read-only root): the cluster's lifecycle (3) and the
+end-to-end gate (1), on the image's binaries and configuration. They never
+skip: in the image, everything they need is there.
 """
 
 from __future__ import annotations
@@ -41,7 +40,7 @@ from app.kwok_cluster import (
 from tests import guard
 
 # ---------------------------------------------------------------------------
-# The baked configuration (Preflight ruling 5)
+# The baked configuration
 # ---------------------------------------------------------------------------
 
 
@@ -225,7 +224,7 @@ def test_a_command_gets_only_the_allowlisted_environment(monkeypatch: pytest.Mon
 
 # ---------------------------------------------------------------------------
 # kwok-marked: the lifecycle tests (3) and the end-to-end gate (1),
-# on the image's binaries (Task 5 runs them)
+# on the image's binaries
 # ---------------------------------------------------------------------------
 
 
@@ -307,7 +306,7 @@ async def test_kwok_cluster_stop_before_start_is_noop() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Liveness (Ruling 29)
+# Liveness
 # ---------------------------------------------------------------------------
 
 
@@ -341,7 +340,7 @@ async def test_an_apiserver_that_refuses_connections_is_not_alive(tmp_path: Path
 async def test_a_started_cluster_is_alive_until_its_apiserver_dies() -> None:
     """The real cluster: alive once started; its kube-apiserver killed, the
     probe says it's dead (the supervisor then fails kwok and the service
-    exits, Ruling 26)."""
+    exits)."""
     import psutil
 
     name = f"telflo-pytest-live-{uuid.uuid4().hex[:8]}"
@@ -407,11 +406,10 @@ _USER_FAILING_YAML = dedent(
 
 # Through the service, a filelog receiver picks the filelog strategy (the
 # OTLP document read as a line of text), so this text has the user's
-# processors behind an OTLP receiver, for the OTLP replay (D14a Task 5:
-# found when the kwok tests first ran in the image). The text as the user
-# wrote it, filelog and all, runs below too
-# (``test_users_failing_yaml_runs_as_filelog_after_the_informer_wait``): since
-# Ruling 30, filelog waits for the informer as the replay does.
+# processors behind an OTLP receiver, for the OTLP replay. The text as the
+# user wrote it, filelog and all, runs below too
+# (``test_users_failing_yaml_runs_as_filelog_after_the_informer_wait``):
+# filelog waits for the informer as the replay does.
 _USER_FAILING_YAML_REPLAYED = _USER_FAILING_YAML.replace(
     "  filelog:\n    include: [/var/log/pods/*/*/*.log]\n    encoding: utf-8\n    start_at: end\n",
     "  otlp:\n    protocols:\n      grpc:\n        endpoint: 0.0.0.0:4317\n",
@@ -481,13 +479,12 @@ def test_users_failing_yaml_now_succeeds_with_k8s_attributes(binary_dir: Path) -
 
 @pytest.mark.kwok
 def test_users_failing_yaml_runs_as_filelog_after_the_informer_wait(binary_dir: Path) -> None:
-    """The user's text as written (filelog), through the tester (Ruling 30;
-    Task 5's departure 6 reviewed): kwok up, R-100 and R-008, the informer
-    waited for before the input was staged, and the line read. Its
-    ``pod_association`` is ``from: connection``, the sender's address, which
-    a line read from a file doesn't have, so nothing associates it with the
-    seeded pod: no k8s.* attribute is added (the container operator's
-    enrichment of a file is test_binary_kwok.py's)."""
+    """The user's text as written (filelog), through the tester: kwok up,
+    R-100 and R-008, the informer waited for before the input was staged, and
+    the line read. Its ``pod_association`` is ``from: connection``, the
+    sender's address, which a line read from a file doesn't have, so nothing
+    associates it with the seeded pod: no k8s.* attribute is added (the
+    container operator's enrichment of a file is test_binary_kwok.py's)."""
     from fastapi.testclient import TestClient
 
     from app.catalog import Catalog, binary_path

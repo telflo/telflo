@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Render tests for charts/supervisor-collector (the platform's chart; the
-# first section holds the 8 render tests of the chart it replaces,
-# telflo-supervisor-collector 0.3.5).
+# first section holds 8 base cases: mounts' readOnly, collectorEnv, the token
+# Secret and a render without values).
 #
 # `helm lint` can't catch these: it lints with whatever values it is given and
 # Helm 4's lint only LOGS a guard's `fail`. Every guard, name, checksum and
@@ -174,7 +174,7 @@ run_case() { # <name> <command...>
 }
 
 # ---------------------------------------------------------------------------
-echo "# 0.3.5's eight (collectorGroupId now in the base values)"
+echo "# the eight base cases"
 
 # mount_read_only <mountPath> <expected readOnly> <helm args...>
 mount_read_only() {
@@ -563,7 +563,7 @@ run_case "checksum/collector-env changes with a value" env_checksum_changes
 run_case "checksum/collector-env: two renders of one value agree" env_checksum_same
 
 # ---------------------------------------------------------------------------
-echo "# a pod's identity, mounts and RBAC rules (KEPT behaviour is pinned too: a change is deliberate)"
+echo "# a pod's identity, mounts and RBAC rules (the current behavior is pinned too: a change is deliberate)"
 
 identity() { # <role> <workload kind> <fullname> <insecure "true"|"false"> <helm args...>
   local role="$1" kind="$2" name="$3" insecure="$4"; shift 4
@@ -669,7 +669,7 @@ clickstack_mounts() {
 }
 run_case "node, ClickStack: the init container's and the collector's mounts paired" clickstack_mounts
 
-# Ruling 29: a volume's mountPath and hostPath are written quoted, so a path
+# A volume's mountPath and hostPath are written quoted, so a path
 # that is a YAML word (bare, as the chart takes any string), or holds one as a
 # segment, stays that exact string: never true, false or null.
 word_mount_paths() { # <role> <workload kind>

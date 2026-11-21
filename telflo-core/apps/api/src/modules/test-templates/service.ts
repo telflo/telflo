@@ -9,32 +9,30 @@ import { testTemplateNotFound } from "./errors.js";
 import type { ITestTemplateRepository, TestTemplate, TestTemplateChanges } from "./repositories/test-template-repository.js";
 
 /*
- * The test templates API (D14b decisions 3, 13 and 14; details 19 to 21;
- * Preflight rulings 11, 22 and 24): a product-wide library of sample inputs,
- * global as flows are (ADR 0008).
+ * The test templates API: a product-wide library of sample inputs, global as
+ * flows are.
  *
  * Whether the caller may write is decided before the service is reached
  * (`requireProductAdmin` on the routes); every write is audited in no
- * organization, with ids only (decision 14).
+ * organization, with ids only.
  *
- * Creating one (ruling 11), as D14a's upload saves a test file: its id is
- * chosen first (`prepareCreate`), before any byte is read; then the parts,
- * in order (the routes); then the type, by the file name's extension (415,
- * nothing read); then the bytes stream into the FileStore at
- * global/test-templates/<id>, and only once they are whole, under 10 MiB and
- * followed by nothing (`finish`), one transaction inserts the row and the
- * audit row. Whatever was written is removed on every path but success, so
- * a row always has its bytes.
+ * Creating one, as a test file's upload is saved: its id is chosen first
+ * (`prepareCreate`), before any byte is read; then the parts, in order (the
+ * routes); then the type, by the file name's extension (415, nothing read);
+ * then the bytes stream into the FileStore at global/test-templates/<id>,
+ * and only once they are whole, under 10 MiB and followed by nothing
+ * (`finish`), one transaction inserts the row and the audit row. Whatever
+ * was written is removed on every path but success, so a row always has its
+ * bytes.
  *
  * Deleting one: one transaction soft-deletes the live row (`deleted_at`) and
  * writes the audit row; it commits; then the bytes are removed, a failure
  * logged (its code and syscall only) and never thrown. The row goes before
  * the bytes, so a failure never leaves a live template without its bytes.
- * Definitions and runs made from it keep their
- * own copies (decision 13).
+ * Definitions and runs made from it keep their own copies.
  *
  * Names, descriptions, file names and bytes reach no log line and no audit
- * row (ADR 0024).
+ * row.
  */
 
 /** The repositories a write uses, bound to one transaction. Both are global: no database context is needed. */
@@ -121,7 +119,7 @@ export interface ITestTemplateService {
   openHead(id: string): Promise<{ sizeBytes: number; stream: Readable }>;
 }
 
-/** The FileStore's key of a template's bytes (D14b decision 3). */
+/** The FileStore's key of a template's bytes. */
 export function testTemplateKey(templateId: string): FileKey {
   return { kind: "test-template", templateId };
 }
@@ -129,7 +127,7 @@ export function testTemplateKey(templateId: string): FileKey {
 /** The metadata fields a change compares and audits, in the contract's order. */
 const FIELDS = ["name", "description", "receiverType", "signal"] as const satisfies readonly (keyof TestTemplateChanges)[];
 
-/** An audit row about a template (decision 14): global, so in no organization; ids and field names only. */
+/** An audit row about a template: global, so in no organization; ids and field names only. */
 function auditEvent(
   writer: TestTemplateWriter,
   templateId: string,
@@ -231,8 +229,8 @@ export function createTestTemplateService(deps: TestTemplateServiceDependencies)
           return created;
         });
       } catch (error) {
-        // Any write rejection included (D14a Ruling 25): the store may have
-        // renamed the file into place before a later step failed.
+        // Any write rejection included: the store may have renamed the file
+        // into place before a later step failed.
         if (!template.content.destroyed && !template.content.readableEnded) template.content.destroy();
         await removeQuietly(template.templateId);
         throw error;
@@ -256,7 +254,7 @@ export function createTestTemplateService(deps: TestTemplateServiceDependencies)
         const updated = await transaction.templates.update(current.id, to, now());
         // Locked above, and only a delete in another transaction ends it: this can't miss.
         if (!updated) throw testTemplateNotFound();
-        // The fields' names, never their values (ADR 0024).
+        // The fields' names, never their values.
         await transaction.audit.record(auditEvent(writer, current.id, "test_template.updated", { changedFields }));
         return updated;
       });

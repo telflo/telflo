@@ -23,21 +23,19 @@ import type { TestSuite } from "./repositories/test-suite-repository.js";
 import type { TestSuitesTransaction, WithTestSuitesTransaction } from "./transaction.js";
 
 /*
- * The test suites and definitions API (D14b decisions 1, 2, 4, 5, 8, 9 and
- * 25; details 19 and 20; Preflight rulings 7, 10 and 22 to 24).
+ * The test suites and definitions API.
  *
  * Suites and definitions belong to a configuration version and follow its
- * configuration's visibility (decision 8): another member's draft's, a
- * deleted configuration's and another organization's are 404, with the
+ * configuration's visibility: another member's draft's, a deleted
+ * configuration's and another organization's are 404, with the
  * configurations' own codes for the configuration and the version, as the
- * runs' are. They may change on any version, published or not (decision 5).
+ * runs' are. They may change on any version, published or not.
  *
- * Every write takes the organization's lock as a member (lockAsMember),
- * then the configuration's (lockedConfiguration): one lock order, which
- * also serializes the inputs' reference count (Preflight ruling 7) and the
- * caps (ruling 23), counted under it.
+ * Every write takes the organization's lock as a member (lockAsMember), then
+ * the configuration's (lockedConfiguration): one lock order, which also
+ * serializes the inputs' reference count and the caps, counted under it.
  *
- * Creating a definition copies its input, in this order (ruling 7):
+ * Creating a definition copies its input, in this order:
  *   1. a read transaction: the membership, the configuration and its
  *      version, the suite in the version (404 `test_suite_not_found`), the
  *      source (the caller's own test file, 404 `test_file_not_found`, or a
@@ -57,7 +55,7 @@ import type { TestSuitesTransaction, WithTestSuitesTransaction } from "./transac
  * without its row, the file is unreachable.
  *
  * Names, descriptions, file names and bytes reach no log line and no audit
- * row (ADR 0024): the audit rows name ids only.
+ * row: the audit rows name ids only.
  */
 
 export interface TestSuiteServiceDependencies {
@@ -91,7 +89,7 @@ export interface CreateDefinitionInput {
   durationSeconds: number;
 }
 
-/** The path's ids, as the routes take them: any strings (D5 decision 7). */
+/** The path's ids, as the routes take them: any strings. */
 export interface VersionPath {
   organizationId: string;
   configurationId: string;
@@ -133,8 +131,8 @@ export interface ITestSuiteService {
 
 /**
  * The FileStore's key of a definition input in the caller's active
- * organization: always `actor.context.organizationId`, never the path's
- * (Ruling 32), as testInputKey keys a test file.
+ * organization: always `actor.context.organizationId`, never the path's, as
+ * testInputKey keys a test file.
  */
 export function testDefinitionInputKey(organizationId: string, inputId: string): FileKey {
   return { kind: "test-definition-input", organizationId, inputId };
@@ -166,9 +164,9 @@ async function visibleVersion(
 }
 
 /**
- * A write's checks, in the one lock order (Preflight ruling 7): the
- * organization as a member, then the configuration, locked `for update` as
- * the caller sees it, then its version.
+ * A write's checks, in the one lock order: the organization as a member,
+ * then the configuration, locked `for update` as the caller sees it, then
+ * its version.
  */
 async function lockedVersion(
   transaction: TestSuitesTransaction,
@@ -277,7 +275,7 @@ export function createTestSuiteService(deps: TestSuiteServiceDependencies): ITes
         const updated = await transaction.suites.update(current.id, to, now());
         // Visible under the lock just taken: this can't miss.
         if (!updated) throw testSuiteNotFound();
-        // The fields' names, never their values (ADR 0024).
+        // The fields' names, never their values.
         await transaction.audit.record(
           audit(actor, "test_suite.updated", { type: "test_suite", id: current.id }, { configurationId, versionId, changedFields }),
         );
@@ -318,7 +316,7 @@ export function createTestSuiteService(deps: TestSuiteServiceDependencies): ITes
 
     async createDefinition(actor, path, suiteId, input) {
       assertActiveOrganization(actor, path.organizationId);
-      // The store's key names the session's organization, never the path's (Ruling 32).
+      // The store's key names the session's organization, never the path's.
       const { organizationId } = actor.context;
       const { configurationId, versionId } = canonicalVersionPath(path);
       const id = canonicalIdOf(suiteId);
@@ -336,7 +334,7 @@ export function createTestSuiteService(deps: TestSuiteServiceDependencies): ITes
           audit: { inputFileId: string } | { templateId: string };
         };
         if (input.inputFileId !== undefined) {
-          // The caller's own file in this organization only (decision 1), admins included.
+          // The caller's own file in this organization only, admins included.
           const file = inputFileId === undefined ? undefined : await transaction.files.findOwn(inputFileId);
           if (!file) throw testFileNotFound();
           source = {

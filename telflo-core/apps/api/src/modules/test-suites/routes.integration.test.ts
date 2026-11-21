@@ -39,7 +39,7 @@ import { UNCALLED_TESTING } from "../../testing/otelcol-testing.js";
 import { UNCALLED_OTELCOL_VALIDATOR } from "../../testing/otelcol-validator.js";
 import { hashPassword } from "../identity/password.js";
 
-// The opamp-server every server needs (D11b decision 8): this file's own fake.
+// The opamp-server every server needs: this file's own fake.
 const opamp = useFakeOpampServer();
 
 const csrfHeaders = { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE };
@@ -48,7 +48,7 @@ const csrfHeaders = { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE };
 const LOCK_RACE_TIMEOUT = 20_000;
 const PASSWORD = "a-sufficiently-long-password";
 
-/** Markers no log line, URL or audit row may hold: names, descriptions and file names (ADR 0024). */
+/** Markers no log line, URL or audit row may hold: names, descriptions and file names. */
 const NAME_MARKER = "suite-name-marker-6b2e";
 const DESCRIPTION_MARKER = "suite-description-marker-0c9d";
 const FILE_MARKER = "file-name-marker-a41f";
@@ -114,10 +114,9 @@ async function filesUnder(root: string): Promise<string[]> {
 const sha256Of = (data: Buffer) => createHash("sha256").update(data).digest("hex");
 
 /*
- * D14b Task 3: the test suites and definitions API (decisions 1, 2, 4, 5,
- * 8, 9 and 25; details 19 and 20; Preflight rulings 7, 10 and 22 to 24),
- * against Postgres as the API's own role, with a real FileStore on a
- * temporary directory. Runs from a definition are Task 4's.
+ * The test suites and definitions API, against Postgres as the API's own
+ * role, with a real FileStore on a temporary directory. Runs from a
+ * definition are the runs API's (test-runs/routes.integration.test.ts).
  */
 describe("the test suites and definitions API", () => {
   let databases: TestDatabases;
@@ -249,7 +248,7 @@ describe("the test suites and definitions API", () => {
       payload: { organizationId: organization.id },
     });
     expect(switched.statusCode).toBe(200);
-    // A no-op when the sign-in already landed there (D36-1 decision 56): no new cookie, the token sent stands.
+    // A no-op when the sign-in already landed there: no new cookie, the token sent stands.
     return { userId: account.user.id, organizationId: organization.id, access: (switched.headers["set-cookie"] === undefined ? cookieValue(signedIn, "telflo_access") : cookieValue(switched, "telflo_access")) };
   };
 
@@ -390,7 +389,7 @@ describe("the test suites and definitions API", () => {
     return response.json<{ file: { id: string; fileName: string; sizeBytes: number; sha256: string } }>().file;
   };
 
-  /** A live template with `data` behind it, as Task 5's upload would leave it. */
+  /** A live template with `data` behind it, as a template's upload would leave it. */
   const templateWith = async (data: Buffer, overrides: { file_name?: string; content_type?: string } = {}) => {
     const template = await addTestTemplate(databases.ownerDb, {
       file_name: overrides.file_name ?? `otlp-traces-${FILE_MARKER}.json`,
@@ -443,7 +442,7 @@ describe("the test suites and definitions API", () => {
       .orderBy("id")
       .execute();
 
-  /** Ruling 7's invariant: no definition without its input, and no input no definition names; each input's bytes there exactly when its row is. */
+  /** The invariant: no definition without its input, and no input no definition names; each input's bytes there exactly when its row is. */
   const expectNothingDangles = async (organizationId: string) => {
     const ownerDb = databases.ownerDb;
     const { rows } = await sql<{ dangling: number; unused: number }>`
@@ -489,7 +488,7 @@ describe("the test suites and definitions API", () => {
     return tracked;
   };
 
-  /** A side connection's hold: the configuration's row, as every reference-changing path locks it (Preflight ruling 7). */
+  /** A side connection's hold: the configuration's row, as every reference-changing path locks it. */
   const configurationRow =
     (configurationId: string) =>
     (connection: Kysely<Database>): Promise<unknown> =>
@@ -770,7 +769,7 @@ describe("the test suites and definitions API", () => {
       expect(await auditRows("test_definition.")).toHaveLength(1);
     });
 
-    it("refuses a version's 101st suite with 409 test_suite_limit_reached (decision 25), and another version still takes one", async () => {
+    it("refuses a version's 101st suite with 409 test_suite_limit_reached, and another version still takes one", async () => {
       const ana = await member();
       const target = await configurationOf(ana);
       await sql`
@@ -826,7 +825,7 @@ describe("the test suites and definitions API", () => {
             .executeTakeFirstOrThrow()
         ).input_id;
       const [inputA, inputC] = [await inputOf(a.id), await inputOf(c.id)];
-      // A version copy's definition on v2 shares input C (decision 4), as Task 4's copy will make it.
+      // A version copy's definition on v2 shares input C.
       const copy = await addTestSuite(databases.ownerDb, {
         organizationId: target.organizationId,
         configurationId: target.configurationId,
@@ -882,7 +881,7 @@ describe("the test suites and definitions API", () => {
     });
   });
 
-  describe("visibility (decision 8)", () => {
+  describe("visibility", () => {
     it("hides a draft's suites and definitions from a teammate (404 configuration_not_found everywhere) until it is published; then he sees them, creates a definition from his own file and sees Ana's", async () => {
       const { ana, ben } = await team();
       const target = await configurationOf(ana);
@@ -913,7 +912,7 @@ describe("the test suites and definitions API", () => {
       expect(listed.definitions.map((definition) => definition.id)).toEqual([anas.id, bens.id]);
       // Ana's definition's input is his to read too (Play one's check), though her file is hers alone.
       expect((await call(ben, "GET", headPath(target, suite.id, anas.id))).statusCode).toBe(200);
-      // And a published configuration's suite is every member's to rename (decision 8).
+      // And a published configuration's suite is every member's to rename.
       expect((await call(ben, "PATCH", suitePath(target, suite.id), { name: "Renamed by Ben" })).statusCode).toBe(200);
     });
 
@@ -967,7 +966,7 @@ describe("the test suites and definitions API", () => {
       expect(await inputRows()).toEqual([]);
     });
 
-    it("refuses every endpoint, all eight, with 403 terms_acceptance_required to a member who hasn't accepted the current terms, writing nothing (Ruling 32)", async () => {
+    it("refuses every endpoint, all eight, with 403 terms_acceptance_required to a member who hasn't accepted the current terms, writing nothing", async () => {
       const ana = await member();
       const target = await configurationOf(ana);
       const suite = await createdSuite(ana, target);
@@ -1185,7 +1184,7 @@ describe("the test suites and definitions API", () => {
       expect(listed.every((definition) => definition.inputName === file.fileName)).toBe(true);
     });
 
-    it("keeps a definition's input when Ana deletes her My Files file: its head still reads it (decision 1)", async () => {
+    it("keeps a definition's input when Ana deletes her My Files file: its head still reads it", async () => {
       const ana = await member();
       const target = await configurationOf(ana);
       const suite = await createdSuite(ana, target);
@@ -1201,7 +1200,7 @@ describe("the test suites and definitions API", () => {
       expect(head.rawPayload).toEqual(data);
     });
 
-    it("refuses a suite's 101st definition with 409 test_definition_limit_reached (decision 25), keeping no copy of its input", async () => {
+    it("refuses a suite's 101st definition with 409 test_definition_limit_reached, keeping no copy of its input", async () => {
       const ana = await member();
       const target = await configurationOf(ana);
       const suite = await createdSuite(ana, target);
@@ -1405,7 +1404,7 @@ describe("the test suites and definitions API", () => {
     });
   });
 
-  describe("the uploads' limit (RATE_LIMITS: 30 a minute, Preflight ruling 22)", () => {
+  describe("the uploads' limit (RATE_LIMITS: 30 a minute)", () => {
     it("counts a definition's create and its input's head with the person's uploads, refusing the 31st (429) before copying anything", async () => {
       const limited = await serverWith({ rateLimits: RATE_LIMITS });
       const ana = await member();
@@ -1432,12 +1431,12 @@ describe("the test suites and definitions API", () => {
       expect((await call(ana, "GET", headPath(target, suite.id, created[0]!.id), undefined, { on: limited })).statusCode).toBe(429);
       expect(await inputRows()).toHaveLength(15);
       expect(await inputFiles()).toHaveLength(15);
-      // Suite writes have no limit of their own (Preflight ruling 24).
+      // Suite writes have no limit of their own.
       expect((await call(ana, "POST", suitesPath(target), { name: "Still" }, { on: limited })).statusCode).toBe(201);
     });
   });
 
-  describe("a new version's copy of its source's suites (D14b decisions 4 and 12, Preflight rulings 7 and 8)", () => {
+  describe("a new version's copy of its source's suites", () => {
     /** POST …/versions: a new version of `target`'s configuration from `sourceVersionId`, as `person`. */
     const newVersion = (person: Person, target: Target, sourceVersionId: string) =>
       call(person, "POST", `/api/v1/organizations/${target.organizationId}/configurations/${target.configurationId}/versions`, {
@@ -1649,7 +1648,7 @@ describe("the test suites and definitions API", () => {
       ).toEqual(before);
     });
 
-    describe("against a definition's delete on the same input, both under the configuration's lock (Preflight ruling 7)", () => {
+    describe("against a definition's delete on the same input, both under the configuration's lock", () => {
       /** A published configuration whose version 1 has one suite with Ana's one definition, on its own input. */
       const contested = async () => {
         const { ana, ben } = await team();
@@ -1693,15 +1692,15 @@ describe("the test suites and definitions API", () => {
   });
 
   /*
-   * Ruling 32 (m1): deletes sharing an input, through the API. Each delete
-   * takes the configuration's lock before it deletes a row and frees what
-   * nothing names (Preflight ruling 7). The side connection holds the
-   * inputs' table, so both deletes have begun before either frees: with the
-   * lock, the second waits for the first to commit, and frees the input;
-   * without it (a bug), both have deleted their definitions when they free,
-   * each still seeing the other's, and the input is orphaned.
+   * Deletes sharing an input, through the API. Each delete takes the
+   * configuration's lock before it deletes a row and frees what nothing
+   * names. The side connection holds the inputs' table, so both deletes have
+   * begun before either frees: with the lock, the second waits for the first
+   * to commit, and frees the input; without it (a bug), both have deleted
+   * their definitions when they free, each still seeing the other's, and the
+   * input is orphaned.
    */
-  describe("deletes racing on a shared input (Preflight ruling 7, Ruling 32)", () => {
+  describe("deletes racing on a shared input", () => {
     /** Ana's published configuration: a suite on v1 with her definition on input I (and `own`, on J), a suite on v2 with a copy's definition on I. */
     const shared = async () => {
       const ana = await member();
@@ -1719,7 +1718,7 @@ describe("the test suites and definitions API", () => {
         ).input_id;
       const inputId = await inputOf(definition.id);
       const ownInputId = await inputOf(own.id);
-      // v2's suite and its definition on I, as a version copy leaves them (decision 4).
+      // v2's suite and its definition on I, as a version copy leaves them.
       const onV2 = await createdSuite(ana, target, {}, target.v2);
       const copied = await addTestDefinition(databases.ownerDb, {
         organizationId: target.organizationId,
@@ -1800,7 +1799,7 @@ describe("the test suites and definitions API", () => {
     );
   });
 
-  describe("privacy (ADR 0024)", () => {
+  describe("privacy", () => {
     it("puts no suite's or definition's name, description or input name in any audit row or log line", async () => {
       const { ana, ben } = await team();
       const target = await configurationOf(ana, { published: true });

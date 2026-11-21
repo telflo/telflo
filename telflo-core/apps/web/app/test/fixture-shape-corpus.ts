@@ -3,10 +3,9 @@ import { fileURLToPath } from "node:url";
 import type { FixtureShape, StrategyKind } from "~/lib/test-runs/fixture-shape.js";
 
 /*
- * The fixture-shape parity corpus as the web's parity test reads it (D14a
- * decision 17, Preflight ruling 18): the one copy,
- * `services/otelcol-testing/tests/fixtures/fixture-shape-corpus.json`, which
- * the tester's `tests/test_fixture_shape_parity.py` reads too, as
+ * The fixture-shape parity corpus as the web's parity test reads it: the one
+ * copy, `services/otelcol-testing/tests/fixtures/fixture-shape-corpus.json`,
+ * which the tester's `tests/test_fixture_shape_parity.py` reads too, as
  * app/test/seeded-flows.ts reads the validator's fixture. Each section is
  * checked for its fields here, so a renamed key fails loudly instead of
  * passing over no cases.
@@ -38,7 +37,7 @@ export interface StrategyCase {
   name: string;
   yaml: string;
   signal_type: string;
-  /** Only the target_strategies section's cases carry one (D14a Task 9). */
+  /** Only the target_strategies section's cases carry one. */
   target_pipeline?: string;
   expected_kind: StrategyKind;
 }

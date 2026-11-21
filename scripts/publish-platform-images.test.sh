@@ -391,7 +391,7 @@ STANDIN_OTHER_DIGEST=1 run --build-oci "$oci5" --builder owner-builder --image a
 check "a build whose metadata digest isn't the archive's index refused: no archive, no digest file" \
   "[ $rc -eq 1 ] && has \"index.json's entry is\" && [ -z \"\$(ls -A '$oci5')\" ]"
 STANDIN_LABEL_VERSION=9.9.9 run --build-oci "$oci5" --builder owner-builder --image api
-check "an archive whose images aren't labelled with the version refused" \
+check "an archive whose images aren't labeled with the version refused" \
   "[ $rc -eq 1 ] && has \"version label isn't 1.2.3\" && [ -z \"\$(ls -A '$oci5')\" ]"
 STANDIN_BUILDX=v0.8.2 run --build-oci "$oci5" --builder owner-builder --image api
 check "a buildx too old to attest refused (0.11 or later)" "[ $rc -eq 1 ] && has \"can't attest\" && nothing_built"
@@ -408,16 +408,16 @@ for i in api web otelcol-validator otelcol-testing ottl-evaluator; do
 done
 tr_fixture "$offline/ottl-evaluator.oci.tar" 1.2.3 "$rev" O-ottl-evaluator no-attest >"$offline/ottl-evaluator.digest"
 run --push-oci "$offline"
-check "a --no-attest archive refused for ghcr.io (decision 72), before any registry call" \
+check "a --no-attest archive refused for ghcr.io, before any registry call" \
   "[ $rc -eq 1 ] && has \"ottl-evaluator.oci.tar: the linux/amd64 image has no attestation manifest\" && has 'nothing pushed' && [ -f '$logs/crane-calls.log' ] && [ ! -s '$logs/crane-calls.log' ]"
 tr_fixture "$offline/ottl-evaluator.oci.tar" 1.2.3 "$rev" O-ottl-evaluator >"$offline/ottl-evaluator.digest"
 tr_tamper "$offline/ottl-evaluator.oci.tar" flip-layer
 run --push-oci "$offline"
 check "a corrupt blob in the last archive (one layer byte flipped) refused in pass 1, before any registry call" \
   "[ $rc -eq 1 ] && has \"ottl-evaluator.oci.tar: the archive's blobs/sha256/\" && has \"doesn't hash to its name\" && [ ! -s '$logs/crane-calls.log' ]"
-# CI: crane only tools.sh's checked one (oci.sh's rule, Rulings 392 and 399): the file
-# `tools.sh path crane` gives, hashed against tools.lock's binary sha256; never PATH's, never
-# another named one. (The accepted case is oci.test.sh's, whose lock names its stand-in's sum.)
+# CI: crane only tools.sh's checked one (oci.sh's rule): the file `tools.sh path crane` gives,
+# hashed against tools.lock's binary sha256; never PATH's, never another named one. (The accepted
+# case is oci.test.sh's, whose lock names its stand-in's sum.)
 run_ci() { reset_logs; out="$(env CI=true "$@" TMPDIR="$tmp/t" DOCKER_CONFIG="$tmp/docker" "$shell" "$tmp/repo/scripts/publish-platform-images.sh" --dry-run --builder owner-builder --image api 2>&1)"; rc=$?; }
 run_ci TELFLO_CRANE="$bin/crane"
 check "CI=true: a TELFLO_CRANE outside the repository's .tools/ refused (no checked crane there), crane never run" \
@@ -446,7 +446,7 @@ if $push_ok; then
   REG="$TR_REGISTRY"
   pr() { STANDIN_CRANE='' TEST_DOCKER_CONFIG="$TR_CONFIG" run --push-oci "$@"; }
   remote_of() { DOCKER_CONFIG="$TR_CONFIG" "$real_crane" digest "$REG/telflo/telflo/$1:1.2.3" 2>/dev/null; }
-  # The release's archives: fixtures labelled 1.2.3 and HEAD's revision.
+  # The release's archives: fixtures labeled 1.2.3 and HEAD's revision.
   rel="$tmp/release"; mkdir -p "$rel"
   for i in api web otelcol-validator otelcol-testing ottl-evaluator; do
     tr_fixture "$rel/$i.oci.tar" 1.2.3 "$rev" "A-$i" >"$rel/$i.digest"

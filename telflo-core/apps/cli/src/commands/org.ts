@@ -1,9 +1,9 @@
 /*
- * `telflo org list` and `telflo org use <id>` (D27 decisions 10 and 15):
- * a person's token switches organization without logging in again.
- * `org list` reads `/orgs` (the current one marked); `org use` checks the
- * id against `/orgs`, canonicalized, then stores it. `TELFLO_ORG` overrides
- * the stored one for one shell.
+ * `telflo org list` and `telflo org use <id>`: a person's token switches
+ * organization without logging in again. `org list` reads `/orgs` (the
+ * current one marked); `org use` checks the id against `/orgs`,
+ * canonicalized, then stores it. `TELFLO_ORG` overrides the stored one for
+ * one shell.
  */
 
 import type { Command } from "commander";

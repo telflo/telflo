@@ -26,34 +26,31 @@ import { createConfigurationVersionRepository } from "../modules/configurations/
 import { createConfigurationVersionSelectionRepository } from "../modules/configurations/repositories/configuration-version-selection-repository.js";
 
 /*
- * Drafts are private within one organization (D11b decision 1; Preflight
- * ruling 7). The cross-tenant suite keeps organizations apart; this one
- * keeps members of one organization apart: a member sees their own drafts
- * and every published configuration with all its versions, never another
- * member's draft, and a configuration whose author's account is gone and
- * that was never published is visible to no one, admins included.
+ * Drafts are private within one organization. The cross-tenant suite keeps
+ * organizations apart; this one keeps members of one organization apart: a
+ * member sees their own drafts and every published configuration with all its
+ * versions, never another member's draft, and a configuration whose author's
+ * account is gone and that was never published is visible to no one, admins
+ * included.
  *
  * Each rule is checked twice: through the repositories the API uses, and in
  * raw SQL as the API's role, where row-level security (migration
  * 1700000000021) is the only thing in the way.
  *
- * Test runs follow their configuration (D14a decision 8, migration
- * 1700000000028): a draft's runs are its author's alone, and once the
- * configuration is published every member sees its runs, past and future.
- * Test files are their owner's alone (decision 7). Until D14a's testing
- * module brings their repositories, they are checked in raw SQL only.
+ * Test runs follow their configuration (migration 1700000000028): a draft's
+ * runs are its author's alone, and once the configuration is published every
+ * member sees its runs, past and future. Test files are their owner's alone.
+ * Here they are checked in raw SQL only.
  *
  * Test suites, their definitions and the definitions' inputs follow their
- * configuration too (D14b decision 8, migration 1700000000029): a draft's
- * are its author's alone; once published, every member sees them and may
- * add and rename suites, on any version. Until D14b's suites repositories
- * (Task 3) come, they are checked in raw SQL only.
+ * configuration too (migration 1700000000029): a draft's are its author's
+ * alone; once published, every member sees them and may add and rename
+ * suites, on any version. Here they are checked in raw SQL only.
  *
- * Validation pipelines and their rules follow their configuration too (D15a
- * decision 12, migration 1700000000030): a draft's are its author's alone;
- * once published, every member sees them and may add, change and delete
- * rules, on any version. Until D15a's repositories (Task 6) come, they are
- * checked in raw SQL only.
+ * Validation pipelines and their rules follow their configuration too
+ * (migration 1700000000030): a draft's are its author's alone; once
+ * published, every member sees them and may add, change and delete rules, on
+ * any version. Here they are checked in raw SQL only.
  */
 
 describe("draft privacy within an organization", () => {
@@ -62,7 +59,7 @@ describe("draft privacy within an organization", () => {
   /** The tables' owner: fixtures, truncation and reading rows back. */
   let ownerDb: Kysely<Database>;
   let databases: TestDatabases;
-  /** The catalogue's default distribution and version (D13a), which a version inserted by hand is pinned to. */
+  /** The catalog's default distribution and version, which a version inserted by hand is pinned to. */
   let pin: { collector_distribution: string; collector_version: string };
 
   beforeAll(async () => {
@@ -290,10 +287,9 @@ describe("draft privacy within an organization", () => {
 
   describe("through the repositories alone, past row-level security (as the tables' owner)", () => {
     /*
-     * The owner is exempt from row-level security (the tables aren't
-     * FORCEd), so only the repositories' own filter (D11b Preflight ruling
-     * 6) stands between a viewer and another member's draft here: the
-     * policies can't hide a lost filter.
+     * The owner is exempt from row-level security (the tables aren't FORCEd),
+     * so only the repositories' own filter stands between a viewer and another
+     * member's draft here: the policies can't hide a lost filter.
      */
     const reachableAsOwner = (seeded: Seeded, userId: string) =>
       // The context still set, as for a request: "published" is the
@@ -460,7 +456,7 @@ describe("draft privacy within an organization", () => {
     });
   });
 
-  describe("test runs and test files, in raw SQL as the application role (D14a decisions 7 and 8)", () => {
+  describe("test runs and test files, in raw SQL as the application role", () => {
     const idsOf = (rows: Array<{ id: string }>) => sorted(rows.map((row) => row.id));
 
     /** Every test run and test file `userId` can select, with no filter of our own. */
@@ -541,7 +537,7 @@ describe("draft privacy within an organization", () => {
     });
   });
 
-  describe("test suites, definitions and inputs, in raw SQL as the application role (D14b decision 8)", () => {
+  describe("test suites, definitions and inputs, in raw SQL as the application role", () => {
     const idsOf = (rows: Array<{ id: string }>) => sorted(rows.map((row) => row.id));
 
     /** Every suite, definition and input `userId` can select, with no filter of our own. */
@@ -555,7 +551,7 @@ describe("draft privacy within an organization", () => {
     /**
      * The author's suite with a definition and its input on the draft's v1,
      * and on the published configuration's draft v2 (a suite belongs to any
-     * version, D14b decision 5), as the owner.
+     * version), as the owner.
      */
     const seedSuites = async (seeded: Seeded) => {
       const on = async (configurationId: string, versionId: string) => {
@@ -652,8 +648,8 @@ describe("draft privacy within an organization", () => {
      * A statement with no WHERE clause and no RETURNING reads no column, so
      * Postgres applies only its command's policy, not the select policy: the
      * probes above, by id, would pass with the update and delete policies
-     * cut to the organization (D14b Ruling 29). These reach the author's
-     * draft through the update and delete policies alone.
+     * cut to the organization. These reach the author's draft through the
+     * update and delete policies alone.
      */
     it("updates and deletes none of the author's draft's suites, definitions or inputs by a bare statement with no WHERE clause, the teammate seeing no other row", async () => {
       const seeded = await seed();
@@ -701,7 +697,7 @@ describe("draft privacy within an organization", () => {
     });
   });
 
-  describe("validation pipelines and rules, in raw SQL as the application role (D15a decision 12)", () => {
+  describe("validation pipelines and rules, in raw SQL as the application role", () => {
     const idsOf = (rows: Array<{ id: string }>) => sorted(rows.map((row) => row.id));
 
     /** Every validation pipeline and rule `userId` can select, with no filter of our own. */
@@ -714,7 +710,7 @@ describe("draft privacy within an organization", () => {
     /**
      * The author's validation pipeline with a rule on the draft's v1, and on
      * the published configuration's draft v2 (a validation pipeline belongs
-     * to any version, D15a decision 13), as the owner.
+     * to any version), as the owner.
      */
     const seedValidation = async (seeded: Seeded) => {
       const on = async (configurationId: string, versionId: string) => {

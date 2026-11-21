@@ -1,11 +1,10 @@
 import { CheckboxField, NumberField, SelectField } from "./form-context.js";
 
 /*
- * The debug exporter's form (ADR 0018), over the form's fields (D9b
- * decisions 2 and 3):
- * each field writes its own key. The collector's defaults (debug exporter
+ * The debug exporter's form, over the form's fields: each field writes
+ * its own key. The collector's defaults (debug exporter
  * `createDefaultConfig`, v0.162.0: basic, 2, 1, true) show while a key is
- * unset; 0 can be entered (decision 4).
+ * unset; 0 can be entered.
  */
 
 const VERBOSITIES = [

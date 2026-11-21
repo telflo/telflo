@@ -2,12 +2,11 @@ import type { FlowSignal, FlowSource } from "@telflo/contracts";
 import { Badge } from "~/components/ui/badge.js";
 
 /*
- * The flow's badges (ADR 0018; D12): a flow's signals and its provenance, as
- * badges. Every string is the flow's, shown as text (ADR 0024: nothing in an
- * attribute).
+ * The flow's badges: a flow's signals and its provenance, as badges. Every
+ * string is the flow's, shown as text (nothing in an attribute).
  */
 
-// One colour per signal, everywhere a flow is shown, so the gallery can be
+// One color per signal, everywhere a flow is shown, so the gallery can be
 // scanned for "the logs ones" without reading labels.
 const SIGNAL_VARIANT: Record<FlowSignal, "info" | "success" | "warning"> = {
   traces: "info",

@@ -27,10 +27,9 @@ import type { ValuePath } from "~/lib/graph/text-edits.js";
 import type { ValueView } from "~/lib/graph/value-view.js";
 
 /*
- * The Kubernetes attributes processor's form (ADR 0018), over the form's
- * fields (D9c decision 2, D9b's contract): each field writes its
- * own key. Collector paths are `processor/k8sattributesprocessor/` at
- * contrib v0.162.0.
+ * The Kubernetes attributes processor's form, over the form's fields: each
+ * field writes its own key. Collector paths are
+ * `processor/k8sattributesprocessor/` at contrib v0.162.0.
  *
  * - The pod association rules, the custom labels and the custom annotations
  *   are sortable lists of cards written by item: each card's fields write
@@ -38,53 +37,49 @@ import type { ValueView } from "~/lib/graph/value-view.js";
  *   sortable list of their own), `extract.labels.<i>` or
  *   `extract.annotations.<i>` (`FormScope`), so keys the form doesn't show
  *   stay. Dragging a card moves the item's own lines, its comments with it
- *   (`form.move`); the cards are keyed by keys of their own, so a card's
- *   state (a field's typing) follows it (`useCardKeys`; Preflight ruling
- *   25; a rule's sources too, Ruling 43); a rule is never rebuilt as
- *   `{sources}` on a change.
- * - Fixed (decision 3): "Extract OpenTelemetry Annotations" writes only
- *   `extract.otel_annotations`, never `extract: {metadata: [],
- *   otel_annotations: …}` when `extract` is unset: an empty list replaces
- *   the collector's default metadata (`factory.go:45-51`).
- * - Fixed (decision 3): "Derive Deployment Name from ReplicaSet" isn't
- *   shown: `deployment_name_from_replicaset` isn't a key (`config.go:22-60`;
- *   the collector derives the name anyway) and the collector refuses it. A
- *   key already in the text is left alone (D9b Ruling 52; D13's).
- * - Fixed (decision 3; Preflight ruling 16): Add Rule never appends a second
- *   `{sources: [{from: connection}]}`, which the collector refuses
- *   ("duplicate pod association", `config.go:74-85`). It seeds the first of
- *   `connection`, `resource_attribute` `k8s.pod.ip` and `resource_attribute`
- *   `k8s.pod.uid` that isn't already a rule, compared by the collector's key
- *   (each source's `from/name`, sorted and joined, `config.go:152-164`); with
- *   all three there it is disabled, with "Every suggested rule is already
- *   here. Add others in the YAML."
- * - Standard Attributes is a checkbox list written by item (D9c decision
- *   5): unset shows none ticked, with the collector's default
- *   in the hint (`K8S_ATTRIBUTES_DEFAULT_METADATA`, v0.162.0), and the
- *   first tick writes that item alone. An item outside the 13 (the
- *   collector takes 31, `config.go:106-125`) shows after them, ticked, as
- *   text. Ids are `metadata-<index>`, never the attribute name (decision
- *   10).
- * - Kept (Parity Notes): Add Source appends `{from: connection}` while a
- *   rule has fewer than 4 sources (`config.go:76-77`); a source's From
- *   writes `from` alone; Add Label and Add Annotation append
- *   `{tag_name: "", key: "", from: pod}` (the collector takes empty ones,
- *   `options.go:258-286`; D9c Handoffs' residue); the Key/Regex switch
+ *   (`form.move`); the cards are keyed by keys of their own, so a card's state
+ *   (a field's typing) follows it (`useCardKeys`; a rule's sources too); a
+ *   rule is never rebuilt as `{sources}` on a change.
+ * - "Extract OpenTelemetry Annotations" writes only
+ *   `extract.otel_annotations`, never
+ *   `extract: {metadata: [], otel_annotations: …}` when `extract` is unset:
+ *   an empty list replaces the collector's default metadata
+ *   (`factory.go:45-51`).
+ * - "Derive Deployment Name from ReplicaSet" isn't shown:
+ *   `deployment_name_from_replicaset` isn't a key (`config.go:22-60`; the
+ *   collector derives the name anyway) and the collector refuses it. A key
+ *   already in the text is left alone.
+ * - Add Rule never appends a second `{sources: [{from: connection}]}`, which
+ *   the collector refuses ("duplicate pod association", `config.go:74-85`).
+ *   It seeds the first of `connection`, `resource_attribute` `k8s.pod.ip` and
+ *   `resource_attribute` `k8s.pod.uid` that isn't already a rule, compared by
+ *   the collector's key (each source's `from/name`, sorted and joined,
+ *   `config.go:152-164`); with all three there it is disabled, with "Every
+ *   suggested rule is already here. Add others in the YAML."
+ * - Standard Attributes is a checkbox list written by item: unset shows none
+ *   ticked, with the collector's default in the hint
+ *   (`K8S_ATTRIBUTES_DEFAULT_METADATA`, v0.162.0), and the first tick writes
+ *   that item alone. An item outside the 13 (the collector takes 31,
+ *   `config.go:106-125`) shows after them, ticked, as text. Ids are
+ *   `metadata-<index>`, never the attribute name.
+ * - Add Source appends `{from: connection}` while a rule has fewer than
+ *   4 sources (`config.go:76-77`); a source's From writes `from` alone; Add
+ *   Label and Add Annotation append `{tag_name: "", key: "", from: pod}` (the
+ *   collector takes empty ones, `options.go:258-286`); the Key/Regex switch
  *   moves the value between `key` and `key_regex` (renamed in place, so it
- *   keeps its quoting and comment; where the other key is there, both
- *   set, which the collector refuses, `config.go:88-90`, or a null, it
- *   takes the value and the first is removed, in one write). The switch is disabled while either key holds a
- *   value the key field can't show, which it would otherwise overwrite
- *   (Ruling 41).
- * - Unset shows the collector's default (D9b decision 3; Ruling 31):
- *   Authentication Type `serviceAccount` (`factory.go:47`), Wait Timeout
- *   `10s` (`factory.go:52`), a label's From `pod` (the placeholder;
- *   `options.go:263-265`). A From or source outside the select's options
- *   shows as an extra option (`replicaset` and `cronjob`, not offered:
- *   decision 6 adds no choices here).
+ *   keeps its quoting and comment; where the other key is there, both set,
+ *   which the collector refuses, `config.go:88-90`, or a null, it takes the
+ *   value and the first is removed, in one write). The switch is disabled
+ *   while either key holds a value the key field can't show, which it would
+ *   otherwise overwrite.
+ * - Unset shows the collector's default: Authentication Type `serviceAccount`
+ *   (`factory.go:47`), Wait Timeout `10s` (`factory.go:52`), a label's From
+ *   `pod` (the placeholder; `options.go:263-265`). A From or source outside
+ *   the select's options shows as an extra option (`replicaset` and
+ *   `cronjob`, which aren't offered).
  *
  * Ids are fixed per field or by index (`assoc-0`, `assoc-0-src-1`,
- * `label-0`, `annotation-0`, `metadata-3`), never a value (decision 10).
+ * `label-0`, `annotation-0`, `metadata-3`), never a value.
  */
 
 const AUTH_TYPES = [
@@ -129,7 +124,7 @@ const MAX_SOURCES = 4;
 
 export const ALL_RULES_PRESENT = "Every suggested rule is already here. Add others in the YAML.";
 
-/** The rules Add Rule seeds, in order: connection, then the pod IP and UID resource attributes (Preflight ruling 16). */
+/** The rules Add Rule seeds, in order: connection, then the pod IP and UID resource attributes. */
 export const SUGGESTED_RULES: readonly { sources: readonly { from: string; name?: string }[] }[] = [
   { sources: [{ from: "connection" }] },
   { sources: [{ from: "resource_attribute", name: "k8s.pod.ip" }] },
@@ -344,8 +339,9 @@ function RuleSources({ assocIndex }: { assocIndex: number }) {
   const form = useForm();
   const rule = form.read([]);
   const view = form.read(["sources"]);
-  // Each source's row is keyed by a key of its own, which follows its source through a move, an undo or the
-  // YAML box, so a held edit in its fields is written to its own source (Ruling 43).
+  // Each source's row is keyed by a key of its own, which follows its source
+  // through a move, an undo or the YAML box, so a held edit in its fields is
+  // written to its own source.
   const cards = useCardKeys(view.kind === "list" ? view.value : []);
   if ((rule.kind !== "map" && rule.kind !== "absent") || (view.kind !== "list" && view.kind !== "absent")) {
     return <p className="text-[11px] leading-4 text-muted-foreground">{UNSHOWABLE_VALUE_MESSAGE}</p>;
@@ -546,14 +542,14 @@ function ExtractFields({ kind, handle, onRemove }: { kind: ExtractKind; handle: 
   }
   // Regex mode: `key_regex` is there, empty or not.
   const isRegexMode = form.read(["key_regex"]).kind !== "absent";
-  // The switch moves one key's value to the other, so it waits while either holds one the key field can't show (Ruling 41).
+  // The switch moves one key's value to the other, so it waits while either holds one the key field can't show.
   const switchable = shownAsText(form.read(["key"])) && shownAsText(form.read(["key_regex"]));
 
   /** The Key/Regex switch: the value moves to the other key, in place where it can. */
   const switchKeyMode = (toRegex: boolean) => {
     const [source, target] = toRegex ? ["key", "key_regex"] : ["key_regex", "key"];
     const moving = form.read([source]);
-    // A target written as a null reads as unset but is there: a rename would clash, so it is set (Ruling 41).
+    // A target written as a null reads as unset but is there: a rename would clash, so it is set.
     const item = form.read([]).value as Record<string, unknown>;
     if (moving.kind === "absent") {
       form.set([target], "");

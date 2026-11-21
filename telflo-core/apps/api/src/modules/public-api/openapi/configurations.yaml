@@ -1,9 +1,9 @@
-# Configurations and their versions (D25 decision 17's routes 4-12; decisions
-# 18, 19, 20 and 31). Assembled by document.ts. A token sees the published
-# configurations and its own user's drafts, never another member's; every
-# reply is no-store. Each operation's refusals name the codes it answers (Ruling 165); the
-# request schemas are as strict as the contracts' (packages/contracts/src/
-# public-api/configurations.ts), but for trimming, which the API does first.
+# Configurations and their versions. Assembled by document.ts. A token sees
+# the published configurations and its own user's drafts, never another
+# member's; every reply is no-store. Each operation's refusals name the codes
+# it answers; the request schemas are as strict as the contracts'
+# (packages/contracts/src/public-api/configurations.ts), but for trimming,
+# which the API does first.
 paths:
   /configurations:
     get:

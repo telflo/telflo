@@ -6,10 +6,10 @@ import type { OtelcolTestingHealthMonitor } from "../otelcol-testing/health-moni
 import { startFakeOtelcolTesting, type FakeOtelcolTesting } from "./fake-otelcol-testing.js";
 import { UNCALLED_OTTL_EVALUATOR, UNCALLED_OTTL_EVALUATOR_HEALTH } from "./ottl-evaluator.js";
 
-// The collector tester's fake for a test file (D14a Task 6), as
-// useFakeOtelcolValidator is for the validator (otelcol-validator.ts). A test
-// file about test runs starts the OpenAPI-checked fake
-// (fake-otelcol-testing.ts) and uses its client. One fake per file:
+// The collector tester's fake for a test file, as useFakeOtelcolValidator is
+// for the validator (otelcol-validator.ts). A test file about test runs
+// starts the OpenAPI-checked fake (fake-otelcol-testing.ts) and uses its
+// client. One fake per file:
 //
 //   const tester = useFakeOtelcolTesting();
 //   ...
@@ -23,9 +23,9 @@ import { UNCALLED_OTTL_EVALUATOR, UNCALLED_OTTL_EVALUATOR_HEALTH } from "./ottl-
 // `tester.fake`.
 //
 // A test server about test runs passes its own `testing` dependency (this
-// fake's client) and its own file store (buildServer's `fileStore`, D23-2
-// decision 31); every other test server passes UNCALLED_TESTING and
-// UNCALLED_FILE_STORE (testing/file-store.ts).
+// fake's client) and its own file store (buildServer's `fileStore`); every
+// other test server passes UNCALLED_TESTING and UNCALLED_FILE_STORE
+// (testing/file-store.ts).
 
 export interface FakeOtelcolTestingForFile {
   /** The file's fake; read it inside a hook or a test, once it has started. */
@@ -87,9 +87,9 @@ const UNCALLED_HEALTH: OtelcolTestingHealthMonitor = {
 };
 
 /**
- * An organization variables' source no test meant to reach (D20 Task 11):
- * a run's text with no live `${org:NAME}` never reads one, so a test whose
- * runs hold none passes this, and a read fails it.
+ * An organization variables' source no test meant to reach: a run's text
+ * with no live `${org:NAME}` never reads one, so a test whose runs hold
+ * none passes this, and a read fails it.
  */
 export const UNCALLED_ORGANIZATION_VARIABLES: IOrganizationVariables = {
   read: () => uncalled("organization variables' source"),
@@ -97,13 +97,12 @@ export const UNCALLED_ORGANIZATION_VARIABLES: IOrganizationVariables = {
 
 /**
  * buildServer's `testing` for every test server not about test runs or
- * validation rules (D14a Preflight ruling 17): any use of the tester, the
- * OTTL evaluator (testing/ottl-evaluator.ts's UNCALLED_OTTL_EVALUATOR) or
- * the organization variables' source rejects, so the request fails with a
- * 500 and the test with it, rather than reach a tester, an evaluator or a
- * source nobody set up. Its queue signal is a no-op: nothing listens. The
- * file store is buildServer's own `fileStore` (D23-2 decision 31;
- * UNCALLED_FILE_STORE, testing/file-store.ts).
+ * validation rules: any use of the tester, the OTTL evaluator
+ * (testing/ottl-evaluator.ts's UNCALLED_OTTL_EVALUATOR) or the organization
+ * variables' source rejects, so the request fails with a 500 and the test with
+ * it, rather than reach a tester, an evaluator or a source nobody set up. Its
+ * queue signal is a no-op: nothing listens. The file store is buildServer's
+ * own `fileStore` (UNCALLED_FILE_STORE, testing/file-store.ts).
  */
 export const UNCALLED_TESTING: TestingDependencies = {
   tester: UNCALLED_TESTER,

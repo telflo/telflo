@@ -22,39 +22,36 @@ import { useSettled } from "~/lib/hooks/use-settled.js";
 import { useCurrentUser } from "~/lib/use-current-user.js";
 
 /*
- * `/app`, where sign-in lands: the Configurations page (ADR 0018; D7
- * decision 12). Its rules are in the D7 Parity Notes:
- * - the list is paged and searched on the server (decision 6): the search
- *   goes 300 ms after typing stops, the filter at once, and "Load more"
- *   below the grid or table fetches the next page (disabled while a new
- *   first page is under way). So the header has no count, which a paged list
- *   can't know;
- * - the filter (All configurations, Mine, Published; D11b decision 6) is
- *   the server's, sent with every page, and isn't remembered across visits;
- * - Delete shows only where it's allowed, for an admin too (D11b decision 2);
+ * `/app`, where sign-in lands: the Configurations page. Its rules:
+ * - the list is paged and searched on the server: the search goes 300 ms
+ *   after typing stops, the filter at once, and "Load more" below the grid
+ *   or table fetches the next page (disabled while a new first page is under
+ *   way). So the header has no count, which a paged list can't know;
+ * - the filter (All configurations, Mine, Published) is the server's, sent
+ *   with every page, and isn't remembered across visits;
+ * - Delete shows only where it's allowed, for an admin too;
  * - the public editor's work is saved through one dialog, the playground's
- *   handoff (`PlaygroundSaveDialog`, D31-1 decision 37): with an edit the
- *   playground or the blank public editor staged in this browser, once the
- *   terms are accepted, "Save your playground configuration?";
- * - the collector catalogue is read once, for the distribution tags' labels
- *   (D13a decision 10); a page whose read fails still lists, each tag
- *   naming its distribution by id;
- * - opening a configuration goes to `/editor/{id}`, and so does creating one
- *   (D8 decision 16);
+ *   handoff (`PlaygroundSaveDialog`): with an edit the playground or the
+ *   blank public editor staged in this browser, once the terms are
+ *   accepted, "Save your playground configuration?";
+ * - the collector catalog is read once, for the distribution tags' labels;
+ *   a page whose read fails still lists, each tag naming its distribution
+ *   by id;
+ * - opening a configuration goes to `/editor/{id}`, and so does creating one;
  * - no "Please wait…" overlay: the dialogs say "Creating…" and "Deleting...";
- * - the terms dialog is the signed-in layout's (D2c), and the list waits for
+ * - the terms dialog is the signed-in layout's, and the list waits for
  *   it (lib/configurations.ts);
  * - the view mode is kept under `telflo-configuration-view-mode`, read after
  *   mount, since the page is also rendered on the server; the first render is
  *   the grid.
  * The layout route supplies the shell, so the page doesn't wrap itself in
- * AppLayout. No attribute here carries a name, a description or an email
- * (ADR 0024): they are text, which replay masks.
+ * AppLayout. No attribute here carries a name, a description or an email:
+ * they are text, which replay masks.
  */
 
 type ViewMode = "grid" | "list";
 
-/** The filter's options, in order, with their words (D11b decision 6). */
+/** The filter's options, in order, with their words. */
 const FILTER_LABELS: Record<ConfigurationsListFilter, string> = {
   all: "All configurations",
   mine: "Mine",

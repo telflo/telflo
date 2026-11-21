@@ -6,13 +6,12 @@ import {
 import { AppError } from "../../errors.js";
 
 /*
- * The test suites' and definitions' own refusals (D14b detail 19, Preflight
- * ruling 23). The organization's (`organization_not_found`), the
- * configurations' (`configuration_not_found`,
+ * The test suites' and definitions' own refusals. The organization's
+ * (`organization_not_found`), the configurations' (`configuration_not_found`,
  * `configuration_version_not_found`) and the test files' and templates'
  * (`test_file_not_found`, `test_template_not_found`) are those modules', so
- * every endpoint answers them alike. No message names a suite, a
- * definition, a file or a template.
+ * every endpoint answers them alike. No message names a
+ * suite, a definition, a file or a template.
  */
 
 /**
@@ -33,12 +32,12 @@ export function testDefinitionNotFound(): AppError {
   return new AppError("test_definition_not_found" satisfies TestingErrorCode, "Test configuration not found", 404);
 }
 
-/** A version's 101st suite (the owner, D14b decision 25): decision 25's words. */
+/** A version's 101st suite, in fixed words. */
 export function testSuiteLimitReached(): AppError {
   return new AppError("test_suite_limit_reached" satisfies TestingErrorCode, TEST_SUITE_LIMIT_MESSAGE, 409);
 }
 
-/** A suite's 101st definition (the owner, D14b decision 25): decision 25's words. */
+/** A suite's 101st definition, in fixed words. */
 export function testDefinitionLimitReached(): AppError {
   return new AppError("test_definition_limit_reached" satisfies TestingErrorCode, TEST_DEFINITION_LIMIT_MESSAGE, 409);
 }

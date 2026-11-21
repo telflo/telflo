@@ -19,10 +19,9 @@ import type { AppLayoutData } from "~/routes/app-layout.js";
 import { signedInMember } from "~/test/configurations.js";
 
 /*
- * Settings › Editor (D21 decisions 31 and 33; Preflight ruling 35):
- * its words; each control saves its own key, optimistically; a
- * failure restores that key alone; an earlier answer never overwrites a
- * later choice.
+ * Settings › Editor: its words; each control saves its own key,
+ * optimistically; a failure restores that key alone; an earlier answer never
+ * overwrites a later choice.
  */
 
 /** A promise answered by hand. */

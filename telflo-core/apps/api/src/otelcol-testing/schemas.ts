@@ -1,9 +1,9 @@
 import { z } from "zod";
 
 // The collector tester's answers, as zod schemas, one for each schema in
-// services/otelcol-testing/openapi.yaml the platform reads (D14a decision 1,
-// Preflight ruling 1). Unknown fields are stripped rather than refused,
-// unlike the file's `additionalProperties: false`, as the validator's are
+// services/otelcol-testing/openapi.yaml the platform reads. Unknown fields are
+// stripped rather than refused, unlike the file's
+// `additionalProperties: false`, as the validator's are
 // (otelcol-validator/schemas.ts): a field the tester adds later must not
 // break a platform that hasn't learned it. The fake
 // (testing/fake-otelcol-testing.ts) checks the tester's side of the contract

@@ -1,21 +1,21 @@
 import { useEffect, useRef } from "react";
 
 /*
- * Edits a field holds that the store doesn't have yet (D9b decision 2;
- * Preflight ruling 24; D9a's name field and YAML box): a name typed but not
- * committed, a write waiting for the typing's pause, one refused.
+ * Edits a field holds that the store doesn't have yet (the name field's and
+ * the YAML box's among them): a name typed but not committed, a write
+ * waiting for the typing's pause, one refused.
  *
  * A field holding one registers its `flush`, which writes what it holds (and
- * does nothing when it holds nothing). The page's save flushes every held
- * edit first, so Cmd/Ctrl+S (and the toolbar's Save) saves what the fields
- * hold; a navigation elsewhere in the app flushes them before it is judged
- * (ruling 36), so the page's Unsaved Changes dialog sees them; the panel
- * flushes them before its tab changes, it collapses or its rail expands it
- * (the Configuration tab stays mounted while hidden, so its fields don't
- * go; Rulings 86 and 89); a field flushes when it goes (a section
- * collapsing, another node selected); and while any edit is held, closing or reloading the tab asks
- * the browser's question, through one `beforeunload` listener (the store
- * reads clean until the edit is written, so the page's own guard can't).
+ * does nothing when it holds nothing). The page's save flushes every held edit
+ * first, so Cmd/Ctrl+S (and the toolbar's Save) saves what the fields hold; a
+ * navigation elsewhere in the app flushes them before it is judged, so the
+ * page's Unsaved Changes dialog sees them; the panel flushes them before its
+ * tab changes, it collapses or its rail expands it (the Configuration tab
+ * stays mounted while hidden, so its fields don't go); a field flushes when it
+ * goes (a section collapsing, another node selected); and while any edit is
+ * held, closing or reloading the tab asks the browser's question, through one
+ * `beforeunload` listener (the store reads clean until the edit is written, so
+ * the page's own guard can't).
  */
 
 const held = new Map<object, { current: () => void }>();
@@ -38,7 +38,7 @@ function release(token: object) {
 /**
  * Writes every held edit, now: before the page saves, and before a
  * navigation away is judged (use-navigation-guard). One field's flush
- * throwing doesn't stop the others' (ruling 35): each is flushed, one that
+ * throwing doesn't stop the others': each is flushed, one that
  * threw is released (it would otherwise hold for good, keeping the unload
  * guard armed and failing every save's flush after), and the first error is
  * thrown once all have run. A flush that returns leaves its field to say

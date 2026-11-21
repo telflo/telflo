@@ -47,7 +47,7 @@ describe("themeClassName", () => {
   });
 });
 
-describe("decision 22's table, row by row", () => {
+describe("pageTheme's table, row by row", () => {
   it("under the signed-in layout, signed_in: the signed-in theme, whatever the cookie and the remembered value", () => {
     // On the server (nothing remembered) and on the client alike.
     expect(pageTheme({ ...NOTHING, layout: "signed_in", signedIn: "navy", cookie: "light" })).toBe("navy");
@@ -207,7 +207,7 @@ describe("the remembered value", () => {
   });
 });
 
-describe("browser storage (D21 decision 22)", () => {
+describe("browser storage", () => {
   it("the remembered value is never put in browser storage", async () => {
     localStorage.clear();
     sessionStorage.clear();

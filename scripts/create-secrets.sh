@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-# Creates or updates the platform chart's Secrets from one git-ignored file
-# (D33-1 spec decisions 7, 8, 20 and 33; Preflight rulings 4 and 17). The
-# chart takes Secret NAMES only (`existingSecret`); this script is how their
+# Creates or updates the platform chart's Secrets from one git-ignored file.
+# The chart takes Secret NAMES only (`existingSecret`); this script is how their
 # values reach the cluster, before the first install and whenever one changes.
 #
 #   scripts/create-secrets.sh --context <context> [--namespace <namespace>] [--kubeconfig <file>] <file>
@@ -20,7 +19,7 @@
 # The value is everything after the first `=` (no quotes, no inline comment:
 # a `#` inside a value is part of it); a line whose first non-blank character
 # is `#` is a comment; blank lines are ignored. The sections and keys are
-# exactly the spec's decision 20 (the chart's default Secret names):
+# exactly the chart's default Secret names:
 #
 #   [telflo-postgres]           postgres-password, owner-password, api-password
 #   [telflo-opamp-server]       owner-password, runtime-password, management-secret,
@@ -62,7 +61,7 @@
 #   kubectl --context <ctx> [-n <ns>] apply --server-side \
 #     --field-manager=telflo-create-secrets --force-conflicts -f -
 # A server-side apply stores no `last-applied-configuration` annotation (a
-# client-side one would hold every value, Ruling 17); a re-run updates each
+# client-side one would hold every value); a re-run updates each
 # Secret in place, and a key removed from the file (a previous key after a
 # rotation) is removed from its Secret.
 #
@@ -74,7 +73,7 @@
 # text. kubectl's stderr from both commands goes to the temporary folder and
 # is never printed (a failing apply can echo its patch); a failure prints a
 # fixed message naming the Secret, with a fixed hint when its cause is
-# recognised. The secrets file and the token file are refused when their
+# recognized. The secrets file and the token file are refused when their
 # mode lets anyone but their owner read them. The temporary folder is
 # removed on every exit.
 #

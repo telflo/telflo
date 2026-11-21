@@ -13,13 +13,11 @@ import {
 } from "./instantiate-flow.js";
 
 /*
- * Making a configuration from a flow (D12 Preflight ruling 12): the graph
- * persisted (here through `toStored`), the slug recorded, the flow's
- * distribution, its version, the declared distribution, a parse failure
- * refused before any call, the editor path. Its three override cases and its
- * blank-pin and blank-distribution cases aren't ported: nothing picks an
- * override, and the flows table rules a blank pin out. Ruling 16 adds the
- * deprecated pin's.
+ * Making a configuration from a flow: the graph persisted (here through
+ * `toStored`), the slug recorded, the flow's distribution, its version, the
+ * declared distribution, a parse failure refused before any call, the editor
+ * path, and a deprecated pin's. Nothing picks an override, and the flows
+ * table rules a blank pin out, so neither has a case.
  */
 
 const ORGANIZATION_ID = "00000000-0000-4000-8000-000000000003";
@@ -65,7 +63,7 @@ describe("createConfigurationFromFlow", () => {
     ]);
     expect(request.yamlContent).toBe(TAIL_SAMPLING_YAML);
     expect(request).toMatchObject({ name: "My config", description: "Mine now." });
-    // What the create API accepts (D12 decision 12): the four content fields together, the save's schemas.
+    // What the create API accepts: the four content fields together, the save's schemas.
     expect(CreateConfigurationRequestSchema.safeParse(request).success).toBe(true);
   });
 
@@ -83,7 +81,7 @@ describe("createConfigurationFromFlow", () => {
     expect(sent(createConfiguration).collectorDistribution).toBe(CONTRIB.id);
   });
 
-  it("pins the version the flow was validated against, not the catalogue's default", async () => {
+  it("pins the version the flow was validated against, not the catalog's default", async () => {
     // 0.161.0 is offered, and isn't the default (0.162.0).
     const createConfiguration = created();
     await instantiate(makeFlow({ collectorVersion: "0.161.0" }));
@@ -118,7 +116,7 @@ describe("createConfigurationFromFlow", () => {
     expect(result.configuration).toBe(MINE);
   });
 
-  describe("a pin the catalogue no longer offers (D12 decision 16)", () => {
+  describe("a pin the catalog no longer offers", () => {
     it("moves the copy to the distribution's default version, and leaves the flow as it was", async () => {
       const createConfiguration = created();
       const flow = makeFlow({ collectorVersion: RETIRED_VERSION });
@@ -130,7 +128,7 @@ describe("createConfigurationFromFlow", () => {
       expect(flow).toEqual(before);
     });
 
-    it("sends the flow's own pin while the catalogue is unread, for the API to judge", async () => {
+    it("sends the flow's own pin while the catalog is unread, for the API to judge", async () => {
       const createConfiguration = created();
       await instantiate(makeFlow({ collectorVersion: RETIRED_VERSION }), null);
 
@@ -146,14 +144,14 @@ describe("createConfigurationFromFlow", () => {
   });
 });
 
-describe("flowCopyPin and pinMovedSentence (D12 Preflight ruling 16)", () => {
+describe("flowCopyPin and pinMovedSentence", () => {
   it("keeps an offered pin, and says nothing", () => {
     const pin = flowCopyPin(makeFlow({ collectorVersion: "0.160.0" }), CATALOGUE);
     expect(pin).toEqual({ distribution: CONTRIB.id, version: "0.160.0", movedFrom: null });
     expect(pinMovedSentence(pin)).toBeNull();
   });
 
-  it("moves a pin the catalogue doesn't offer to the default, and says so", () => {
+  it("moves a pin the catalog doesn't offer to the default, and says so", () => {
     const pin = flowCopyPin(makeFlow({ collectorVersion: RETIRED_VERSION }), CATALOGUE);
     expect(pin).toEqual({ distribution: CONTRIB.id, version: "0.162.0", movedFrom: RETIRED_VERSION });
     expect(pinMovedSentence(pin)).toBe("This flow was built for collector v0.155.0, which is no longer offered; your copy will use v0.162.0.");
@@ -164,7 +162,7 @@ describe("flowCopyPin and pinMovedSentence (D12 Preflight ruling 16)", () => {
     expect(flowCopyPin(makeFlow({ collectorVersion: RETIRED_VERSION }), [noDefault]).version).toBe("0.162.0");
   });
 
-  it("keeps the pin when the catalogue can't say: unread, a distribution it doesn't list, or one offering nothing", () => {
+  it("keeps the pin when the catalog can't say: unread, a distribution it doesn't list, or one offering nothing", () => {
     const flow = makeFlow({ collectorVersion: RETIRED_VERSION });
     const kept = { distribution: CONTRIB.id, version: RETIRED_VERSION, movedFrom: null };
     expect(flowCopyPin(flow, null)).toEqual(kept);

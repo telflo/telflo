@@ -18,10 +18,9 @@ import { UNCALLED_FILE_STORE } from "../../testing/file-store.js";
 import { UNCALLED_TESTING } from "../../testing/otelcol-testing.js";
 
 /*
- * PUT /api/v1/auth/me/password (D21 decisions 7, 35, 41, 43 and 44): the
- * change, its refusals, every session kept, the reset links consumed, the
- * audit rows' content, the email after the response, and the races of
- * decision 47 on Postgres with Preflight ruling 20's locker (a separate
+ * PUT /api/v1/auth/me/password: the change, its refusals, every session
+ * kept, the reset links consumed, the audit rows' content, the email after
+ * the response, and the races on Postgres with a locker (a separate
  * connection holds the user's row `for update` until the requests under test
  * are blocked on it). Limits are rate-limits.integration.test.ts's.
  */
@@ -177,7 +176,7 @@ describe("PUT /api/v1/auth/me/password", () => {
   /**
    * Waits until `count` other connections are blocked on a lock in a
    * statement naming `users`: the requests under test have verified their
-   * passwords and queued on the locker's row lock (Preflight ruling 20).
+   * passwords and queued on the locker's row lock.
    */
   async function waitForBlocked(count: number, lockerPid: number): Promise<void> {
     const deadline = Date.now() + 5_000;
@@ -456,7 +455,7 @@ describe("PUT /api/v1/auth/me/password", () => {
     });
   });
 
-  describe("races (D21 decision 47, Preflight ruling 20)", () => {
+  describe("races", () => {
     it("refuses a sign-in that verified the old password when a change commits before its session starts", async () => {
       const account = await person();
       const access = await signedIn(account.user.email);

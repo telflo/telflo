@@ -7,9 +7,9 @@ import type { AnalyticsSettings } from "~/lib/analytics.js";
 import { setConsentStatus } from "~/lib/cookie-consent.js";
 import { mockPostHog, settle, type PostHogMock } from "~/test/posthog.js";
 
-// Root with and without TELFLO_POSTHOG_KEY (D4 decision 8). A fresh root for
-// every test, sharing the fresh analytics module and posthog-js mock of
-// test/posthog.ts. jsdom's page is on localhost, where replay never starts.
+// Root with and without TELFLO_POSTHOG_KEY. A fresh root for every test,
+// sharing the fresh analytics module and posthog-js mock of test/posthog.ts.
+// jsdom's page is on localhost, where replay never starts.
 
 let posthog: PostHogMock;
 
@@ -53,7 +53,7 @@ describe("root without a PostHog key", () => {
 });
 
 describe("root with a PostHog key", () => {
-  it("hands the banner the site's cookie-policy URL, and none without one (D36-1 decision 33)", async () => {
+  it("hands the banner the site's cookie-policy URL, and none without one", async () => {
     const withPolicy = { ...OPEN_SOURCE_SITE, terms: { ...OPEN_SOURCE_SITE.terms, cookiePolicyUrl: "https://policies.example.org/cookies" } };
     await renderRoot({ key: "phc_test", host: null }, withPolicy);
     const banner = await screen.findByRole("dialog", { name: "Telflo uses cookies" });
@@ -66,7 +66,7 @@ describe("root with a PostHog key", () => {
     expect(within(banner).queryByText(/Cookie Policy/)).not.toBeInTheDocument();
   });
 
-  it("imports and initialises posthog-js, and shows the banner", async () => {
+  it("imports and initializes posthog-js, and shows the banner", async () => {
     await renderRoot({ key: "phc_test", host: null });
 
     expect(await screen.findByRole("dialog", { name: "Telflo uses cookies" })).toBeInTheDocument();
@@ -87,11 +87,11 @@ describe("root with a PostHog key", () => {
   });
 });
 
-describe("an emailed link's token and PostHog (Ruling 14)", () => {
+describe("an emailed link's token and PostHog", () => {
   /**
    * Root with analytics on and the page at `url`, as a browser loads it from
    * the email: the document's URL has the token; the router gets the path
-   * and query. Returns the address PostHog saw when it initialised, which is
+   * and query. Returns the address PostHog saw when it initialized, which is
    * the one it records as the page's and keeps as the person's first.
    */
   async function addressAtInit(url: string): Promise<string> {

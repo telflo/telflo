@@ -8,26 +8,25 @@ import { UNLINK_FAILED_MESSAGE, accountFailureMessage, isAccountRefusal } from "
 import { isSessionEnded, unlinkIdentity } from "~/lib/api-client.js";
 
 /*
- * Removing a provider's sign-in (D21 decision 39): the current password, in
- * the DELETE's body (never the URL). A wrong one shows the API's fixed
- * message under the field, announced (`role="alert"`), and the field takes
- * the focus again once it is enabled. Success toasts fixed words with the
- * provider's configured name and the card reads its methods again; another
- * refusal (no such sign-in any more, no password) toasts its fixed message
- * and reads them again too. The words say that a Google sign-in with the
- * account's own address links it again (Q126: D2c's link by the
- * authoritative email stays) exactly when the API says the identity's
- * provider re-links by email (`relinksByEmail`: configured, with an
- * email-authority rule; Ruling 92), as the "removed" email does. The
- * password lives only in the dialog's uncontrolled field, is emptied after
- * every answer, and goes with the dialog (decision 45).
+ * Removing a provider's sign-in: the current password, in the DELETE's body
+ * (never the URL). A wrong one shows the API's fixed message under the field,
+ * announced (`role="alert"`), and the field takes the focus again once it is
+ * enabled. Success toasts fixed words with the provider's configured name and
+ * the card reads its methods again; another refusal (no such sign-in any
+ * more, no password) toasts its fixed message and reads them again too. The
+ * words say that a Google sign-in with the account's own address links it
+ * again (the sign-in's link by an authoritative email still applies) exactly
+ * when the API says the identity's provider re-links by email
+ * (`relinksByEmail`: configured, with an email-authority rule), as the
+ * "removed" email does. The password lives only in the dialog's uncontrolled
+ * field, is emptied after every answer, and goes with the dialog.
  */
 
 type UnlinkProviderDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   provider: { id: string; name: string };
-  /** The identity's `relinksByEmail` from the sign-in methods: only then does signing in with it link it again (Q126, Ruling 92). */
+  /** The identity's `relinksByEmail` from the sign-in methods: only then does signing in with it link it again. */
   relinksByEmail: boolean;
   /** The sign-in methods changed (or may have): read them again. */
   onChanged: () => void;
@@ -50,7 +49,7 @@ export function UnlinkProviderDialog({
   const [problem, setProblem] = useState<string | null>(null);
   const [isUnlinking, setIsUnlinking] = useState(false);
   // Counts wrong passwords: after each, once the field is enabled again, it takes the focus (RenameVersionDialog's way),
-  // in a layout effect: in the very commit that shows the alert and enables the field, not in a later task (Ruling 93).
+  // in a layout effect: in the very commit that shows the alert and enables the field, not in a later task.
   const [wrongPasswords, setWrongPasswords] = useState(0);
   useLayoutEffect(() => {
     if (wrongPasswords > 0) field.current?.focus();

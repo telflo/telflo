@@ -1,7 +1,7 @@
 /*
- * The CLI's one client of the platform's public API, `/api/public/v1`
- * (D27 decisions 16-18). Each command area keeps its own per-route calls
- * in `ops/*.ts` on top of `request` and `listAll` (Preflight ruling 22).
+ * The CLI's one client of the platform's public API, `/api/public/v1`.
+ * Each command area keeps its own per-route calls in `ops/*.ts` on top of
+ * `request` and `listAll`.
  *
  * - Headers: `Accept`, `Content-Type` with a body, `Authorization: Bearer
  *   <token>`, `X-Telflo-Org` (a person's token, every route but `/whoami`,
@@ -14,7 +14,7 @@
  * - A 429 with `Retry-After` is retried after it (whole seconds; a bad value
  *   counts as 5; each wait capped at 60 s), at most 3 times, with one stderr
  *   note per wait (`writeNote`: JSON with `--json`). A 429 without one is
- *   not retried (Preflight ruling 10).
+ *   not retried.
  * - Errors are fixed words (`ApiError`): the envelope's message, or the
  *   CLI's words for the status. Never a reply's body, a header or the token.
  */
@@ -26,15 +26,15 @@ import { VERSION } from "./version.js";
 
 export { ApiError } from "./api-error.js";
 
-/** The public surface's prefix (D25). */
+/** The public API's prefix. */
 export const PUBLIC_API_PREFIX = "/api/public/v1";
 
-/** Every request's timeout but the long ones (decision 16). */
+/** Every request's timeout but the long ones. */
 export const DEFAULT_TIMEOUT_MS = 30_000;
-/** A test run's create and its output (decision 16). */
+/** A test run's create and its output. */
 export const LONG_TIMEOUT_MS = 120_000;
 
-/** Retries of one request after a 429 with `Retry-After` (decision 17). */
+/** Retries of one request after a 429 with `Retry-After`. */
 export const MAXIMUM_RATE_LIMIT_RETRIES = 3;
 /** The longest one wait lasts, whatever `Retry-After` says. */
 export const MAXIMUM_RETRY_WAIT_SECONDS = 60;
@@ -45,7 +45,7 @@ export const BAD_RETRY_AFTER_SECONDS = 5;
 export const PAGE_LIMIT = 100;
 export const MAXIMUM_PAGES = 100;
 
-/** The largest JSON reply the CLI reads (Ruling 237). */
+/** The largest JSON reply the CLI reads. */
 export const MAXIMUM_REPLY_BYTES = 16 * 1024 * 1024;
 /** The largest text reply (`text: true`: a test run's output may be large). */
 export const MAXIMUM_TEXT_REPLY_BYTES = 32 * 1024 * 1024;
@@ -81,9 +81,9 @@ export interface RequestOptions {
   /** The reply's text as is (a test run's output) instead of its JSON. */
   text?: boolean;
   /**
-   * The reply's bytes exactly, as a `Buffer` (Ruling 238: a test run's
-   * output, byte for byte: a BOM and invalid UTF-8 kept), under the text
-   * reply's 32 MiB cap. Takes precedence over `text`.
+   * The reply's bytes exactly, as a `Buffer` (a test run's output, byte for
+   * byte: a BOM and invalid UTF-8 kept), under the text reply's 32 MiB cap.
+   * Takes precedence over `text`.
    */
   bytes?: boolean;
 }
@@ -106,15 +106,15 @@ export interface Page<T> {
   nextCursor: string | null;
 }
 
-/** The User-Agent every request sends (decision 16). */
+/** The User-Agent every request sends. */
 export function userAgent(): string {
   return `telflo-cli/${VERSION} node/${process.versions.node} ${process.platform}`;
 }
 
 /**
- * One path segment, percent-encoded (decision 16). A `.` or `..` segment is
- * refused: the URL parser would resolve it (even as `%2E`), moving the
- * request to another route.
+ * One path segment, percent-encoded. A `.` or `..` segment is refused: the
+ * URL parser would resolve it (even as `%2E`), moving the request to another
+ * route.
  */
 export function segment(value: string): string {
   if (isDotSegment(value)) throw new ExitError("A name or id can't be . or ..", EXIT.USAGE);
@@ -155,9 +155,9 @@ function isEnvelope(value: unknown): value is Envelope {
 }
 
 /**
- * A JSON reply parsed, one leading BOM (U+FEFF) dropped first (Ruling 242):
- * JSON.parse refuses one, and a proxy may add it. Only here: `bytes: true`
- * answers the bytes as they came, and `text: true` keeps its text whole.
+ * A JSON reply parsed, one leading BOM (U+FEFF) dropped first: JSON.parse
+ * refuses one, and a proxy may add it. Only here: `bytes: true` answers the
+ * bytes as they came, and `text: true` keeps its text whole.
  */
 function parseJson(text: string): unknown {
   try {
@@ -167,7 +167,7 @@ function parseJson(text: string): unknown {
   }
 }
 
-/** A refusal's words: the envelope's when the reply is one, else the status's (decision 18). */
+/** A refusal's words: the envelope's when the reply is one, else the status's. */
 function refusalOf(status: number, isJson: boolean, text: string): ApiError {
   const parsed = isJson ? parseJson(text) : undefined;
   if (isEnvelope(parsed)) {
@@ -179,7 +179,7 @@ function refusalOf(status: number, isJson: boolean, text: string): ApiError {
   return new ApiError(status, null, UNEXPECTED_REPLY_MESSAGE(status));
 }
 
-/** `Retry-After` in whole seconds; a bad value counts as 5; null when there is none (decision 17). */
+/** `Retry-After` in whole seconds; a bad value counts as 5; null when there is none. */
 export function retryAfterSecondsOf(header: string | null): number | null {
   if (header === null) return null;
   const value = header.trim();
@@ -272,9 +272,8 @@ export class ApiClient {
 
   /**
    * A paged list (`/configurations`, `/fleets`), every page: `limit=100`,
-   * following `nextCursor`, at most 100 pages (decision 16). Not for the
-   * unpaged lists (`/orgs`, groups, pipelines), whose strict queries take no
-   * `limit`.
+   * following `nextCursor`, at most 100 pages. Not for the unpaged lists
+   * (`/orgs`, groups, pipelines), whose strict queries take no `limit`.
    */
   async listAll<T>(path: string, options: Omit<RequestOptions, "body" | "text"> = {}): Promise<T[]> {
     const items: T[] = [];

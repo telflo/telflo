@@ -12,12 +12,11 @@ import { publicFlowReader } from "../actor.js";
 import type { PublicApiArea } from "../area.js";
 
 /*
- * The public surface's flows (D25 decision 17's routes 24 and 25; decisions
- * 18, 19 and 45), registered into the `/api/public/v1` plugin (routes.ts),
- * so each runs the token check, the per-token limit and its access check
- * first. Flows are global, not an organization's: both read the shared
- * flows service (decision 15) as `publicFlowReader`, never a product admin,
- * so a token sees the published flows only and a hidden one is 404
+ * The public surface's flows, registered into the `/api/public/v1` plugin
+ * (routes.ts), so each runs the token check, the per-token limit and its
+ * access check first. Flows are global, not an organization's: both read
+ * the shared flows service as `publicFlowReader`, never a product admin, so
+ * a token sees the published flows only and a hidden one is 404
  * `flow_not_found`, as an unknown slug is. The list answers each flow
  * without its description and YAML, the get with both. Its OpenAPI fragment
  * is `openapi/flows.yaml`.
@@ -68,7 +67,7 @@ export const registerFlowPublicRoutes: PublicApiArea = (api, { deps }) => {
   const { service } = deps.services.flows;
   const typed = api.withTypeProvider<ZodTypeProvider>();
 
-  // Route 24: every published flow, in the gallery's order (sort order, then name); one page (decision 19).
+  // Every published flow, in the gallery's order (sort order, then name); one page.
   typed.get(
     "/flows",
     {
@@ -81,7 +80,7 @@ export const registerFlowPublicRoutes: PublicApiArea = (api, { deps }) => {
     },
   );
 
-  // Route 25: one published flow by its slug, with its description and YAML.
+  // One published flow by its slug, with its description and YAML.
   typed.get(
     "/flows/:slug",
     {

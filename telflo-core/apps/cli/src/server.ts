@@ -1,13 +1,13 @@
 /*
- * The server the CLI talks to (D27 decision 12): `--server <url>` (on
- * `login` only), else `TELFLO_SERVER`, else the stored server. There is no
- * default server: with none of them, `telflo login` at a terminal asks for
- * the server's URL, and every other case is a usage error saying how to
- * name one. It is reduced to an origin; a path, query, fragment or user
- * part is refused. HTTPS only, except `http://localhost`, `http://127.0.0.0/8`
- * and `http://[::1]` on any port; there is no flag to allow another
- * plain-http server. The refusals are fixed words: the typed address is
- * never echoed (a user part could hold a password).
+ * The server the CLI talks to: `--server <url>` (on `login` only), else
+ * `TELFLO_SERVER`, else the stored server. There is no default server: with
+ * none of them, `telflo login` at a terminal asks for the server's URL, and
+ * every other case is a usage error saying how to name one. It is reduced to
+ * an origin; a path, query, fragment or user part is refused. HTTPS only,
+ * except `http://localhost`, `http://127.0.0.0/8` and `http://[::1]` on any
+ * port; there is no flag to allow another plain-http server. The refusals are
+ * fixed words: the typed address is never echoed (a user part could hold a
+ * password).
  */
 
 import { EXIT, ExitError } from "./output.js";
@@ -62,9 +62,9 @@ function nonEmpty(value: string | undefined): string | undefined {
 export const NO_SERVER_MESSAGE = "No Telflo server is set: pass --server <url> to telflo login, or set TELFLO_SERVER.";
 
 /**
- * The server named for a command (decision 12), as an origin: the flag
- * (login only), else `TELFLO_SERVER`, else the stored server; undefined
- * when none names one. An empty variable counts as unset.
+ * The server named for a command, as an origin: the flag (login only), else
+ * `TELFLO_SERVER`, else the stored server; undefined when none names one. An
+ * empty variable counts as unset.
  */
 export function namedServer(flag: string | undefined, env: NodeJS.ProcessEnv, stored: string | undefined): string | undefined {
   const named = flag ?? nonEmpty(env.TELFLO_SERVER) ?? stored;

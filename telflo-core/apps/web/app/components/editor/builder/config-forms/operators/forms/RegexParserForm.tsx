@@ -7,23 +7,19 @@ import { TimestampConfigSection } from "../shared/TimestampConfigSection.js";
 import { findPattern } from "~/lib/regex-library.js";
 
 /*
- * The `regex_parser` operator's form (ADR 0018), over the card's scope (D9c
- * decisions 2 and 8). Ids are the card's (`op-<index>-regex-…`). The
- * pattern's placeholder and the tip's example are regex-library's "Generic
- * Log Line" and "Date-Prefixed Log Line".
+ * The `regex_parser` operator's form, over the card's scope. Ids are the
+ * card's (`op-<index>-regex-…`). The pattern's placeholder and the tip's
+ * example are regex-library's "Generic Log Line" and "Date-Prefixed Log Line".
  *
- * - Regex Pattern is written as typed (decision 3): a pattern without named
- *   groups, which the collector refuses (`parser/regex/config.go:64-75`), is
- *   D13's to report. Cleared, the key goes (D9b's rule; the collector
- *   requires it, `:55-56`, and refuses `""` as well).
- * Changed (D9b decisions 2 and 3):
- * - Cache Size is D9b's number field: 0 is typed and written (never shown
- *   as empty); a
- *   value past `uint16` (`config.go:43-45`) is written as typed. Unset
- *   shows the collector's 0, no cache (`config.go:82-83`), as the
+ * - Regex Pattern is written as typed: a pattern without named groups, which
+ *   the collector refuses (`parser/regex/config.go:64-75`), is written all
+ *   the same. Cleared, the key goes (the collector requires it, `:55-56`,
+ *   and refuses `""` as well).
+ * - Cache Size is a number field: 0 is typed and written (never shown as
+ *   empty); a value past `uint16` (`config.go:43-45`) is written as typed.
+ *   Unset shows the collector's 0, no cache (`config.go:82-83`), as the
  *   placeholder and "Default 0". Cleared, `cache.size` goes and an emptied
- *   `cache` stays `{}` (D9a's removal), which the collector reads as no
- *   cache.
+ *   `cache` stays `{}`, which the collector reads as no cache.
  * - Parse From and Parse To show the collector's `body` and `attributes`
  *   when unset (`helper/parser.go:26-27`); Parse To is rootable (`:35`).
  */

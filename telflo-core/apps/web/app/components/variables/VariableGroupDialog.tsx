@@ -43,17 +43,16 @@ import {
 import { handleSharedWriteFailure } from "./write-failures.js";
 
 /*
- * A variable group's create, rename and description (D20 decisions 3 and
- * 39; default 22; ADR 0018): add and rename in one, with D20's description. A
- * group starts with no override (Q82). The titles and toasts are fixed words
- * ("Add variable group", "Edit variable group"; "Variable group added",
- * "Variable group saved"), never the name. The fields sit inside
+ * A variable group's create, rename and description: add and rename in one,
+ * with a description. A group starts with no override. The titles and toasts
+ * are fixed words ("Add variable group", "Edit variable group"; "Variable
+ * group added", "Variable group saved"), never the name. The fields sit inside
  * `ph-no-capture`; the Name's own `value` is the one attribute holding it. A
- * create carries this opening's id (a retry is safe, Q93); an edit sends only
- * what changed, and Save waits for a change. `variable_group_name_taken` is
- * said under Name; the rest as `write-failures.ts` says. The baseline is the
- * group as the dialog opened. A save's group goes into the fleet screens'
- * shared names at once.
+ * create carries this opening's id (a retry is safe); an edit sends only what
+ * changed, and Save waits for a change. `variable_group_name_taken` is said
+ * under Name; the rest as `write-failures.ts` says. The baseline is the group
+ * as the dialog opened. A save's group goes into the fleet screens' shared
+ * names at once.
  */
 
 export interface VariableGroupDialogProps {
@@ -178,7 +177,7 @@ function VariableGroupSession({ open, onOpenChange, organizationId, variableGrou
     savingRef.current = false;
     setSaving(false);
     if (!isStillCurrent(sentIn)) return;
-    // The fleet screens' shared names follow the save (D20 final review side 2, Minor 1).
+    // The fleet screens' shared names follow the save.
     noteVariableGroupName(sentIn, saved.id, saved.name);
     toast.success(original === null ? VARIABLE_GROUP_ADDED_MESSAGE : VARIABLE_GROUP_SAVED_MESSAGE);
     onOpenChange(false);

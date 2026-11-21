@@ -1,19 +1,18 @@
 """Sandbox YAML mutations.
 
-Its IDs and messages are stable (D14a Task 4, spec decision 15, Preflight
-ruling 3):
+Its IDs and messages are stable:
 
 - **R-105 is not a walk here.** Every live non-``env`` confmap reference
   is spliced out of the text before this module ever sees it, on the decoded
-  keys and values (`app/neutralise.py`, the validator's neutraliser), and the
+  keys and values (`app/neutralise.py`, the validator's neutralizer), and the
   exact text these mutations produce is checked again before any collector
   reads it (the backstop). R-105's advisory is built there from the schemes
-  the neutraliser returns.
-- **R-106** (D14a Ruling 28): the ``consul``, ``openshift`` and
-  ``docker`` resourcedetection detectors are stripped with their settings,
-  since they query services the sandbox doesn't have and could read files
-  named in the text. R-101, R-103 and R-106 match both spellings of the
-  processor (``resource_detection`` and ``resourcedetection``).
+  the neutralizer returns.
+- **R-106**: the ``consul``, ``openshift`` and ``docker`` resourcedetection
+  detectors are stripped with their settings, since they query services the
+  sandbox doesn't have and could read files named in the text. R-101, R-103
+  and R-106 match both spellings of the processor (``resource_detection`` and
+  ``resourcedetection``).
 - A component configuration that isn't a mapping is left for the collector
   to judge rather than raising (``rewrite_k8s_auth``), and a pipeline whose
   value is empty is rewired as an empty mapping (``swap_pipeline_endpoints``
@@ -491,11 +490,10 @@ def rewrite_k8s_auth(
 
 
 # The resourcedetection processor's type, by both of its spellings: the
-# catalogue's `resource_detection` (since 0.153.0) and its deprecated
+# catalog's `resource_detection` (since 0.153.0) and its deprecated
 # `resourcedetection`, which every offered collector still accepts. R-101,
-# R-103 and R-106 strip detectors from either (D14a Ruling 28: matching the
-# old spelling only would let a `resource_detection` processor keep every
-# detector).
+# R-103 and R-106 strip detectors from either (matching the old spelling only
+# would let a `resource_detection` processor keep every detector).
 RESOURCE_DETECTION_TYPES = frozenset({"resourcedetection", "resource_detection"})
 
 
@@ -756,14 +754,14 @@ def _format_r103_message(
     return " ".join(parts)
 
 
-# Resourcedetection detectors that query a service outside the collector
-# (D14a Ruling 28): `consul` asks a Consul agent (its `token_file` is read and
-# sent to its `address`), `openshift` asks an OpenShift API server (its
-# `tls` files are read), `docker` asks the Docker daemon. The sandbox has
-# none of these services, and every run's collector runs as the same user in
-# the same container, so a detector that reads a file named in the text
-# could read another run's files, or the tester's, and send them on. They're
-# stripped with their own settings, as R-103 strips the cloud detectors.
+# Resourcedetection detectors that query a service outside the collector:
+# `consul` asks a Consul agent (its `token_file` is read and sent to its
+# `address`), `openshift` asks an OpenShift API server (its `tls` files are
+# read), `docker` asks the Docker daemon. The sandbox has none of these
+# services, and every run's collector runs as the same user in the same
+# container, so a detector that reads a file named in the text could read
+# another run's files, or the tester's, and send them on. They're stripped
+# with their own settings, as R-103 strips the cloud detectors.
 _SERVICE_DETECTORS = ("consul", "openshift", "docker")
 
 

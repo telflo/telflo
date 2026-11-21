@@ -9,10 +9,10 @@ import { EXPRESSION_TOO_LONG_MESSAGE, EXPR_NEEDS_CONTEXT_MESSAGE, NO_INPUT_MESSA
 import { LINT_FAILED_MESSAGE, YAML_INVALID_MESSAGE } from "./ottl.js";
 
 /*
- * telflo ottl lint (D27 decision 26) against a stand-in API: both modes'
- * bodies (D25's `valueExpressions`), the rendering (`ottlVersion`), and
- * the exit codes: 0, 4 for an invalid expression or YAML, 2 for usage, 1
- * for a 503. Tokens are made at run time and checked as booleans only.
+ * telflo ottl lint against a stand-in API: both modes' bodies
+ * (`valueExpressions`), the rendering (`ottlVersion`), and the exit codes: 0,
+ * 4 for an invalid expression or YAML, 2 for usage, 1 for a 503. Tokens are
+ * made at run time and checked as booleans only.
  */
 
 const SERVER = "https://telflo.example";
@@ -184,7 +184,7 @@ describe("telflo ottl lint", () => {
     expect((await cli(["ottl", "lint", "-"], { input: CONFIG })).code).toBe(1);
   });
 
-  it("keeps the HTTP status in --json for a YAML's 422 and a 503 (Ruling 239)", async () => {
+  it("keeps the HTTP status in --json for a YAML's 422 and a 503", async () => {
     routes({ "POST /ottl/lint": { status: 422, json: envelope("configuration_invalid", "The configuration isn't valid.", { errors: [] }) } });
     expect(JSON.parse((await cli(["--json", "ottl", "lint", "-"], { input: "a: b: c\n" })).stderr)).toEqual({
       error: { code: "configuration_invalid", message: YAML_INVALID_MESSAGE, status: 422 },
@@ -195,7 +195,7 @@ describe("telflo ottl lint", () => {
     });
   });
 
-  it("keeps a 401 as exit 3 with Run telflo login. (Ruling 243)", async () => {
+  it("keeps a 401 as exit 3 with Run telflo login.", async () => {
     routes({ "POST /ottl/lint": { status: 401, json: envelope("invalid_api_token", "Missing or invalid API token") } });
     const result = await cli(["ottl", "lint", "-"], { input: CONFIG });
     expect(result.code).toBe(3);

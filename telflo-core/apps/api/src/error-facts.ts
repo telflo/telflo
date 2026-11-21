@@ -1,8 +1,7 @@
 /**
  * An error as a log line may name it: its name, code and syscall, never its
- * message, which can name a path or quote a request (D14a Rulings 25 and
- * 42). The background loops (the dispatcher, the reaper, the tester's
- * health monitor) log through it.
+ * message, which can name a path or quote a request. The background loops
+ * (the dispatcher, the reaper, the tester's health monitor) log through it.
  */
 export function errorFacts(error: unknown): Record<string, unknown> {
   if (error === null || typeof error !== "object") return { error: typeof error };

@@ -31,7 +31,7 @@ import { Toaster } from "~/components/ui/sonner.js";
 
 vi.mock("~/lib/api-client.server.js", () => ({ fetchCurrentUser: vi.fn() }));
 
-/** Where a create's Done went: the fleet's page (Task 6's). */
+/** Where a create's Done went: the fleet's page. */
 function Landed() {
   return <p>landed on {useLocation().pathname}</p>;
 }
@@ -142,7 +142,7 @@ describe("the fleet list (/fleet-management)", () => {
     expect(layout?.children?.find((route) => route.path === "fleet-management")?.file).toBe("routes/fleet-management.tsx");
   });
 
-  it("has a fixed title, never a fleet's label (Preflight ruling 9)", () => {
+  it("has a fixed title, never a fleet's label", () => {
     expect(meta({} as Parameters<typeof meta>[0])).toEqual([{ title: "Fleets - Telflo" }]);
   });
 
@@ -286,7 +286,7 @@ describe("the fleet list (/fleet-management)", () => {
     expect(getFleets).toHaveBeenLastCalledWith(PERSONAL_ID, { status: undefined, limit: 50, cursor: undefined }, expect.anything());
   });
 
-  it("works Last Seen and the Token badge out again at each poll, for the same fleet (decision 22)", async () => {
+  it("works Last Seen and the Token badge out again at each poll, for the same fleet", async () => {
     vi.useFakeTimers({ toFake: ["setInterval", "clearInterval", "Date"] });
     Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "visible" });
     const start = Date.parse("2026-10-14T12:00:00.000Z");
@@ -395,7 +395,7 @@ describe("the fleet list (/fleet-management)", () => {
     expect(await screen.findByText(`landed on /fleet-management/${create.mock.calls[0]![1].id}`)).toBeInTheDocument();
   });
 
-  it("holds no fleet's label in any attribute of the page, dialogs closed, every row's tooltip opened in turn (decision 29, Preflight ruling 15)", async () => {
+  it("holds no fleet's label in any attribute of the page, dialogs closed, every row's tooltip opened in turn", async () => {
     const canary = "canary-label-93c1";
     const now = Date.now();
     serveFleets(() =>
@@ -419,10 +419,9 @@ describe("the fleet list (/fleet-management)", () => {
     // Online, Configuration Sync, Token and Last Seen, in both rows.
     expect(await expectNoAttributeHoldsInOpenTooltips(canary, screen.getByRole("table"))).toBe(8);
   });
-  // The final review's Minor: the label canary with each dialog open, the
-  // create's tokens step, and the label's two toasts shown (the root's
-  // Toaster, mounted beside the page). Only an open Name input's value may
-  // hold it (Preflight ruling 15's exception).
+  // The label canary with each dialog open, the create's tokens step, and
+  // the label's two toasts shown (the root's Toaster, mounted beside the
+  // page). Only an open Name input's value may hold it.
   it("holds no fleet's label in any attribute with Archive, Unarchive, Delete or the tokens step open, nor in the delete's and create's toasts", async () => {
     const canary = "canary-label-7e2a";
     const ARCHIVED_ID = "5f607182-93a4-45b6-8c7d-8e9fa0b1c2d3";
@@ -488,7 +487,7 @@ describe("the fleet list (/fleet-management)", () => {
     expectNoAttributeHolds(canary);
   });
 
-  // D17b-1's final fix wave (D14b Ruling 46's pattern): the chooser and the create dialogs have no Radix trigger.
+  // The chooser and the create dialogs have no Radix trigger.
   describe("the focus as the create flow closes", () => {
     const focusIsOn = async (element: () => HTMLElement) => waitFor(() => expect(document.activeElement).toBe(element()));
     const newFleet = (index: number) => () => screen.getAllByRole("button", { name: "New Fleet" })[index]!;
@@ -531,9 +530,9 @@ describe("the fleet list (/fleet-management)", () => {
       },
     );
 
-    // The follow-up (D14b Ruling 52's case for the create flow): the dialog
-    // closes at once, focus back on the empty state's New Fleet, and the
-    // reload its unknown outcome started lands later with the fleet made.
+    // In the create flow, the dialog closes at once, focus back on the
+    // empty state's New Fleet, and the reload its unknown outcome started
+    // lands later with the fleet made.
     it("goes to the header's New Fleet once a create closed after an unknown outcome has its reload take the empty state away", async () => {
       let made = false;
       const reload = deferred<FleetsPage>();
@@ -561,7 +560,7 @@ describe("the fleet list (/fleet-management)", () => {
       await focusIsOn(newFleet(0));
     });
 
-    // The review of 32f39ff: a read begun before the create's reload (a poll's) answering as the dialog closes never spends it.
+    // A read begun before the create's reload (a poll's) answering as the dialog closes never spends it.
     it("goes to the header's New Fleet when a poll sent before the create opened answers as it closes after an unknown outcome, and the reload, late, takes the empty state away", async () => {
       vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
       Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "visible" });
@@ -657,7 +656,7 @@ describe("the fleet list (/fleet-management)", () => {
     });
   });
 
-  describe("a row's Rename, Archive, Unarchive and Delete (Task 6)", () => {
+  describe("a row's Rename, Archive, Unarchive and Delete", () => {
     const OTHER_ID = "5f607182-93a4-45b6-8c7d-8e9fa0b1c2d3";
     const rowOf = (label: string) => screen.getByRole("link", { name: label }).closest("tr") as HTMLElement;
 
@@ -729,7 +728,7 @@ describe("the fleet list (/fleet-management)", () => {
       expect(screen.queryByRole("alertdialog")).toBeNull();
     });
 
-    it("on a delete's 503, toasts it, closes and reloads the list, which may still show the fleet (decision 11)", async () => {
+    it("on a delete's 503, toasts it, closes and reloads the list, which may still show the fleet", async () => {
       const getFleets = serveFleets(() => fleetsPage([fleetDetail()]));
       vi.spyOn(apiClient, "deleteFleet").mockRejectedValue(UNAVAILABLE());
       const error = vi.spyOn(toast, "error");
@@ -745,7 +744,7 @@ describe("the fleet list (/fleet-management)", () => {
       expect(screen.getByRole("link", { name: "edge-prod" })).toBeInTheDocument();
     });
 
-    // D17b-1's final fix wave (D14b Ruling 46's pattern): no dialog here has a Radix trigger.
+    // No dialog here has a Radix trigger.
     describe("the focus as a row's dialog closes", () => {
       const focusIsOn = async (element: () => HTMLElement) => waitFor(() => expect(document.activeElement).toBe(element()));
       const headerNewFleet = () => screen.getAllByRole("button", { name: "New Fleet" })[0]!;
@@ -850,7 +849,7 @@ describe("the fleet list (/fleet-management)", () => {
         expect(document.activeElement).toBe(document.body);
       });
 
-      it("goes to the header's New Fleet after a delete, the row gone; and after the list's reload answered late (D14b Ruling 52)", async () => {
+      it("goes to the header's New Fleet after a delete, the row gone; and after the list's reload answered late", async () => {
         let deleted = false;
         let held: ReturnType<typeof deferred<FleetsPage>> | null = null;
         serveFleets(() => {
@@ -876,7 +875,7 @@ describe("the fleet list (/fleet-management)", () => {
         await focusIsOn(headerNewFleet);
       });
 
-      // The review of cfaf57d: a poll's rows before the close never spend the delete's flag; its reload's do.
+      // A poll's rows before the close never spend the delete's flag; its reload's do.
       it("goes to the header's New Fleet when a poll sent before the delete opened answers with it, and the reload, late, removes the row", async () => {
         vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
         Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "visible" });
@@ -910,7 +909,7 @@ describe("the fleet list (/fleet-management)", () => {
         await focusIsOn(headerNewFleet);
       });
 
-      // The review of 32f39ff: what counts is when a read began, not who asked for it: the person's own "Load more", sent before the delete, is no reload.
+      // What counts is when a read began, not who asked for it: the person's own "Load more", sent before the delete, is no reload.
       it("goes to the header's New Fleet when a \"Load more\" sent before the delete opened answers with it, and the reload, late, removes the row", async () => {
         const more = deferred<FleetsPage>();
         const reloadHeld = deferred<FleetsPage>();

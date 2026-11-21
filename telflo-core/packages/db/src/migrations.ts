@@ -15,8 +15,8 @@ const migrationsDirectory = fileURLToPath(new URL("../migrations", import.meta.u
  */
 export async function migrateToLatest(url: string, log: (message: string) => void = () => {}): Promise<void> {
   // The runner gets a client we own and end ourselves. Given a URL instead,
-  // node-pg-migrate's close() calls client.end() without awaiting it (D1b
-  // Ruling 2), leaving a connection closing in the background.
+  // node-pg-migrate's close() calls client.end() without awaiting it, leaving
+  // a connection closing in the background.
   const client = new pg.Client({ connectionString: url, options: PLATFORM_CONNECTION_OPTIONS });
   await client.connect();
   try {
@@ -42,14 +42,14 @@ export async function migrateToLatest(url: string, log: (message: string) => voi
  * The migration step, as `npm run db:migrate` (migrate.ts), compose's
  * migrate and prepareTestDatabase run it:
  *
- *   1. validates `catalogue`, the collector catalogue's files as read,
- *      before it touches the database, so an invalid catalogue fails having
- *      migrated nothing (D13a decision 2, Ruling 38);
+ *   1. validates `catalogue`, the collector catalog's files as read,
+ *      before it touches the database, so an invalid catalog fails having
+ *      migrated nothing;
  *   2. applies every pending migration, as the tables' owner;
- *   3. syncs the catalogue into its tables, which validates it again and
- *      refuses, changing neither table, a catalogue that drops a row the
+ *   3. syncs the catalog into its tables, which validates it again and
+ *      refuses, changing neither table, a catalog that drops a row the
  *      database holds (the migrations stay applied);
- *   4. creates or resets the API's login role (D5 decision 1).
+ *   4. creates or resets the API's login role.
  *
  * `log` receives node-pg-migrate's progress and a line for each later
  * step; by default it is discarded.

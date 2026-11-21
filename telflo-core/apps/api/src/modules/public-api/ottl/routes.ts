@@ -5,30 +5,28 @@ import { apiActorOf } from "../actor.js";
 import type { PublicApiArea } from "../area.js";
 
 /*
- * The public surface's OTTL lint (D25 decision 17's route 16; decision 33;
- * Preflight rulings 13 and 17), registered into the `/api/public/v1` plugin
- * (routes.ts), so it runs the token check, the per-token limit and its
- * access check (read, decision 14) before anything else. A YAML's every
- * OTTL expression, or expressions against one context, parse-checked by
- * the OTTL evaluator (modules/ottl-lint/), as the token's user in its
- * organization: the person's `ottlLintsPerUser`. The service is built once,
- * here, as the plugin registers once per server; it has no browser route
- * to share it with, and its limiter is the server's one. Its OpenAPI
- * fragment is `openapi/ottl.yaml`.
+ * The public surface's OTTL lint, registered into the `/api/public/v1`
+ * plugin (routes.ts), so it runs the token check, the per-token limit and
+ * its access check (read) before anything else. A YAML's every OTTL
+ * expression, or expressions against one context, parse-checked by the OTTL
+ * evaluator (modules/ottl-lint/), as the token's user in its organization:
+ * the person's `ottlLintsPerUser`. The service is built once, here, as the
+ * plugin registers once per server; it has no browser route to share it
+ * with, and its limiter is the server's one. Its OpenAPI fragment is
+ * `openapi/ottl.yaml`.
  *
  * The YAML and the expressions (each item's `input` echoes the caller's
  * own) go only into the reply's body, never a log line or an error's
- * message (ADR 0024); the reply is `no-store`.
+ * message; the reply is `no-store`.
  */
 
 /**
- * The body limit (Preflight ruling 17), the gateway's on the same path. A
- * YAML of 262,144 characters fits it however JSON escapes it (at most
- * 1.5 MiB). 200 expressions of 8,192 characters (1.6 million characters)
- * may not: the contract takes them, but a body over 2 MiB as sent answers
- * 413 `payload_too_large` first, so the 2 MiB is the effective bound on
- * the expressions (Ruling 168; the contract and the OpenAPI document say
- * so).
+ * The body limit, the gateway's on the same path. A YAML of 262,144
+ * characters fits it however JSON escapes it (at most 1.5 MiB). 200
+ * expressions of 8,192 characters (1.6 million characters) may not: the
+ * contract takes them, but a body over 2 MiB as sent answers 413
+ * `payload_too_large` first, so the 2 MiB is the effective bound on the
+ * expressions (the contract and the OpenAPI document say so).
  */
 export const OTTL_LINT_BODY_LIMIT = 2 * 1024 * 1024;
 

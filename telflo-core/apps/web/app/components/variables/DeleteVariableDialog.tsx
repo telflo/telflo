@@ -31,21 +31,21 @@ import { VariableInUseList } from "./InUseLists.js";
 import { handleSharedWriteFailure } from "./write-failures.js";
 
 /*
- * A variable's delete (D20 decision 6, default 21; Q102; ADR 0018): an
- * AlertDialog with "Delete" / "Deleting..." and Cancel. In detail:
+ * A variable's delete: an AlertDialog with "Delete" / "Deleting..." and
+ * Cancel. In detail:
  * - the title is fixed ("Delete variable"), and the variable's reference
  *   is shown inside `ph-no-capture`, never quoted in the text;
  * - the guard is the opamp-server's (409 `variable_in_use`, its uses listed
  *   as `InUseLists.tsx` says, at most 100, then "… and N more published
  *   versions"); the dialog stays open, nothing deleted;
- * - the drafts that reference the name (default 21, read as the dialog
- *   opens) are a warning only: "Drafts using OTLP_EP: edge-config";
+ * - the drafts that reference the name (read as the dialog opens) are a
+ *   warning only: "Drafts using OTLP_EP: edge-config";
  * - "Variable deleted" toasts a success, closes and reloads; a variable
  *   already gone toasts "Variable not found" (an error), closes and
- *   reloads the list, which no longer shows it; an unknown
- *   outcome as `write-failures.ts` says. Escape and Cancel wait while the
- *   delete runs; a double click sends once. The variable is the one the
- *   dialog opened on (D17c-1 Ruling 66).
+ *   reloads the list, which no longer shows it; an unknown outcome as
+ *   `write-failures.ts` says. Escape and Cancel wait while the delete
+ *   runs; a double click sends once. The variable is the one the dialog
+ *   opened on.
  */
 
 export interface DeleteVariableDialogProps {

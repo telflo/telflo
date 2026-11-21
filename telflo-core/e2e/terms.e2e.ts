@@ -1,14 +1,14 @@
 import { CSRF_HEADER_NAME, CSRF_HEADER_VALUE } from "@telflo/contracts";
 import { expect, type Page } from "@playwright/test";
-// The SaaS pair (D36-1 Preflight ruling 16): open registration, the Terms, the playground and the anonymous reads.
+// The SaaS pair: open registration, the Terms, the playground and the anonymous reads.
 import { test } from "./support/saas.js";
 import { E2E_SAAS_WEB_URL } from "./support/environment.js";
 import { findIdentities, findUsersByEmail, seedUser, uniqueEmail } from "./support/database.js";
 import { clickGoogle, signInAtProvider } from "./support/oidc.js";
 import { signInThroughApi, waitForHydration } from "./support/session.js";
 
-// The terms dialog in the signed-in layout (D2c decision 6): shown whenever
-// the user's accepted terms version isn't the current one.
+// The terms dialog in the signed-in layout: shown whenever the user's
+// accepted terms version isn't the current one.
 
 const PASSWORD = "correct horse battery staple";
 
@@ -26,7 +26,7 @@ test("a user whose accepted terms version is old sees the dialog on /app", async
   await expect(termsDialog(page)).toBeVisible();
 });
 
-test("a Google sign-in that takes over an unverified password account lands behind the dialog, and the old password fails (Ruling 14)", async ({
+test("a Google sign-in that takes over an unverified password account lands behind the dialog, and the old password fails", async ({
   page,
   playwright,
 }) => {
@@ -63,7 +63,7 @@ test("a Google sign-in that takes over an unverified password account lands behi
   }
 });
 
-test("from the terms dialog, the site's Terms of Service URL opens in a new tab, and the dialog stays, unticked (Ruling 20; D36-1 decision 32)", async ({
+test("from the terms dialog, the site's Terms of Service URL opens in a new tab, and the dialog stays, unticked", async ({
   page,
   context,
 }) => {
@@ -81,7 +81,7 @@ test("from the terms dialog, the site's Terms of Service URL opens in a new tab,
   ]);
   await terms.waitForLoadState();
 
-  // TELFLO_TERMS_URL: telflo-site's page, which nothing serves in the browser tests (the web app answers its 404).
+  // TELFLO_TERMS_URL: a page nothing serves in the browser tests (the web app answers its 404).
   expect(new URL(terms.url()).pathname).toBe("/home/terms-of-service");
   await terms.close();
 

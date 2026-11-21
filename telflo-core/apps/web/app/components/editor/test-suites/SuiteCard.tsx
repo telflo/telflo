@@ -15,13 +15,13 @@ interface SuiteCardProps {
   suite: TestSuite;
   /** Edit suite, with the button pressed: the focus goes back to it as the dialog closes. */
   onEdit: (suite: TestSuite, opener: HTMLElement) => void;
-  /** Delete suite, with the button pressed: the focus goes back to it when the confirmation closes without a delete (D14b Ruling 51). */
+  /** Delete suite, with the button pressed: the focus goes back to it when the confirmation closes without a delete. */
   onDelete: (suite: TestSuite, opener: HTMLElement) => void;
-  /** A definition's Run test (Play one), with the button pressed: the focus goes back to it when nothing is queued (D14b Ruling 50). */
+  /** A definition's Run test (Play one), with the button pressed: the focus goes back to it when nothing is queued. */
   onPlayOne: (suite: TestSuite, definition: TestDefinition, opener: HTMLElement) => void;
   /** Play all, in parallel or serially, with the button pressed, as `onPlayOne`. */
   onPlayAll: (suite: TestSuite, mode: PlayAllMode, opener: HTMLElement) => void;
-  /** Called as the definition dialog or a definition's delete confirmation shows (`useDialogShowing`, D14b Ruling 50). */
+  /** Called as the definition dialog or a definition's delete confirmation shows (`useDialogShowing`). */
   onDialogShown?: (() => () => void) | undefined;
 }
 
@@ -35,31 +35,28 @@ const PLAY_BUTTON = `${ICON_BUTTON} disabled:opacity-40 disabled:cursor-not-allo
  * its definitions, each with Run test and Delete, and "Add test
  * configuration" under them.
  *
- * Differences (the Parity Notes):
- * - the definitions are read each time the card expands (D14b Preflight
- *   ruling 18), not once; a failed read shows inline
- *   with Retry ("Failed to load test configurations", or the API's words);
- * - a definition's delete is confirmed (decision 2);
+ * - the definitions are read each time the card expands; a failed
+ *   read shows inline with Retry ("Failed to load test configurations", or the
+ *   API's words);
+ * - a definition's delete is confirmed;
  * - Play all in parallel, Play all serially and each Run test are held,
  *   titled "Another run is in progress", by the one hold over every Play
- *   (D14b Preflight ruling 13: the person's own run on the version, a Play
- *   all under way, a single run starting), not only while a polled run is
- *   in flight;
- * - in the playground (D31-1 decisions 24 and 31), the Play alls, Edit
- *   suite, Delete suite, a definition's Run test and delete, and Add test
- *   configuration open the sign-up prompt at their buttons
- *   (`useLockedAction`); expanding a suite reads its
- *   sample definitions;
+ *   (the person's own run on the version, a Play all under way, a single
+ *   run starting);
+ * - in the playground, the Play alls, Edit suite, Delete suite, a
+ *   definition's Run test and delete, and Add test configuration open the
+ *   sign-up prompt at their buttons (`useLockedAction`); expanding a
+ *   suite reads its sample definitions;
  * - names and descriptions are text under the app's `ph-mask`, never an
- *   attribute; the buttons' labels are fixed words (Preflight
- *   ruling 19), each described by its suite's or definition's name, by
- *   reference to that text (`aria-describedby`, D14b Ruling 38);
+ *   attribute; the buttons' labels are fixed words, each described by its
+ *   suite's or definition's name, by reference to that text
+ *   (`aria-describedby`);
  * - closing the definition dialog gives the focus back to "Add test
  *   configuration", and a definition deleted gives it to the next row's first
- *   button, else the previous row's, else "Add test configuration" (D14b
- *   Ruling 38); closed without a delete (Cancel, Escape), the confirmation
- *   gives it back to the row's Delete (D14b Ruling 51: it has no Radix
- *   trigger, so Radix's own return would leave it on the page's body).
+ *   button, else the previous row's, else "Add test configuration"; closed
+ *   without a delete (Cancel, Escape), the confirmation gives it back to the
+ *   row's Delete (it has no Radix trigger, so Radix's own return would leave
+ *   it on the page's body).
  */
 export function SuiteCard({ target, suite, onEdit, onDelete, onPlayOne, onPlayAll, onDialogShown }: SuiteCardProps) {
   const locked = useLockedAction();
@@ -94,7 +91,7 @@ export function SuiteCard({ target, suite, onEdit, onDelete, onPlayOne, onPlayAl
    * After a delete: the row now at its place (its first button that can be
    * pressed), else the one before, else Add test configuration. Closed
    * without one (Cancel, Escape): back to the Delete that opened it, while it
-   * is there (Ruling 51).
+   * is there.
    */
   const focusAfterDelete = (event: Event) => {
     const index = deletedAt.current;
@@ -125,7 +122,7 @@ export function SuiteCard({ target, suite, onEdit, onDelete, onPlayOne, onPlayAl
     }
   };
 
-  // Read afresh each time the card expands (D14b Preflight ruling 18).
+  // Read afresh each time the card expands.
   useEffect(() => {
     // Only on expanding: the target and the suite are the card's for its life.
     if (expanded) readDefinitions();
@@ -291,7 +288,7 @@ export function SuiteCard({ target, suite, onEdit, onDelete, onPlayOne, onPlayAl
         target={target}
         suiteId={suite.id}
         onCloseAutoFocus={(event) => {
-          // Back to "Add test configuration" (D14b Ruling 38).
+          // Back to "Add test configuration".
           if (addRef.current === null) return;
           event.preventDefault();
           addRef.current.focus();

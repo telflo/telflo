@@ -16,10 +16,9 @@ import {
 } from "./index.js";
 
 /*
- * The sample workspace (D31-1 decision 10, Preflight rulings 6 and 7): its
- * shapes parse with the contracts' schemas, its pins are offered, its ids
- * are fixed, and nothing in the WHOLE sample (every area's module, Tasks 2
- * and 3's included once they fill theirs) is shaped like a secret.
+ * The sample workspace: its shapes parse with the contracts' schemas, its pins
+ * are offered, its ids are fixed, and nothing in the WHOLE sample (every
+ * area's module) is shaped like a secret.
  */
 
 const NOW = Date.parse("2026-10-27T12:00:00.000Z");
@@ -38,7 +37,7 @@ function everyString(): string[] {
   return [...stringsIn(sampleWorkspace(NOW)), ...stringsIn(sampleVisitor())];
 }
 
-/** The offered (non-deprecated) versions of the build-time catalogue for a distribution. */
+/** The offered (non-deprecated) versions of the build-time catalog for a distribution. */
 function offeredVersions(distribution: string): string[] {
   return PLAYGROUND_CATALOGUE.find((entry) => entry.id === distribution)?.versions.map((offer) => offer.version) ?? [];
 }
@@ -119,7 +118,7 @@ describe("the sample's visitor", () => {
   });
 });
 
-describe("the whole sample holds no secret-shaped value (Preflight ruling 6)", () => {
+describe("the whole sample holds no secret-shaped value", () => {
   const strings = everyString();
 
   it("has something to search", () => {

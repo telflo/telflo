@@ -13,8 +13,7 @@ import {
 } from "./collector-schema.js";
 
 /*
- * Which schema the pin gets, and the options monaco-yaml gets for it (D13c
- * decisions 2 and 11; Preflight rulings 12 and 13; Ruling 26).
+ * Which schema the pin gets, and the options monaco-yaml gets for it.
  */
 
 const CATALOGUE: Record<string, readonly SchemaCatalogueVersion[]> = {
@@ -38,23 +37,23 @@ describe("schemaPathFor", () => {
     expect(schemaPathFor(null, null, CATALOGUE)).toBeNull();
   });
 
-  it("gives syntax only to a retired version (decision 2)", () => {
+  it("gives syntax only to a retired version", () => {
     expect(schemaPathFor("otelcol-contrib", "0.158.0", CATALOGUE)).toBeNull();
   });
 
-  it("gives syntax only to a version the catalogue doesn't list", () => {
+  it("gives syntax only to a version the catalog doesn't list", () => {
     expect(schemaPathFor("otelcol-contrib", "0.163.0", CATALOGUE)).toBeNull();
     expect(schemaPathFor("otelcol-contrib", "../../etc/passwd", CATALOGUE)).toBeNull();
   });
 
-  it("gives syntax only to a distribution without schemas, even on a version it offers, and to one the catalogue doesn't have", () => {
+  it("gives syntax only to a distribution without schemas, even on a version it offers, and to one the catalog doesn't have", () => {
     expect(schemaPathFor("grafana-alloy", "1.0.0", CATALOGUE)).toBeNull();
     expect(schemaPathFor("acme-collector", "0.162.0", CATALOGUE)).toBeNull();
     // An inherited property is no distribution.
     expect(schemaPathFor("constructor", "0.162.0", CATALOGUE)).toBeNull();
   });
 
-  it("reads the real catalogue: each offered version of each distribution with schemas has its committed file, and a retired one gets none", () => {
+  it("reads the real catalog: each offered version of each distribution with schemas has its committed file, and a retired one gets none", () => {
     const contrib = SCHEMA_CATALOGUE["otelcol-contrib"] ?? [];
     const offered = contrib.filter((entry) => !entry.deprecated);
     const retired = contrib.filter((entry) => entry.deprecated);
@@ -74,7 +73,7 @@ describe("schemaPathFor", () => {
     }
   });
 
-  it("refuses a catalogue without distribution files, or a file without a valid versions list, naming it", () => {
+  it("refuses a catalog without distribution files, or a file without a valid versions list, naming it", () => {
     expect(() => readSchemaCatalogue({})).toThrow("catalog/distributions/*.json matched nothing");
     expect(() => readSchemaCatalogue({ "/catalog/distributions/acme.json": [{ version: "1.0.0" }] })).toThrow(
       "acme.json has no valid versions list",

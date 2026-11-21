@@ -3,10 +3,9 @@ import { ApiError } from "~/lib/api-client.js";
 
 /*
  * What the signed-in flows pages' loaders share (`/app/flows` and
- * `/app/flows/:slug`; D12 Preflight rulings 5 and 18), the signed-in
- * layout's pattern: the server loader reads with the visitor's cookie, and
- * the client loader reads again through the browser client when the access
- * token had expired.
+ * `/app/flows/:slug`), the signed-in layout's pattern: the server loader
+ * reads with the visitor's cookie, and the client loader reads again
+ * through the browser client when the access token had expired.
  */
 
 /** Sign in, then back to `pathname` and `search`: the layout's redirect for a session that is over. */

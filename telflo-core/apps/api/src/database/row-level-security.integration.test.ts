@@ -11,9 +11,8 @@ import {
 import { withDatabaseContext, withUserContext } from "./context.js";
 
 /**
- * Row-level security on organization_members (D5 decision 3, migration
- * 1700000000011), as the API's own role. The owner, which builds the
- * fixtures here, is exempt.
+ * Row-level security on organization_members (migration 1700000000011), as
+ * the API's own role. The owner, which builds the fixtures here, is exempt.
  */
 describe("row-level security on organization_members", () => {
   /** The API's own role, which the policies constrain. */
@@ -162,7 +161,7 @@ describe("row-level security on organization_members", () => {
       const owner = await createUserWithOrganization(ownerDb);
       // A person whose only live membership is in the group (their own group
       // organization's removed): a person, not a service account, since no
-      // service account has a second membership (D22 Preflight ruling 8).
+      // service account has a second membership.
       const group = await addMembership(ownerDb, { userId: owner.user.id });
       const onlyHere = await createUserWithOrganization(ownerDb, { organization: { type: "group", name: "Only" } });
       await addMembership(ownerDb, { userId: onlyHere.user.id, organizationId: group.organization.id });

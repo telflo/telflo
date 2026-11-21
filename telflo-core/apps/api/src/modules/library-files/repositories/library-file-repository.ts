@@ -2,11 +2,10 @@ import { sql, type Kysely, type Selectable, type Transaction } from "kysely";
 import type { Database, LibraryFilesTable } from "@telflo/db";
 
 /*
- * Library files (D23-2 decisions 19, 28 and 41; migration 1700000000037):
- * the global library of helper files, their bytes in the file store at
- * global/library-files/<id>.
+ * Library files (migration 1700000000037): the global library of helper
+ * files, their bytes in the file store at global/library-files/<id>.
  *
- * A global repository (ADR 0008; the resource registry's `kind: "global"`),
+ * A global repository (the resource registry's `kind: "global"`),
  * as test templates': every member reads the same files, so there is no
  * organization scope and no row-level security. Whether a caller may write
  * is the service's question (product admins only, requireProductAdmin on the

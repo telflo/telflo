@@ -17,12 +17,12 @@ import {
 import { PASSWORD_MINIMUM_LENGTH } from "./identity.js";
 
 describe("INVITATION_TTL_DAYS", () => {
-  it("is decision 2's seven days", () => {
+  it("is seven days", () => {
     expect(INVITATION_TTL_DAYS).toBe(7);
   });
 });
 
-describe("the invitee's messages (decision 9)", () => {
+describe("the invitee's messages", () => {
   it("are the invalid and expired texts, the accepted one, and the mismatch naming the address", () => {
     expect(INVITATION_NOT_FOUND_MESSAGE).toBe(
       "Invalid or expired invite link. Please ask your admin to resend the invitation.",
@@ -47,7 +47,7 @@ describe("CreateInvitationRequestSchema", () => {
     }
   });
 
-  it("refuses viewer, which is retired (D7 decision 2)", () => {
+  it("refuses viewer, which is not a role", () => {
     expect(CreateInvitationRequestSchema.safeParse({ email: "someone@example.com", role: "viewer" }).success).toBe(false);
   });
 
@@ -121,14 +121,14 @@ describe("InvitationPreviewResponseSchema", () => {
     expect(InvitationPreviewResponseSchema.safeParse({ invitation: { ...preview, status } }).success).toBe(true);
   });
 
-  it("requires mayRegister, as a boolean (D36-1 decision 52)", () => {
+  it("requires mayRegister, as a boolean", () => {
     const { mayRegister: _omitted, ...withoutMayRegister } = preview;
     expect(InvitationPreviewResponseSchema.safeParse({ invitation: withoutMayRegister }).success).toBe(false);
     expect(InvitationPreviewResponseSchema.safeParse({ invitation: { ...preview, mayRegister: "false" } }).success).toBe(false);
     expect(InvitationPreviewResponseSchema.safeParse({ invitation: { ...preview, mayRegister: false } }).success).toBe(true);
   });
 
-  it("requires organizationType, personal or group (D36-1 Q264)", () => {
+  it("requires organizationType, personal or group", () => {
     const { organizationType: _omitted, ...withoutType } = preview;
     expect(InvitationPreviewResponseSchema.safeParse({ invitation: withoutType }).success).toBe(false);
     expect(InvitationPreviewResponseSchema.safeParse({ invitation: { ...preview, organizationType: "team" } }).success).toBe(false);
@@ -159,7 +159,7 @@ describe("InvitationRegistrationRequestSchema", () => {
     expect(InvitationRegistrationRequestSchema.parse({ ...valid, password })).toEqual({ ...valid, password });
   });
 
-  it("takes no terms version, as registration does (D36-1 decision 29: a site without Terms sends none)", () => {
+  it("takes no terms version, as registration does: a site without Terms sends none", () => {
     const { acceptedTermsVersion: _omitted, ...withoutTerms } = valid;
     expect(InvitationRegistrationRequestSchema.parse(withoutTerms)).toEqual(withoutTerms);
     expect(InvitationRegistrationRequestSchema.safeParse({ ...valid, acceptedTermsVersion: "" }).success).toBe(false);

@@ -14,7 +14,7 @@ import {
   startFakeOtelcolTestingControl,
 } from "./support/fake-otelcol-testing.js";
 
-// The browser tests' collector tester (D14a Task 6): the web server
+// The browser tests' collector tester: the web server
 // start-fake-otelcol-testing.ts runs is up where the E2E API's settings
 // point, and its start helper and the teardown's check do what
 // global-setup.ts relies on: a violation is written down as it is seen, and
@@ -66,7 +66,7 @@ test("the E2E fake's control route answers for a token, and refuses a request wi
   expect((await fetch(`${E2E_OTELCOL_TESTING_CONTROL_URL}/release?contains=`, { method: "POST" })).status).toBe(400);
 });
 
-test("the control route counts and releases only the held runs whose text holds its token (D14a Ruling 36)", async () => {
+test("the control route counts and releases only the held runs whose text holds its token", async () => {
   const fake = await startFakeOtelcolTesting();
   const control = await startFakeOtelcolTestingControl(Promise.resolve(fake), 0);
   const controlUrl = `http://127.0.0.1:${(control.address() as AddressInfo).port}`;

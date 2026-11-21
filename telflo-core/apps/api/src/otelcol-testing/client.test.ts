@@ -22,12 +22,11 @@ import {
   type TesterUnavailableReason,
 } from "./client.js";
 
-// The platform's client for the collector tester (D14a decisions 1 and 12,
-// Preflight rulings 1, 2 and 7), against the OpenAPI-checked fake, and
-// against a hand-made fetch for what the fake can't be pushed to answer.
-// Every failure is `unavailable`, never a throw, and says whether the run
-// may go back to the queue: only when the tester refused it before starting
-// anything, or the connection was refused before anything was sent.
+// The platform's client for the collector tester, against the OpenAPI-checked
+// fake, and against a hand-made fetch for what the fake can't be pushed to
+// answer. Every failure is `unavailable`, never a throw, and says whether the
+// run may go back to the queue: only when the tester refused it before
+// starting anything, or the connection was refused before anything was sent.
 
 let fake: FakeOtelcolTesting;
 let client: OtelcolTestingClient;
@@ -142,7 +141,7 @@ async function closedUrl(): Promise<string> {
  * The reasons a run may be released for, written out here rather than read
  * from the client: the tester refused it before starting anything, or
  * nothing was sent: the connection was refused, or the tester's name didn't
- * resolve (Preflight ruling 7, Ruling 36).
+ * resolve.
  */
 const RELEASED: ReadonlySet<TesterUnavailableReason> = new Set<TesterUnavailableReason>([
   "busy",
@@ -167,13 +166,13 @@ const unavailable = (reason: TesterUnavailableReason, details: Record<string, un
   ({ kind: "unavailable", reason, ...details, isReleasable: RELEASED.has(reason) }) as TestRunResult;
 
 describe("the collector tester's client", () => {
-  it("gives a run 74 + d s over its request and reply (Preflight ruling 2), and reads at most 32 MiB", () => {
+  it("gives a run 74 + d s over its request and reply, and reads at most 32 MiB", () => {
     expect(otelcolTestingRunTimeoutMs(1)).toBe(75_000);
     expect(otelcolTestingRunTimeoutMs(60)).toBe(134_000);
     expect(MAX_OTELCOL_TESTING_REPLY_BYTES).toBe(32 * 1024 * 1024);
   });
 
-  describe("the run's duration is guarded in the timer (Ruling 38)", () => {
+  describe("the run's duration is guarded in the timer", () => {
     it.each([0, 61, 1.5, -1, Number.NaN, Number.POSITIVE_INFINITY])("refuses %d s: no timer is built from it", (seconds) => {
       expect(isOtelcolTestingDuration(seconds)).toBe(false);
       expect(() => otelcolTestingRunTimeoutMs(seconds)).toThrow(RangeError);
@@ -197,7 +196,7 @@ describe("the collector tester's client", () => {
     });
   });
 
-  it("releases only the runs the tester refused before starting, or a refused connection (Preflight ruling 7)", () => {
+  it("releases only the runs the tester refused before starting, or a refused connection", () => {
     expect([...RELEASABLE_TESTER_REASONS].sort()).toEqual([...RELEASED].sort());
   });
 
@@ -317,7 +316,7 @@ describe("the collector tester's client", () => {
       const wrong = createOtelcolTestingClient({ url: fake.url, secret, log });
 
       expect(await wrong.run(RUN)).toEqual(unavailable("unauthorized", { status: 401, code: "unauthorized" }));
-      // The envelope's code (Ruling 38), never its message or the body.
+      // The envelope's code, never its message or the body.
       expect(log.lines).toEqual([
         {
           details: { operation: "runTest", reason: "unauthorized", status: 401, code: "unauthorized" },
@@ -343,7 +342,7 @@ describe("the collector tester's client", () => {
       ["500 internal_error", "error_500", 500, "internal_error"],
       ["400 invalid_request", "invalid_request", 400, "invalid_request"],
       ["413 input_too_large", "input_too_large", 413, "input_too_large"],
-    ])("a status the run doesn't expect (%s) is logged at error with the envelope's code (Ruling 38)", async (_label, fault, status, code) => {
+    ])("a status the run doesn't expect (%s) is logged at error with the envelope's code", async (_label, fault, status, code) => {
       const log = recordingLog();
       const logged = createOtelcolTestingClient({ url: fake.url, secret: fake.secret, log });
       fake.nextFault(fault);
@@ -358,7 +357,7 @@ describe("the collector tester's client", () => {
     it.each<[string, FakeOtelcolTestingFault, number, string, TesterUnavailableReason]>([
       ["409 version_retired", "version_retired", 409, "version_retired", "version_retired"],
       ["400 version_unknown", "version_unknown", 400, "version_unknown", "version_unknown"],
-    ])("a version the tester doesn't offer (%s): its own reason, never released, logged at warn, not error (Rulings 50, 51)", async (_label, fault, status, code, reason) => {
+    ])("a version the tester doesn't offer (%s): its own reason, never released, logged at warn, not error", async (_label, fault, status, code, reason) => {
       const log = recordingLog();
       const logged = createOtelcolTestingClient({ url: fake.url, secret: fake.secret, log });
       fake.nextFault(fault);
@@ -425,7 +424,7 @@ describe("the collector tester's client", () => {
       expect(await down.run(RUN)).toEqual({ kind: "unavailable", reason: "connection_refused", isReleasable: true });
     });
 
-    it.each(["ENOTFOUND", "EAI_AGAIN"])("the tester's name doesn't resolve (%s): name_not_resolved, released (nothing was sent, Ruling 36)", async (code) => {
+    it.each(["ENOTFOUND", "EAI_AGAIN"])("the tester's name doesn't resolve (%s): name_not_resolved, released (nothing was sent)", async (code) => {
       const { doFetch, calls } = failingWith(code);
       expect(await handMade(doFetch).run(RUN)).toEqual({ kind: "unavailable", reason: "name_not_resolved", isReleasable: true });
       expect(calls()).toBe(1);
@@ -484,7 +483,7 @@ describe("the collector tester's client", () => {
       expect(settled).toEqual(unavailable("timeout"));
     });
 
-    it("the caller's signal ended before the call (the API stopping): not_sent, nothing sent, released (Ruling 41)", async () => {
+    it("the caller's signal ended before the call (the API stopping): not_sent, nothing sent, released", async () => {
       const controller = new AbortController();
       controller.abort();
       const { seen, doFetch } = answering(() => new Response(JSON.stringify(answerBody()), { status: 200 }));
@@ -613,7 +612,7 @@ describe("the collector tester's client", () => {
       expect(await handMade(doFetch).health()).toEqual(expected);
     });
 
-    it("no answer within 5 s: down, timeout (fake timers; Ruling 38)", async () => {
+    it("no answer within 5 s: down, timeout (fake timers)", async () => {
       expect(OTELCOL_TESTING_HEALTH_TIMEOUT_MS).toBe(5_000);
       vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
       const { doFetch } = neverAnswering();

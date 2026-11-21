@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # setup.sh: writes the Compose install's settings and secrets, once, in the
-# folder this script is in (the unpacked release; D36-2 decisions 67, 90-92):
+# folder this script is in (the unpacked release):
 #
 #   ./setup.sh --public-url <url> --agent-url <url> [--http-port <port>]
 #              [--agent-port <port>] [--bind <address>]

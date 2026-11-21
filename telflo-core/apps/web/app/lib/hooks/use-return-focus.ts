@@ -50,18 +50,17 @@ export interface ReturnFocus {
 }
 
 /**
- * Focus back to a dialog's opener as it closes (D14b Ruling 46's pattern;
- * D17b-1's final fix wave): the dialogs here open without a Radix
- * `DialogTrigger`, so Radix's own close has nothing to focus and leaves the
- * focus on the body. Each `onCloseAutoFocus` prevents Radix's and focuses
- * the button that opened the dialog, else (its row deleted, the bar gone, a
- * button disabled meanwhile) the fallback named as it opened. A dialog
- * closed before its write's reload has answered gives the focus back to a
- * row that the reload then removes: `rowsChanged`, called once the rows
- * have rendered again, moves it on (D14b Ruling 52), only when the dialog
- * made a write (`wrote`, the host's reload after one): a poll is no write.
- * Which rows spend the write follows when their read began, after the
- * write or before it, never who asked for it (`rowsChanged`).
+ * Focus back to a dialog's opener as it closes: the dialogs here open without
+ * a Radix `DialogTrigger`, so Radix's own close has nothing to focus and
+ * leaves the focus on the body. Each `onCloseAutoFocus` prevents Radix's and
+ * focuses the button that opened the dialog, else (its row deleted, the bar
+ * gone, a button disabled meanwhile) the fallback named as it opened. A dialog
+ * closed before its write's reload has answered gives the focus back to a row
+ * that the reload then removes: `rowsChanged`, called once the rows have
+ * rendered again, moves it on, only when the dialog made a write (`wrote`, the
+ * host's reload after one): a poll is no write. Which rows spend the write
+ * follows when their read began, after the write or before it, never who asked
+ * for it (`rowsChanged`).
  */
 export function useReturnFocus(): ReturnFocus {
   const opener = useRef<{ from: HTMLElement | null; fallback: FocusFallback } | null>(null);

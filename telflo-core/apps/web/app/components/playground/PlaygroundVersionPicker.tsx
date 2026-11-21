@@ -13,18 +13,17 @@ import { useEditorStore } from "~/lib/stores/editor-store.js";
 export const OTHER_VERSION_LOCKED_ACTION = "validate against a different collector version";
 
 /*
- * The playground's fixed collector picker (D31-1 decision 11, Q210, Ruling
- * 277, Preflight ruling 20), for the playground editor's toolbar (Task 2)
- * and the blank public editor's (Task 5), in place of
- * `CollectorVersionSelect` (whose options come from the catalogue store,
- * never loaded here). It has the signed-in picker's look: "Collector:", the
- * configuration's distribution, read-only with its lock, and a dropdown of
- * the versions the build-time catalogue offers for it (its deprecated
- * versions left out; the same versions `SCHEMA_CATALOGUE` gives schemas
- * for), showing the open version's pin. A pick of another version changes
- * nothing: it opens the sign-up prompt (`useLockedAction`) once the list
- * has closed and given the focus back to the trigger, the prompt's opener
- * (Ruling 299). Every string is the catalogue's or fixed (ADR 0024).
+ * The playground's fixed collector picker, for the playground editor's toolbar
+ * (`PlaygroundToolbar`) and the blank public editor's (`PublicEditorToolbar`),
+ * in place of `CollectorVersionSelect` (whose options come from the catalog
+ * store, never loaded here). It has the signed-in picker's look: "Collector:",
+ * the configuration's distribution, read-only with its lock, and a dropdown of
+ * the versions the build-time catalog offers for it (its deprecated versions
+ * left out; the same versions `SCHEMA_CATALOGUE` gives schemas for), showing
+ * the open version's pin. A pick of another version changes nothing: it opens
+ * the sign-up prompt (`useLockedAction`) once the list has closed and given
+ * the focus back to the trigger, the prompt's opener. Every string is the
+ * catalog's or fixed.
  */
 export function PlaygroundVersionPicker() {
   const distributionId = useEditorStore((state) => state.configuration?.collectorDistribution ?? null);

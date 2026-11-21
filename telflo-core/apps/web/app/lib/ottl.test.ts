@@ -4,9 +4,8 @@ import { ottlString } from "./ottl.js";
 import { findPattern } from "./regex-library.js";
 
 /*
- * The OTTL string helper (D9d decision 12): the T2 template ("Redact
- * Passwords in URLs") built with it gives the template's statements
- * exactly.
+ * The OTTL string helper: the T2 template ("Redact Passwords in URLs") built
+ * with it gives the template's statements exactly.
  */
 
 describe("ottlString", () => {

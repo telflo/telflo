@@ -1,6 +1,6 @@
-"""The service's process is not dumpable (D14a spec decision 5, Preflight
-ruling 4): `prctl(PR_SET_DUMPABLE, 0)` at start, before the secret's file is
-read, checked with PR_GET_DUMPABLE. Linux's only: elsewhere it does nothing.
+"""The service's process is not dumpable: `prctl(PR_SET_DUMPABLE, 0)` at
+start, before the secret's file is read, checked with PR_GET_DUMPABLE.
+Linux's only: elsewhere it does nothing.
 The real call is made in a fresh interpreter (on Linux, the image's test
 stage; on macOS it shows the no-op); the call's shape is checked with a
 fake libc everywhere."""

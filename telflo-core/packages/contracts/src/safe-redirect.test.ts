@@ -54,7 +54,7 @@ describe("safeRedirectPath", () => {
     });
   });
 
-  // D2c's preflight: a browser's URL parser strips tabs and newlines from
+  // A browser's URL parser strips tabs and newlines from
   // anywhere in a URL, so these become `//evil.example`, another site.
   describe("rejected (control characters and backslashes anywhere)", () => {
     it("rejects a tab between the slashes", () => {

@@ -221,7 +221,7 @@ resend from it answers 403 `personal_organization_invitations_disabled`,
 and its Invited page says "Invitations can't be sent from a personal
 workspace on this site." in Invite Member's place. Leftover invitations
 from a personal workspace (sent while the site was open) can still be
-cancelled, and under `invite-only` they never create an account. An
+canceled, and under `invite-only` they never create an account. An
 invited person who creates an account gets their own personal workspace
 and joins the organization that invited them; if it made them an admin,
 they invite others into it.

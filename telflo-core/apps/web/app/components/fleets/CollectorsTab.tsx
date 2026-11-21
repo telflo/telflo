@@ -19,70 +19,66 @@ import { DeleteCollectorDialog } from "./DeleteCollectorDialog.js";
 import { EditCollectorDialog } from "./EditCollectorDialog.js";
 
 /*
- * A server fleet's Collectors tab (D17b-1 decisions 2, 3, 9, 10, 21, 27 and
- * 29; Preflight rulings 8, 9, 10 and 17): a toolbar, grid, pager and empty
+ * A server fleet's Collectors tab: a toolbar, grid, pager and empty
  * states, over `useCollectorsPage` (one page at a time, polled every 15 s
  * while the tab is visible and no dialog is open). Mounted only while the
  * tab is chosen (Radix Tabs unmounts the others), keyed by the fleet.
  *
  * States: "Loading collectors…"; a failed first load, with "Try again"; an
- * empty fleet (page 1 empty, nothing searched or filtered): the
- * install state ("Install your first collector") until installing started
- * in this visit (`installStarted`, the route's: D17c-1 decisions 13 and 44,
- * Preflight ruling 22), then its waiting state with the help "Collector not
- * showing up?"; "Install collector" (`onInstall`, the install dialog for
- * the Default group) one element across both, so the focus stays on it; an
- * archived fleet's words instead (no install); a search matching nothing;
- * a group with none. The hook steps an empty page other than the first
- * back, so only page 1 is ever empty here.
+ * empty fleet (page 1 empty, nothing searched or filtered): the install state
+ * ("Install your first collector") until installing started in this visit
+ * (`installStarted`, the route's), then its waiting state with the help
+ * "Collector not showing up?"; "Install collector" (`onInstall`, the install
+ * dialog for the Default group) one element across both, so the focus stays on
+ * it; an archived fleet's words instead (no install); a search matching
+ * nothing; a group with none. The hook steps an empty page other than the
+ * first back, so only page 1 is ever empty here.
  *
- * The selection (decision 27) is the tab's: the ids of collectors on the
- * page shown, cleared when the page or the query changes (a page change, a
- * search, a filter, a sort, an emptied page stepped back), and kept across
- * a poll for the rows still shown. With one or more selected, its bar
+ * The selection is the tab's: the ids of collectors on the page shown,
+ * cleared when the page or the query changes (a page change, a search, a
+ * filter, a sort, an emptied page stepped back), and kept across a poll for
+ * the rows still shown. With one or more selected, its bar
  * (`CollectorsSelectionBar`) opens bulk pin, bulk move and bulk delete
- * (`BulkPinDialog`, `BulkMoveDialog`, `BulkDeleteDialog`, decision 27) for
- * the collectors selected when it opened, in the organization it was opened
- * in, closed by another as the details are; Move to group is disabled while
- * the tab holds no groups (Preflight ruling 5).
+ * (`BulkPinDialog`, `BulkMoveDialog`, `BulkDeleteDialog`) for the
+ * collectors selected when it opened, in the organization it was opened in,
+ * closed by another as the details are; Move to group is disabled while the
+ * tab holds no groups.
  *
- * A Kubernetes-supervisor fleet's tab (D17d-1 decision 23; Preflight rulings
- * 25–29) is the same tab, every part told the fleet's type (`fleetType`):
- * the grid's Role column and the Group column's dash for Agent and Cluster,
- * the Agent's and the Cluster's names in the Group filter, the edit's Group
- * select and bulk move (ordered Agent, Cluster, then the gateways), the
- * details' Node row, the pins' canary note and the deletes' words. Its empty
- * fleet shows the waiting state at once, its help always there, in
- * Kubernetes words, and "Install with Helm" (D17d-2 decision 23: the route's
- * Helm install dialog, `onInstall`).
+ * A Kubernetes-supervisor fleet's tab is the same tab, every part told the
+ * fleet's type (`fleetType`): the grid's Role column and the Group column's
+ * dash for Agent and Cluster, the Agent's and the Cluster's names in the Group
+ * filter, the edit's Group select and bulk move (ordered Agent, Cluster, then
+ * the gateways), the details' Node row, the pins' canary note and the deletes'
+ * words. Its empty fleet shows the waiting state at once, its help always
+ * there, in Kubernetes words, and "Install with Helm" (the route's Helm
+ * install dialog, `onInstall`).
  *
- * A row's Name opens its details (`CollectorDetailsDialog`, decision 24),
+ * A row's Name opens its details (`CollectorDetailsDialog`),
  * for the organization it was opened in: another organization (a switch,
  * or a removal elsewhere) closes them, as the fleet's dialogs
  * (`useFleetActionDialogs`). The polls pause while they are open (an open
  * dialog pauses `useVisiblePolling`).
  *
  * A row's Edit and the details' "Edit collector" open the edit dialog
- * (`EditCollectorDialog`, decision 26), a row's Delete the delete
- * (`DeleteCollectorDialog`, decision 28), one at a time, for the
- * organization they were opened in, closed by another as the details are.
- * After a write (or a 404, or an answer that leaves one unknown, or a bulk
- * move's or delete's run, closed) the tab reads its page again and the
- * route its fleet (`onFleetChanged`), so the strip and the total follow at
- * once (Preflight ruling 8).
+ * (`EditCollectorDialog`), a row's Delete the delete
+ * (`DeleteCollectorDialog`), one at a time, for the organization they were
+ * opened in, closed by another as the details are. After a write (or a
+ * 404, or an answer that leaves one unknown, or a bulk move's or delete's
+ * run, closed) the tab reads its page again and the route its fleet
+ * (`onFleetChanged`), so the strip and the total follow at once.
  *
  * Every dialog's close gives the focus back to the control that opened it
- * (`useReturnFocus`, D14b Ruling 46's pattern): the row's Name, Edit or
- * Delete, the selection bar's button; the details' "Edit collector" hands
- * the row's Name on to the edit. When that control is gone, its row deleted,
- * the focus goes to the grid's first Name, else the search box; after a bulk
- * action, to the selection bar, else the search box. A write's reload that
- * removes the row the focus went back to moves it on the same way; a poll
- * after a close with no write never moves it.
+ * (`useReturnFocus`): the row's Name, Edit or Delete, the selection bar's
+ * button; the details' "Edit collector" hands the row's Name on to the edit.
+ * When that control is gone, its row deleted, the focus goes to the grid's
+ * first Name, else the search box; after a bulk action, to the selection
+ * bar, else the search box. A write's reload that removes the row the focus
+ * went back to moves it on the same way; a poll after a close with no write
+ * never moves it.
  *
- * In the playground (D31-1 decisions 24 and 35) the details open (a read),
- * and every write is locked at its opener (`openAction`, `openBulk`): the
- * sign-up prompt opens with the action's words, and no dialog does.
+ * In the playground the details open (a read), and every write is locked
+ * at its opener (`openAction`, `openBulk`): the sign-up prompt opens with
+ * the action's words, and no dialog does.
  */
 
 /** The sign-up prompt's words for each collector action in the playground. */
@@ -101,7 +97,7 @@ function selectionKey(query: CollectorsListQuery, pageIndex: number): string {
   return JSON.stringify([pageIndex, query.q, query.groupId, query.sort, query.order]);
 }
 
-/** The empty fleet's states' words (D17c-1 decision 44; Preflight ruling 22). */
+/** The empty fleet's states' words. */
 export const INSTALL_FIRST_TITLE = "Install your first collector";
 export const INSTALL_FIRST_DETAIL = "Run one copy-paste command on a host; the collector connects with this fleet's token and appears here.";
 export const WAITING_TITLE = "Waiting for your first collector to connect";
@@ -113,14 +109,14 @@ export const NOT_SHOWING_UP_TIPS = [
   "Linux: export OPAMP_TOKEN before running start_supervisor.sh (copy it again from the install dialog).",
   "Container: docker logs telflo-collector shows the supervisor's output.",
   "A command naming a group that has since been deleted is refused: copy a new one.",
-  // D17c-1 Ruling 62: a second `docker run` on the same host fails on the command's fixed --name.
+  // A second `docker run` on the same host fails on the command's fixed --name.
   "Re-installing on a container host: remove the old container first (docker rm -f telflo-collector); keep the telflo-opamp volume to keep the same collector.",
 ] as const;
 
-/** A Kubernetes fleet's empty tab (D17d-1 decision 23; Preflight ruling 28), beside D17d-2's "Install with Helm". */
+/** A Kubernetes fleet's empty tab, beside "Install with Helm". */
 export const KUBERNETES_WAITING_DETAIL =
   "Each pod a group's Helm release starts appears here when it checks in with this fleet's token. This list refreshes automatically every 15 seconds.";
-/** The command a Kubernetes tip names, in monospace as the server tip's `docker logs` (D17d-1 Ruling 50). */
+/** The command a Kubernetes tip names, in monospace as the server tip's `docker logs`. */
 const KUBECTL_LOGS = "kubectl logs";
 export const KUBERNETES_NOT_SHOWING_UP_TIPS = [
   "The pod must reach the fleet's endpoint: kubectl logs on the pod shows the supervisor's output.",
@@ -164,7 +160,7 @@ export function CollectorsTab({ fleet, installStarted, onInstall, onFleetGone, o
   const organizationId = useCurrentUser()?.organization.id ?? null;
   const locked = useLockedAction();
 
-  // Focus back to each dialog's opener, else these (D14b Ruling 46).
+  // Focus back to each dialog's opener, else these.
   const focus = useReturnFocus();
   const searchBox = useRef<HTMLInputElement>(null);
   const firstName = useRef<HTMLButtonElement>(null);
@@ -423,7 +419,7 @@ export function CollectorsTab({ fleet, installStarted, onInstall, onFleetGone, o
           // Locked in the playground: the prompt opens once the details have
           // closed and given the focus back to the row, so the prompt's close
           // gives it back there too (its opener, the details' Edit, is gone by
-          // then; as the Testing tab's locked Run: D31-1 Task 7).
+          // then; as the Testing tab's locked Run).
           lockedEditFromDetails.current = collector;
         }}
         onCloseAutoFocus={(event) => {

@@ -1,10 +1,9 @@
 /**
  * Complex production-grade OTel Collector configuration — unit tests.
  *
- * Construction (D9a Parity Notes); generation is the text edits (Task 4),
- * and the round trip the round-trip invariant over
- * `corpus/complex-config.yaml`, the YAML generated for this graph; the last
- * test here ties the two.
+ * Construction; generation is the text edits, and the round trip the
+ * round-trip invariant over `corpus/complex-config.yaml`, the YAML generated
+ * for this graph; the last test here ties the two.
  */
 
 import { describe, expect, it, beforeAll } from "vitest";

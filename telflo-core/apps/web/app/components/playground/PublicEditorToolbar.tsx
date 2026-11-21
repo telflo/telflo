@@ -9,17 +9,15 @@ import { PUBLISH_LOCKED_ACTION } from "./PlaygroundToolbar.js";
 import { PlaygroundVersionPicker } from "./PlaygroundVersionPicker.js";
 
 /*
- * The blank public editor's toolbar (D31-1 decisions 7, 28 and 38; Q210,
- * Preflight ruling 10), built on the playground toolbar's pieces. On the
- * left, the Telflo mark linking to sign-in (D36-1 decision 23: no home page
- * in the app; the public editor has no sidebar to hold it), the
+ * The blank public editor's toolbar, built on the playground toolbar's pieces.
+ * On the left, the Telflo mark linking to sign-in (there is no home page in
+ * the app, and the public editor has no sidebar to hold it), the
  * configuration's name as text (no rename, no "Unsaved" badge) and the fixed
- * collector picker (`PlaygroundVersionPicker`: the pin, a change locked;
- * Q210). No version picker. On the right, under the editor tour's
- * `toolbar-actions` anchor: the shared edit actions (`EditorEditActions`),
- * Save, always enabled (it stages the edit and opens "Sign in to save":
- * `onSave`), and Publish, shown and locked, as the playground's (Ruling 276).
- * The name is text, never an attribute (ADR 0024).
+ * collector picker (`PlaygroundVersionPicker`: the pin, a change locked). No
+ * version picker. On the right, under the editor tour's `toolbar-actions`
+ * anchor: the shared edit actions (`EditorEditActions`), Save, always enabled
+ * (it stages the edit and opens "Sign in to save": `onSave`), and Publish,
+ * shown and locked, as the playground's. The name is text, never an attribute.
  */
 export function PublicEditorToolbar({ onSave }: { onSave: () => void }) {
   const name = useEditorStore((state) => state.configuration?.name ?? "");

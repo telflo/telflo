@@ -1,4 +1,4 @@
-# Layout every edit keeps outside itself (Preflight ruling 1).
+# Layout every edit keeps outside itself.
 receivers:
   otlp: # the key's own comment
     protocols:

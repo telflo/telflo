@@ -28,14 +28,13 @@ export function groupBadgeLabel(label: string, signalType: string | undefined): 
 }
 
 /**
- * A pipeline group's node: a dashed box with a 5 % fill in the
- * pipeline's colour, its badge, and a resizer while selected (300 × 150 at
- * least). Two invisible, unconnectable handles anchor the edges drawn to and
- * from the group: the route edges of routing and failover connectors, and a
- * connector's edge in a pipeline with nothing else to join (Task 3's
- * ruling). The pipeline's name is text in the badge, never an attribute.
- * A published version's groups show no resizer (D11b decision 4): it can be
- * selected, never resized.
+ * A pipeline group's node: a dashed box with a 5 % fill in the pipeline's
+ * color, its badge, and a resizer while selected (300 × 150 at least). Two
+ * invisible, unconnectable handles anchor the edges drawn to and from the
+ * group: the route edges of routing and failover connectors, and a
+ * connector's edge in a pipeline with nothing else to join. The pipeline's
+ * name is text in the badge, never an attribute. A published version's
+ * groups show no resizer: it can be selected, never resized.
  */
 export function PipelineGroupNode({ data, selected }: NodeProps<OTelNode>) {
   const color = data.color;

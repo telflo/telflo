@@ -20,29 +20,27 @@ import { E2E_WEB_URL } from "./support/environment.js";
 import { signInThroughApi, skipEditorTour, waitForHydration } from "./support/session.js";
 import { createVariableThroughApi, uniqueVariableName } from "./support/variables.js";
 
-// Flows (D12), in the browser, signed in: "Use this flow" from a flow's
-// page in the product and "Start from a flow" in the create dialog, each
-// opening the editor on a copy holding the flow's text byte for byte and its
-// pin; and product admin's flows page (create, edit, hide and show, delete,
-// the security check), with its gate for everyone else. And the edges (D12
-// Ruling 36): a copy of a flow whose pin the catalogue retired moves to the
-// default and says so (decision 16); a hidden flow's page is a 404 for a
-// non-admin; and a product admin whose flag is cleared mid-visit. The
-// public library and the landing's showcase left with the marketing site
-// (D36-1 decision 20).
+// Flows, in the browser, signed in: "Use this flow" from a flow's page in
+// the product and "Start from a flow" in the create dialog, each opening the
+// editor on a copy holding the flow's text byte for byte and its pin; and
+// product admin's flows page (create, edit, hide and show, delete, the
+// security check), with its gate for everyone else. And the edges: a copy of
+// a flow whose pin the catalog retired moves to the default and says so; a
+// hidden flow's page is a 404 for a non-admin; and a product admin whose
+// flag is cleared mid-visit.
 //
 // The seeded flows are global setup's (migration 1700000000026's rows, put
 // back after the truncation), read here from the migration's constant and
 // never written. A test that writes flows gives each an `e2e-` slug, asserts
 // only on its own, never on a count, and deletes them as the tables' owner
-// when it ends, however it ends (D12 Preflight ruling 13): the flows table is
-// global, so every parallel test sees what another wrote.
+// when it ends, however it ends: the flows table is global, so every
+// parallel test sees what another wrote.
 //
 // The words are the web app's, written out here.
 
 const PASSWORD = "correct horse battery staple";
 
-/** The seeded flow on the one pin that isn't the catalogue's default (0.159.0), so a copy on the default would show. */
+/** The seeded flow on the one pin that isn't the catalog's default (0.159.0), so a copy on the default would show. */
 const OFF_DEFAULT_SLUG = "clickhouse-failover-gateway-s3-overflow";
 /** A seeded flow, which every gallery lists (so a gallery has rendered). */
 const TABLE_ONLY_SLUG = "log-volume-cost-control";
@@ -208,7 +206,7 @@ test("Start from a flow, in the create dialog (start, browse, pick, name, Create
   await expectCopyOfFlow(page, user, name, flow);
 });
 
-test("Use this flow on a flow pinned where the catalogue no longer offers opens the editor on a copy on the default, and says so first (D12 decision 16)", async ({
+test("Use this flow on a flow pinned where the catalog no longer offers opens the editor on a copy on the default, and says so first", async ({
   page,
   testFlows,
 }) => {
@@ -326,7 +324,7 @@ async function openAdminFromSidebar(page: Page): Promise<void> {
   await expect(page.getByRole("heading", { level: 1, name: "Flows", exact: true })).toBeVisible();
 }
 
-/** The product admin's "Show hidden flows" switch on the signed-in gallery (Ruling 42). */
+/** The product admin's "Show hidden flows" switch on the signed-in gallery. */
 function showHiddenFlows(page: Page): Locator {
   return page.getByRole("switch", { name: "Show hidden flows", exact: true });
 }
@@ -361,7 +359,7 @@ async function expectGallery(
 
 /**
  * A flow the signed-in product admin creates through the API, as the dialog
- * does, for tests about something after creating: on the catalogue's default
+ * does, for tests about something after creating: on the catalog's default
  * pin, with the test flow's text, `published` or hidden.
  */
 async function createFlowThroughApi(
@@ -466,7 +464,7 @@ test("a product admin hides an e2e- flow they created: it leaves every gallery, 
   expect(await findFlow(slug)).toMatchObject({ published: false });
 
   await expectGallery(memberPage, name, false);
-  // A product admin's gallery is everyone's until they switch Show hidden flows on (Ruling 42).
+  // A product admin's gallery is everyone's until they switch Show hidden flows on.
   await expectGallery(page, name, false, { productAdmin: true });
   await expectGallery(page, name, true, { productAdmin: true, showHidden: true });
 });
@@ -484,7 +482,7 @@ test("a product admin shows a hidden e2e- flow they created again: it returns to
   const memberPage = await secondContext.newPage();
   await signInThroughApi(memberPage, member);
 
-  // Hidden: not in a non-admin's gallery, nor in the admin's until they switch Show hidden flows on (Ruling 42).
+  // Hidden: not in a non-admin's gallery, nor in the admin's until they switch Show hidden flows on.
   await expectGallery(memberPage, name, false);
   await expectGallery(page, name, false, { productAdmin: true });
   await expectGallery(page, name, true, { productAdmin: true, showHidden: true });
@@ -520,7 +518,7 @@ test("a product admin's security check says a clean YAML has no blocking issue, 
   await check.click();
   const finding = dialog.locator(".ph-no-capture > div").filter({ hasText: HARDCODED_CREDENTIAL_MESSAGE });
   await expect(finding).toHaveText(`.exporters.otlp_http.api_key ${HARDCODED_CREDENTIAL_MESSAGE}`);
-  // A block finding: its mark is the failure colour, and it comes first.
+  // A block finding: its mark is the failure color, and it comes first.
   await expect(finding.locator("svg")).toHaveClass(/text-fail/);
   await expect(dialog.locator(".ph-no-capture > div").first()).toHaveText(`.exporters.otlp_http.api_key ${HARDCODED_CREDENTIAL_MESSAGE}`);
   await expect(dialog.getByText("No blocking issues.", { exact: true })).toHaveCount(0);
@@ -583,7 +581,7 @@ test("a product admin whose flag is cleared mid-visit, then switching a flow's v
   expect(await findFlow(slug)).toMatchObject({ published: true });
 });
 
-// D20 default 28 (Preflight ruling 31): "Define these in your organization's variables" marks each name.
+// "Define these in your organization's variables" marks each name.
 test("a flow's page in the product marks each organization variable its text references as defined or not defined in the organization", async ({
   page,
   testFlows,

@@ -8,10 +8,10 @@ import { parse as parseYaml } from "yaml";
 import { z } from "zod";
 import * as schemas from "./schemas.js";
 
-// D16b Ruling 21 (Task 2's review): no zod mirror of openapi.yaml is
-// stricter than the file. A mirror stricter than the server's contract
-// makes a documented reply a thrown misconfiguration, the route a 503 for
-// good (one long name, one collector with an empty error text).
+// No zod mirror of openapi.yaml is stricter than the file. A mirror stricter
+// than the server's contract makes a documented reply a thrown
+// misconfiguration, the route a 503 for good (one long name, one collector
+// with an empty error text).
 //
 // Two halves, both read from the file itself:
 // - each mirror parses every fixture here, and each fixture is first
@@ -331,10 +331,10 @@ function groups() {
       { "acme.io/owner": "ops", telflo: { dockerMounts: [{ containerPath: "/logs", hostPath: "/var/log", readOnly: true }] } },
       null,
       {},
-      // D17d-1 decision 2: a Kubernetes group's settings are the platform's data in its annotations.
+      // A Kubernetes group's settings are the platform's data in its annotations.
       { telflo: { kubernetes: { namespace: "observability", replicas: 3, role: "gateway", volumes: [] } } },
     ],
-    // D20 Task 6: the variable group its collectors use, or none.
+    // The variable group its collectors use, or none.
     [null, id()],
   ).map(([name, isDefault, assignedPublicationId, annotations, variableGroupId]) => ({
     id: id(),
@@ -414,7 +414,7 @@ function collectorInstances() {
     [id(), null],
     ["online", "warning", "unknown", "offline"],
     ["inSync", "pending", "failed", "drifted", "unassigned"],
-    // D20 Task 6: a pinned variable group, or none.
+    // A pinned variable group, or none.
     [id(), null],
   ).map(([name, pin, resolution, served, effective, reported, enrollmentTokenId, liveness, drift, pinnedVariableGroupId]) => ({
     id: id(),
@@ -452,10 +452,10 @@ function usagePublications() {
   }));
 }
 
-// D20 (Task 9; Preflight ruling 38): the organization variables' mirrors.
-// A value's pattern refuses U+2028 and U+2029, so its fixtures leave them
-// out (Preflight ruling 23): 1,024 code points (Q104) with 4-byte characters among
-// them, and the empty value. A name is the renderer's grammar, ASCII only.
+// The organization variables' mirrors. A value's pattern refuses U+2028 and
+// U+2029, so its fixtures leave them out: 1,024 code points with 4-byte
+// characters among them, and the empty value. A name is the renderer's
+// grammar, ASCII only.
 
 /** A value of `length` code points the value pattern takes: never U+2028 or U+2029. */
 function valueText(length: number): string {
@@ -622,7 +622,7 @@ function describeIssues(result: z.SafeParseReturnType<unknown, unknown>): string
   return result.success ? "" : result.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; ");
 }
 
-describe("no mirror is stricter than openapi.yaml (Ruling 21)", () => {
+describe("no mirror is stricter than openapi.yaml", () => {
   it("covers every schema schemas.ts exports, each against the file's schema of its name", () => {
     const exported = (Object.values(schemas) as unknown[]).filter((value): value is z.ZodTypeAny => value instanceof z.ZodType);
     const mirrored = new Set<z.ZodTypeAny>(MIRRORS.map(([, schema]) => schema));
@@ -668,7 +668,7 @@ describe("no mirror is stricter than openapi.yaml (Ruling 21)", () => {
         "CollectorGroupList.groups: many items",
         "EnrollmentTokenList.tokens: many items",
         "FleetCreated.tokens.default.bearer: long",
-        // D20.
+        // The organization variables.
         "Variable.value: shortest",
         "Variable.value: longest",
         "Variable.description: longest, with U+2028",

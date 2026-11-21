@@ -4,11 +4,10 @@ import { InlineAlert } from "./InlineAlert.js";
 import type { ValueView } from "~/lib/graph/value-view.js";
 
 /*
- * The batch processor's form (ADR 0018), over the form's fields (D9b
- * decisions 2 and 3): each field writes its own key; the metadata keys are
- * written by item. The collector's defaults (batch processor
- * `createDefaultConfig`, v0.162.0: 200ms, 8192, no maximum, 1000) show while
- * a key is unset; 0 can be entered (decision 4).
+ * The batch processor's form, over the form's fields: each field writes its
+ * own key; the metadata keys are written by item. The collector's defaults
+ * (batch processor `createDefaultConfig`, v0.162.0: 200ms, 8192, no maximum,
+ * 1000) show while a key is unset; 0 can be entered.
  *
  * The alerts read the text: "Zero timeout" for a timeout written `0` or
  * `0s`, "Size conflict" while both sizes are numbers and the maximum is

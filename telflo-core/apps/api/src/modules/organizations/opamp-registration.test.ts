@@ -19,12 +19,12 @@ import {
   type OpampRegistrationService,
 } from "./opamp-registration.js";
 
-// D11a decision 20: the platform keeps the opamp-server's registry in step
-// after its own commits, best effort, against the OpenAPI-checked fake. The
-// routes' tests (opamp-registration.integration.test.ts) show each path
-// calls it; these show what one call sends, and what it logs.
+// The platform keeps the opamp-server's registry in step after its own
+// commits, best effort, against the OpenAPI-checked fake. The routes' tests
+// (opamp-registration.integration.test.ts) show each path calls it; these
+// show what one call sends, and what it logs.
 
-/** A name that is an email, as a personal organization's is (Q263). */
+/** A name that is an email, as a personal organization's is. */
 const NAME = "secret-person@example.com";
 
 interface LogLine {
@@ -210,7 +210,7 @@ describe("createOpampRegistration", () => {
     expect(lines).toEqual([]);
   });
 
-  it("counts the delete of an organization it doesn't hold (404) as done: the DELETE is idempotent (D16b Preflight ruling 14)", async () => {
+  it("counts the delete of an organization it doesn't hold (404) as done: the DELETE is idempotent", async () => {
     const id = randomUUID();
 
     registration.deleted(id);
@@ -263,7 +263,7 @@ describe("createOpampRegistration", () => {
   });
 });
 
-describe("an organization's delete, retried (D16b decision 20; Preflight ruling 14)", () => {
+describe("an organization's delete, retried", () => {
   /** How many attempts the registration has handed the runner. */
   let handed: number;
 
@@ -383,7 +383,7 @@ describe("an organization's delete, retried (D16b decision 20; Preflight ruling 
     expect(hooks.pendingDeletes()).toEqual([]);
   });
 
-  it("counts as done a delete that finished after the platform hung up: the first attempt times out at the client's 25 s, the retry answers 404, and nothing is an error (Ruling 32)", async () => {
+  it("counts as done a delete that finished after the platform hung up: the first attempt times out at the client's 25 s, the retry answers 404, and nothing is an error", async () => {
     const id = randomUUID();
     const requests: string[] = [];
     const hangsThenNotFound = createOpampServerClient({
@@ -514,7 +514,7 @@ describe("an organization's delete, retried (D16b decision 20; Preflight ruling 
     expect(hooks.pendingDeletes()).toEqual([]);
   });
 
-  it("empties the pending set as retries finish, and at close logs those still pending at error, cancelling their timers", async () => {
+  it("empties the pending set as retries finish, and at close logs those still pending at error, canceling their timers", async () => {
     const [first, second, third] = [randomUUID(), randomUUID(), randomUUID()];
     const { registration: hooks, deleteOrganization } = scripted({
       [first]: [TIMEOUT, { kind: "deleted" }],
@@ -556,7 +556,7 @@ describe("an organization's delete, retried (D16b decision 20; Preflight ruling 
     expect(lines).toEqual([]);
   });
 
-  it("keeps an organization pending while any of its deletes is (a fleet's create asking again, Preflight ruling 13)", async () => {
+  it("keeps an organization pending while any of its deletes is (a fleet's create asking again)", async () => {
     const id = randomUUID();
     const { registration: hooks, deleteOrganization } = scripted({ [id]: [TIMEOUT, { kind: "deleted" }, { kind: "deleted" }] });
 
@@ -652,7 +652,7 @@ describe("unrefTimer", () => {
     }
   });
 
-  it("runs the callback after the delay, and never once cancelled", () => {
+  it("runs the callback after the delay, and never once canceled", () => {
     vi.useFakeTimers();
     const ran: string[] = [];
     unrefTimer(() => ran.push("kept"), 1_000);
@@ -666,7 +666,7 @@ describe("unrefTimer", () => {
   });
 });
 
-describe("ensureOrganization (D11a decision 20; D16b Preflight ruling 10: publishing's, moved)", () => {
+describe("ensureOrganization", () => {
   it("registers an unknown organization, and answers one already registered under its name, ensured", async () => {
     const id = randomUUID();
     expect(await ensureOrganization(client, { id, name: NAME })).toEqual({ kind: "ensured" });

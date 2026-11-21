@@ -1,13 +1,11 @@
-// New in D15a Task 2 (plan Preflight ruling 10; ADR 0028's pattern): each
-// evaluate and validate request's work runs in a child process of the same
-// binary, in its own process group, with an empty environment but
+// Each evaluate and validate request's work runs in a child process of the
+// same binary, in its own process group, with an empty environment but
 // GOMEMLIMIT (and GOMAXPROCS, below). At its limit, or when its request or
 // the server ends, the whole group is killed (SIGKILL) and reaped before
 // the request's slot is freed. The child's lines are read as they come, so
-// a kill keeps the rules already finished. The follow-up to Task 2's
-// review (the controller's Ruling 33) added GOMAXPROCS=2 to the
-// environment and, on Linux, Pdeathsig (child_linux.go). D25 Task 3 added
-// the lint's child, lint-child.
+// a kill keeps the rules already finished. On Linux the child also has
+// Pdeathsig (child_linux.go). The lint runs in a child of its own,
+// lint-child.
 
 package server
 
@@ -27,14 +25,14 @@ import (
 const (
 	EvaluateChildCommand = "evaluate-child"
 	ValidateChildCommand = "validate-child"
-	// LintChildCommand is the public API's OTTL lint (D25 Task 3).
+	// LintChildCommand is the public API's OTTL lint.
 	LintChildCommand = "lint-child"
 )
 
 // childEnvironment is a child's whole environment: its memory limit, and
 // GOMAXPROCS=2 so that each child (a whole Go runtime) starts few threads
-// (the controller's Ruling 33: compose's pids_limit counts threads, serve's
-// and every child's together).
+// (compose's pids_limit counts threads, serve's and every child's
+// together).
 var childEnvironment = []string{"GOMEMLIMIT=640MiB", "GOMAXPROCS=2"}
 
 const (

@@ -13,8 +13,7 @@ import { GROUP_ID, PERSONAL_ID } from "~/test/configurations.js";
 import { FLEET_ID, fleet } from "~/test/fleets.js";
 
 /*
- * "Archive fleet" and "Unarchive fleet" (D17a decisions 26 and 28, Preflight
- * rulings 4 and 14).
+ * "Archive fleet" and "Unarchive fleet".
  */
 
 const refusal = (code: string, message: string, status: number) => new ApiError(code, message, { status });
@@ -88,7 +87,7 @@ describe("ArchiveFleetDialog", () => {
   it.each([
     ["archive", "Archive fleet", ARCHIVE_WORDS, "Archive"],
     ["unarchive", "Unarchive fleet", UNARCHIVE_WORDS, "Unarchive"],
-  ] as const)("%s: says what the server does, in Preflight ruling 4's words", async (action, title, words, button) => {
+  ] as const)("%s: says what the server does, in the dialog's words", async (action, title, words, button) => {
     await renderDialog(action);
     const dialog = screen.getByRole("alertdialog", { name: title });
     // The dialog's description (an inline span holds the label, so the text is read whole).

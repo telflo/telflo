@@ -3,13 +3,13 @@ import { open } from "./editor-page.js";
 import { E2E_WEB_URL } from "./environment.js";
 import { adminNavItems } from "./test-templates-page.js";
 
-// The Users page (D29 decisions 38 and 45) for the browser tests:
-// `/product-admin/users`, its search, its rows and the delete dialog.
+// The Users page for the browser tests: `/product-admin/users`, its search,
+// its rows and the delete dialog.
 //
 // The page lists every account in the e2e database, parallel workers'
 // included: a test finds only its own people, by searching for their own
 // addresses or their own group's name, never by counts, the list's order
-// or "the whole list" (D29 Preflight ruling 18).
+// or "the whole list".
 
 /** Opens product admin from the sidebar's Product Admin item (Flows, its home), then Users from its nav. */
 export async function openUsers(page: Page): Promise<void> {
@@ -58,7 +58,7 @@ export function deleteDialog(page: Page): Locator {
   return page.getByRole("alertdialog");
 }
 
-/** The type-to-confirm field, labelled by its sentence. */
+/** The type-to-confirm field, labeled by its sentence. */
 export function confirmField(page: Page): Locator {
   return deleteDialog(page).getByRole("textbox", { name: "This cannot be undone. Type the user's email to confirm." });
 }

@@ -1,9 +1,8 @@
 /*
  * The OpenTelemetry mark, for the OpenTelemetry Collector Contrib
- * distribution (D13a decision 13, Preflight ruling 19), its two-tone fills
- * and viewBox the source's: the telescope's tube in blue (#425CC7), the lens
- * ring, top beam and tripod leg in orange (#F5A800). Both read on light and
- * dark backgrounds, so no `currentColor`.
+ * distribution, its two-tone fills and viewBox the source's: the telescope's
+ * tube in blue (#425CC7), the lens ring, top beam and tripod leg in orange
+ * (#F5A800). Both read on light and dark backgrounds, so no `currentColor`.
  *
  * Source: cncf/artwork,
  * `projects/opentelemetry/icon/color/opentelemetry-icon-color.svg` at commit
@@ -11,8 +10,8 @@
  * https://github.com/cncf/artwork/blob/002662490acb2303c7301acc0256c00790e03e9f/projects/opentelemetry/icon/color/opentelemetry-icon-color.svg
  * Terms: the Linux Foundation's trademark usage guidelines; no copyright
  * license stated (cncf/artwork's LICENSE.md points only to them).
- * OpenTelemetry is a trademark of The Linux Foundation. D30 revisits these
- * terms before any bundle ships. Listed in docs/third-party-assets.md.
+ * OpenTelemetry is a trademark of The Linux Foundation. Listed in
+ * docs/third-party-assets.md.
  */
 export function OtelIcon({ className }: { className?: string }) {
   return (

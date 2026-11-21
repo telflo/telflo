@@ -2,9 +2,9 @@ import { vi } from "vitest";
 import * as apiClient from "~/lib/api-client.js";
 
 /*
- * The playground's seam tests (D31-1 decision 23): every API client
- * function that sends a request, spied on and calling through, so a test
- * can show none was called while a page or a store read the sample.
+ * The playground's seam tests: every API client function that sends a
+ * request, spied on and calling through, so a test can show none was called
+ * while a page or a store read the sample.
  */
 
 /** The client's exports that send no request: the session-ended handler's switches and pure helpers. */

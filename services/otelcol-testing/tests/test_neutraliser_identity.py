@@ -1,8 +1,8 @@
-"""The neutraliser's modules are the validator's, byte for byte (D14a
-Preflight ruling 3): `providers.py`, `bounded_yaml.py` and `placeholders.py`
-are copied unchanged (both services' packages are named `app`, so their
-imports hold). A change to either copy fails here until the other is made
-the same. Unmarked: it runs in the repository's suite."""
+"""The neutralizer's modules are the validator's, byte for byte:
+`providers.py`, `bounded_yaml.py` and `placeholders.py` are copied unchanged
+(both services' packages are named `app`, so their imports hold). A change
+to either copy fails here until the other is made the same. Unmarked: it
+runs in the repository's suite."""
 
 from __future__ import annotations
 

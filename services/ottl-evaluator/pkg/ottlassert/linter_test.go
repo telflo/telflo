@@ -1,5 +1,5 @@
-// New in D25 Task 3: the Linter parses one text at a time, with the
-// standard function set (editors and converters), as Lint does.
+// The Linter parses one text at a time, with the standard function
+// set (editors and converters), as Lint does.
 
 package ottlassert
 

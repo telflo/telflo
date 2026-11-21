@@ -1,16 +1,15 @@
-"""The collector's renames against the real collectors (D13b decision 6,
-Preflight ruling 5; marked `binary`, deselected by default, run inside the
-image with `pytest -m binary`).
+"""The collector's renames against the real collectors (marked `binary`,
+deselected by default, run inside the image with `pytest -m binary`).
 
 For every offered version whose `otelcol-contrib` is under
-OTELCOL_BINARY_DIR, and every rename the catalogue's `renamedTypes` lists
-(read from the catalogue itself, never a copy): the current name passes from
+OTELCOL_BINARY_DIR, and every rename the catalog's `renamedTypes` lists
+(read from the catalog itself, never a copy): the current name passes from
 `since` on and fails as an unknown type before it (only where an offered
 version predates `since`: today the aws_s3 receiver on 0.159.0-0.161.0); the
-old name passes on every offered version. Each text is the smallest one the
-preflight found the collector accepts for that component.
+old name passes on every offered version. Each text is the smallest one
+found that the collector accepts for that component.
 
-A rename the catalogue gains needs its configuration below
+A rename the catalog gains needs its configuration below
 (`test_every_rename_has_a_configuration` says which), and its `since`
 checked: catalog/README.md, "Adding a collector version".
 """
@@ -27,7 +26,7 @@ pytestmark = pytest.mark.binary
 
 
 def _renamed_types() -> list[dict]:
-    """Contrib's `renamedTypes`, as its catalogue file lists them."""
+    """Contrib's `renamedTypes`, as its catalog file lists them."""
     for path in sorted(CATALOG_DIR.glob("*.json")):
         document = json.loads(path.read_text(encoding="utf-8"))
         if document.get("distribution") == DISTRIBUTION:
@@ -38,7 +37,7 @@ def _renamed_types() -> list[dict]:
 RENAMES = _renamed_types()
 
 # (kind, deprecated name) -> (the pipeline's signal, the component's body):
-# Preflight A's minimal configurations (kubeletstats needs `auth_type: none`
+# The minimal configurations (kubeletstats needs `auth_type: none`
 # outside a cluster; aws_s3 needs a time range and a bucket).
 CONFIGURATIONS: dict[tuple[str, str], tuple[str, str]] = {
     ("receiver", "filelog"): ("logs", "include: [/tmp/x.log]"),
@@ -76,8 +75,7 @@ OTLP_RECEIVER = "receivers:\n  otlp:\n    protocols:\n      grpc:\n"
 
 
 def configuration(kind: str, name: str, signal: str, body: str) -> str:
-    """The smallest configuration holding a `kind` component of type `name`
-    (preflight A's renames.py, unchanged)."""
+    """The smallest configuration holding a `kind` component of type `name`."""
     component = " {}" if body == "{}" else "\n    " + body
     if kind == "receiver":
         return (

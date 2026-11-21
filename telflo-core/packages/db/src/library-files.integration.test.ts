@@ -5,12 +5,12 @@ import type { Database } from "./schema.js";
 import { addLibraryFile, createUserWithOrganization, openTestDatabases, truncateAll, type TestDatabases } from "./testing.js";
 
 /*
- * Migration 1700000000037 (D23-2 decisions 19, 21 and 28; Preflight ruling
- * 13): the global library of helper files. Its up, down and up again are
- * schema.integration.test.ts's ("the library files migration …"); the
- * resource registry's global entry is apps/api's cross-tenant suite's.
- * Here: every check, the guard trigger (P0001 for the tables' owner too),
- * the defaults, the creator's set null and the API's role's hard delete.
+ * Migration 1700000000037: the global library of helper files. Its up, down
+ * and up again are schema.integration.test.ts's ("the library files
+ * migration …"); the resource registry's global entry is apps/api's
+ * cross-tenant suite's. Here: every check, the guard trigger (P0001 for the
+ * tables' owner too), the defaults, the creator's set null and the API's
+ * role's hard delete.
  */
 
 /** A check's or the guard's refusal, by the name Postgres reports. */

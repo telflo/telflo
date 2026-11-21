@@ -3,10 +3,9 @@ import { ValidateConfigurationVersionRequestSchema } from "../configurations.js"
 import { OTTL_CONTEXTS } from "../validation-rules.js";
 
 /*
- * The public surface's request and response shapes for OTTL lint (route 16)
- * (D25 decisions 17, 18 and 33): strict Zod schemas, camelCase, reusing the
- * platform's contracts where they already hold a field. Exported from the
- * package's index with `export *`.
+ * The public surface's request and response shapes for OTTL lint (route 16):
+ * strict Zod schemas, camelCase, reusing the platform's contracts where they
+ * already hold a field. Exported from the package's index with `export *`.
  */
 
 /** How many expressions one lint may check, in all (the evaluator's cap). */
@@ -30,10 +29,10 @@ const ExpressionsSchema = z.array(z.string().max(PUBLIC_OTTL_LINT_EXPRESSION_MAX
  * - `{ context, conditions?, statements?, valueExpressions? }`: the
  *   expressions against one context, 1 to 200 in all.
  * Both, neither, an unknown context and more than 200 expressions are 400
- * `invalid_request`. The body is at most 2 MiB as sent
- * (413 `payload_too_large` past it, before this schema runs): with long
+ * `invalid_request`. The body is at most 2 MiB as sent (413
+ * `payload_too_large` past it, before this schema runs): with long
  * expressions, or ones JSON escapes, that is the effective bound, below the
- * 200 × 8,192 characters this schema takes (Ruling 168).
+ * 200 × 8,192 characters this schema takes.
  */
 export const PublicOttlLintRequestSchema = z
   .object({

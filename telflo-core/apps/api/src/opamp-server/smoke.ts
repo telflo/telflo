@@ -8,34 +8,32 @@ import {
 } from "./client.js";
 import type { PublicationSummary } from "./schemas.js";
 
-// The stack smoke test's sequences (D11a Tasks 7 and 10b), run by
-// stack-smoke.ts inside the API container against the real opamp-server
-// (Task 8), and by smoke.test.ts against the fake.
+// The stack smoke test's sequences, run by stack-smoke.ts inside the API
+// container against the real opamp-server, and by smoke.test.ts against the
+// fake.
 //
 // runStackSmoke registers an organization under a random id, as the platform
-// does (decision 20), and registers it again (unchanged); posts a publication
-// under it with its own id (0.2.4's postPublication; its collector answered
-// as posted, D13a decision 7), posts it again (unchanged), posts a changed
-// body and then another collector under the same id (conflict, twice), reads
-// it (the YAML and the collector equal), lists it (the collector equal),
-// posts a second publication
-// of the same configuration under a fresh id, deletes that one by its id and
-// reads it (not found), deletes the configuration's publications, and reads
-// the first again (not found); then deletes the organization and reads its
-// publication again (organization_not_found).
+// does, and registers it again (unchanged); posts a publication under it
+// with its own id (0.2.4's postPublication; its collector answered as
+// posted), posts it again (unchanged), posts a changed body and then another
+// collector under the same id (conflict, twice), reads it (the YAML and the
+// collector equal), lists it (the collector equal), posts a second
+// publication of the same configuration under a fresh id, deletes that one
+// by its id and reads it (not found), deletes the configuration's
+// publications, and reads the first again (not found); then deletes the
+// organization and reads its publication again (organization_not_found).
 //
 // expectOrganizationRegistered, expectOrganizationName and
 // expectOrganizationGone poll for what the platform sent the opamp-server
-// after a response (decision 20): a new account's personal organization, and
-// a group organization created, renamed and deleted through the gateway.
-// expectPublications polls for a configuration's snapshots: the one a
-// publish through the gateway put (D11b), and none once the configuration is
-// deleted, which the platform removes after the response (D11b decision 12).
-// expectPublication checks the one snapshot a publish put is of the version
-// published, by its id, holds the YAML saved, by its SHA-256 (D11b Ruling
-// 29), and names the collector the version is pinned to, of the
-// configuration's distribution (D13a decision 7).
-// runStackSmokeCommand reads stack-smoke.ts's arguments and runs one of them.
+// after a response: a new account's personal organization, and a group
+// organization created, renamed and deleted through the gateway.
+// expectPublications polls for a configuration's snapshots: the one a publish
+// through the gateway put, and none once the configuration is deleted, which
+// the platform removes after the response. expectPublication checks the one
+// snapshot a publish put is of the version published, by its id, holds the
+// YAML saved, by its SHA-256, and names the collector the version is pinned
+// to, of the configuration's distribution. runStackSmokeCommand reads
+// stack-smoke.ts's arguments and runs one of them.
 //
 // Any surprise throws a StackSmokeError naming the step and the result's
 // kind, never the secret, the YAML or an organization's or a
@@ -205,7 +203,7 @@ export interface PollOptions {
 export type ExpectedName = { name: string } | { emailAddress: true };
 
 /**
- * A personal organization is named by its owner's email (D36-1 Q263): the
+ * A personal organization is named by its owner's email: the
  * smoke never learns which, so it checks only that the name is an address.
  */
 export const PERSONAL_ORGANIZATION_NAME: ExpectedName = { emailAddress: true };
@@ -216,7 +214,7 @@ const EMAIL_ADDRESS = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 /**
  * Asks for `organizationId` until `isWaiting` says the answer is no longer
  * one to wait out, or the attempts run out; answers the last result. The
- * platform sends its calls after its responses (decision 20), so the first
+ * platform sends its calls after its responses, so the first
  * answer can be an old one.
  */
 async function pollOrganization(
@@ -372,7 +370,7 @@ export interface ExpectedPublication {
   versionId: string;
   /** The SHA-256 (hex) of the YAML saved as that version, computed by the caller from what it sent. */
   sha256: string;
-  /** The configuration's distribution and the version's collector version, as the platform reports them (D13a decision 7). */
+  /** The configuration's distribution and the version's collector version, as the platform reports them. */
   collector: PublicationCollector;
 }
 
@@ -382,9 +380,8 @@ export interface ExpectedPublication {
  * number and version id, read by its id, whose recorded `sha256` and whose
  * YAML's own SHA-256 are both `expected.sha256`, and whose collector, listed
  * and read, is `expected.collector`: the snapshot is the version published,
- * holding the text saved (D11b Ruling 29) and the pin it had (D13a decision
- * 7). Its errors name ids, numbers and the collectors only, never the YAML
- * or a hash.
+ * holding the text saved and the pin it had. Its errors name ids, numbers and
+ * the collectors only, never the YAML or a hash.
  */
 export async function expectPublication(
   client: OpampServerClient,
@@ -436,11 +433,11 @@ function integerArgument(value: string | undefined, min: number, max: number): n
 }
 
 /**
- * stack-smoke.ts's arguments, run (D11a decision 20):
+ * stack-smoke.ts's arguments, run:
  *
  * - `<personal organization id>`: runStackSmoke, then the new account's
  *   personal organization registered under an email address, a personal
- *   organization's name (Q263);
+ *   organization's name;
  * - `group-registered <id> <name>`: a group organization registered under
  *   its name, after "New organization";
  * - `group-renamed <id> <name>`: renamed to `<name>`, after a rename;
@@ -448,12 +445,12 @@ function integerArgument(value: string | undefined, min: number, max: number): n
  * - `publications <organization id> <configuration id> <count> [version
  *   number]`: the configuration has `count` snapshots (0 to 100), each of
  *   that version number when given, after a publish through the gateway,
- *   or none after its delete (D11b);
+ *   or none after its delete;
  * - `publication <organization id> <configuration id> <version number>
  *   <version id> <sha256> <distribution> <collector version>`: the
  *   configuration has one snapshot, of that version, holding the YAML whose
- *   SHA-256 (hex) is given (D11b Ruling 29) and naming that collector (D13a
- *   decision 7), after a publish through the gateway.
+ *   SHA-256 (hex) is given and naming that collector, after a publish
+ *   through the gateway.
  *
  * Anything else throws the usage, never the arguments (a name is one).
  */

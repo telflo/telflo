@@ -17,10 +17,10 @@ import { ApiError, getConfigurations, isSessionEnded } from "~/lib/api-client.js
 import { useCurrentUser } from "~/lib/use-current-user.js";
 import type { AppLayoutData } from "~/routes/app-layout.js";
 
-/** The toast for a list, or an editor, that didn't load (D7 Parity Notes; D8 decision 12). */
+/** The toast for a list, or an editor, that didn't load. */
 export const LOAD_FAILED_MESSAGE = "Failed to load configuration";
 
-/** How long the search waits after the last keystroke before it asks the API (D7 decision 12). */
+/** How long the search waits after the last keystroke before it asks the API. */
 export const SEARCH_DELAY_MS = 300;
 
 const TERMS_ACCEPTANCE_REQUIRED: IdentityErrorCode = "terms_acceptance_required";
@@ -30,15 +30,14 @@ const FLEETS_UNAVAILABLE: FleetErrorCode = "fleets_unavailable";
 const RATE_LIMITED: SessionErrorCode = "rate_limited";
 
 /**
- * The refusals whose message the configurations page shows as it is (D7
- * Preflight ruling 2): the configuration's own codes (D11b's among them:
- * the delete's 403, a published version's 409, publishing's 503; D16b's
- * delete refused while a fleet uses the configuration, 409), the
- * organization's, the terms', and two more a delete answers (D16b
- * Preflight ruling 6): `fleets_unavailable`, its fleet usage unreadable
- * (503, "nothing was deleted"), and `rate_limited`, the person's fleet
- * limit spent (429). It is an allow-list, so a server error's "Something went wrong"
- * or `invalid_request`'s "The request was not valid." never reaches the user.
+ * The refusals whose message the configurations page shows as it is: the
+ * configuration's own codes (among them the delete's 403, a published
+ * version's 409, publishing's 503, and the delete refused while a fleet uses
+ * the configuration, 409), the organization's, the terms', and two more a
+ * delete answers: `fleets_unavailable`, its fleet usage unreadable (503,
+ * "nothing was deleted"), and `rate_limited`, the person's fleet limit spent
+ * (429). It is an allow-list, so a server error's "Something went wrong" or
+ * `invalid_request`'s "The request was not valid." never reaches the user.
  */
 const REFUSAL_CODES: ReadonlySet<string> = new Set<string>([
   ...CONFIGURATION_ERROR_CODES,
@@ -77,7 +76,7 @@ export function isConfigurationGone(error: unknown): error is ApiError {
   return error instanceof ApiError && error.code === CONFIGURATION_NOT_FOUND;
 }
 
-/** Whether a request was refused because the current terms aren't accepted (D7 decision 10). */
+/** Whether a request was refused because the current terms aren't accepted. */
 export function isTermsAcceptanceRequired(error: unknown): error is ApiError {
   return error instanceof ApiError && error.code === TERMS_ACCEPTANCE_REQUIRED;
 }
@@ -105,11 +104,10 @@ export function useStillCurrent(organizationId: string): (sentIn: string) => boo
 }
 
 /**
- * Whether the signed-in member may delete a configuration (D11b decision 2):
- * its author, or an admin of the organization. One whose author's account is
- * gone is an admin's alone. The API decides (403
- * `configuration_delete_forbidden`); this only hides Delete where it would
- * be refused.
+ * Whether the signed-in member may delete a configuration: its author, or an
+ * admin of the organization. One whose author's account is gone is an
+ * admin's alone. The API decides (403 `configuration_delete_forbidden`);
+ * this only hides Delete where it would be refused.
  */
 export function canDeleteConfiguration(
   configuration: Configuration,
@@ -157,14 +155,13 @@ export interface ConfigurationsList {
 }
 
 /**
- * The configurations list of the active organization, a page at a time (D7
- * decision 6), through the browser client in effects rather than a server
- * loader (D2b's Handoffs).
+ * The configurations list of the active organization, a page at a time,
+ * through the browser client in effects rather than a server loader.
  *
  * - The first page loads for the active organization, the search and the
  *   filter. A change of any of them starts over; so does `reload()`. The
  *   organization is `useCurrentUser()`'s, since a removal elsewhere changes it
- *   without the page remounting (D7 Preflight ruling 10).
+ *   without the page remounting.
  * - What is shown stays until the new answer replaces it, so a search doesn't
  *   blank the page; another organization's list is never shown.
  * - Only the latest load's answer is used, as in `org-admin.tsx`: an older
@@ -179,9 +176,9 @@ export interface ConfigurationsList {
  *   the layout, whose dialog then opens, and waits the same way, with no toast.
  * - A 404 `organization_not_found` revalidates the layout too, with no toast:
  *   the session's organization comes back, and the list starts over in it.
- * - A 401 `unauthenticated` toasts nothing either (D12 Ruling 39): the
- *   session-ended handler takes the browser to sign in, or Logout, which
- *   has it suspended, is taking the page to `/login`.
+ * - A 401 `unauthenticated` toasts nothing either: the session-ended handler
+ *   takes the browser to sign in, or Logout, which has it suspended, is
+ *   taking the page to `/login`.
  * - Any other failure toasts "Failed to load configuration".
  */
 export function useConfigurationsList({
@@ -210,7 +207,7 @@ export function useConfigurationsList({
         void revalidate();
         return;
       }
-      // The session is over: the session-ended handler, or Logout, has the page (D12 Ruling 39).
+      // The session is over: the session-ended handler, or Logout, has the page.
       if (isSessionEnded(error)) return;
       toast.error(LOAD_FAILED_MESSAGE);
     },
@@ -265,8 +262,8 @@ export function useConfigurationsList({
         setIsLoadingMore(false);
         setShown((before) => {
           if (before?.load !== thisLoad) return before;
-          // A configuration changed while paging can come round again
-          // (decision 6); it is shown once.
+          // A configuration changed while paging can come round again; it
+          // is shown once.
           const seen = new Set(before.items.map((item) => item.id));
           const added = page.items.filter((item) => !seen.has(item.id));
           return { ...before, items: [...before.items, ...added], nextCursor: page.nextCursor };

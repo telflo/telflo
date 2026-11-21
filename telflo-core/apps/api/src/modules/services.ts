@@ -12,13 +12,12 @@ import { createValidationPipelineServices, type ValidationPipelineServices } fro
 import { createVariableServices, type VariableServices } from "./variables/routes.js";
 
 /*
- * The data services, one instance each (D25 decision 15, Preflight ruling
- * 4): built once by buildServer and handed to every module in
- * `moduleDeps.services`, so the browser routes and the public routes
- * (`/api/public/v1/`) share them. Nothing is doubled: a service's limiter
- * is counted once per person whichever surface calls it, and the test
- * runs' copy places are resolved once. Each area's construction is its
- * module's own `create<Area>Services`, moved verbatim from its routes.
+ * The data services, one instance each: built once by buildServer and
+ * handed to every module in `moduleDeps.services`, so the browser routes
+ * and the public routes (`/api/public/v1/`) share them. Nothing is
+ * doubled: a service's limiter is counted once per person whichever
+ * surface calls it, and the test runs' copy places are resolved once. Each
+ * area's construction is its module's own `create<Area>Services`.
  */
 
 /** What every module's services are built from: buildServer's dependencies, with its clock, runner and registry. */

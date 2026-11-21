@@ -73,7 +73,7 @@ describe("invitation repository", () => {
 
   /**
    * Fails with 55P03 while another transaction holds a conflicting lock on
-   * the row: the deterministic way to see a lock held (D2a Ruling 6).
+   * the row: the deterministic way to see a lock held.
    */
   const probeLock = (id: string, mode: "update" | "key share") =>
     ownerDb
@@ -216,7 +216,7 @@ describe("invitation repository", () => {
       const find = (email: string) =>
         inOrganization(adminId, organizationId, (invitations) => invitations.findPendingByEmail(email));
 
-      // The neighbour's invitation to invitee@example.com isn't this organization's.
+      // The neighbor's invitation to invitee@example.com isn't this organization's.
       expect(await find("invitee@example.com")).toBeUndefined();
       await addInvitation(ownerDb, {
         organizationId,
@@ -331,7 +331,7 @@ describe("invitation repository", () => {
       expect(await accept()).toBe(false);
     });
 
-    it("revokes every pending invitation the user sent here, expired ones included, oldest first, and nothing else (Ruling 17)", async () => {
+    it("revokes every pending invitation the user sent here, expired ones included, oldest first, and nothing else", async () => {
       const { adminId, organizationId, elsewhere } = await organizationWithNeighbour();
       const other = await createUserWithOrganization(ownerDb);
       const sent = { invited_by_user_id: adminId };

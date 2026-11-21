@@ -6,13 +6,12 @@ import { CONFIG_NEEDS_LOGIN_MESSAGE, VALIDATION_FAILED_MESSAGE } from "../src/co
 import { runCli, serviceAccountWithToken, useApiServer, type CliRun } from "./harness.js";
 
 /*
- * telflo validate against the real API in process (D27 decisions 23, 26
- * and 33): logged in on route 15, logged out on the anonymous route (no
- * token sent), --config's pin, an invalid text (exit 4), an unknown
- * version (a 400: exit 2) and --config without a login (exit 3). The
- * collector validator is the api's OpenAPI-checked fake. Tokens are made
- * at run time and checked with boolean canaries only; no log line holds
- * the text.
+ * telflo validate against the real API in process: logged in on route 15,
+ * logged out on the anonymous route (no token sent), --config's pin, an
+ * invalid text (exit 4), an unknown version (a 400: exit 2) and --config
+ * without a login (exit 3). The collector validator is the api's
+ * OpenAPI-checked fake. Tokens are made at run time and checked with boolean
+ * canaries only; no log line holds the text.
  */
 
 const validator = useFakeOtelcolValidator();
@@ -88,7 +87,7 @@ describe("telflo validate, logged in", () => {
     ]);
   });
 
-  it("is exit 2 for a version the catalogue doesn't have, the validator never asked", async () => {
+  it("is exit 2 for a version the catalog doesn't have, the validator never asked", async () => {
     await loggedIn();
     const result = await cli(["--json", "validate", "-", "--collector-version", "0.0.1"], VALID_YAML);
     expect(result.code).toBe(2);

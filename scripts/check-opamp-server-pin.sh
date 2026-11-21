@@ -1,30 +1,29 @@
 #!/usr/bin/env bash
-# The platform runs the opamp-server's published release (D26 decisions 5
-# and 36): vendor/opamp-server/ holds the three contract files the platform
-# reads, byte for byte the release's, and PIN names that release. This
-# checks that they still agree:
+# The platform runs the opamp-server's published release: vendor/opamp-server/
+# holds the three contract files the platform reads, byte for byte the
+# release's, and PIN names that release. This checks that they still agree:
 #
 #   - the sibling checkout's tag v<version> (under refs/tags/, so a branch of
 #     that name doesn't count) is the PIN's commit;
 #   - each vendored file equals that commit's blob;
-#   - docker-compose.yml's opamp-migrate and opamp-server each
-#     run ghcr.io/telflo/opamp-server:<version>@<digest> and build nothing,
-#     and nothing else in it names the image outside comments; the same for
-#     the Compose install's deploy/compose/compose.yaml (D36-2 decisions 88
-#     and 89), whose copy of bootstrap.sql,
-#     deploy/compose/opamp-server/bootstrap.sql, is the tag's blob too;
+#   - docker-compose.yml's opamp-migrate and opamp-server each run
+#     ghcr.io/telflo/opamp-server:<version>@<digest> and build nothing, and
+#     nothing else in it names the image outside comments; the same for the
+#     Compose install's deploy/compose/compose.yaml, whose copy of
+#     bootstrap.sql, deploy/compose/opamp-server/bootstrap.sql, is the tag's
+#     blob too;
 #   - the opamp-server chart vendored unpacked in the platform's chart
-#     (charts/telflo/charts/opamp-server, D33-1 decision 21) is the
-#     release's: the PIN's chart-tree is the git tree id of that commit's
-#     charts/opamp-server, and both HEAD's tree at the vendored path and the
-#     working tree's files there (tracked and untracked, ignored ones left
-#     out, hashed as git would, nothing written) have that id, and no file
-#     git ignores sits there but .DS_Store (Helm would package or render it,
-#     and the tree ids can't see it); and the
-#     version charts/telflo/Chart.yaml declares for its opamp-server
-#     dependency (at oci://ghcr.io/telflo/charts), the vendored Chart.yaml's
-#     version and the PIN's are one version (Helm passes a mismatch
-#     silently). The tree ids need no network and no registry.
+#     (charts/telflo/charts/opamp-server) is the release's: the PIN's
+#     chart-tree is the git tree id of that commit's charts/opamp-server,
+#     and both HEAD's tree at the vendored path and the working tree's files
+#     there (tracked and untracked, ignored ones left out, hashed as git
+#     would, nothing written) have that id, and no file git ignores sits
+#     there but .DS_Store (Helm would package or render it, and the tree ids
+#     can't see it); and the version charts/telflo/Chart.yaml declares for
+#     its opamp-server dependency (at oci://ghcr.io/telflo/charts), the
+#     vendored Chart.yaml's version and the PIN's are one version (Helm
+#     passes a mismatch silently). The tree ids need no network and no
+#     registry.
 #
 # Compose is checked twice: first as text (no Docker; it catches the plain
 # cases fast), then as Compose itself reads the file, merge keys, anchors and
@@ -91,10 +90,10 @@ IMAGE_REPO=ghcr.io/telflo/opamp-server
 # command in docker-compose.yml must update this line; the test fails while
 # they differ.
 BOOTSTRAP_COMMAND='["psql", "-h", "db", "-U", "telflo_platform_owner", "-d", "postgres", "-X", "-q", "-v", "ON_ERROR_STOP=1", "-f", "/opamp/bootstrap.sql"]'
-# The Compose install (D36-2 decisions 88 and 89; Preflight ruling 1): its
-# file, its copy of bootstrap.sql, its bootstrap service and that service's
-# command, exactly as deploy/compose/compose.yaml commits it (the same rule
-# as BOOTSTRAP_COMMAND's).
+# The Compose install: its file, its copy of bootstrap.sql, its bootstrap
+# service and that service's command, exactly as
+# deploy/compose/compose.yaml commits it (the same rule as
+# BOOTSTRAP_COMMAND's).
 INSTALL_DIR="$ROOT/deploy/compose"
 INSTALL_COMPOSE="$INSTALL_DIR/compose.yaml"
 INSTALL_BOOTSTRAP_COPY="$INSTALL_DIR/opamp-server/bootstrap.sql"

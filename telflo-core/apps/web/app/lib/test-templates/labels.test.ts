@@ -2,7 +2,7 @@ import { TEST_RUN_SIGNALS, TEST_TEMPLATE_RECEIVER_TYPES } from "@telflo/contract
 import { describe, expect, it } from "vitest";
 import { receiverTypeLabel, signalLabel } from "./labels.js";
 
-/* How a template's receiver type and signal show (D14b Preflight ruling 12, Ruling 40). */
+/* How a template's receiver type and signal show. */
 
 describe("a test template's labels", () => {
   it("show each signal by its word: Traces, Logs, Metrics", () => {

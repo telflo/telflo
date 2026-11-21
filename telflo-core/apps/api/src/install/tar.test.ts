@@ -6,9 +6,9 @@ import { gunzipSync } from "node:zlib";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { tarGz, TarNameError } from "./tar.js";
 
-// D17c-1 decision 37, Preflight ruling 13: the archive read back by the
-// system tar (bsdtar on a Mac, GNU tar on Linux): extracted with -xzpf and
-// each file stat'ed, never `tar -tv` parsed (the two print it differently).
+// The archive read back by the system tar (bsdtar on a Mac, GNU tar on Linux):
+// extracted with -xzpf and each file stat'ed, never `tar -tv` parsed (the two
+// print it differently).
 
 let directory: string;
 

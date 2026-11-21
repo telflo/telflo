@@ -24,11 +24,10 @@ import { findConfigurationVersions, seedConfiguration } from "./database.js";
 import { enrollFakeCollector, type FakeCollectorEnrollment } from "./fake-opamp-server.js";
 import type { EnrolledCollector } from "../../apps/api/src/testing/fake-opamp-server-fleets.js";
 
-// Seeding a fleet's collectors for the browser tests (D17b-1 decision 33;
-// Preflight ruling 16; a Kubernetes-supervisor fleet's since D17d-1,
-// Preflight ruling 38). Fleets, groups, pins and publishing go through
-// the E2E API as the page's session (`page.request`, the CSRF header set),
-// so the fake opamp-server holds what the platform made; collectors and
+// Seeding a fleet's collectors for the browser tests (a server fleet's or a
+// Kubernetes-supervisor fleet's). Fleets, groups, pins and publishing go
+// through the E2E API as the page's session (`page.request`, the CSRF header
+// set), so the fake opamp-server holds what the platform made; collectors and
 // errors through the fake's control port (support/fake-opamp-server.ts),
 // before the page reads them.
 
@@ -45,7 +44,7 @@ export function collectorsApiPath(organizationId: string, fleetId: string): stri
 /**
  * A server fleet made through the API, as the page's own create would: its
  * rotate token never expires unless `rotateExpiresAt` (ISO 8601) says when
- * (the Tokens tab's banner, D17b-2 Preflight ruling 16).
+ * (the Tokens tab's banner).
  */
 export async function createServerFleetThroughApi(
   page: Page,
@@ -57,10 +56,10 @@ export async function createServerFleetThroughApi(
 }
 
 /**
- * A fleet of `type` made through the API, as the page's own create would
- * (a Kubernetes-supervisor fleet's among them, D17d-1 Preflight ruling 38):
- * its Default group, its tokens; its rotate token never expires unless
- * `rotateExpiresAt` (ISO 8601) says when.
+ * A fleet of `type` made through the API, as the page's own create would (a
+ * Kubernetes-supervisor fleet's among them): its Default group, its tokens;
+ * its rotate token never expires unless `rotateExpiresAt` (ISO 8601) says
+ * when.
  */
 export async function createFleetThroughApi(
   page: Page,
@@ -85,7 +84,7 @@ export async function revokeThroughApi(page: Page, organizationId: string, fleet
   expect(response.status()).toBe(200);
 }
 
-/** The fleet's new default token issued through the API (D17c-1 decision 45), once its default token is revoked: its id and bearer. */
+/** The fleet's new default token issued through the API, once its default token is revoked: its id and bearer. */
 export async function issueDefaultTokenThroughApi(
   page: Page,
   organizationId: string,
@@ -112,7 +111,7 @@ export async function archiveFleetThroughApi(page: Page, organizationId: string,
  * A group of the fleet made through the API: nothing assigned and no
  * annotations, unless `fields` says (a Kubernetes group's settings in its
  * annotations' `telflo.kubernetes`, which the API requires on a
- * Kubernetes-supervisor fleet: D17d-1 Preflight rulings 13 and 38).
+ * Kubernetes-supervisor fleet).
  */
 export async function createGroupThroughApi(
   page: Page,
@@ -131,8 +130,8 @@ export async function createGroupThroughApi(
 
 /**
  * A group of the fleet changed through the API's PATCH: its published
- * version (`assignedVersionId`), its annotations (a server group's mounts,
- * D17c-1 decision 31), its name.
+ * version (`assignedVersionId`), its annotations (a server group's mounts),
+ * its name.
  */
 export async function updateGroupThroughApi(
   page: Page,
@@ -149,17 +148,16 @@ export async function updateGroupThroughApi(
   return ((await response.json()) as { group: CollectorGroup }).group;
 }
 
-/** A fleet's quick-deploy links' path under the E2E API (D17c-2 decision 25). */
+/** A fleet's quick-deploy links' path under the E2E API. */
 function quickDeployLinksApiPath(organizationId: string, fleetId: string): string {
   return `/api/v1/organizations/${organizationId}/fleets/${fleetId}/quick-deploy-links`;
 }
 
 /**
  * A quick-deploy link of the group made through the API, as the install
- * dialog's "Quick Deploy" makes it (D17c-2 Preflight ruling 27): 201,
- * `no-store`; its link and its `url`, the one copy of the link's secret,
- * checked as the web checks it before it builds a command
- * (`QUICK_DEPLOY_URL_PATTERN`).
+ * dialog's "Quick Deploy" makes it: 201, `no-store`; its link and its `url`,
+ * the one copy of the link's secret, checked as the web checks it before it
+ * builds a command (`QUICK_DEPLOY_URL_PATTERN`).
  */
 export async function createQuickDeployLinkThroughApi(
   page: Page,
@@ -212,9 +210,9 @@ export async function quickDeployLinksThroughApi(page: Page, organizationId: str
 
 /** What a published configuration's version 1 holds, when a test needs other than the default. */
 export interface PublishedConfigurationOptions {
-  /** Its YAML (default PUBLISHABLE_YAML): an install's `${env:NAME}` references, say (D17c-1 decision 43). */
+  /** Its YAML (default PUBLISHABLE_YAML): an install's `${env:NAME}` references, say. */
   yaml?: string;
-  /** Its collector version (default the catalogue's default version): the install's image tag follows it. */
+  /** Its collector version (default the catalog's default version): the install's image tag follows it. */
   collectorVersion?: string;
 }
 
@@ -269,9 +267,7 @@ export async function enrollCollectors(
 }
 
 /**
- * Pins a collector (or unpins it, `null`) through the API's PATCH. No test
- * calls it since D16c's Task 1 (its callers pinned imports); kept for
- * D17b-2's tests (D16c Preflight ruling 13).
+ * Pins a collector (or unpins it, `null`) through the API's PATCH.
  */
 export async function pinThroughApi(
   page: Page,
@@ -302,27 +298,26 @@ export async function collectorsThroughApi(page: Page, organizationId: string, f
   return ((await response.json()) as { collectors: Collector[] }).collectors;
 }
 
-/** A Kubernetes pod's collector as the collector image reports it (D17d-1 decision 23): its group, node and namespace. */
+/** A Kubernetes pod's collector as the collector image reports it: its group, node and namespace. */
 export interface KubernetesPodEnrollment {
   /** Its name: the pod's (`POD_NAME`), as the supervisor names it at enrolment. */
   name: string;
-  /** The group it joins (`COLLECTOR_GROUP_ID`): every collector names one since D17d-1 (decision 5). */
+  /** The group it joins (`COLLECTOR_GROUP_ID`): every collector names one. */
   groupId: string;
   /** Its node (`NODE_NAME`): `k8s.node.name`, the details' Node row. */
   nodeName: string;
   /** Its namespace: `k8s.namespace.name`. */
   namespace: string;
-  /** Its pod's IP (`HOST_IP` in the platform's chart, charts/supervisor-collector: the pod's, Preflight ruling 40): reported as its IPs and as `host.ip`. */
+  /** Its pod's IP (`HOST_IP` in the platform's chart, charts/supervisor-collector: the pod's): reported as its IPs and as `host.ip`. */
   ip?: string;
 }
 
 /**
- * Enrolls a Kubernetes pod's collector in the fleet through the control port
- * (D17d-1 Preflight ruling 38): in its group, seen now, reporting the
- * attributes the collector image sets from the pod's environment
- * (`k8s.node.name`, `k8s.pod.name`, `k8s.namespace.name`, `host.ip` from
- * `HOST_IP`, `telflo.collector_group_id`: docker/collector-image's
- * entrypoint).
+ * Enrolls a Kubernetes pod's collector in the fleet through the control port:
+ * in its group, seen now, reporting the attributes the collector image sets
+ * from the pod's environment (`k8s.node.name`, `k8s.pod.name`,
+ * `k8s.namespace.name`, `host.ip` from `HOST_IP`,
+ * `telflo.collector_group_id`: docker/collector-image's entrypoint).
  */
 export async function enrollKubernetesPod(
   organizationId: string,

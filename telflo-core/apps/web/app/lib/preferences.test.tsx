@@ -9,13 +9,11 @@ import { numberPreferenceRead, useUserStore } from "~/lib/stores/user-store.js";
 import { signedInMember } from "~/test/configurations.js";
 
 /*
- * Saving a preference (D21 decision 33; Preflight ruling 35; Ruling 86's
- * invariant): the confirmed value is always the last one the server is
+ * Saving a preference: the confirmed value is always the last one the server is
  * known to hold, the page shows the newest pending choice else that, and a
  * failure shows the confirmed value again. Most cases here start from a
  * confirmed value that differs from the one shown before the click, so
- * "restore what was shown before the click" fails them. After the review's
- * probes P1-P11 (copy of d8079471).
+ * "restore what was shown before the click" fails them.
  */
 
 /** A promise answered by hand. */
@@ -63,7 +61,7 @@ describe("useSavePreference", () => {
     expect(preferenceChange("email.productTips", false)).toEqual({ email: { productTips: false } });
   });
 
-  it("two choices answered in reverse: the later stands, the earlier's answer doesn't undo it (P1)", async () => {
+  it("two choices answered in reverse: the later stands, the earlier's answer doesn't undo it", async () => {
     const { a, b, savedA, savedB } = twoSaves(14, 16);
     b.resolve(font(16));
     expect(await savedB).toBe(true);
@@ -72,7 +70,7 @@ describe("useSavePreference", () => {
     expect([shown(), confirmed()]).toEqual([16, 16]);
   });
 
-  it("two failures in a row restore to the confirmed value, toasting once (P2)", async () => {
+  it("two failures in a row restore to the confirmed value, toasting once", async () => {
     const error = vi.spyOn(toast, "error");
     const { a, b, savedA, savedB } = twoSaves(14, 16);
     a.reject(failure());
@@ -85,7 +83,7 @@ describe("useSavePreference", () => {
     expect(error).toHaveBeenCalledWith(PREFERENCES_FAILED_MESSAGE);
   });
 
-  it("an earlier choice failing after the later one's success: the later stands, no toast (P3)", async () => {
+  it("an earlier choice failing after the later one's success: the later stands, no toast", async () => {
     const error = vi.spyOn(toast, "error");
     const { a, b, savedA, savedB } = twoSaves(14, 16);
     b.resolve(font(16));
@@ -96,7 +94,7 @@ describe("useSavePreference", () => {
     expect(error).not.toHaveBeenCalled();
   });
 
-  it("an overtaken answer, then the later choice failing, restores to the overtaken answer's value (P4)", async () => {
+  it("an overtaken answer, then the later choice failing, restores to the overtaken answer's value", async () => {
     const { a, b, savedA, savedB } = twoSaves(14, 16);
     a.resolve(font(14));
     expect(await savedA).toBe(false);
@@ -117,7 +115,7 @@ describe("useSavePreference", () => {
     expect([shown(), confirmed()]).toEqual([14, 14]);
   });
 
-  it("a /me re-seed between the choice and its answer keeps the choice shown, then the answer confirms it (P5)", async () => {
+  it("a /me re-seed between the choice and its answer keeps the choice shown, then the answer confirms it", async () => {
     const a = held<UserPreferences>();
     vi.spyOn(apiClient, "updatePreferences").mockReturnValueOnce(a.promise);
     const { result } = renderHook(() => useSavePreference());
@@ -129,7 +127,7 @@ describe("useSavePreference", () => {
     expect([shown(), confirmed()]).toEqual([18, 18]);
   });
 
-  it("a re-seed, then a failure, restores to the re-seeded value (P5b)", async () => {
+  it("a re-seed, then a failure, restores to the re-seeded value", async () => {
     const a = held<UserPreferences>();
     vi.spyOn(apiClient, "updatePreferences").mockReturnValueOnce(a.promise);
     const { result } = renderHook(() => useSavePreference());
@@ -140,7 +138,7 @@ describe("useSavePreference", () => {
     expect([shown(), confirmed()]).toEqual([15, 15]);
   });
 
-  it("a stale /me (read before the save) answered after the save's answer doesn't overwrite it (P6, Ruling 86's item 4)", async () => {
+  it("a stale /me (read before the save) answered after the save's answer doesn't overwrite it", async () => {
     const readBefore = numberPreferenceRead();
     vi.spyOn(apiClient, "updatePreferences").mockResolvedValue(font(18));
     const { result } = renderHook(() => useSavePreference());
@@ -156,7 +154,7 @@ describe("useSavePreference", () => {
     expect([shown(), confirmed()]).toEqual([13, 13]);
   });
 
-  it("signed out meanwhile: neither the answer nor the failure touches the store or toasts (P7)", async () => {
+  it("signed out meanwhile: neither the answer nor the failure touches the store or toasts", async () => {
     const error = vi.spyOn(toast, "error");
     const a = held<UserPreferences>();
     const b = held<UserPreferences>();
@@ -173,7 +171,7 @@ describe("useSavePreference", () => {
     expect(error).not.toHaveBeenCalled();
   });
 
-  it("the same person signed in again while a save is in flight: its answer, from before, isn't taken (P7b)", async () => {
+  it("the same person signed in again while a save is in flight: its answer, from before, isn't taken", async () => {
     const a = held<UserPreferences>();
     vi.spyOn(apiClient, "updatePreferences").mockReturnValueOnce(a.promise);
     const { result } = renderHook(() => useSavePreference());
@@ -185,7 +183,7 @@ describe("useSavePreference", () => {
     expect([shown(), confirmed()]).toEqual([13, 13]);
   });
 
-  it("another person's seed meanwhile: the failure neither restores nor toasts (P8)", async () => {
+  it("another person's seed meanwhile: the failure neither restores nor toasts", async () => {
     const error = vi.spyOn(toast, "error");
     const a = held<UserPreferences>();
     vi.spyOn(apiClient, "updatePreferences").mockReturnValueOnce(a.promise);
@@ -199,7 +197,7 @@ describe("useSavePreference", () => {
     expect(error).not.toHaveBeenCalled();
   });
 
-  it("the 30 s hang guard aborts the save, restores the key and toasts (P9)", async () => {
+  it("the 30 s hang guard aborts the save, restores the key and toasts", async () => {
     vi.useFakeTimers();
     const error = vi.spyOn(toast, "error");
     let signal: AbortSignal | undefined;
@@ -228,7 +226,7 @@ describe("useSavePreference", () => {
     expect(error).toHaveBeenCalledWith(PREFERENCES_FAILED_MESSAGE);
   });
 
-  it("a session that ended: restored, no toast (P10)", async () => {
+  it("a session that ended: restored, no toast", async () => {
     const error = vi.spyOn(toast, "error");
     vi.spyOn(apiClient, "updatePreferences").mockRejectedValue(new ApiError("unauthenticated", "Sign in again."));
     const { result } = renderHook(() => useSavePreference());
@@ -237,7 +235,7 @@ describe("useSavePreference", () => {
     expect(error).not.toHaveBeenCalled();
   });
 
-  it("writes nothing to browser storage or cookies (P11)", async () => {
+  it("writes nothing to browser storage or cookies", async () => {
     const setItem = vi.spyOn(Storage.prototype, "setItem");
     const cookie = document.cookie;
     vi.spyOn(apiClient, "updatePreferences").mockResolvedValue({ ...DEFAULT_USER_PREFERENCES, theme: "navy" });

@@ -48,7 +48,7 @@ describe("downloadTextFile", () => {
   });
 });
 
-describe("downloadBlob (D14a Preflight ruling 14)", () => {
+describe("downloadBlob", () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });

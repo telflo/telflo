@@ -16,12 +16,11 @@ import {
 } from "./use-collector-validation.js";
 
 /*
- * The playground's validation source (D31-1 decisions 3 and 29, Preflight
- * rulings 7 and 11): D27's anonymous validate, 1.5 s after an opening or a
- * change, its 429 counted down ("Checking paused — try again in N s") and
- * asked again then; a retired pin shown as the signed-in editor shows it; a
- * 413 as too large. The signed-in source is the default and unchanged (its
- * own tests, use-collector-validation.test.tsx, are untouched).
+ * The playground's validation source: the anonymous validate, 1.5 s after
+ * an opening or a change, its 429 counted down ("Checking paused — try
+ * again in N s") and asked again then; a retired pin shown as the signed-in
+ * editor shows it; a 413 as too large. The signed-in source is the default
+ * (its own tests are use-collector-validation.test.tsx).
  */
 
 const TEXT = "receivers:\n  otlp:\n    protocols:\n      grpc: {}\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    logs:\n      receivers: [otlp]\n      exporters: [debug]\n";
@@ -163,7 +162,7 @@ describe("the anonymous source", () => {
     expect(screen.getByText(VALIDATION_TOO_LARGE_MESSAGE)).toBeInTheDocument();
   });
 
-  it("says the gateway's own 413 (an HTML page, read as unexpected_response) is too large to check too (Ruling 282)", async () => {
+  it("says the gateway's own 413 (an HTML page, read as unexpected_response) is too large to check too", async () => {
     vi.spyOn(apiClient, "validateAnonymously").mockRejectedValue(
       new ApiError("unexpected_response", "The server returned an unexpected error.", { status: 413 }),
     );

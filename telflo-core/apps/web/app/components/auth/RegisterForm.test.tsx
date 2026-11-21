@@ -7,7 +7,7 @@ import * as analytics from "~/lib/analytics.js";
 import * as apiClient from "~/lib/api-client.js";
 
 const TERMS_VERSION = "2026-01-01";
-/** The site's Terms (D36-1 decision 32): an absolute URL and a path, as the settings allow both. */
+/** The site's Terms: an absolute URL and a path, as the settings allow both. */
 const TERMS = { version: TERMS_VERSION, termsUrl: "https://legal.example.com/terms", privacyUrl: "/home/privacy-policy" };
 
 /** The form links to the sign-in page, so it needs a router around it. */
@@ -52,7 +52,7 @@ describe("RegisterForm", () => {
     });
   });
 
-  it("captures the user_signed_up event after a registration, and none after a failure (D4 decision 8)", async () => {
+  it("captures the user_signed_up event after a registration, and none after a failure", async () => {
     const capture = vi.spyOn(analytics, "captureEvent");
     const register = vi
       .spyOn(apiClient, "postRegister")
@@ -137,7 +137,7 @@ describe("RegisterForm", () => {
     expect(await screen.findByText(/that email address is not valid/i)).toBeInTheDocument();
   });
 
-  it("shows the API's words for an address at the reserved domain, 422 email_reserved (D22 decision 23)", async () => {
+  it("shows the API's words for an address at the reserved domain, 422 email_reserved", async () => {
     vi.spyOn(apiClient, "postRegister").mockRejectedValue(
       new apiClient.ApiError("email_reserved", "This address can't be used"),
     );
@@ -176,7 +176,7 @@ describe("RegisterForm", () => {
   it("submits only once when the button is clicked twice quickly", async () => {
     // Without the in-flight guard this creates two registrations. The reply
     // is held until after the second click, so both clicks land while the
-    // first request is in flight, however slow the run (Ruling 107).
+    // first request is in flight, however slow the run.
     let release: (value: { status: "verification_sent" }) => void = () => {};
     const spy = vi.spyOn(apiClient, "postRegister").mockImplementation(
       () => new Promise((resolve) => { release = resolve; }),
@@ -195,7 +195,7 @@ describe("RegisterForm", () => {
     expect(spy).toHaveBeenCalledOnce();
   });
 
-  it("links the site's Terms of Service and Privacy Policy from the terms checkbox, each in a new tab (Ruling 20; D36-1 decision 32)", () => {
+  it("links the site's Terms of Service and Privacy Policy from the terms checkbox, each in a new tab", () => {
     render(<RegisterForm terms={TERMS} onSuccess={vi.fn()} providers={[]} />);
 
     expect(
@@ -227,7 +227,7 @@ describe("RegisterForm", () => {
     expect(checkbox).toBeChecked();
   });
 
-  it("shows the API's words when the site isn't open to sign-ups, 403 registration_not_open (D36-1 decision 35)", async () => {
+  it("shows the API's words when the site isn't open to sign-ups, 403 registration_not_open", async () => {
     const message = "This site is invitation-only. Ask an organization admin for an invitation.";
     vi.spyOn(apiClient, "postRegister").mockRejectedValue(new apiClient.ApiError("registration_not_open", message));
     const onSuccess = vi.fn();
@@ -243,7 +243,7 @@ describe("RegisterForm", () => {
     expect(onSuccess).not.toHaveBeenCalled();
   });
 
-  describe("on a site that asks for no Terms (D36-1 decision 32)", () => {
+  describe("on a site that asks for no Terms", () => {
     it("shows no Usage policies divider, no checkbox and no document links", () => {
       render(<RegisterForm terms={null} onSuccess={vi.fn()} providers={[]} />);
       expect(screen.getByRole("button", { name: /create account/i })).toBeInTheDocument();
@@ -328,7 +328,7 @@ describe("RegisterForm", () => {
       expect(screen.getByRole("button", { name: /create account/i })).toBeDisabled();
     });
 
-    it("is usable again when the page comes back from the back/forward cache (Ruling 16)", async () => {
+    it("is usable again when the page comes back from the back/forward cache", async () => {
       const user = userEvent.setup();
       render(<RegisterForm terms={TERMS} onSuccess={vi.fn()} providers={[GOOGLE]} />);
       await user.click(screen.getByRole("link", { name: "Google" }));

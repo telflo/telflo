@@ -3,7 +3,7 @@ import { FileText, LayoutTemplate } from "lucide-react";
 import { Button } from "~/components/ui/button.js";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "~/components/ui/dialog.js";
 
-/** The one flag: set once the visitor has chosen how to start (D31-1 decisions 15 and 18). */
+/** The one flag: set once the visitor has chosen how to start. */
 export const PUBLIC_EDITOR_WELCOME_DONE_KEY = "telflo-public-editor-welcome-done";
 
 export const PUBLIC_EDITOR_WELCOME_TITLE = "Welcome to Telflo";
@@ -33,14 +33,13 @@ function markPublicEditorWelcomeDone(): void {
 }
 
 /*
- * The public editor's WelcomeDialog (D31-1 decision 15): "Welcome to Telflo",
- * Start from Scratch or Use a Template, and "Skip tour" (the editor tour is
- * the choice's second half). It honours its "done" flag, so it shows only
- * until a choice is made: one localStorage word,
- * `telflo-public-editor-welcome-done`, read after mount (the page renders on
- * the server too) and written once a choice is made, both in effects. Until a
- * choice it can't be dismissed: no close button, Escape and an outside click
- * do nothing. Fixed words only.
+ * The public editor's WelcomeDialog: "Welcome to Telflo", Start from Scratch
+ * or Use a Template, and "Skip tour" (the editor tour is the choice's second
+ * half). It honors its "done" flag, so it shows only until a choice is made:
+ * one localStorage word, `telflo-public-editor-welcome-done`, read after
+ * mount (the page renders on the server too) and written once a choice is
+ * made, both in effects. Until a choice it can't be dismissed: no close
+ * button, Escape and an outside click do nothing. Fixed words only.
  *
  * `onStart` hears the choice and whether to take the tour.
  */
@@ -57,7 +56,7 @@ export function PublicEditorWelcomeDialog({
   const [skipTour, setSkipTour] = useState(false);
   const skipTourId = useId();
 
-  // Not while the cookie banner asks (it is modal too, and would be covered: Ruling 301); then once.
+  // Not while the cookie banner asks (it is modal too, and would be covered); then once.
   useEffect(() => {
     if (consentPending) return;
     setShown((current) => (current !== "unknown" ? current : isPublicEditorWelcomeDone() ? "done" : "open"));

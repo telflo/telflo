@@ -4,30 +4,27 @@ import { useOperatorId } from "../operator-ids.js";
 import { FieldSelector } from "../shared/FieldSelector.js";
 
 /*
- * The recombine operator's form (ADR 0018), over the card's scope (D9c
- * decisions 2 and 8). Ids are the card's (`op-<index>-recombine-…`).
+ * The recombine operator's form, over the card's scope. Ids are the card's
+ * (`op-<index>-recombine-…`).
  *
- * Fixed:
- * - First Entry Pattern and Last Entry Pattern exclude each other (decision
- *   7; Preflight ruling 15): the collector takes exactly one
- *   (`transformer/recombine/config.go:73-79`), so typing in one removes the
- *   other in the same change, with no alert, as filelog's multiline
- *   patterns do (`TextField`'s `excludes`). Cleared, a pattern removes its
- *   key.
- * - Combine Field shows no default (decision 3): the collector requires it
+ * - First Entry Pattern and Last Entry Pattern exclude each other: the
+ *   collector takes exactly one (`transformer/recombine/config.go:73-79`), so
+ *   typing in one removes the other in the same change, with no alert, as
+ *   filelog's multiline patterns do (`TextField`'s `excludes`). Cleared, a
+ *   pattern removes its key.
+ * - Combine Field shows no default: the collector requires it
  *   (`config.go:97-99`), and the seed writes `body` (`operator-catalog.ts`);
  *   `body` is written, not only shown.
- * - Combine With is escape-aware (decision 8; Preflight ruling 1;
- *   `EscapedTextField`): a newline shows as `\n`, a tab as `\t`, a
- *   backslash as `\\`, and typing `\n` writes a newline, which the text
- *   edits double-quote (`"\n"`). The two characters `\` and `n` (`'\n'`,
- *   a literal backslash-n to the collector) are never written; such a text
- *   shows `\\n`, and blurring it writes nothing. Unset shows the collector's
- *   newline (`config.go:24, 43`) as the placeholder `\n` and "Default \n",
- *   not as the value. D9c Ruling 70: `combine_with: ""` joins entries with
+ * - Combine With is escape-aware (`EscapedTextField`): a newline shows as
+ *   `\n`, a tab as `\t`, a backslash as `\\`, and typing `\n` writes a
+ *   newline, which the text edits double-quote (`"\n"`). The two characters
+ *   `\` and `n` (`'\n'`, a literal backslash-n to the collector) are never
+ *   written; such a text shows `\\n`, and blurring it writes nothing. Unset
+ *   shows the collector's newline (`config.go:24, 43`) as the placeholder `\n`
+ *   and "Default \n", not as the value. `combine_with: ""` joins entries with
  *   nothing between them (`recombine.md:16, 45`; the container parser's own
- *   recombine does, `parser/container/config.go:127`), so it shows empty,
- *   with no placeholder or default, and the hint "Empty: entries are joined
+ *   recombine does, `parser/container/config.go:127`), so it shows empty, with
+ *   no placeholder or default, and the hint "Empty: entries are joined
  *   directly." under the field (in a `space-y-1.5` block, the grid cell);
  *   clearing it still removes the key.
  * - Max Batch Size takes 0, the collector's "unlimited" (`recombine.md`;
@@ -35,24 +32,24 @@ import { FieldSelector } from "../shared/FieldSelector.js";
  * - Max Log Size's default is the collector's 0, no limit (`config.go:63`;
  *   `recombine.md`): placeholder and hint "Default 0 (unlimited)"
  *   (not 1048576). A size with a unit (`1MiB`, a `helper.ByteSize`) is
- *   written as typed (D9b's number field; never `parseInt`'s 1 for
+ *   written as typed (`NumberField`; never `parseInt`'s 1 for
  *   `1MiB`).
  * - Overwrite With's default is the collector's `oldest` (`config.go:44,
  *   101-109`): unset shows "Oldest entry" as its placeholder and "Default
  *   oldest" (not Newest entry).
- * Changed (D9b decision 3; Ruling 31): Force Flush Period shows the
- * collector's 5s (`config.go:45`) as its placeholder, and
- * "Default 5s"; Source Identifier shows the collector's
- * `attributes["log.file.path"]` (`config.go:46`; `fileconsumer/attrs/attrs.go:15`)
- * as its placeholders and "Default attributes["log.file.path"]". Cleared,
- * each removes its key.
+ *
+ * Force Flush Period shows the collector's 5s (`config.go:45`) as its
+ * placeholder, and "Default 5s"; Source Identifier shows the collector's
+ * `attributes["log.file.path"]` (`config.go:46`;
+ * `fileconsumer/attrs/attrs.go:15`) as its placeholders and "Default
+ * attributes["log.file.path"]". Cleared, each removes its key.
  */
 
 const SOURCE_DEFAULT = 'attributes["log.file.path"]';
 /** The collector's default separator, a newline, as Combine With shows it. */
 const NEWLINE_SHOWN = "\\n";
 
-/** Under a Combine With that is `""` (D9c Ruling 70). */
+/** Under a Combine With that is `""`. */
 export const EMPTY_JOIN_HINT = "Empty: entries are joined directly.";
 
 export function RecombineOperatorForm() {

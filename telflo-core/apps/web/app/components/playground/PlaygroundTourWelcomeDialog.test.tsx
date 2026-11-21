@@ -16,13 +16,12 @@ import {
 import { PLAYGROUND_TOUR_DESKTOP_QUERY, PLAYGROUND_WELCOME_TITLE, shouldOfferPlaygroundTour } from "./PlaygroundTourWelcomeDialog.js";
 
 /*
- * The playground's welcome dialog and the tour's pages (D31-1 decision 15,
- * Preflight ruling 16): "Welcome to the Telflo playground" on a first desktop
- * visit to the list, until it is dismissed or the tour taken (one flag, the
- * tour's completion); none on a phone; the list starting the tour's first
- * stage from the dialog, from a hand-over and from the banner's "Take the
- * tour" (here or from another page); fleet's page starting the last stage.
- * Nothing here reaches the API.
+ * The playground's welcome dialog and the tour's pages: "Welcome to the Telflo
+ * playground" on a first desktop visit to the list, until it is dismissed or
+ * the tour taken (one flag, the tour's completion); none on a phone; the list
+ * starting the tour's first stage from the dialog, from a hand-over and from
+ * the banner's "Take the tour" (here or from another page); fleet's page
+ * starting the last stage. Nothing here reaches the API.
  */
 
 function Where() {
@@ -172,7 +171,7 @@ describe("the tour's pages", () => {
     expect(cards()).toHaveLength(10);
   });
 
-  it("Take the tour from the table view starts on the grid, its sample step on the first card (Ruling 294)", async () => {
+  it("Take the tour from the table view starts on the grid, its sample step on the first card", async () => {
     const user = userEvent.setup();
     window.localStorage.setItem(PLAYGROUND_TOUR_COMPLETED_KEY, "true");
     renderPlayground();

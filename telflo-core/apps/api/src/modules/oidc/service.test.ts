@@ -255,7 +255,7 @@ describe("OIDC service", () => {
     expect(harness.events.map((event) => event.action)).toEqual(["user.identity_linked"]);
   });
 
-  it("locks the user's row before the takeover touches tokens and sessions (D3 Ruling 17's order)", async () => {
+  it("locks the user's row before the takeover touches tokens and sessions (the lock order)", async () => {
     const unverified = user({ emailVerifiedAt: null, passwordHash: "$argon2id$hash" });
     const harness = buildHarness();
     harness.users.findByEmailIncludingDeleted.mockResolvedValueOnce({ user: unverified, isDeleted: false });
@@ -276,7 +276,7 @@ describe("OIDC service", () => {
     expect(transaction.sessions.revokeAllForUser).toHaveBeenCalledWith(unverified.id, "account_taken_over");
   });
 
-  describe("the site's registration (D36-1 decision 35, Preflight ruling 5)", () => {
+  describe("the site's registration", () => {
     for (const registration of ["invite-only", "closed"] as const) {
       it(`${registration}: a sign-in with no account for the email is refused registration_not_open, creating nothing and starting no session`, async () => {
         const harness = buildHarness({}, registration);
@@ -327,7 +327,7 @@ describe("OIDC service", () => {
 
     expect(await harness.complete()).toEqual({ kind: "signed_in", issued, redirectTo: "/app/x" });
     // As password sign-in: where the person last was, else the organization joined most recently,
-    // the personal organization the last resort (D36-1 decision 56, Q265), chosen in the session's transaction.
+    // the personal organization the last resort, chosen in the session's transaction.
     expect(harness.startSession).toHaveBeenCalledWith(
       expect.objectContaining({
         landing: { personalOrganizationId: "org" },
@@ -360,7 +360,7 @@ describe("OIDC service", () => {
     expect(harness.failure()).toBeUndefined();
   });
 
-  it("refuses provider_taken with identity_conflict when the subject is still unlinked (Ruling 8)", async () => {
+  it("refuses provider_taken with identity_conflict when the subject is still unlinked", async () => {
     const existing = user();
     const harness = buildHarness();
     harness.users.findByEmailIncludingDeleted.mockResolvedValueOnce({ user: existing, isDeleted: false });
@@ -461,7 +461,7 @@ describe("OIDC service", () => {
     });
   });
 
-  it("a sign-in's link records via sign_in and queues no email (Q118)", async () => {
+  it("a sign-in's link records via sign_in and queues no email", async () => {
     const existing = user();
     const harness = buildHarness();
     harness.users.findByEmailIncludingDeleted.mockResolvedValueOnce({ user: existing, isDeleted: false });
@@ -476,7 +476,7 @@ describe("OIDC service", () => {
     expect(harness.mailer.sent).toEqual([]);
   });
 
-  describe("a link from Settings (D21 decision 38)", () => {
+  describe("a link from Settings", () => {
     const session = (overrides: Partial<Session> = {}): Session => ({
       id: LINK_SESSION_ID,
       userId: LINK_USER_ID,
@@ -637,7 +637,7 @@ describe("OIDC service", () => {
     });
   });
 
-  describe("unlinking (D21 decision 39)", () => {
+  describe("unlinking", () => {
     const context = {
       userId: LINK_USER_ID,
       organizationId: "org",

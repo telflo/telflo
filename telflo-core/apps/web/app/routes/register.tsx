@@ -9,8 +9,8 @@ import { termsToAccept, useSite } from "~/lib/use-site.js";
 
 /**
  * A signed-in visitor has no account to create and goes to `/app`. One whose
- * access token has expired sees the form, like a signed-out one (D2b decision
- * 7). An unreachable API throws rather than reading as signed out.
+ * access token has expired sees the form, like a signed-out one. An
+ * unreachable API throws rather than reading as signed out.
  *
  * The providers for the federated buttons are fetched alongside. They are
  * optional: if the list can't be had, the page shows the email form alone.
@@ -25,7 +25,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 // An auth screen: root's Layout renders the theme this browser was last
-// told, the remembered one or the `telflo_theme` cookie's (D21 decision 22).
+// told, the remembered one or the `telflo_theme` cookie's.
 export const handle = { theme: "remembered" } satisfies ThemeHandle;
 
 export function meta(_args: Route.MetaArgs) {
@@ -37,7 +37,7 @@ export function meta(_args: Route.MetaArgs) {
 
 export default function RegisterPage({ loaderData }: Route.ComponentProps) {
   const navigate = useNavigate();
-  // The site's Terms, as root's loader read them: none when it asks for none (D36-1 decisions 29 and 32).
+  // The site's Terms, as root's loader read them: none when it asks for none.
   const { terms } = useSite();
 
   return (

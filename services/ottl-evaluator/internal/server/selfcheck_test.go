@@ -1,7 +1,6 @@
-// New in D15a Task 3 (plan Preflight ruling 13): the selfcheck's parsing
-// and its child check. The checks that read /proc run in the container
-// (scripts/check-container.sh). D15a Task 3's follow-up (the controller's
-// Ruling 34) adds TestResolvesToSelf, the network's positive control.
+// The selfcheck's parsing and its child check. The checks that read /proc
+// run in the container (scripts/check-container.sh). TestResolvesToSelf
+// is the network's positive control.
 
 package server
 

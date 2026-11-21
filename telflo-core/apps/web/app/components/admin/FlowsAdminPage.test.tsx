@@ -13,14 +13,13 @@ import { RETIRED_VERSION, seedCatalogue } from "~/test/collector-distributions.j
 import { HIDDEN, PII_REDACTION, TAIL_SAMPLING, makeFlow } from "~/test/flows.js";
 
 /*
- * Product admin's flows page (D12 decisions 2, 11 and 16; Preflight rulings
- * 18 and 19): the table, the empty state, create, edit (only the changed
- * fields sent), the visibility switch, delete with its confirmation, the
- * toasts, the retired-pin mark, and the way out when the flag is cleared
- * mid-visit.
+ * Product admin's flows page: the table, the empty state, create, edit (only
+ * the changed fields sent), the visibility switch, delete with its
+ * confirmation, the toasts, the retired-pin mark, and the way out when the
+ * flag is cleared mid-visit.
  */
 
-/** A flow ClickStack wrote, pinned where the catalogue no longer offers. */
+/** A flow ClickStack wrote, pinned where the catalog no longer offers. */
 const RETIRED = makeFlow({
   id: "0199b000-0000-7000-8000-000000000004",
   slug: "otel-to-clickstack",
@@ -150,7 +149,7 @@ describe("FlowsAdminPage", () => {
     expect(await screen.findByRole("dialog", { name: "New flow" })).toBeInTheDocument();
   });
 
-  it("toasts nothing when the read finds the session over (401 unauthenticated): the session-ended handler, or Logout, has the page (D12 Ruling 39)", async () => {
+  it("toasts nothing when the read finds the session over (401 unauthenticated): the session-ended handler, or Logout, has the page", async () => {
     vi.spyOn(apiClient, "getFlows").mockRejectedValue(new ApiError("unauthenticated", "You need to sign in.", { status: 401 }));
     const error = vi.spyOn(toast, "error");
     renderPage();
@@ -167,8 +166,8 @@ describe("FlowsAdminPage", () => {
     await waitFor(() => expect(error).toHaveBeenCalledWith("Failed to load flows"));
   });
 
-  describe("the retired-pin mark (D12 decision 16)", () => {
-    it("marks a flow whose pin the catalogue no longer offers, and no other", async () => {
+  describe("the retired-pin mark", () => {
+    it("marks a flow whose pin the catalog no longer offers, and no other", async () => {
       serveFlows(FLOWS);
       renderPage();
       await screen.findByRole("cell", { name: RETIRED.name });
@@ -179,7 +178,7 @@ describe("FlowsAdminPage", () => {
       expect(screen.getAllByText(PIN_NO_LONGER_OFFERED)).toHaveLength(1);
     });
 
-    it("marks nothing while the catalogue can't say", async () => {
+    it("marks nothing while the catalog can't say", async () => {
       resetCollectorCatalogue();
       vi.spyOn(apiClient, "getCollectorDistributions").mockRejectedValue(new ApiError("network_error", "Down."));
       serveFlows(FLOWS);
@@ -228,7 +227,7 @@ describe("FlowsAdminPage", () => {
     });
   });
 
-  describe("editing a flow (D12 Preflight ruling 19)", () => {
+  describe("editing a flow", () => {
     it("sends only the fields that changed, and toasts Flow updated", async () => {
       serveFlows([TAIL_SAMPLING]);
       const updateFlow = vi
@@ -375,7 +374,7 @@ describe("FlowsAdminPage", () => {
     });
   });
 
-  describe("a flow deleted since the list was read (404 flow_not_found; D12 Ruling 36)", () => {
+  describe("a flow deleted since the list was read (404 flow_not_found)", () => {
     it("a delete counts as done: Flow deleted, the flows read again, and its row gone", async () => {
       const getFlows = serveFlows([TAIL_SAMPLING, PII_REDACTION], [PII_REDACTION]);
       vi.spyOn(apiClient, "deleteFlow").mockRejectedValue(NOT_FOUND);
@@ -482,7 +481,7 @@ describe("FlowsAdminPage", () => {
     });
   });
 
-  describe("the focus as the dialog or the confirmation closes (D14b Ruling 46: no Radix trigger, so not the body)", () => {
+  describe("the focus as the dialog or the confirmation closes (no Radix trigger, so not the body)", () => {
     it("goes back to New flow and to the row's Edit: Cancel, Escape", async () => {
       serveFlows([TAIL_SAMPLING]);
       const { user } = renderPage();
@@ -537,7 +536,7 @@ describe("FlowsAdminPage", () => {
       await waitFor(() => expect(document.activeElement).toBe(screen.getByRole("button", { name: "New flow" })));
     });
 
-    it("goes to New flow when the row goes with a delete answered after the confirmation has closed: back to its Delete first (D14b Ruling 52)", async () => {
+    it("goes to New flow when the row goes with a delete answered after the confirmation has closed: back to its Delete first", async () => {
       serveFlows([TAIL_SAMPLING, PII_REDACTION], [PII_REDACTION]);
       let answer!: () => void;
       vi.spyOn(apiClient, "deleteFlow").mockImplementation(
@@ -561,7 +560,7 @@ describe("FlowsAdminPage", () => {
       await waitFor(() => expect(document.activeElement).toBe(screen.getByRole("button", { name: "New flow" })));
     });
 
-    it("leaves the focus on the row's Delete when the late delete fails, and where the person has put it since when the row goes (D14b Ruling 52)", async () => {
+    it("leaves the focus on the row's Delete when the late delete fails, and where the person has put it since when the row goes", async () => {
       serveFlows([TAIL_SAMPLING, PII_REDACTION], [PII_REDACTION]);
       const answers: Array<{ resolve: () => void; reject: (error: unknown) => void }> = [];
       vi.spyOn(apiClient, "deleteFlow").mockImplementation(
@@ -593,7 +592,7 @@ describe("FlowsAdminPage", () => {
     });
   });
 
-  describe("privacy (ADR 0024)", () => {
+  describe("privacy", () => {
     it("puts no flow's text in any attribute, with the table and the edit dialog shown", async () => {
       serveFlows(FLOWS);
       const { user } = renderPage();

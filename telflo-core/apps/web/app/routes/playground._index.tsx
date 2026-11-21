@@ -30,9 +30,9 @@ import { useCurrentUser } from "~/lib/use-current-user.js";
 import { readsFor } from "~/lib/workspace-reads.js";
 
 /*
- * `/playground`, the sample workspace's configurations (D31-1 decision 32):
- * the signed-in page's card and table (ADR 0018) on the sample's ten, its
- * header, view switch, search and filter, the playground's way:
+ * `/playground`, the sample workspace's configurations: the signed-in page's
+ * card and table on the sample's ten, its header, view switch, search and
+ * filter, the playground's way:
  * - the list is read through the seam (`readsFor`, the sample's visitor's
  *   organization), after mount: the sample's times are relative to now, so
  *   the server renders the spinner;
@@ -43,15 +43,14 @@ import { readsFor } from "~/lib/workspace-reads.js";
  * - the view mode isn't remembered (nothing of the visitor's is stored);
  * - New configuration opens the blank playground editor, a card or Edit
  *   the playground editor on it; Delete opens the sign-up prompt;
- * - the distribution tags name the catalogue the web was built with (no
- *   catalogue request).
- * The `data-tour-step` anchors are the tour's (Preflight ruling 16). Once
- * the list has arrived, the page starts the tour's first stage when it is
- * handed one (the banner's "Take the tour" from another page; the restart
- * event on this one), or offers the tour to a first desktop visitor (a
- * welcome dialog, decision 15). The tour starts on the grid
- * with the search and the filter cleared, so its steps point at the whole
- * list and its first card.
+ * - the distribution tags name the catalog the web was built with (no
+ *   catalog request).
+ * The `data-tour-step` anchors are the tour's. Once the list has arrived,
+ * the page starts the tour's first stage when it is handed one (the
+ * banner's "Take the tour" from another page; the restart event on this
+ * one), or offers the tour to a first desktop visitor (a welcome dialog).
+ * The tour starts on the grid with the search and the filter cleared, so
+ * its steps point at the whole list and its first card.
  */
 
 type ViewMode = "grid" | "list";
@@ -97,7 +96,7 @@ export default function PlaygroundConfigurations() {
   const navigateRef = useRef(navigate);
   navigateRef.current = navigate;
   const beginListTour = useCallback(() => {
-    // The grid, so "Let's open a sample" points at the first card (Ruling 294).
+    // The grid, so "Let's open a sample" points at the first card.
     setViewMode("grid");
     setSearch("");
     setFilter("all");
@@ -126,8 +125,8 @@ export default function PlaygroundConfigurations() {
     };
   }, [organizationId]);
 
-  // Once the list has arrived and no cookie choice is still to make (the banner, modal too, would be covered: Ruling
-  // 301): a handed-over stage, else the first desktop visit's offer.
+  // Once the list has arrived and no cookie choice is still to make (the banner, modal too, would be covered): a
+  // handed-over stage, else the first desktop visit's offer.
   const consentPending = useConsentPending();
   useEffect(() => {
     if (!loaded || consentPending) return;

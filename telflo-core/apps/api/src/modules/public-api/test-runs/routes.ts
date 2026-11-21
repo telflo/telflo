@@ -29,39 +29,37 @@ import { hasPipelineKey } from "../yaml-pipelines.js";
 import { checkedInlineRules } from "./inline-rules.js";
 
 /*
- * The public surface's test runs (D25 decision 17's routes 26–28;
- * decisions 39 to 44; Q168), registered into the `/api/public/v1` plugin
- * (routes.ts), so each runs the token check, the per-token limit and its
- * access check first. Each goes through the shared test runs and test files
- * services (decision 15: one instance, so the copy places, the runs'
- * limiter and the uploads' are counted once) as the token's user in its
- * organization (`apiActorOf`). Its OpenAPI fragment is
- * `openapi/test-runs.yaml`.
+ * The public surface's test runs, registered into the `/api/public/v1`
+ * plugin (routes.ts), so each runs the token check, the per-token limit and
+ * its access check first. Each goes through the shared test runs and test
+ * files services (one instance, so the copy places, the runs' limiter and
+ * the uploads' are counted once) as the token's user in its organization
+ * (`apiActorOf`). Its OpenAPI fragment is `openapi/test-runs.yaml`.
  *
  * `POST /test-runs`, in this order:
  *   1. the body (strict: exactly one source, the pipeline's signal,
- *      exactly one of rules and useSavedRules; Ruling 178), 400; the
- *      sample's size once decoded, UTF-8, at most 1 MiB, 413
- *      `payload_too_large` (the route's body limit is 8 MiB: JSON's escapes
- *      can grow a 1 MiB sample six times; Preflight ruling 17);
+ *      exactly one of rules and useSavedRules), 400; the sample's size once
+ *      decoded, UTF-8, at most 1 MiB, 413 `payload_too_large` (the route's
+ *      body limit is 8 MiB: JSON's escapes can grow a 1 MiB sample six
+ *      times);
  *   2. a version's run: its id by number (`versionIdOf`, the configurations'
  *      404s), its text and pin (`getVersion`), a `distribution` that isn't
  *      its configuration's 400, a text a run can't take 422;
  *   3. the pipeline a key of the text's `service.pipelines`
  *      (`yaml-pipelines.ts`), 422 `configuration_invalid` in fixed words;
- *   4. the cheap refusals (`precheckQueue`, Rulings 178 and 187), before
- *      anything is stored or spent: `useSavedRules` with no saved rules
- *      422, the pin's 400s, the person's waiting runs full 429
- *      `test_run_queue_full`, the tester or the evaluator known down 503;
- *   5. the run's minute (`testRunsPerUser`, 429 `test_run_rate_limited`;
- *      Ruling 187), admitted here, before a rule check or an upload is
- *      spent, and handed to the queue, which doesn't admit again. Any
- *      refusal before the run's input is copied gives it back: steps 6 and
- *      7's here, the queue's own until its copy begins;
+ *   4. the cheap refusals (`precheckQueue`), before anything is stored or
+ *      spent: `useSavedRules` with no saved rules 422, the pin's 400s, the
+ *      person's waiting runs full 429 `test_run_queue_full`, the tester or
+ *      the evaluator known down 503;
+ *   5. the run's minute (`testRunsPerUser`, 429 `test_run_rate_limited`),
+ *      admitted here, before a rule check or an upload is spent, and handed
+ *      to the queue, which doesn't admit again. Any refusal before the
+ *      run's input is copied gives it back: steps 6 and 7's here, the
+ *      queue's own until its copy begins;
  *   6. inline rules checked (inline-rules.ts: `checkNewRules`), before
  *      anything is stored;
- *   7. the sample stored as the caller's test file `api-sample.json`
- *      (decision 41), counted in `testFileUploadsPerUser` first;
+ *   7. the sample stored as the caller's test file `api-sample.json`,
+ *      counted in `testFileUploadsPerUser` first;
  *   8. the run queued from it (a version's run through `queue`, its rules
  *      the request's, or the database's with `useSavedRules`; a YAML run
  *      through `queueFromYaml`), which checks steps 4's again. Any refusal
@@ -70,14 +68,14 @@ import { checkedInlineRules } from "./inline-rules.js";
  *      reach it; the run holds its own copy), a person's stays in their My
  *      Files.
  *
- * The text, the sample and the rules are configuration text (Q168): they
- * reach a reply's body alone, never a log line, an error's message, an
- * audit row or a URL. The routes log nothing; the services log ids.
+ * The text, the sample and the rules are configuration text: they reach a
+ * reply's body alone, never a log line, an error's message, an audit row or
+ * a URL. The routes log nothing; the services log ids.
  */
 
 const NO_STORE = "no-store";
 
-/** The queue's body: a JSON-escaped 1 MiB sample, up to six times larger, beside a text and 20 rules (Preflight ruling 17). */
+/** The queue's body: a JSON-escaped 1 MiB sample, up to six times larger, beside a text and 20 rules. */
 const QUEUE_BODY_LIMIT = 8 * 1024 * 1024;
 
 const RunParamsSchema = z.object({ runId: z.string() });
@@ -123,7 +121,7 @@ function runnableTextInvalid(message: string, componentPath: string | null): App
 /** Ended: succeeded, failed or validation_failed. */
 const isEnded = (status: AnyTestRun["status"]) => status !== "queued" && status !== "running";
 
-/** A run as the public surface answers it (decision 43), from D14a's run, one for one. */
+/** A run as the public surface answers it, from the stored run, one for one. */
 function toPublicRun(run: AnyTestRun): PublicTestRun {
   const totalMs = run.timings?.totalMs;
   return {
@@ -147,7 +145,7 @@ function toPublicRun(run: AnyTestRun): PublicTestRun {
 export const registerTestRunPublicRoutes: PublicApiArea = (api, { deps, rateLimiters }) => {
   const { files, runs } = deps.services.testRuns;
   const { service: configurations } = deps.services.configurations;
-  // The Validation tab's check, on the one limiter every surface counts (decision 42).
+  // The Validation tab's check, on the one limiter every surface counts.
   const ruleCheck = createValidationRuleCheck({
     evaluator: deps.testing.ottlEvaluator,
     limiter: rateLimiters.validationRuleChecksPerUser,
@@ -155,7 +153,6 @@ export const registerTestRunPublicRoutes: PublicApiArea = (api, { deps, rateLimi
   });
   const typed = api.withTypeProvider<ZodTypeProvider>();
 
-  // Route 26.
   typed.post(
     "/test-runs",
     {
@@ -204,10 +201,10 @@ export const registerTestRunPublicRoutes: PublicApiArea = (api, { deps, rateLimi
         throw runnableTextInvalid(PUBLIC_TEST_RUN_PIPELINE_NOT_IN_CONFIGURATION_MESSAGE, "service.pipelines");
       }
 
-      // 4. The cheap refusals, before a sample is stored or a check spent
-      // (Ruling 178), each checked again when the run is queued: saved rules
-      // to run, the pin, the tester's and (a run with rules always has some)
-      // the evaluator's down states.
+      // 4. The cheap refusals, before a sample is stored or a check spent,
+      // each checked again when the run is queued: saved rules to run, the
+      // pin, the tester's and (a run with rules always has some) the
+      // evaluator's down states.
       await runs.precheckQueue(actor, organizationId, {
         pin:
           source.kind === "version"
@@ -226,8 +223,8 @@ export const registerTestRunPublicRoutes: PublicApiArea = (api, { deps, rateLimi
         hasRules: true,
       });
 
-      // 5. The run's minute, before a check or an upload is spent (Ruling
-      // 187); the queue takes it and admits no other.
+      // 5. The run's minute, before a check or an upload is spent; the queue
+      // takes it and admits no other.
       const admission = rateLimiters.testRunsPerUser.admit(userId, organizationId);
       if (!admission.isAdmitted) throw testRunRateLimited(admission.retryAfterSeconds);
 
@@ -236,10 +233,10 @@ export const registerTestRunPublicRoutes: PublicApiArea = (api, { deps, rateLimi
       try {
         // 6. Inline rules, checked before anything is stored; useSavedRules the database's.
         const ids = source.kind === "version" ? { organizationId, configurationId: source.configurationId, versionId: source.versionId } : { organizationId };
-        // The body's schema requires `rules` without `useSavedRules` (Ruling 178).
+        // The body's schema requires `rules` without `useSavedRules`.
         inlineRules = body.rules === undefined ? undefined : await checkedInlineRules(ruleCheck, actor, body.signal, body.rules, ids);
 
-        // 7. The sample, as the caller's test file (decision 41).
+        // 7. The sample, as the caller's test file.
         rateLimiters.testFileUploadsPerUser(userId, organizationId);
         const { fileId } = await files.prepareSave(actor, organizationId);
         sample = await files.save(actor, organizationId, {
@@ -252,7 +249,7 @@ export const registerTestRunPublicRoutes: PublicApiArea = (api, { deps, rateLimi
           finish: () => Promise.resolve(),
         });
       } catch (error) {
-        // Nothing copied yet: the minute goes back (Ruling 187).
+        // Nothing copied yet: the minute goes back.
         admission.refund();
         throw error;
       }
@@ -304,7 +301,7 @@ export const registerTestRunPublicRoutes: PublicApiArea = (api, { deps, rateLimi
       }
       // A service account's sample is reachable by no one once the run holds
       // its own copy (no My Files of its own): it goes. A person's stays in
-      // their My Files, theirs to delete (decision 41; Ruling 178).
+      // their My Files, theirs to delete.
       if (requireApiTokenAuthentication(request).kind === "service_account") {
         try {
           await files.remove(actor, organizationId, sample.id);
@@ -316,7 +313,6 @@ export const registerTestRunPublicRoutes: PublicApiArea = (api, { deps, rateLimi
     },
   );
 
-  // Route 27.
   typed.get(
     "/test-runs/:runId",
     {
@@ -330,7 +326,7 @@ export const registerTestRunPublicRoutes: PublicApiArea = (api, { deps, rateLimi
     },
   );
 
-  // Route 28: the output as text, never sniffed, never cached.
+  // The output as text, never sniffed, never cached.
   typed.get(
     "/test-runs/:runId/output",
     // No response schema: the answer is a stream, and a refusal the envelope.

@@ -2,9 +2,9 @@ import { TestRunSummarySchema, type TestFile, type TestRunDetail, type TestRunSu
 import { MEMBER_ID, MINE, VERSION_ID } from "./configurations.js";
 
 /*
- * Test files and runs as the API answers them (D14a decision 28), for the
- * Testing tab's tests. Names carrying `zq-` are the private-text markers the
- * attribute scans look for (ADR 0024).
+ * Test files and runs as the API answers them, for the Testing tab's tests.
+ * Names carrying `zq-` are the private-text markers the attribute scans look
+ * for.
  */
 
 /** A test file of the member's, uploaded at noon UTC; any field overridden. */

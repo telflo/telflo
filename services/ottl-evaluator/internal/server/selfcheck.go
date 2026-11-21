@@ -1,15 +1,14 @@
-// New in D15a Task 3 (plan Preflight ruling 13; the ledger's A4e): the
-// selfcheck subcommand, which checks the running container from the inside.
-// The image is distroless, with no shell or Python to pipe a probe into (the
-// collector tester's scripts/container-probe.py), so the binary carries its
-// own: scripts/check-container.sh runs `ottl-evaluator selfcheck` in the
-// container with `docker compose exec`, as the container's user.
+// The selfcheck subcommand, which checks the running container from the
+// inside. The image is distroless, with no shell or Python to pipe a probe
+// into (the collector tester's scripts/container-probe.py), so the binary
+// carries its own: scripts/check-container.sh runs
+// `ottl-evaluator selfcheck` in the container with `docker compose exec`,
+// as the container's user.
 //
 // This file holds the parts that only read text (/proc's status and mounts,
 // the environment, a child's answer), tested on any system; the checks
-// themselves read /proc and are Linux's (selfcheck_linux.go). D15a Task 3's
-// follow-up (the controller's Ruling 34) adds the network's positive control,
-// selfcheckOwnName and resolvesToSelf.
+// themselves read /proc and are Linux's (selfcheck_linux.go). The network's
+// positive control is selfcheckOwnName and resolvesToSelf.
 
 package server
 

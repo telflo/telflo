@@ -10,9 +10,9 @@ import { StatusBadge } from "./run-status.js";
 import { TestRunResults } from "./TestRunResults.js";
 
 interface TestRunsPanelProps {
-  /** Re-runs a run against the current text (decision 18), with the ↺ pressed: the focus goes back to it when nothing is queued (D14b Ruling 50). */
+  /** Re-runs a run against the current text, with the ↺ pressed: the focus goes back to it when nothing is queued. */
   onRerun: (run: TestRunSummary, opener: HTMLElement) => void;
-  /** Holds ↺, as Play is held (Preflight ruling 15; D14b Preflight ruling 13). */
+  /** Holds ↺, as Play is held. */
   disableRerun: boolean;
   /** Changes with each request to focus the selected run's row (a run just queued). */
   focusRequest?: number;
@@ -20,7 +20,7 @@ interface TestRunsPanelProps {
   takeFocus?: () => boolean;
 }
 
-/** A centred message under the toolbar, the empty states. */
+/** A centered message under the toolbar, the empty states. */
 function Placeholder({ children }: { children: ReactNode }) {
   return (
     <div className="flex-1 flex items-center justify-center">
@@ -30,36 +30,31 @@ function Placeholder({ children }: { children: ReactNode }) {
 }
 
 /**
- * The version's runs and the selected run's results (D14a decisions 8, 18
- * and 22; Preflight ruling 15; the toolbar is in TestingTab). The list over
- * the results, flex-[2] over flex-[3]; the runs are the store's, polled while
- * any is queued or running.
+ * The version's runs and the selected run's results (the toolbar is in
+ * TestingTab). The list over the results, flex-[2] over flex-[3]; the runs are
+ * the store's, polled while any is queued or running.
  *
- * Differences (the Parity Notes):
- * - the list is everyone's runs that the person can see (decision 8), a
- *   teammate's included, refreshed while any is in flight; the "Created"
- *   time is when the run was queued;
- * - a waiting run's badge says its place: "Queued (n ahead)" (decision 1);
+ * - the list is everyone's runs that the person can see, a teammate's
+ *   included, refreshed while any is in flight; the "Created" time is when
+ *   the run was queued;
+ * - a waiting run's badge says its place: "Queued (n ahead)";
  * - a run from a suite's definition carries the "Suite › Configuration"
- *   breadcrumb under its time (D14b decision 11, Preflight ruling 18); its
- *   names are text, under the app's `ph-mask`;
+ *   breadcrumb under its time; its names are text, under the app's `ph-mask`;
  * - a held ↺ is titled "Another run is in progress", as held Plays are;
  * - ↺ shows on every run, since each keeps its own input, a file id or
  *   not; it is held while Play is;
  * - once the polling stops on failures, "Failed to refresh test runs" with
- *   Retry, never a single toast and a silent stop after 60 s; a
- *   failed first read says "Failed to load test runs" at once, and a refusal
- *   the API's own words, each with Retry (Ruling 48);
+ *   Retry; a failed first read says "Failed to load test runs" at once, and a refusal
+ *   the API's own words, each with Retry;
  * - each row's accessible name is its own text: the time, the "Suite ›
  *   Configuration" breadcrumb when it has one, and the status;
- * - the rule editor Compare's chip opens (D15b) gives the focus to the
+ * - the rule editor Compare's chip opens gives the focus to the
  *   selected row as it closes when the run's Compare link isn't there
  *   (`focusFallback`, as ValidationPipelineCard's); while it shows, a
  *   request to focus the selected row (a Play all's first run) is dropped,
- *   the focus left in the editor (Ruling 32);
- * - in the playground (D31-1 decisions 24 and 31), ↺ opens the sign-up
- *   prompt at its button (`useLockedAction`); the runs
- *   are the sample's.
+ *   the focus left in the editor;
+ * - in the playground, ↺ opens the sign-up prompt at its button
+ *   (`useLockedAction`); the runs are the sample's.
  */
 export function TestRunsPanel({ onRerun, disableRerun, focusRequest = 0, takeFocus }: TestRunsPanelProps) {
   const locked = useLockedAction();
@@ -83,12 +78,12 @@ export function TestRunsPanel({ onRerun, disableRerun, focusRequest = 0, takeFoc
 
   // A run just queued, selected: its row takes the focus (the Tests subtab
   // mounts it after a Play from Suites), never left on the held Play and
-  // lost. The request is served the first time the
-  // list renders after it, or dropped when no selected row shows then, so
-  // it can't pull the focus to a row later (D14b Ruling 42). Dropped, too,
-  // while Compare's rule editor shows (a Play all's first run selected under
-  // it): the row behind the modal would take the focus only for Radix to pull
-  // it back into the editor, selecting what was typed in its field (Ruling 32).
+  // lost. The request is served the first time the list renders after it, or
+  // dropped when no selected row shows then, so it can't pull the focus to a
+  // row later. Dropped, too, while Compare's rule editor shows (a Play all's
+  // first run selected under it): the row behind the modal would take the
+  // focus only for Radix to pull it back into the editor, selecting what was
+  // typed in its field.
   useEffect(() => {
     if (takeFocus?.() !== true || ruleEditorShown.current) return;
     listRef.current?.querySelector<HTMLElement>('button[aria-pressed="true"]')?.focus();

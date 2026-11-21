@@ -2,9 +2,9 @@ import type { TestDefinition, TestSuite } from "@telflo/contracts";
 import { MEMBER_ID, MINE, VERSION_ID } from "./configurations.js";
 
 /*
- * Test suites and definitions as the API answers them (D14b detail 19), for
- * the Suites subtab's tests. Names and descriptions carrying `zq-` are the
- * private-text markers the attribute scans look for (ADR 0024).
+ * Test suites and definitions as the API answers them, for the Suites
+ * subtab's tests. Names and descriptions carrying `zq-` are the
+ * private-text markers the attribute scans look for.
  */
 
 /** A suite of MINE's version 1, created by the member at noon UTC; any field overridden. */

@@ -17,39 +17,37 @@ import { SendingQueueSection } from "./shared/SendingQueueSection.js";
 import type { ValuePath } from "~/lib/graph/text-edits.js";
 
 /*
- * The AWS S3 exporter's form (ADR 0018), over the form's fields
- * (D9d decision 2, D9b's contract): each field writes its own key, the
- * uploader's under `s3uploader`. Collector claims are contrib v0.162.0's
- * `exporter/awss3exporter`.
+ * The AWS S3 exporter's form, over the form's fields: each field writes its
+ * own key, the uploader's under `s3uploader`. Collector claims are contrib
+ * v0.162.0's `exporter/awss3exporter`.
  *
- * - Fixed (decision 4): the Sending Queue shows off while `sending_queue`
- *   is absent: the exporter's queue is `configoptional.Default`
- *   (`factory.go:51`), off unless the block is in the text (D9b's section
- *   showed it on, so it couldn't be turned on). `absentMeans:
- *   "off-optional"` (Preflight ruling 4): ticking writes D9b's block,
- *   unticking removes it. Retry is on by default
- *   (`configretry.NewDefaultBackOffConfig`, `factory.go:66`), as D9b's.
- * - Kept: the selects remove their keys at the collector's defaults:
- *   Storage Class `STANDARD` (`factory.go:60`), SDK Retry
- *   Mode `standard` (`factory.go:61`), Compression None; Unique Key Segment
- *   and Canned ACL have unset options ("Random integer",
- *   "None (do not set)", the sentinel `__unset__`, never written). Unset,
- *   each shows the default as its placeholder (D9b decision 3).
- * - Changed (decision 6): Storage Class offers the collector's 15
- *   (`config.go:112-115, 133-135`, the AWS SDK's `StorageClass.Values()`):
- *   STANDARD through EXPRESS_ONEZONE, then FSX_OPENZFS, FSX_ONTAP,
- *   AWS_BACKUP_WARM and AWS_BACKUP_LOW_COST_WARM.
- * - Changed (decision 4): Partition Timezone's placeholder is `Local`, the
- *   default (`s3_writer.go:94-103`), not `UTC`.
- * - Kept: Dynamic Routing's two fields sit in a pruning scope on
+ * - The Sending Queue shows off while `sending_queue` is absent: the
+ *   exporter's queue is `configoptional.Default` (`factory.go:51`), off
+ *   unless the block is in the text. `absentMeans: "off-optional"`: ticking
+ *   writes `SendingQueueSection`'s block, unticking removes it. Retry is on
+ *   by default (`configretry.NewDefaultBackOffConfig`, `factory.go:66`), as
+ *   `RetryConfigSection` shows it.
+ * - The selects remove their keys at the collector's defaults: Storage
+ *   Class `STANDARD` (`factory.go:60`), SDK Retry Mode `standard`
+ *   (`factory.go:61`), Compression None; Unique Key Segment and Canned ACL
+ *   have unset options ("Random integer", "None (do not set)", the sentinel
+ *   `__unset__`, never written). Unset, each shows the default as its
+ *   placeholder.
+ * - Storage Class offers the collector's 15 (`config.go:112-115, 133-135`,
+ *   the AWS SDK's `StorageClass.Values()`): STANDARD through
+ *   EXPRESS_ONEZONE, then FSX_OPENZFS, FSX_ONTAP, AWS_BACKUP_WARM and
+ *   AWS_BACKUP_LOW_COST_WARM.
+ * - Partition Timezone's placeholder is `Local`, the default
+ *   (`s3_writer.go:94-103`), not `UTC`.
+ * - Dynamic Routing's two fields sit in a pruning scope on
  *   `resource_attrs_to_s3` (the block goes when emptied); the Logs-only alert
  *   (the marshaler only has a logs marshaler, `marshaler.go:57-66`) and the
  *   credentials alert.
- * - Region and Bucket cleared remove their keys (D9b's contract;
- *   `region: ""` is refused, `config.go:126-128`).
+ * - Region and Bucket cleared remove their keys (`region: ""` is refused,
+ *   `config.go:126-128`).
  *
  * Ids are fixed; option values are the collector's names, never a value
- * from the text (decision 13).
+ * from the text.
  */
 
 const MARSHALERS: readonly SelectOption[] = [

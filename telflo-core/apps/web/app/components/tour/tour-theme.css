@@ -1,6 +1,6 @@
-/* driver.js theme overrides to match Telflo design (ADR 0018). Rules for
+/* driver.js theme overrides to match Telflo design. Rules for
  * guides that run over a Radix dialog belong to the deploy guide and arrive
- * with it. The editor's tour (D9a) uses these rules as they are. */
+ * with it. The editor's tour uses these rules as they are. */
 
 .driver-popover.tour-popover {
   background-color: var(--color-popover, #ffffff);

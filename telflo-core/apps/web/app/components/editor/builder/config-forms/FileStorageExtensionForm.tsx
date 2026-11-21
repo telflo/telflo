@@ -3,10 +3,9 @@ import { CheckboxField, NumberField, TextField, useForm } from "./form-context.j
 import { InlineAlert } from "./InlineAlert.js";
 
 /*
- * The file storage extension's form (ADR 0018), over the form's fields (D9b
- * decisions 2 and 3): each field writes its own key; clearing a field removes
- * it; 0 can be entered (decision 4). Timeout and Check Interval stay plain
- * text fields (Ruling 50).
+ * The file storage extension's form, over the form's fields: each field writes
+ * its own key; clearing a field removes it; 0 can be entered. Timeout and
+ * Check Interval stay plain text fields.
  *
  * The collector's defaults (`extension/storage/filestorage`
  * `createDefaultConfig`, contrib v0.162.0) show while a key is unset:
@@ -15,12 +14,11 @@ import { InlineAlert } from "./InlineAlert.js";
  * 100, `rebound_trigger_threshold_mib` 10, `check_interval` 5s,
  * `max_transaction_size` 65536; `fsync` false.
  *
- * Changed (decision 3; Preflight ruling 8): Create Directory shows off
- * while unset, as the collector has it. The
- * compaction directory's default is the collector's
- * (`getDefaultDirectory()`, `/var/lib/otelcol/file_storage` outside
- * Windows), its hint and placeholder, not the "storage directory": the
- * collector doesn't follow `directory` there.
+ * Create Directory shows off while unset, as the collector has it. The
+ * compaction directory's default is the collector's (`getDefaultDirectory()`,
+ * `/var/lib/otelcol/file_storage` outside Windows), its hint and placeholder,
+ * not the "storage directory": the collector doesn't follow `directory`
+ * there.
  *
  * The Compaction section's count is the keys the `compaction` block holds.
  */

@@ -1,99 +1,91 @@
 #!/usr/bin/env bash
-# Checks that the gateway's logs never hold a quick-deploy link's secret
-# (D17c-2 decisions 2 and 28, Preflight ruling 12), nor an API token (D22
-# decision 40, Preflight ruling 14), nor a library link (D23-2 decisions 4,
-# 47 and 50, Preflight ruling 16; sections 3 and 4). Runs the real image,
-# nginx:1.27-alpine (never pulled: it must already be on the machine), with
-# the real docker/gateway/default.conf, unchanged, its upstreams'
-# names resolving to the container's own loopback (--add-host), where two
-# stand-in servers answer for the API and the web app. Its include of
-# /etc/nginx/telflo/extra-routes.conf (D36-1 decision 24) reads, in
-# sections 1-10, the compose stack's docker/gateway/extra-routes.conf
-# (comments only, no route), and in section 11 the chart's rendered
-# fixture. It sends a canary secret in every spelling that reaches the
-# route, and asserts:
+# Checks that the gateway's logs never hold a quick-deploy link's secret, nor
+# an API token, nor a library link (sections 3 and 4). Runs the real image,
+# nginx:1.27-alpine (never pulled: it must already be on the machine), with the
+# real docker/gateway/default.conf, unchanged, its upstreams' names resolving
+# to the container's own loopback (--add-host), where two stand-in servers
+# answer for the API and the web app. Its include of
+# /etc/nginx/telflo/extra-routes.conf reads, in sections 1-10, the compose
+# stack's docker/gateway/extra-routes.conf (comments only, no route), and in
+# section 11 the chart's rendered fixture. It sends a canary secret in every
+# spelling that reaches the route, and asserts:
 #
-#   1. upstreams up: no access or error log line holds the canary; each
-#      such request's access log line is the redacted one; each went where
-#      it goes in the stack: the API's path to the API, the same typed
-#      without /api/ answered by nginx itself, a plain 404 "Not found."
-#      as Content-Type: text/plain whatever the path's extension (Ruling
-#      49), the web stand-in receiving none of them (it counts its
-#      requests: Ruling 44), and a web path holding tqd_ (an asset's name, a secret
-#      in another segment) to the web app; a secret in another path's
-#      query, any letter of its tqd_ prefix percent-encoded or not, is cut
-#      from the access log too; a Referer naming a link, in any of those
-#      spellings, is logged as [redacted]; an ordinary request is logged as
-#      before, query, referer and all, and an ordinary web path reaches the
+#   1. upstreams up: no access or error log line holds the canary; each such
+#      request's access log line is the redacted one; each went where it goes
+#      in the stack: the API's path to the API, the same typed without /api/
+#      answered by nginx itself, a plain 404 "Not found." as Content-Type:
+#      text/plain whatever the path's extension, the web stand-in receiving
+#      none of them (it counts its requests), and a web path holding tqd_ (an
+#      asset's name, a secret in another segment) to the web app; a secret in
+#      another path's query, any letter of its tqd_ prefix percent-encoded or
+#      not, is cut from the access log too; a Referer naming a link, in any of
+#      those spellings, is logged as [redacted]; an ordinary request is logged
+#      as before, query, referer and all, and an ordinary web path reaches the
 #      web stand-in; and a request line or a Referer holding an API token's
 #      tf_, any letter percent-encoded once or not, case aside, is logged
-#      redacted ("GET /[redacted] HTTP/1.1"; "[redacted]"), still routed
-#      where it goes, with no access or error log line holding the token;
-#      and a token sent as an HTTP Basic user name (`curl -u "$TF:"`) is in
-#      no field: the user field is "-" (D22 Ruling 100: no field of the
-#      access log is derived from the Authorization header); and a
-#      User-Agent or an X-Forwarded-For holding tf_, in the same spellings,
-#      is logged "[redacted]" (Ruling 105: no logged field holding a
-#      client-supplied value carries a tf_ token), an ordinary one as
+#      redacted ("GET /[redacted] HTTP/1.1"; "[redacted]"), still routed where
+#      it goes, with no access or error log line holding the token; and a token
+#      sent as an HTTP Basic user name (`curl -u "$TF:"`) is in no field: the
+#      user field is "-" (no field of the access log is derived from the
+#      Authorization header); and a User-Agent or an X-Forwarded-For holding
+#      tf_, in the same spellings, is logged "[redacted]" (no logged field
+#      holding a client-supplied value carries a tf_ token), an ordinary one as
 #      before;
 #   2. upstreams down (no stand-ins, so nginx can't connect): the same, the
 #      upstreams' requests answered 502 and the paths typed without /api/
 #      still nginx's plain-text 404, and an ordinary API request's failure IS in the
 #      error log (so the check isn't passing on an error log that writes
 #      nothing).
-#   3. a library link (tll_), upstreams up, on a fresh container: the
-#      same, by the link's own rules: its API paths (an organization's and
-#      a library file's paths holding one too) to the API, the same typed
+#   3. a library link (tll_), upstreams up, on a fresh container: the same,
+#      by the link's own rules: its API paths (an organization's and a
+#      library file's paths holding one too) to the API, the same typed
 #      without /api/ nginx's plain-text 404 (/library-links/tqd_x.js among
 #      them: the locations' order), the web stand-in receiving none; a web
 #      path holding tll_ to the web app; each logged "GET
 #      /api/v1/library-links/[redacted] HTTP/1.1" (the one 404 whose path
 #      also holds tqd_, the quick-deploy line); a link in another path's
 #      query, any letter of tll_ percent-encoded or not, cut too; a Referer,
-#      a User-Agent or an X-Forwarded-For holding one "[redacted]" (Ruling
-#      128's class rule); the library's ordinary paths logged as before;
+#      a User-Agent or an X-Forwarded-For holding one "[redacted]"; the
+#      library's ordinary paths logged as before;
 #   4. the same link, upstreams down: 502 and the plain 404 as above, no
 #      access or error log line holding it (an organization's path holding
 #      one included), and an ordinary failure in the error log.
-#   5. the public surface (D25 decision 46, Ruling 177), upstreams up, on a
-#      fresh container: every request under /api/public/v1, in any
-#      spelling (case, encoded and doubly encoded letters and slashes, runs
-#      of slashes, dot segments, an absolute-form request line), is logged
-#      "METHOD /api/public/v1/[redacted] PROTOCOL", its path and query
-#      never: no access or error log line holds a tf_ canary (Preflight
-#      B19's seven cases) or a validation pipeline's name in route 14's
-#      path (a marker; Ruling 167), each request still reaching the
-#      upstream it reaches today; the public body limits: 2 MiB on the
-#      configuration writes, /validate and /ottl/lint, 8 MiB on /test-runs
-#      (a body under each passes, one a little over is nginx's 413), 1 MiB
-#      on the other public paths; route 14's PUT over 1 MiB and a 2 MiB
-#      location's body over 2 MiB, their query naming the pipeline, nginx's
-#      413 with the name in no log line; an ordinary path is logged as
-#      before.
-#   6. the same public spellings, upstreams down (Ruling 184): 502 (route
-#      14's oversized PUT 413), no access or error log line holding a tf_
-#      canary or the pipeline's name (every public location logs crit and
-#      worse only), an ordinary API path's failure still in the error log.
-#   7. product administration (D29 decision 41, Preflight ruling 9, Ruling
-#      257), upstreams up, on a fresh container: every request under
-#      /api/v1/product-admin, in any spelling nginx routes there (runs of
-#      slashes, dot segments, an encoded letter), its query holding a search
-#      term (a made-up address, raw and percent-encoded), is logged "GET
+#   5. the public surface, upstreams up, on a fresh container: every
+#      request under /api/public/v1, in any spelling (case, encoded and
+#      doubly encoded letters and slashes, runs of slashes, dot segments,
+#      an absolute-form request line), is logged "METHOD
+#      /api/public/v1/[redacted] PROTOCOL", its path and query never: no
+#      access or error log line holds a tf_ canary (seven cases) or a
+#      validation pipeline's name in route 14's path (a marker), each
+#      request still reaching the upstream it reaches today; the public
+#      body limits: 2 MiB on the configuration writes, /validate and
+#      /ottl/lint, 8 MiB on /test-runs (a body under each passes, one a
+#      little over is nginx's 413), 1 MiB on the other public paths; route
+#      14's PUT over 1 MiB and a 2 MiB location's body over 2 MiB, their
+#      query naming the pipeline, nginx's 413 with the name in no log line;
+#      an ordinary path is logged as before.
+#   6. the same public spellings, upstreams down: 502 (route 14's oversized
+#      PUT 413), no access or error log line holding a tf_ canary or the
+#      pipeline's name (every public location logs crit and worse only), an
+#      ordinary API path's failure still in the error log.
+#   7. product administration, upstreams up, on a fresh container: every
+#      request under /api/v1/product-admin, in any spelling nginx routes there
+#      (runs of slashes, dot segments, an encoded letter), its query holding a
+#      search term (a made-up address, raw and percent-encoded), is logged "GET
 #      <its path as nginx routes it> HTTP/1.1", never its query: no access or
-#      error log line holds the term; each reaches the API; another case
-#      (which the API doesn't route) is logged without its query too; a tf_
-#      in such a path is the tf_ line; an ordinary path is logged as before.
+#      error log line holds the term; each reaches the API; another case (which
+#      the API doesn't route) is logged without its query too; a tf_ in such a
+#      path is the tf_ line; an ordinary path is logged as before.
 #   8. the same, upstreams down: 502, no access or error log line holding
 #      the term (the product-admin location logs crit and worse only), an
 #      ordinary API path's failure still in the error log.
 #   9. an organization's fleets, its configurations list and the open flow
-#      read (D36-1 decision 41, Preflight ruling 10), upstreams up, on a
-#      fresh container: a request under /api/v1/organizations/<id>/fleets
-#      or for the configurations list (a trailing slash or not), in any
-#      spelling nginx routes there (runs of slashes, dot segments, an
-#      encoded letter), its query holding a marker, is logged "GET <its
-#      path as nginx routes it> HTTP/1.1"; one under
-#      /api/v1/published-flows, the slug or the query holding a marker
+#      read, upstreams up, on a fresh container: a request under
+#      /api/v1/organizations/<id>/fleets or for the configurations list (a
+#      trailing slash or not), in any spelling nginx routes there (runs of
+#      slashes, dot segments, an encoded letter), its query holding a
+#      marker, is logged "GET <its path as nginx routes it> HTTP/1.1"; one
+#      under /api/v1/published-flows, the slug or the query holding a marker
 #      (slashes, dot segments, encoded letters, an encoded or doubly encoded
 #      slash, a ";", a "?" or a "#" decoded from the path), "GET
 #      /api/v1/published-flows HTTP/1.1" (the list) or "GET
@@ -111,21 +103,21 @@
 #      locations log crit and worse only; the list's create over 5 MiB,
 #      413, too), every line exactly; the lookalike's and an ordinary API
 #      path's failures still in the error log.
-#  11. gateway.extraRoutes (D36-1 decision 24, Preflight ruling 15), on a
-#      fresh container whose include reads the chart's rendered snippet
-#      (charts/telflo/tests/expected/extra-routes.conf, an exact /
-#      and a ^~ /home/ prefix to telflo-site.telflo.svc:8081; a render case
-#      holds helm's output equal to it): nginx -t accepts it; / and every
-#      path under /home/, in any spelling nginx routes there (runs of
-#      slashes, an encoded letter, dot segments), reach a third stand-in
-#      for the site; /home is nginx's 301 to /home/; /homex, /HOME/x and the
-#      web app's paths (/login, /_root.data, /forgot-password,
-#      /robots.txt, /assets/...) still reach the web app and /api/ the API; the access
-#      log's rules hold there (a tf_ token, a quick-deploy secret typed
-#      under /home/: redacted); upstreams down, the site's paths 502 with
-#      no access or error log line holding their marker (each block logs
-#      crit and worse only), an ordinary API path's failure still in the
-#      error log; and without the snippet nginx doesn't start ([emerg]).
+#  11. gateway.extraRoutes, on a fresh container whose include reads the
+#      chart's rendered snippet
+#      (charts/telflo/tests/expected/extra-routes.conf, an exact / and a ^~
+#      /home/ prefix to website.telflo.svc:8081; a render case holds helm's
+#      output equal to it): nginx -t accepts it; / and every path under /home/,
+#      in any spelling nginx routes there (runs of slashes, an encoded letter,
+#      dot segments), reach a third stand-in for the site; /home is nginx's 301
+#      to /home/; /homex, /HOME/x and the web app's paths (/login, /_root.data,
+#      /forgot-password, /robots.txt, /assets/...) still reach the web app and
+#      /api/ the API; the access log's rules hold there (a tf_ token, a
+#      quick-deploy secret typed under /home/: redacted); upstreams down, the
+#      site's paths 502 with no access or error log line holding their marker
+#      (each block logs crit and worse only), an ordinary API path's failure
+#      still in the error log; and without the snippet nginx doesn't start
+#      ([emerg]).
 #
 # Sections 1-4's lines for a path under /api/public/v1 (a tf_ in its path
 # or query, or a Referer, User-Agent, X-Forwarded-For or Basic user name
@@ -133,35 +125,32 @@
 #
 # Residues (not checked): the locations that log crit and worse only are
 # the quick-deploy and library-link ones (and their 404s typed without
-# /api/, and the web paths holding tqd_ or tll_), the public surface's
-# (any spelling of /api/public/v1 above; sections 5 and 6, whose down run
-# sends the public spellings with tf_ canaries) and product
-# administration's (sections 7 and 8), the fleets', the published flows'
-# and the configurations list's (sections 9 and 10) and each extra route's
-# (section 11). A product-admin, fleets, configurations-list or
-# published-flows path in another case (/API/V1/PRODUCT-ADMIN/...) matches
-# no API location (case-sensitive, as the API's router): it goes to the web
-# app as any other such path, its access log line without its query (or
-# its slug), but its error log at the image's level with the web app down,
-# so sections 8 and 10 don't send one. An extra route's prefix wins over
-# the quick-deploy and library-link locations for a path under it
+# /api/, and the web paths holding tqd_ or tll_), the public surface's (any
+# spelling of /api/public/v1 above; sections 5 and 6, whose down run sends
+# the public spellings with tf_ canaries) and product administration's
+# (sections 7 and 8), the fleets', the published flows' and the
+# configurations list's (sections 9 and 10) and each extra route's (section
+# 11). A product-admin, fleets, configurations-list or published-flows path
+# in another case (/API/V1/PRODUCT-ADMIN/...) matches no API location
+# (case-sensitive, as the API's router): it goes to the web app as any
+# other such path, its access log line without its query (or its slug), but
+# its error log at the image's level with the web app down, so sections 8
+# and 10 don't send one. An extra route's prefix wins over the quick-deploy
+# and library-link locations for a path under it
 # (/home/quick-deploy/tqd_...: proxied to the site, not nginx's 404; its
-# access log line still redacted), and telflo-site's own logs are its own.
-# Every other location's
-# error log quotes a request line, its referrer and its host when its
-# upstream fails: a secret pasted into ANOTHER path's query, a Referer
-# naming one on a request for another path, or a tf_ token in the Host
-# header (its line's host: "…") is cut from the access log but kept there,
-# so those cases run with the upstreams up only. An /api/v1 size location
-# can be made to climb into the public prefix by a request crafted with a
-# doubly encoded parameter, and logs at the image's level: caller-made
-# text only, never a route 14 pipeline's name, the API still answering the
-# one 401 (Ruling 187). A tqd_ secret in a User-Agent or an X-Forwarded-For
-# is logged as sent (their rules were ruled for tf_ and tll_ only). And a
-# web path or query holding tqd_, tll_ or tf_ reaches the web app, whose
-# own server has written no request's URL or path since D33-1 (its decision
-# 13; until then react-router-serve's morgan "tiny" logged it whole on
-# telflo-web's stdout, D22 Ruling 109).
+# access log line still redacted), and website's own logs are its own.
+# Every other location's error log quotes a request line, its referrer and
+# its host when its upstream fails: a secret pasted into ANOTHER path's
+# query, a Referer naming one on a request for another path, or a tf_ token
+# in the Host header (its line's host: "…") is cut from the access log but
+# kept there, so those cases run with the upstreams up only. An /api/v1
+# size location can be made to climb into the public prefix by a request
+# crafted with a doubly encoded parameter, and logs at the image's level:
+# caller-made text only, never a route 14 pipeline's name, the API still
+# answering the one 401. A tqd_ secret in a User-Agent or an
+# X-Forwarded-For is logged as sent (their rules cover tf_ and tll_ only).
+# And a web path or query holding tqd_, tll_ or tf_ reaches the web app,
+# whose own server writes no request's URL or path.
 #
 # Its files (the stand-ins' config, the logs it reads) go in a directory
 # under $TMPDIR (/tmp when unset); it prints where, and removes it at the
@@ -180,26 +169,26 @@ CONTAINER=${CHECK_GATEWAY_LOGS_CONTAINER:-telflo-check-gateway-logs}
 PORT=${CHECK_GATEWAY_LOGS_PORT:-50089}
 CONFIG=docker/gateway/default.conf
 # The include's file: the compose stack's (no route), and the chart's
-# rendered snippet for section 11 (Preflight ruling 15).
+# rendered snippet for section 11.
 EXTRA_ROUTES=docker/gateway/extra-routes.conf
 EXTRA_ROUTES_FIXTURE=charts/telflo/tests/expected/extra-routes.conf
 # The fixture's service, as the chart names it in the render tests' namespace.
-SITE_HOST=telflo-site.telflo.svc
+SITE_HOST=website.telflo.svc
 FAILURES=0
 
 SECRET=tqd_CANARYCANARYCANARYCANARYCANARYCANARYCANARY0
 BODY=${SECRET#tqd_}
 # What no log line may hold: the secret's random part, in any spelling.
 CANARY=CANARYCANARY
-# An API token's canary (D22 decision 48): built here, at run time, never a
-# literal token in this file (Preflight ruling 32): tf_ and 43 characters.
-# Nothing prints it: the messages below name its cases by number.
+# An API token's canary: built here, at run time, never a literal token in
+# this file: tf_ and 43 characters. Nothing prints it: the messages below
+# name its cases by number.
 TF_BODY="$(printf 'TFCANARY%.0s' 1 2 3 4 5)TFC"
 TF="tf_$TF_BODY"
 TF_CANARY=TFCANARYTFCANARY
-# A library link's canary (D23-2 decision 59): built here, at run time, never
-# a literal link in this file: tll_ and 71 characters, as a link's shape.
-# Nothing prints it: the messages below show it as "…".
+# A library link's canary: built here, at run time, never a literal link in
+# this file: tll_ and 71 characters, as a link's shape. Nothing prints it: the
+# messages below show it as "…".
 LL_BODY="$(printf 'LLCANARY%.0s' 1 2 3 4 5 6 7 8)LLCANAR"
 LINK="tll_$LL_BODY"
 LL_CANARY=LLCANARYLLCANARY
@@ -348,12 +337,12 @@ API_SPELLINGS=(
   "/api/v1/quick-deploy/$SECRET/"
   "/api/v1/quick-deploy/$SECRET/../x"
 )
-# The same typed without /api/: nginx's own 404, never proxied (Ruling
-# 44). As spelt, with a query, upper case, runs of slashes, an encoded
-# letter (lower and upper case codes), an encoded slash before and after,
-# dot segments, under another path, the path ending in /quick-deploy; and
-# two whose extensions nginx's types would name otherwise (text/html,
-# application/javascript), still plain text (Ruling 49).
+# The same typed without /api/: nginx's own 404, never proxied. As spelt,
+# with a query, upper case, runs of slashes, an encoded letter (lower and
+# upper case codes), an encoded slash before and after, dot segments, under
+# another path, the path ending in /quick-deploy; and two whose extensions
+# nginx's types would name otherwise (text/html, application/javascript),
+# still plain text.
 NGINX_404_SPELLINGS=(
   "/quick-deploy/$SECRET"
   "/QUICK-DEPLOY/$SECRET?x=1"
@@ -404,10 +393,9 @@ REFERERS=(
 )
 REFERRED_PATHS=("/assets/app.js" "/api/v1/auth/me") # as the count below matches them
 REDACTED='"GET /api/v1/quick-deploy/[redacted] HTTP/1.1"'
-# An API token in a request line (D22 decision 40): in the public
-# surface's path and query, in another API path's query, in a web path and
-# query, the public prefix in upper case (the API's: Ruling 184's public
-# location matches it case aside),
+# An API token in a request line: in the public surface's path and query,
+# in another API path's query, in a web path and query, the public prefix
+# in upper case (the API's: the public location matches it case aside),
 # each letter of tf_ percent-encoded (lower- and upper-case codes), and all
 # three. Each reaches its upstream as before, logged "GET /[redacted]
 # HTTP/1.1" (upstreams up only; see the residue).
@@ -426,7 +414,7 @@ TF_REQUESTS=(
   "web|/x/Tf_$TF_BODY"
 )
 TF_REDACTED='"GET /[redacted] HTTP/1.1"'
-# A public path's line (Ruling 177): the public surface's own fixed line.
+# A public path's line: the public surface's own fixed line.
 PUBLIC_REDACTED='"GET /api/public/v1/[redacted] HTTP/1.1"'
 # A Referer holding an API token, on requests for paths of their own (not
 # REFERRED_PATHS, whose count above is the quick-deploy Referers'): as
@@ -440,19 +428,18 @@ TF_REFERERS=(
   "https://telflo.example/x?t=%54%46%5F$TF_BODY"
 )
 TF_REFERRED_PATHS=("/assets/token-referred.js" "/api/public/v1/referred") # as the count below matches them
-# An API token sent as an HTTP Basic user name, `curl -u "$TF:"` (D22
-# Ruling 100): nginx fills $remote_user from it, so the format's user field
-# is a fixed "-" and the line holds neither the token nor its Basic
-# encoding. To the public surface and to a web path, as HEAD requests (a
-# public path's line reads like any other public request's: the method
-# tells these apart).
+# An API token sent as an HTTP Basic user name, `curl -u "$TF:"`: nginx fills
+# $remote_user from it, so the format's user field is a fixed "-" and the line
+# holds neither the token nor its Basic encoding. To the public surface and to
+# a web path, as HEAD requests (a public path's line reads like any other
+# public request's: the method tells these apart).
 TF_BASIC_PATHS=("/api/public/v1/basic-user" "/assets/basic-user.js") # as the count below matches them
 # The Basic credentials' base64 ("$TF:"), a stretch from its middle: no line may hold it either.
 TF_BASIC_ENCODED=$(printf '%s:' "$TF" | base64 | tr -d '\n')
 TF_BASIC_CANARY=${TF_BASIC_ENCODED:8:24}
-# A User-Agent and an X-Forwarded-For holding an API token (Ruling 105),
-# each on paths of its own (as the counts below match them): as spelt,
-# after other text, upper case, each letter encoded, all three encoded.
+# A User-Agent and an X-Forwarded-For holding an API token, each on paths of
+# its own (as the counts below match them): as spelt, after other text, upper
+# case, each letter encoded, all three encoded.
 TF_HEADER_VALUES=(
   "$TF"
   "x/1.0 TF_$TF_BODY"
@@ -524,7 +511,7 @@ send "/api/v1/auth/me?x=1" "https://telflo.example/app/fleets?tab=groups"
 send "/api/v1/organizations/o1/fleets/f1/quick-deploy-links?limit=5" "https://telflo.example/app/fleets/f1/quick-deploy-links"
 [ "$status $body" = "200 api stand-in" ] || fail "the links' route reached '$status $body'"
 # A route that keeps its query (the "query kept" canary: a fleets path,
-# the links' among them, drops its own since D36-1 decision 41).
+# the links' among them, drops its own).
 send "/api/v1/organizations/o1/configurations/c1/versions?limit=5"
 [ "$status $body" = "200 api stand-in" ] || fail "a configuration's versions reached '$status $body'"
 tf_sent=0
@@ -707,8 +694,7 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 3. A library link (D23-2 decisions 47 and 50, Preflight ruling 16), the
-# upstreams up, on a fresh container (its own logs).
+# 3. A library link, the upstreams up, on a fresh container (its own logs).
 
 # $1 for a message, the link's random part cut.
 shown_link() {
@@ -788,8 +774,8 @@ LINK_REFERERS=(
   "https://telflo.example/forgot-password?s=%54LL_$LL_BODY"
   "https://telflo.example/library-links%2F$LL_BODY"
 )
-# A User-Agent and an X-Forwarded-For holding a link (Ruling 128's class
-# rule): as spelt, after other text, upper case, each letter encoded, all of them.
+# A User-Agent and an X-Forwarded-For holding a link: as spelt, after other
+# text, upper case, each letter encoded, all of them.
 LINK_HEADER_VALUES=(
   "$LINK"
   "x/1.0 TLL_$LL_BODY"
@@ -956,11 +942,11 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 5. The public surface (D25 decision 46, Ruling 177), the upstreams up, on a
-# fresh container (its own logs).
+# 5. The public surface, the upstreams up, on a fresh container (its own
+# logs).
 
-# A validation pipeline's name in route 14's path (configuration text,
-# Ruling 167): a marker no log line may hold.
+# A validation pipeline's name in route 14's path (configuration text): a
+# marker no log line may hold.
 PIPELINE_MARKER=PIPELINENAMEMARKER
 PIPELINES=/api/public/v1/configurations/c1/versions/1/validation-pipelines
 # $1 for a message, the canaries cut.
@@ -968,13 +954,13 @@ shown_public() {
   local text="${1//$TF_BODY/…}"
   printf '%s' "${text//$PIPELINE_MARKER/…}"
 }
-# [the upstream's reply, the path as sent]: Preflight B19's seven tf_ cases,
+# [the upstream's reply, the path as sent]: the seven tf_ cases,
 # then the pipeline name raw, behind an encoded slash, in the query, mixed
-# case (to the API: Ruling 184's public location matches case aside),
+# case (to the API: the public location matches case aside),
 # runs of slashes, dot segments, the prefix's letters and slash encoded, a
 # letter doubly encoded (nginx decodes once; the API decodes again), the
 # public list's query, and dot segments encoded twice after another
-# segment (Ruling 184: the API resolves them; nginx doesn't).
+# segment (the API resolves them; nginx doesn't).
 PUBLIC_REQUESTS=(
   "api|/api/public/v1/configurations?cursor=$TF"
   "api|/api/public/v1/configurations/$TF/versions/1"
@@ -1112,12 +1098,12 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 6. The public surface, the upstreams down (Ruling 184): nginx's error log
-# quotes a request line when its upstream fails, so every public location
-# logs crit and worse only. Each public spelling above (and the absolute
-# forms, and route 14's body over its limit, a 413) is answered 502 (413)
-# with no access or error log line holding a tf_ canary or the pipeline's
-# name, while an ordinary API path's failure is still in the error log.
+# 6. The public surface, the upstreams down: nginx's error log quotes a
+# request line when its upstream fails, so every public location logs crit
+# and worse only. Each public spelling above (and the absolute forms, and
+# route 14's body over its limit, a 413) is answered 502 (413) with no access
+# or error log line holding a tf_ canary or the pipeline's name, while an
+# ordinary API path's failure is still in the error log.
 start_gateway down
 down_sent=0
 for entry in "${PUBLIC_REQUESTS[@]}"; do
@@ -1165,10 +1151,9 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 7. Product administration (D29 decision 41, Ruling 257), the upstreams up,
-# on a fresh container: a search term in a product-admin request's query
-# reaches no log line, each line the method, the path as nginx routes it,
-# the protocol.
+# 7. Product administration, the upstreams up, on a fresh container: a
+# search term in a product-admin request's query reaches no log line, each
+# line the method, the path as nginx routes it, the protocol.
 # A made-up address (never a person's), raw and percent-encoded in a query.
 PA_MARKER_LOCAL="pa-search-marker-$$"
 PA_MARKER="$PA_MARKER_LOCAL@example.com"
@@ -1300,8 +1285,7 @@ check_failure_logged() {
 
 # ---------------------------------------------------------------------------
 # 9. An organization's fleets, its configurations list and the open flow
-# read (D36-1 decision 41, Preflight ruling 10), the upstreams up, on a
-# fresh container.
+# read, the upstreams up, on a fresh container.
 FLEET_MARKER="fleet-query-marker-$$"
 CONF_MARKER="configurations-query-marker-$$"
 FLOW_MARKER="flow-slug-marker-$$"
@@ -1445,9 +1429,8 @@ check_failure_logged "the published-flowsx lookalike" "GET /api/v1/published-flo
 check_failure_logged "an ordinary request" "GET /api/v1/auth/me?x=1 HTTP/1.1"
 
 # ---------------------------------------------------------------------------
-# 11. gateway.extraRoutes (D36-1 decision 24, Preflight ruling 15): the
-# chart's rendered snippet, on a fresh container with a stand-in for its
-# service.
+# 11. gateway.extraRoutes: the chart's rendered snippet, on a fresh
+# container with a stand-in for its service.
 # [the upstream's reply|the path as sent]: the site's paths, the web app's
 # and the API's around them.
 EXTRA_REQUESTS=(
@@ -1534,7 +1517,7 @@ fi
 check_failure_logged "extra routes: an ordinary request" "GET /api/v1/auth/me?x=1 HTTP/1.1"
 
 # Without the include's file nginx doesn't start: the include names an
-# exact file, never a pattern (Preflight ruling 15).
+# exact file, never a pattern.
 create_gateway down none
 docker start "$CONTAINER" >/dev/null 2>&1
 running=true

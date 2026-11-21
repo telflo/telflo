@@ -66,7 +66,7 @@ describe("generatePipelineColor", () => {
   });
 });
 
-describe("ids (decision 7)", () => {
+describe("ids", () => {
   it("gives the lowest number no id holds, for nodes, edges and pipelines", () => {
     expect(nextNodeId([])).toBe("node_0");
     expect(nextNodeId(["node_0", "node_2"])).toBe("node_1");
@@ -90,7 +90,7 @@ describe("ids (decision 7)", () => {
 });
 
 describe("default pipelines and groups", () => {
-  it("are traces, metrics and logs, with opaque ids and their signal colours", () => {
+  it("are traces, metrics and logs, with opaque ids and their signal colors", () => {
     expect(getDefaultPipelines()).toEqual([
       { id: "pipeline_0", name: "traces", signalType: "traces", color: "#f97316" },
       { id: "pipeline_1", name: "metrics", signalType: "metrics", color: "#3b82f6" },

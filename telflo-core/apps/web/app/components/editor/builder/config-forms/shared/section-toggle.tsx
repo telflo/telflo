@@ -7,10 +7,9 @@ import type { ValuePath } from "~/lib/graph/text-edits.js";
 import type { ValueView } from "~/lib/graph/value-view.js";
 
 /*
- * What the shared sections' "Enable …" boxes show (D9b decisions 3 and 4).
- * A section is on, off, or written in a form the box can't show (a scalar
- * or a list where a mapping belongs), which leaves the box read-only with
- * decision 3's hint.
+ * What the shared sections' "Enable …" boxes show. A section is on, off, or
+ * written in a form the box can't show (a scalar or a list where a mapping
+ * belongs), which leaves the box read-only with the unshowable-value hint.
  */
 
 export type SectionState = "on" | "off" | "unshowable";
@@ -22,9 +21,8 @@ export function presenceOf(view: ValueView): SectionState {
 }
 
 /**
- * What an absent retry or queue block means to the collector (D9d Preflight
- * ruling 4):
- * - `"on"`: a block with a default that is on (D9b's exporters);
+ * What an absent retry or queue block means to the collector:
+ * - `"on"`: a block with a default that is on (exporterhelper's);
  * - `"off-optional"`: a `configoptional.Default` block (load balancing's
  *   top-level `sending_queue`, `factory.go:52`; the S3 exporter's,
  *   `factory.go:51`): absent is off; written, it is on (null, `{}`, or keys
@@ -45,7 +43,7 @@ function writtenNull(form: FormSource, path: ValuePath): boolean {
 
 /**
  * Retry and the queue: on unless `enabled` is false. Unset (the key or the
- * whole block) is on, as the collector has them (decision 4). With an off
+ * whole block) is on, as the collector has them. With an off
  * variant (`absentMeans`), as `AbsentMeans` says.
  */
 export function enabledOf(form: FormSource, path: ValuePath, absentMeans: AbsentMeans = "on"): SectionState {
@@ -105,7 +103,7 @@ export function SectionHint({ children }: { children: ReactNode }) {
   return <p className="text-[11px] leading-4 text-muted-foreground">{children}</p>;
 }
 
-/** Decision 3's hint, under a section whose value it can't show. */
+/** The unshowable-value hint, under a section whose value it can't show. */
 export function UnshowableSectionHint() {
   return <SectionHint>{UNSHOWABLE_VALUE_MESSAGE}</SectionHint>;
 }

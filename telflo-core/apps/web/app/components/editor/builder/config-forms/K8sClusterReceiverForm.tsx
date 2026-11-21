@@ -5,37 +5,37 @@ import { InlineAlert } from "./InlineAlert.js";
 import { isTruthy, listLength } from "./shared/counts.js";
 
 /*
- * The Kubernetes cluster receiver's form (ADR 0018), over the form's fields
- * (D9c decision 2, D9b's contract): each field writes its own key.
+ * The Kubernetes cluster receiver's form, over the form's fields:
+ * each field writes its own key.
  *
- * - Fixed (D9c decisions 3 and 9): Add Namespace and Add Metadata Exporter
- *   hold an empty row until something is typed in it (never writing
- *   `""`). The collector refuses a blank metadata exporter at start
+ * - Add Namespace and Add Metadata Exporter hold an empty row until
+ *   something is typed in it (never writing `""`). The collector refuses a
+ *   blank metadata exporter at start
  *   (`receiver/k8sclusterreceiver/watcher.go:467-509`, "exporter is not in
  *   collector config"), and a blank namespace is an informer on every
  *   namespace that still turns the node and namespace watches off
  *   (`watcher.go:213-215`). A row emptied and left is removed.
  * - Node Conditions and Allocatable Types are checkbox lists written by
- *   item (D9c decision 5): an unset list shows none ticked,
- *   and the first tick writes that item alone. Node conditions' collector
- *   default is `[Ready]` (`factory.go:28, 34`), named in the hint "Default
- *   Ready"; allocatable types have none. An item the list holds that isn't
- *   one of the boxes (`storage`, `nvidia.com/gpu`, which the collector reads
- *   as any resource name) shows after them, ticked.
- * - Unset shows the collector's default (D9b decision 3; `factory.go:22-39`):
- *   Authentication Type `serviceAccount`, Distribution `kubernetes`,
- *   Collection Interval `10s`, Metadata Collection Interval `5m`, in the
- *   placeholder and the "Default …" hint, never as values.
- * - Copy (D9c decision 4, Appearance): Namespaces says setting any stops the
- *   node and namespace metrics (`config.go:48-51`, `watcher.go:213-215`);
- *   Metadata Exporters says each must be in a metrics pipeline
- *   (`receiver.go:55-56` looks them up among the metrics exporters).
+ *   item: an unset list shows none ticked, and the first tick writes that
+ *   item alone. Node conditions' collector default is `[Ready]`
+ *   (`factory.go:28, 34`), named in the hint "Default Ready"; allocatable
+ *   types have none. An item the list holds that isn't one of the boxes
+ *   (`storage`, `nvidia.com/gpu`, which the collector reads as any resource
+ *   name) shows after them, ticked.
+ * - Unset shows the collector's default (`factory.go:22-39`): Authentication
+ *   Type `serviceAccount`, Distribution `kubernetes`, Collection Interval
+ *   `10s`, Metadata Collection Interval `5m`, in the placeholder and the
+ *   "Default …" hint, never as values.
+ * - Copy: Namespaces says setting any stops the node and namespace
+ *   metrics (`config.go:48-51`, `watcher.go:213-215`); Metadata Exporters
+ *   says each must be in a metrics pipeline (`receiver.go:55-56` looks
+ *   them up among the metrics exporters).
  *
- * The Namespaces and Metadata Exporters labels point at ids no row has
- * (Ruling 38): a click on them focuses nothing.
+ * The Namespaces and Metadata Exporters labels point at ids no row has:
+ * a click on them focuses nothing.
  *
  * Ids are fixed per field (`condition-<index>`, `allocatable-<index>`);
- * no value reaches an attribute (decision 10).
+ * no value reaches an attribute.
  */
 
 const AUTH_TYPES = [

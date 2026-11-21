@@ -10,8 +10,8 @@ import { NO_GROUP_MESSAGE } from "../src/ops/fleets.js";
 import { addGroupOrganization, personWithToken, runCli, serviceAccountWithToken, useApiServer, type CliRun } from "./harness.js";
 
 /*
- * telflo fleet list|create|groups|install against the real API in process
- * (D27 decisions 28 and 33), its opamp-server the harness's fake.
+ * telflo fleet list|create|groups|install against the real API in process,
+ * its opamp-server the harness's fake.
  *
  * SECRETS: the `tf_` tokens, the fleet's bearers (recorded from the fake's
  * answers, never printed), a link's secret and install's command are
@@ -38,7 +38,7 @@ const api = useApiServer(() => ({
   }),
 }));
 
-/** The collector version the catalogue offers with binaries for every Linux platform (the api's install tests'). */
+/** The collector version the catalog offers with binaries for every Linux platform (the api's install tests'). */
 const COLLECTOR_VERSION = "0.162.0";
 /** A YAML reading two variables, NGINX_ENV and BACKEND_API_KEY. */
 const YAML = [
@@ -296,7 +296,7 @@ describe("telflo fleet install (the command is a secret)", () => {
     expect(holdsSecret(...api.logLines)).toBe(false);
   });
 
-  it("a new fleet's first deploy (Ruling 248): fleet create's next steps as printed, deploy without --group, then install succeeds", async () => {
+  it("a new fleet's first deploy: fleet create's next steps as printed, deploy without --group, then install succeeds", async () => {
     const account = await loggedIn();
     for (const [type, platform] of [
       ["server", "docker"],

@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# stack.sh's and smoke-env.sh's self-test (D36-2 decision 96), with
-# `--dry-run` only: nothing starts, nothing is pulled. Each case runs
-# stack.sh on a throwaway git repository holding this tree's real
-# docker-compose.yml and the opamp-server's PIN (committed there: stack.sh
-# copies only what is committed), into a work folder of its own:
+# stack.sh's and smoke-env.sh's self-test, with `--dry-run` only: nothing
+# starts, nothing is pulled. Each case runs stack.sh on a throwaway git
+# repository holding this tree's real docker-compose.yml and the
+# opamp-server's PIN (committed there: stack.sh copies only what is
+# committed), into a work folder of its own:
 #   - `--images dev-tag:<tag>` writes the copy and the remapped file, every
 #     telflo image on the tag, no override; `--images release:<version>`
 #     writes the override naming ghcr.io/telflo/telflo/<name>:<version> with

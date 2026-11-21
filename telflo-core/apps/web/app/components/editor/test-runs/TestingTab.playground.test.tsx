@@ -1,13 +1,12 @@
 /**
- * The Testing tab in the playground (D31-1 decisions 2, 12, 24 and 31;
- * Preflight rulings 8 and 9; Ruling 280): its runs, a run's details and its
+ * The Testing tab in the playground: its runs, a run's details and its
  * input and output, the Validation subtab's pipelines and rules and the
  * Suites subtab's suites and definitions are the sample's, read through the
  * seam (`readsFor`), and no API client function is called; the run dialog
  * opens on the sample's templates, and every action that would run, change,
  * upload, view or download a template, or read the regex library opens the
  * sign-up prompt at its button, with its words, and does nothing else. The
- * signed-in tab is TestingTab.test.tsx's (unchanged).
+ * signed-in tab is TestingTab.test.tsx's.
  *
  * Monaco is stubbed (a textarea holding its text), as in TestingTab's tests.
  */
@@ -118,7 +117,7 @@ describe("the Tests subtab", () => {
     expect(await within(results).findByText("k8s-pod-logs.json")).toBeInTheDocument();
   });
 
-  it("opens and downloads a run's input and output from the sample (Ruling 280)", async () => {
+  it("opens and downloads a run's input and output from the sample", async () => {
     const user = userEvent.setup();
     renderInPlayground(<TestingTab />);
     const [newest] = await screen.findAllByRole("button", { pressed: false, name: /Success|Error|Validation Failed/ });
@@ -174,11 +173,11 @@ describe("the run dialog", () => {
     expect(screen.queryByRole("dialog", { name: "Select Test File" })).toBeNull();
     expect(window.localStorage.getItem(LAST_RUN_DURATION_KEY)).toBeNull();
     expect(useTestingStore.getState().lastRunDurationSeconds).toBe(5);
-    // Nor the input or pipeline, as a signed-in Run's would be (Ruling 291).
+    // Nor the input or pipeline, as a signed-in Run's would be.
     expect(useTestingStore.getState()).toMatchObject({ selectedFile: null, selectedTemplate: null, selectedPipelineName: null });
   });
 
-  it("gives the focus back to Configure and run after the locked Run's prompt: the Run pressed is gone by then (Ruling 299)", async () => {
+  it("gives the focus back to Configure and run after the locked Run's prompt: the Run pressed is gone by then", async () => {
     const user = userEvent.setup();
     renderInPlayground(<TestingTab />);
     const opener = await screen.findByRole("button", { name: "Configure and run" });
@@ -301,7 +300,7 @@ describe("My Files", () => {
       </PlaygroundContext.Provider>,
     );
     await user.click(screen.getByRole("button", { name: "Delete checkout sample" }));
-    // The words, and the Delete pressed as the prompt's opener (Ruling 299).
+    // The words, and the Delete pressed as the prompt's opener.
     expect(lock).toHaveBeenCalledWith("delete a test file", screen.getByRole("button", { name: "Delete checkout sample" }));
     expect(useTestingStore.getState().files).toEqual([file]);
   });

@@ -69,10 +69,10 @@ import { sealValues } from "./sealed-values.js";
 import { generateQuickDeploySecret, quickDeploySecretHash } from "./secret.js";
 
 /**
- * A catalogue without one platform's binaries; an error the `downloaded`
+ * A catalog without one platform's binaries; an error the `downloaded`
  * audit row's insert throws (one that isn't Postgres's, with any `code`);
  * an error the Helm values' builder throws (one that isn't its own
- * HelmBuildError: an unexpected one, Ruling 48). All cleared before each test.
+ * HelmBuildError: an unexpected one). All cleared before each test.
  */
 const overrides = vi.hoisted(() => ({
   withoutPlatform: undefined as string | undefined,
@@ -134,9 +134,9 @@ const opamp = useFakeOpampServer();
 const csrfHeaders = { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE };
 const PASSWORD = "a-sufficiently-long-password";
 const DAY_MS = 86_400_000;
-/** Nothing a placeholder could still be (D17c-1 Ruling 11). */
+/** Nothing a placeholder could still be. */
 const LEFTOVER = /\$\{[A-Z_][A-Z0-9_]*\}/;
-/** A bearer's shape (decision 34): no run of 100 or more base64 characters in a public download. */
+/** A bearer's shape: no run of 100 or more base64 characters in a public download. */
 const BEARER_SHAPED = /[A-Za-z0-9+/]{100,}/;
 const USER_AGENT = "curl/8.5.0 (quick-deploy test)";
 
@@ -153,7 +153,7 @@ const YAML = [
   "",
 ].join("\n");
 
-/** A Kubernetes group's version (D17d-2): YAML's variables, one the chart sets itself, and a YAML 1.1 word (offered like any other: D18 decision 23). */
+/** A Kubernetes group's version: YAML's variables, one the chart sets itself, and a YAML 1.1 word (offered like any other). */
 const KUBERNETES_YAML = [YAML.trimEnd(), "      x-node: ${env:NODE_NAME}", "      x-word: ${env:ON}", ""].join("\n");
 
 interface Call {
@@ -162,8 +162,7 @@ interface Call {
 }
 
 /**
- * D17c-2 decisions 6, 7, 9 and 26; Preflight rulings 4, 9, 10 and 13: the
- * public download, GET /api/v1/quick-deploy/{secret}, with no session,
+ * The public download, GET /api/v1/quick-deploy/{secret}, with no session,
  * against Postgres through the API as its own role, the OpenAPI-checked
  * fake as the opamp-server and the repository's templates.
  */
@@ -296,7 +295,7 @@ describe("the public quick-deploy download", () => {
       payload: { organizationId: organization.id },
     });
     expect(switched.statusCode).toBe(200);
-    // A no-op when the sign-in already landed there (D36-1 decision 56): no new cookie, the token sent stands.
+    // A no-op when the sign-in already landed there: no new cookie, the token sent stands.
     return { organizationId: organization.id, person: { userId: account.user.id, email: account.user.email, access: (switched.headers["set-cookie"] === undefined ? cookieValue(signIn, "telflo_access") : cookieValue(switched, "telflo_access")) } };
   };
 
@@ -442,9 +441,9 @@ describe("the public quick-deploy download", () => {
   }
 
   /**
-   * An expected 5xx refusal's line (Ruling 36): at warn, the code and the
-   * link's ids, no stack (no `err`); and no error-level line of the API's
-   * handlers ("server error", "unhandled error") for it.
+   * An expected 5xx refusal's line: at warn, the code and the link's ids,
+   * no stack (no `err`); and no error-level line of the API's handlers
+   * ("server error", "unhandled error") for it.
    */
   function expectRefusalLogged(code: string, world: Pick<World, "organizationId" | "fleetId">, linkId: string): void {
     expect(logged().filter((line) => line.msg === "public download refused")).toEqual([
@@ -470,7 +469,7 @@ describe("the public quick-deploy download", () => {
     it("answers the link's bundle: 200 gzip, its headers and file name, the group's current version, the typed values, no bearer, label or placeholder", async () => {
       const world = await aWorld();
       const { id, secret } = await made(world);
-      // The group's version changes after the link is made: the download renders the current one (decision 6).
+      // The group's version changes after the link is made: the download renders the current one.
       const newer = await publishedVersion(world.organizationId, world.admin.userId, "0.160.0");
       await assign(world, world.defaultGroupId, newer.versionId);
       calls = [];
@@ -557,7 +556,7 @@ describe("the public quick-deploy download", () => {
       };
       expect((await download(other.secret)).statusCode).toBe(503);
       before = {};
-      // The router's own refusals (framework errors) answer as the route's: plain text, its headers, nothing echoed (Ruling 36).
+      // The router's own refusals (framework errors) answer as the route's: plain text, its headers, nothing echoed.
       const malformed = await server.inject({ method: "GET", url: `/api/v1/quick-deploy/${secret}%zz`, headers: { "user-agent": USER_AGENT } });
       expectPlainText(malformed, 400, "The request was not valid.");
       const tooLong = await server.inject({ method: "GET", url: `/api/v1/quick-deploy/${secret}${"x".repeat(120)}` });
@@ -574,7 +573,7 @@ describe("the public quick-deploy download", () => {
 
   // -------------------------------------------------------------------------
 
-  describe("its refusals, in Preflight ruling 10's order", () => {
+  describe("its refusals, in order", () => {
     it("answers a secret of the wrong shape and an unknown one alike, 404 in plain text, with no call", async () => {
       const world = await aWorld();
       const { secret } = await made(world);
@@ -730,7 +729,7 @@ describe("the public quick-deploy download", () => {
       expect(logLines.filter((line) => line.includes(VALUE))).toEqual([]);
     });
 
-    it("refuses a link holding another link's sealed values (another link's id, of its organization or another's: the AAD's link half, Ruling 45): 503 not_authentic, ids only; the others still download", async () => {
+    it("refuses a link holding another link's sealed values (another link's id, of its organization or another's: the AAD's link half): 503 not_authentic, ids only; the others still download", async () => {
       const one = await aWorld();
       const two = await aWorld();
       const source = await made(one);
@@ -781,7 +780,7 @@ describe("the public quick-deploy download", () => {
       }
     });
 
-    it("refuses a link's own sealed values once its row is moved into another organization, its id kept (only the AAD's organization half differs, Ruling 51): 503 not_authentic, ids only; moved back, it downloads", async () => {
+    it("refuses a link's own sealed values once its row is moved into another organization, its id kept (only the AAD's organization half differs): 503 not_authentic, ids only; moved back, it downloads", async () => {
       const one = await aWorld();
       const two = await aWorld();
       const link = await made(one);
@@ -833,7 +832,7 @@ describe("the public quick-deploy download", () => {
       expect((await extracted(response.rawPayload)).get("start_supervisor.sh")).toContain(VALUE);
     });
 
-    it("refuses a link that names variables but holds no sealed values (malformed, Ruling 36): 503, logged, never a bundle without them", async () => {
+    it("refuses a link that names variables but holds no sealed values (malformed): 503, logged, never a bundle without them", async () => {
       const world = await aWorld();
       const { id, secret } = await seeded(world, {}, { envNames: ["NGINX_ENV"] });
       expect([(await stored(id)).env_ciphertext, (await stored(id)).env_key_id]).toEqual([null, null]);
@@ -846,7 +845,7 @@ describe("the public quick-deploy download", () => {
       expect((await download((await seeded(world)).secret)).statusCode).toBe(200);
     });
 
-    it("refuses a Linux link whose stored value the render refuses (a lone surrogate sealed before Ruling 36): 503 at warn, the rule's words and ids only, nothing counted or audited", async () => {
+    it("refuses a Linux link whose stored value the render refuses (a lone surrogate, sealed directly): 503 at warn, the rule's words and ids only, nothing counted or audited", async () => {
       const world = await aWorld();
       const { id, secret } = await made(world);
       const LONE = "lone-canary-\ud800-value";
@@ -917,7 +916,7 @@ describe("the public quick-deploy download", () => {
       await expectRefused(await download(secret), 410, DOWNLOAD_LINK_ENDED_MESSAGE, id);
     });
 
-    it("fails closed when the downloaded row can't be written: 503, nothing served, nothing counted (the provisional choice)", async () => {
+    it("fails closed when the downloaded row can't be written: 503, nothing served, nothing counted", async () => {
       const world = await aWorld();
       const { id, secret } = await made(world);
       await withFailingInsert(ownerDb, "audit_events", "raise exception 'audit insert refused'", async () => {
@@ -969,7 +968,7 @@ describe("the public quick-deploy download", () => {
       expect((await download(secret)).statusCode).toBe(200);
     });
 
-    it("logs each concurrent refusal with its own request's ids (the ids kept per request, Ruling 40): two organizations' links refused 503 at the same moment", async () => {
+    it("logs each concurrent refusal with its own request's ids (the ids kept per request): two organizations' links refused 503 at the same moment", async () => {
       const one = await aWorld();
       const two = await aWorld();
       const a = await made(one);
@@ -1038,7 +1037,7 @@ describe("the public quick-deploy download", () => {
 
   // -------------------------------------------------------------------------
 
-  describe("a Helm values link's download and the switch (D17d-2 decisions 1, 20 and 21; Preflight rulings 9 and 10)", () => {
+  describe("a Helm values link's download and the switch", () => {
     const groupsPath = (world: { organizationId: string; fleetId: string }) => `${fleetPath(world.organizationId, world.fleetId)}/groups`;
     const kubernetesSettings = (role: string, extra: Record<string, unknown> = {}) => ({
       telflo: { kubernetes: { role, namespace: "tracing", volumes: [], ...extra } },
@@ -1098,7 +1097,7 @@ describe("the public quick-deploy download", () => {
       return { id: link.id, secret };
     };
 
-    /** The organization's switch, by its admin (Task 2's route). */
+    /** The organization's switch, by its admin (the organization settings route). */
     const setPublicInstallLinks = async (world: { admin: Person; organizationId: string }, publicInstallLinks: boolean) =>
       expect((await send(world.admin, "PATCH", `/api/v1/organizations/${world.organizationId}/settings`, { publicInstallLinks })).statusCode).toBe(200);
 
@@ -1180,7 +1179,7 @@ describe("the public quick-deploy download", () => {
       expect(await stored(id)).toMatchObject({ download_count: 2, last_downloaded_at: clock });
     });
 
-    // D18 decision 23: the platform's chart quotes collectorEnv's keys, so a YAML 1.1 word's variable reaches the file.
+    // The platform's chart quotes collectorEnv's keys, so a YAML 1.1 word's variable reaches the file.
     it("serves a Helm link holding a YAML 1.1 word's variable (ON): its typed value under a quoted key Helm's YAML 1.1 reads as ON", async () => {
       const world = await aKubernetesWorld();
       const { secret } = await madeHelm(world, world.gatewayId, [{ name: "ON", value: VALUE }]);
@@ -1195,7 +1194,7 @@ describe("the public quick-deploy download", () => {
       expect(response.body).not.toContain("fullnameOverride");
     });
 
-    // D18 decision 21; Preflight ruling 12: the Agent's download names its objects by the fleet's id.
+    // The Agent's download names its objects by the fleet's id.
     it("serves the Agent's Helm link with the fleet's fullnameOverride right after group", async () => {
       const world = await aKubernetesWorld();
       await assign(world, world.defaultGroupId, world.published.versionId);
@@ -1276,7 +1275,7 @@ describe("the public quick-deploy download", () => {
       expect((await unreadable(unreadableId)).kind).toBe("updated");
       const unreadableLink = await seededHelm(world, unreadableId, {}, { envNames: ["NO_LONGER_READ"] });
       await expectRefused(await download(unreadableLink.secret), 409, COLLECTOR_GROUP_SETTINGS_UNREADABLE_MESSAGE, unreadableLink.id);
-      // Variables no longer read and the chart's own, before the default token (a YAML word is offered: D18 decision 23).
+      // Variables no longer read and the chart's own, before the default token (a YAML word is offered).
       for (const envNames of [["NGINX_ENV", "NO_LONGER_READ"], ["NODE_NAME"]]) {
         const changed = await seededHelm(world, world.gatewayId, { default_token_id: randomUUID() }, { envNames });
         await expectRefused(await download(changed.secret), 409, QUICK_DEPLOY_LINK_ERROR_MESSAGES.collector_group_variables_changed, changed.id);
@@ -1390,7 +1389,7 @@ describe("the public quick-deploy download", () => {
       expect((await stored(id)).download_count).toBe(1);
     });
 
-    it("refuses a Helm link whose stored value the builder refuses (a lone surrogate sealed before Ruling 36): 503 at warn, the field and ids only, nothing counted or audited (Ruling 48)", async () => {
+    it("refuses a Helm link whose stored value the builder refuses (a lone surrogate, sealed directly): 503 at warn, the field and ids only, nothing counted or audited", async () => {
       const world = await aKubernetesWorld();
       const { id, secret } = await madeHelm(world);
       const sealed = sealValues(
@@ -1425,7 +1424,7 @@ describe("the public quick-deploy download", () => {
       expect(logLines.filter((line) => BEARER_SHAPED.test(line))).toEqual([]);
     });
 
-    it("logs an unexpected error of the builder (not its HelmBuildError) at error, by its name only: 503, nothing counted or audited (Ruling 48)", async () => {
+    it("logs an unexpected error of the builder (not its HelmBuildError) at error, by its name only: 503, nothing counted or audited", async () => {
       const world = await aKubernetesWorld();
       const { id, secret } = await madeHelm(world);
       overrides.helmValuesYamlFails = new TypeError(`unexpected-canary ${VALUE}`);
@@ -1467,7 +1466,7 @@ describe("the public quick-deploy download", () => {
       expect(logLines.filter((line) => BEARER_SHAPED.test(line))).toEqual([]);
 
       // A values file the builder refuses for an operator's field (here an endpoint outside its rule, set around
-      // loadSettings; Ruling 48): 503 at error, the field and ids logged, never the revealed bearer or a value.
+      // loadSettings): 503 at error, the field and ids logged, never the revealed bearer or a value.
       logLines = [];
       const broken = await own({ settings: { ...settings, install: { ...settings.install, agentPublicUrl: "https://opamp.example/a b" } } });
       expectPlainText(await download(secret, { on: broken }), 503, DOWNLOAD_UNAVAILABLE_MESSAGE);

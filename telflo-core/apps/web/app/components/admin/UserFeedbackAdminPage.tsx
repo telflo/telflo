@@ -14,21 +14,19 @@ import { RUNS_REQUEST_TIMEOUT_MS } from "~/lib/stores/testing-store.js";
 import { failureMessage } from "~/lib/test-runs/messages.js";
 
 /*
- * `/product-admin/user-feedback` (D29 decisions 6, 33, 34, 37, 40 and 41;
- * Preflight rulings 14, 15 and 21): the heading "Pending User Feedback",
- * "Loading feedback...", the table (Email, Feedback, Created At, Actions),
- * "No pending user feedback", the full text in a dialog titled "Feedback"
- * (sr-only "Full feedback text"), Acknowledge's dialog ("Acknowledge
- * Feedback", "Edit the response below. This will be emailed to the user.",
- * the default reply, Cancel, Ok / "Sending..." disabled while blank) and
- * Dismiss; the toasts "Feedback acknowledged", "Feedback dismissed", "Failed
- * to acknowledge feedback", "Failed to dismiss feedback". Per the D29 Parity
- * Notes:
+ * `/product-admin/user-feedback`: the heading "Pending User Feedback",
+ * "Loading feedback...", the table (Email, Feedback, Created At, Actions), "No
+ * pending user feedback", the full text in a dialog titled "Feedback" (sr-only
+ * "Full feedback text"), Acknowledge's dialog ("Acknowledge Feedback", "Edit
+ * the response below. This will be emailed to the user.", the default reply,
+ * Cancel, Ok / "Sending..." disabled while blank) and Dismiss; the toasts
+ * "Feedback acknowledged", "Feedback dismissed", "Failed to acknowledge
+ * feedback", "Failed to dismiss feedback".
  *
  * - the pending items come from the API, newest first, 25 a page, with "Load
  *   more"; a handled item leaves the list at once, and the layout is
  *   revalidated after each acknowledge or dismiss so the nav's pending count
- *   follows (ruling 14);
+ *   follows;
  * - a deleted sender's row shows their anonymous address and only Dismiss
  *   (an acknowledge would email no one: 409 `feedback_author_deleted`);
  * - the truncated text's button has no `title` holding the text, and each
@@ -43,12 +41,11 @@ import { failureMessage } from "~/lib/test-runs/messages.js";
  *   session-ended handler has the page); a read that never answers ends
  *   after 10 s as a failure, "Failed to load feedback"; a failed read with
  *   nothing listed shows "Try again" in the table's place, never "No pending
- *   user feedback" (Ruling 264).
+ *   user feedback".
  *
- * Other people's emails and feedback are personal data (decision 41):
- * visible text only, inside the shell's `ph-mask` (and `<body>`'s, where
- * Radix portals the dialogs); toasts are fixed words or the API's (which
- * name no one).
+ * Other people's emails and feedback are personal data: visible text only,
+ * inside the shell's `ph-mask` (and `<body>`'s, where Radix portals the
+ * dialogs); toasts are fixed words or the API's (which name no one).
  */
 
 export const FEEDBACK_ADMIN_LOAD_FAILED_MESSAGE = "Failed to load feedback";
@@ -148,7 +145,7 @@ export function UserFeedbackAdminPage() {
   /**
    * After a row the focus was in has gone: the first action of the row now
    * at its place, else of the row before it, else the heading, never the
-   * body (Ruling 271).
+   * body.
    */
   useLayoutEffect(() => {
     const index = focusAfterRemoval.current;
@@ -165,13 +162,13 @@ export function UserFeedbackAdminPage() {
   /**
    * Every loaded row handled while more are pending (`nextCursor`): the
    * first page is read again, so the rest show, never "No pending user
-   * feedback" with Load more hidden (Ruling 271).
+   * feedback" with Load more hidden.
    */
   useEffect(() => {
     if (loaded && !loadFailed && !loadingMore && items.length === 0 && nextCursor !== null) void load();
   }, [loaded, loadFailed, loadingMore, items.length, nextCursor, load]);
 
-  /** A handled item leaves the list; the layout reads the pending count again (ruling 14). */
+  /** A handled item leaves the list; the layout reads the pending count again. */
   const handled = (feedbackId: string, heldFocus = false) => {
     setItems((current) => {
       if (heldFocus) focusAfterRemoval.current = current.findIndex((item) => item.id === feedbackId);
@@ -318,9 +315,9 @@ export function UserFeedbackAdminPage() {
                             type="button"
                             id={`${rowId}-dismiss`}
                             aria-labelledby={`${rowId}-dismiss ${rowId}-email`}
-                            // aria-disabled, never disabled, while it sends (Ruling 272): browsers move the focus
-                            // off a button the moment it is disabled, to the body, so the focus couldn't follow the
-                            // row's removal; the guard in dismiss() refuses the second press.
+                            // aria-disabled, never disabled, while it sends: browsers move the focus off a button the moment
+                            // it is disabled, to the body, so the focus couldn't follow the row's removal; the guard in
+                            // dismiss() refuses the second press.
                             aria-disabled={dismissing.has(item.id) ? true : undefined}
                             onClick={() => void dismiss(item)}
                             className="rounded-[4px] px-1.5 py-0.5 font-medium text-fail hover:bg-fail-soft aria-disabled:opacity-50 aria-disabled:cursor-not-allowed"

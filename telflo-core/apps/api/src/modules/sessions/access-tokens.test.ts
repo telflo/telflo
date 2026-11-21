@@ -67,7 +67,7 @@ describe("createAccessTokens", () => {
       expect(expiresAt).toEqual(new Date(START.getTime() + TTL_MINUTES * 60_000));
     });
 
-    it("puts the spec's claims on the wire", async () => {
+    it("puts the access token's claims on the wire", async () => {
       const claims = sampleClaims();
       const { token } = await accessTokens.issue(claims);
       const payload = decodePayload(token);

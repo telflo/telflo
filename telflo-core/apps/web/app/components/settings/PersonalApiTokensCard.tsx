@@ -20,20 +20,21 @@ import {
 } from "~/lib/personal-api-tokens.js";
 
 /*
- * Settings › Account's "API tokens" (D25 decisions 3, 28 and 50; Preflight
- * ruling 22), the page's last card: the signed-in person's own `tf_`
- * tokens, which act as them, with their role, in every organization they
- * belong to (X-Telflo-Org per request). Only they see or revoke them.
+ * Settings › Account's "API tokens", the page's last card: the signed-in
+ * person's own `tf_` tokens, which act as them, with their role, in every
+ * organization they belong to (X-Telflo-Org per request). Only they see or
+ * revoke them.
  *
- * - The list: D22's tokens table (ApiTokensTable), each by its prefix as
+ * - The list: the shared tokens table (ApiTokensTable), each by its prefix as
  *   visible text in the masked shell; "Loading…", or "Failed to load API
  *   tokens" with "Try again"; "No tokens yet."
- * - "Create token" opens D22's create dialog with the person's own calls;
- *   its reply's token is held in this card's state for D22's reveal dialog
- *   alone (inside ph-no-capture, the copy button only), dropped however the
- *   reveal closes, and the list is read again then, not while it is shown.
- * - Revoke per row (named through aria-labelledby), with D22's
- *   confirmation; the list read again after.
+ * - "Create token" opens the shared create dialog (CreateApiTokenDialog) with
+ *   the person's own calls; its reply's token is held in this card's state for
+ *   the reveal dialog alone (inside ph-no-capture, the copy button only),
+ *   dropped however the reveal closes, and the list is read again then, not
+ *   while it is shown.
+ * - Revoke per row (named through aria-labelledby), with the shared
+ *   confirmation (RevokeApiTokenDialog); the list read again after.
  * - The fixed words say a personal token acts as you in every organization
  *   you belong to and that admins can't see it. A token's name is the
  *   person's content: visible text only, never an attribute, a toast or a

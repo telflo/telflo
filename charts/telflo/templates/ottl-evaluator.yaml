@@ -3,10 +3,9 @@
 {{- $name := include "telflo.evaluatorName" . }}
 {{- $secret := include "telflo.secretName" (list . "internalServices") }}
 {{- /*
-The OTTL evaluator (D33-1 decisions 19, 20 and 25; Preflight ruling 10):
-Deployment and ClusterIP Service ottl-evaluator, port 8003. The API is its
-only caller (networkpolicies.yaml admits nothing else, and it reaches
-nothing).
+The OTTL evaluator: Deployment and ClusterIP Service ottl-evaluator, port
+8003. The API is its only caller (networkpolicies.yaml admits nothing else,
+and it reaches nothing).
 
 Its secret is ONLY a file: a projected item of the Secret
 existingSecrets.internalServices names (key ottl-evaluator-secret), mode
@@ -76,12 +75,12 @@ spec:
               value: /run/secrets/telflo/ottl-evaluator-secret
             - name: GOMAXPROCS
               value: "4"
-          # TCP probes, never HTTP (D33-1 decision 18, Ruling 332): a probe
-          # writes no log line, and the evaluator logs every request it
-          # serves, GET /health included (internal/server/server.go,
-          # observe). Its /health checks nothing a TCP accept doesn't: it
-          # always answers 200, and serve listens only after its settings,
-          # its secret and its server are loaded (internal/server/serve.go).
+          # TCP probes, never HTTP: a probe writes no log line, and the
+          # evaluator logs every request it serves, GET /health included
+          # (internal/server/server.go, observe). Its /health checks nothing
+          # a TCP accept doesn't: it always answers 200, and serve listens
+          # only after its settings, its secret and its server are loaded
+          # (internal/server/serve.go).
           readinessProbe:
             tcpSocket:
               port: http

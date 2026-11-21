@@ -5,9 +5,9 @@ import { describe, expect, it } from "vitest";
 import { CONFIGURATION_ID, expectNoAttributeHolds, expectNoAttributeHoldsInOpenTooltips, VERSION_ID } from "~/test/fleets.js";
 import { PublishedVersionLink, type PublishedVersionLinkProps } from "./PublishedVersionLink.js";
 
-// "{configurationName} @v{n}" linked to the editor (D17c-1 decisions 7 and
-// 46; Preflight ruling 32): truncated with a tooltip in tables, whole and
-// without one in dialogs; the name in no attribute.
+// "{configurationName} @v{n}" linked to the editor: truncated with a
+// tooltip in tables, whole and without one in dialogs; the name in no
+// attribute.
 
 const LONG = `nginx-logs-${"x".repeat(120)}-canary`;
 
@@ -125,7 +125,7 @@ describe("PublishedVersionLink in a dialog", () => {
   });
 });
 
-// ADR 0024, D17b-1 decision 32: a configuration's name is text in the masked shell, never an attribute.
+// A configuration's name is text in the masked shell, never an attribute.
 describe("PublishedVersionLink's privacy", () => {
   it.each(["table", "dialog"] as const)("holds the configuration's name in no attribute (%s), its tooltip open", async (variant) => {
     const { container } = renderLink({ variant, meaning: variant === "table" ? "Running: the last published version it was sent." : undefined }, LONG);

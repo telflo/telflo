@@ -4,9 +4,9 @@ import { createOrganizationScope } from "../../tenancy/organization-scope.js";
 import { visibleTo, type ConfigurationViewerContext } from "../configurations/repositories/configuration-repository.js";
 
 /*
- * Default 21's warning (D20 Preflight ruling 27): the configurations whose
- * current draft holds a variable's reference. A configuration's current
- * draft is its highest-numbered version, when that version is unpublished
+ * The drafts warning: the configurations whose current draft holds a
+ * variable's reference. A configuration's current draft is its
+ * highest-numbered version, when that version is unpublished
  * (`published_at` null), among the live configurations the viewer can see
  * (`visibleTo`: their own drafts and every published configuration; within
  * a visible configuration every version is visible, drafts included).
@@ -18,14 +18,14 @@ import { visibleTo, type ConfigurationViewerContext } from "../configurations/re
  * reference's exact spelling, `${org:NAME}`; the caller confirms each with
  * the fill-in's scanner, since an escaped `$${org:NAME}` matches too.
  *
- * The name and the text are configuration text (Q88; ADR 0024): nothing
- * here logs them, and the name is a bound parameter, never in the SQL.
+ * The name and the text are configuration text: nothing here logs them, and
+ * the name is a bound parameter, never in the SQL.
  */
 
 /** A configuration whose current draft holds the reference's spelling: its id, its name, and the draft's text to confirm it in. */
 export interface DraftCandidate {
   id: string;
-  /** The user's text (ADR 0024): never logged. */
+  /** The user's text: never logged. */
   name: string;
   /** Configuration text: never logged. */
   yaml: string;

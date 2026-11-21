@@ -6,23 +6,21 @@
 {{- if not $conf }}{{ fail "files/gateway-default.conf is missing from the chart" }}{{ end }}
 {{- $extraRoutes := include "telflo.gatewayExtraRoutes" . }}
 {{- /*
-The gateway (D33-1 decisions 6, 16, 17 and 25; Preflight ruling 6): nginx
-with docker/gateway/default.conf, byte for byte (files/gateway-default.conf
-is its copy; Helm can't read outside the chart, and a render test holds the
-two equal). It routes every request to telflo-web:3000 and telflo-api:8080,
-the Services the platform's other templates name so, and is the one origin
-browsers reach (no Ingress).
+The gateway: nginx with docker/gateway/default.conf, byte for byte
+(files/gateway-default.conf is its copy; Helm can't read outside the chart,
+and a render test holds the two equal). It routes every request to
+telflo-web:3000 and telflo-api:8080, the Services the platform's other
+templates name so, and is the one origin browsers reach (no Ingress).
 
 nginx runs as its image's user, uid and gid 101, with a read-only root:
 the pod's safe sysctl net.ipv4.ip_unprivileged_port_start=80 lets it bind
 port 80 (Kubernetes 1.22 or later), and it writes only to emptyDirs at
 /var/cache/nginx and /run. Its probes are TCP: no request, no log line.
 
-default.conf includes /etc/nginx/telflo/extra-routes.conf (D36-1 decision
-24, Preflight ruling 15): gateway.extraRoutes rendered as nginx locations
-(telflo.gatewayExtraRoutes), in a second ConfigMap,
-telflo-gateway-extra-routes, an empty file when the list is empty (nginx
-won't start without the file).
+default.conf includes /etc/nginx/telflo/extra-routes.conf:
+gateway.extraRoutes rendered as nginx locations (telflo.gatewayExtraRoutes),
+in a second ConfigMap, telflo-gateway-extra-routes, an empty file when the
+list is empty (nginx won't start without the file).
 */}}
 apiVersion: v1
 kind: ConfigMap
@@ -168,20 +166,19 @@ spec:
               - key: extra-routes.conf
                 path: extra-routes.conf
                 mode: 0444
-        # Request bodies (up to default.conf's largest
-        # client_max_body_size, 11m) and proxied replies spill here. No
-        # sizeLimit (Ruling 337): nginx buffers unauthenticated bodies here,
-        # so a limit would let a couple of dozen slow clients fill it, and
-        # the kubelet would then evict the pod (the only gateway, by
-        # default): an outage anyone can repeat. Without one the outage
-        # remains, only later: under the node's DiskPressure the kubelet
-        # evicts before the disk is full, and picks this pod first (no
-        # ephemeral-storage request, the largest emptyDir), after gigabytes
-        # of uploads in flight rather than 256Mi. Never set an
+        # Request bodies (up to default.conf's largest client_max_body_size,
+        # 11m) and proxied replies spill here. No sizeLimit: nginx buffers
+        # unauthenticated bodies here, so a limit would let a couple of dozen
+        # slow clients fill it, and the kubelet would then evict the pod (the
+        # only gateway, by default): an outage anyone can repeat. Without one
+        # the outage remains, only later: under the node's DiskPressure the
+        # kubelet evicts before the disk is full, and picks this pod first
+        # (no ephemeral-storage request, the largest emptyDir), after
+        # gigabytes of uploads in flight rather than 256Mi. Never set an
         # ephemeral-storage limit on the gateway: it brings the per-pod
-        # eviction back. The real mitigation is a default.conf change
-        # (smaller or unbuffered unauthenticated bodies), D33-2's
-        # (security.md).
+        # eviction back. The real mitigation, not made yet, is a default.conf
+        # change (smaller or unbuffered unauthenticated bodies;
+        # docs/conventions/security.md).
         - name: cache
           emptyDir: {}
         # The pid file only.

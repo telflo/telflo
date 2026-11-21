@@ -1,7 +1,7 @@
-"""The request's contract (D14a Preflight ruling 1): a 16 MiB body refused
-(413) while it streams, a 262,144-character text, a 10 MiB input, and 400
-`invalid_request` for anything else the contract refuses, with nothing run.
-The catalogue's answers: an unknown version 400, a retired one 409, one this
+"""The request's contract: a 16 MiB body refused (413) while it streams, a
+262,144-character text, a 10 MiB input, and 400 `invalid_request` for
+anything else the contract refuses, with nothing run.
+The catalog's answers: an unknown version 400, a retired one 409, one this
 tester doesn't hold 503."""
 
 from __future__ import annotations
@@ -194,7 +194,7 @@ def test_an_unknown_version_is_400_version_unknown_a_retired_one_409_and_one_not
     retired = _post(client, run_body(version="0.155.0"))
     missing = _post(client, run_body(version="0.161.0"))
 
-    # Its own code, so the platform can tell it from a request it got wrong (Ruling 50).
+    # Its own code, so the platform can tell it from a request it got wrong.
     assert _error(unknown) == (400, "version_unknown", "The catalogue lists no such version of otelcol-contrib.")
     assert _error(retired) == (
         409,

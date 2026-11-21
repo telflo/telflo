@@ -1,34 +1,32 @@
 import { z } from "zod";
 
 /*
- * The platform's fleet routes (D16b decisions 13 to 18; Preflight rulings 5,
- * 8, 9, 12, 15, 16 and 19), under /api/v1/organizations/{organizationId}/fleets:
- * a fleet's list, create, read, update and delete; its enrollment tokens'
- * list, rotation, reveal and revocation; its collector groups, collectors
- * (with their pins and error histories); and, beside the
- * configurations, a configuration's fleet usage. Every member of the
- * organization may use them (decision 6). The opamp-server holds the fleets
- * (D16a); the platform passes them through, its own names on the wire.
+ * The platform's fleet routes, under
+ * /api/v1/organizations/{organizationId}/fleets: a fleet's list, create, read,
+ * update and delete; its enrollment tokens' list, rotation, reveal and
+ * revocation; its collector groups, collectors (with their pins and error
+ * histories); and, beside the configurations, a configuration's fleet usage.
+ * Every member of the organization may use them. The opamp-server holds the
+ * fleets; the platform passes them through, its own names on the wire.
  *
- * Published versions are the platform's configuration versions on the wire
- * (decision 14): the browser assigns and pins a configuration version
- * (`assignedVersionId`, `{kind: "version", versionId}`), never a
- * published version's id, and every reply naming a published version's id
- * carries the configuration and version beside it, or null where the
- * platform holds no live version recording it.
+ * Published versions are the platform's configuration versions on the wire:
+ * the browser assigns and pins a configuration version
+ * (`assignedVersionId`, `{kind: "version", versionId}`), never a published
+ * version's id, and every reply naming a published version's id carries the
+ * configuration and version beside it, or null where the platform holds no
+ * live version recording it.
  *
  * A bearer (an enrollment token's secret) crosses the platform only in a
- * fleet's create (201), a token's reveal and a rotation, each `no-store`
- * (decision 1). A fleet's label and every bearer are never logged or
- * audited (ADR 0024).
+ * fleet's create (201), a token's reveal and a rotation, each `no-store`.
+ * A fleet's label and every bearer are never logged or audited.
  *
- * The platform's names, and the opamp-server's they map to (D16a's
+ * The platform's names, and the opamp-server's they map to (its
  * openapi.yaml, which the API's opamp-server client and schemas keep).
- * The platform's say "published version" (the spec's word); a reply's pin
- * is named as a pin's request is, so its `kind` and `versionId` can be
- * sent back. A pin, a resolution and a served state each name a published
- * version only, since D16c removed importing (the `kind` stays, so a later
- * kind can come back without changing what callers send):
+ * The platform's say "published version"; a reply's pin is named as a
+ * pin's request is, so its `kind` and `versionId` can be sent back. A
+ * pin, a resolution and a served state each name a published version only
+ * (the `kind` stays, so another kind can be added without changing what
+ * callers send):
  *
  *   platform                                   opamp-server
  *   group.assignedPublishedVersionId           group.assignedPublicationId
@@ -48,7 +46,7 @@ import { z } from "zod";
  *
  * The platform's own beside them: `version` (`assignedVersion` on a group),
  * the configuration and version the platform holds for that published
- * version (decision 14), or null where it holds no live one.
+ * version, or null where it holds no live one.
  */
 
 /** openapi.yaml's bound on a fleet's label: 1 to 80 characters. */
@@ -125,10 +123,10 @@ export const FleetStatusSchema = z.enum(FLEET_STATUSES);
 // Requests.
 
 /**
- * A fleet's create (decision 15): the browser's own id makes a retry safe
- * (the same id, label and type answers 200 with the fleet and no bearer);
- * without one the platform makes one. `rotateExpiresAt` is when the rotate
- * token expires, in the future, or null for never.
+ * A fleet's create: the browser's own id makes a retry safe (the same id,
+ * label and type answers 200 with the fleet and no bearer); without one
+ * the platform makes one. `rotateExpiresAt` is when the rotate token
+ * expires, in the future, or null for never.
  */
 export const CreateFleetRequestSchema = z
   .object({
@@ -185,10 +183,10 @@ export type ListFleetsQuery = z.input<typeof ListFleetsQuerySchema>;
 export const FleetActorSchema = z.object({ userId: uuid, email: z.string() }).strict();
 
 /**
- * A fleet's rotate tokens at the read (D17a decision 17), or null when none
- * is valid: the current token's expiry (null for never), the latest expiry
- * among the valid tokens in their grace other than the current one (null
- * when none is), and how many rotate tokens are valid.
+ * A fleet's rotate tokens at the read, or null when none is valid: the
+ * current token's expiry (null for never), the latest expiry among the
+ * valid tokens in their grace other than the current one (null when none
+ * is), and how many rotate tokens are valid.
  */
 export const FleetRotateTokenSchema = z
   .object({
@@ -247,11 +245,10 @@ export const FleetsPageSchema = z
   .strict();
 
 /**
- * A published version as the platform knows it (decision 14): its
- * configuration and version, and the collector the version is built for
- * (D17c-1 decision 33: its distribution and version, which an install's
- * image is tagged by), or null where the platform holds no live version
- * recording it.
+ * A published version as the platform knows it: its configuration and version,
+ * and the collector the version is built for (its distribution and version,
+ * which an install's image is tagged by), or null where the platform holds no
+ * live version recording it.
  */
 export const PublishedVersionSchema = z
   .object({
@@ -268,8 +265,7 @@ export const PublishedVersionSchema = z
 /**
  * A collector group: its annotations, and the published version assigned it
  * with the platform's names beside it. A Kubernetes group's role, namespace,
- * replicas and volumes are in its annotations (D17d-1 decision 2), which
- * kubernetesOf reads.
+ * replicas and volumes are in its annotations, which kubernetesOf reads.
  */
 export const CollectorGroupSchema = z
   .object({
@@ -281,7 +277,7 @@ export const CollectorGroupSchema = z
     annotations: z.record(z.unknown()).nullable(),
     assignedPublishedVersionId: uuid.nullable(),
     assignedVersion: PublishedVersionSchema.nullable(),
-    /** D20: the variable group its collectors' text is filled in with (under a pinned one's overrides), or null. */
+    /** The variable group its collectors' text is filled in with (under a pinned one's overrides), or null. */
     variableGroupId: uuid.nullable(),
     createdAt: instant,
     updatedAt: instant,
@@ -336,9 +332,9 @@ export const EnrollmentTokensResponseSchema = z.object({ tokens: z.array(Enrollm
 export const EnrollmentTokenResponseSchema = z.object({ token: EnrollmentTokenSchema }).strict();
 
 /**
- * One event of one of the fleet's tokens (D17b-2 decision 20): ids, who
- * (null for no person) and when; never a bearer or the token's kind (the
- * web pairs the event with the tokens list).
+ * One event of one of the fleet's tokens: ids, who (null for no person) and
+ * when; never a bearer or the token's kind (the web pairs the event with the
+ * tokens list).
  */
 export const EnrollmentTokenEventSchema = z
   .object({
@@ -369,7 +365,7 @@ export const EnrollmentTokenRotatedResponseSchema = z
 
 /**
  * A reveal (`no-store`): a fresh bearer for the token. A new default token
- * after a revoke (D17c-1 decision 29) answers the same shape.
+ * after a revoke answers the same shape.
  */
 export const EnrollmentTokenRevealedResponseSchema = z
   .object({
@@ -398,22 +394,22 @@ export type EnrollmentTokenRotatedResponse = z.infer<typeof EnrollmentTokenRotat
 export type EnrollmentTokenRevealedResponse = z.infer<typeof EnrollmentTokenRevealedResponseSchema>;
 
 // ---------------------------------------------------------------------------
-// Collector groups, collectors and a configuration's fleet usage
-// (D16b Task 4). The bounds are openapi.yaml's, so the platform refuses
-// (400, no call) what the opamp-server would.
+// Collector groups, collectors and a configuration's fleet usage. The bounds
+// are openapi.yaml's, so the platform refuses (400, no call) what the
+// opamp-server would.
 
 /** openapi.yaml's bounds on a collector group's name and a collector's: 1 to 80, and 1 to 200 characters. */
 export const COLLECTOR_GROUP_NAME_MAXIMUM_LENGTH = 80;
 export const COLLECTOR_NAME_MAXIMUM_LENGTH = 200;
 
 /**
- * A group's annotations (D17c-1 decision 30): a JSON object of at most
- * 16,384 bytes both in the opamp-server's canonical form and as Postgres
- * writes it back (ck_collector_groups_annotations_bounded counts
- * `annotations::text`), nesting at most 64 arrays and objects deep (the
- * platform's own bound, stricter than the opamp-server's and Postgres's:
- * a value nested thousands deep, well under 16 KiB, is refused 400 before
- * anything else reads it; the object counting one).
+ * A group's annotations: a JSON object of at most 16,384 bytes both in
+ * the opamp-server's canonical form and as Postgres writes it back
+ * (ck_collector_groups_annotations_bounded counts `annotations::text`),
+ * nesting at most 64 arrays and objects deep (the platform's own bound,
+ * stricter than the opamp-server's and Postgres's: a value nested
+ * thousands deep, well under 16 KiB, is refused 400 before anything else
+ * reads it; the object counting one).
  */
 export const COLLECTOR_GROUP_ANNOTATIONS_MAXIMUM_BYTES = 16_384;
 export const COLLECTOR_GROUP_ANNOTATIONS_MAXIMUM_DEPTH = 64;
@@ -493,31 +489,30 @@ function stringBytes(value: string, form: JsonTextForm, cap: number): number {
 /**
  * A count of the steps a walk of a group's annotations takes (each value it
  * reads, and each key), which the tests pass to bound a walk's cost by
- * operations (Ruling 37 n5).
+ * operations.
  */
 export interface JsonWalkSteps {
   count: number;
 }
 
 /**
- * The length of a JSON value (a group's annotations) in `form`, or
- * undefined when the opamp-server would refuse it (jsonbKeepsAsWritten): a number written with an
- * exponent, or U+0000 in a string or a key. Each number is as the platform
- * sends it (JSON.stringify's), which both forms keep as written. Keys'
- * order changes neither length. Postgres writes a space after each comma
- * and after each key's colon; Go writes none. Walked with a stack of its
- * own, not by recursion, so no nesting can overflow the call stack (Ruling
- * 25 m1); the sum doesn't depend on the order it is walked in.
+ * The length of a JSON value (a group's annotations) in `form`, or undefined
+ * when the opamp-server would refuse it (jsonbKeepsAsWritten): a number
+ * written with an exponent, or U+0000 in a string or a key. Each number is as
+ * the platform sends it (JSON.stringify's), which both forms keep as written.
+ * Keys' order changes neither length. Postgres writes a space after each comma
+ * and after each key's colon; Go writes none. Walked with a stack of its own,
+ * not by recursion, so no nesting can overflow the call stack; the sum doesn't
+ * depend on the order it is walked in.
  *
- * Counted only until past `limit` (Ruling 37 n5): the walk stops there and
- * answers the count so far, some number above the bound, so a wide value
- * (an object of 200,000 keys, an array of 200,000 items) costs about the
- * bound's steps, each value and key it reads having added at least a byte,
- * though an object's keys are still listed once before its first key's step (V8's
- * for...in), a cost the 1 MiB body limit bounds.
- * At and under the bound the count is exact; past it, an exponent or a
- * U+0000 the walk didn't reach goes unseen (the value is refused either
- * way).
+ * Counted only until past `limit`: the walk stops there and answers the count
+ * so far, some number above the bound, so a wide value (an object of 200,000
+ * keys, an array of 200,000 items) costs about the bound's steps, each value
+ * and key it reads having added at least a byte, though an object's keys are
+ * still listed once before its first key's step (V8's for...in), a cost the
+ * 1 MiB body limit bounds. At and under the bound the count is exact; past it,
+ * an exponent or a U+0000 the walk didn't reach goes unseen (the value is
+ * refused either way).
  */
 function jsonBytes(root: unknown, form: JsonTextForm, limit: number, steps?: JsonWalkSteps): number | undefined {
   const separator = form === "jsonb" ? 2 : 1;
@@ -567,12 +562,12 @@ function jsonBytes(root: unknown, form: JsonTextForm, limit: number, steps?: Jso
  * Walked with a stack of its own, so no nesting can overflow the call
  * stack.
  *
- * It reads at most 16,385 values (Ruling 37 n5): each value takes at least
- * a byte in either form, so a value holding more is past the byte bound
- * (the annotations' 16,384), which their schema checks next; a wide value (an object of 200,000
- * keys, say) costs about that many steps (its keys still listed once), and
- * its depth is counted only over the values read, so which message a value
- * past both bounds gets depends on where its depth lies; both are true.
+ * It reads at most 16,385 values: each value takes at least a byte in either
+ * form, so a value holding more is past the byte bound (the annotations'
+ * 16,384), which their schema checks next; a wide value (an object of 200,000
+ * keys, say) costs about that many steps (its keys still listed once), and its
+ * depth is counted only over the values read, so which message a value past
+ * both bounds gets depends on where its depth lies; both are true.
  */
 export function jsonDepth(root: unknown, limit: number, steps?: JsonWalkSteps): number {
   const pending: [unknown, number][] = [[root, 0]];
@@ -608,7 +603,7 @@ export function jsonDepth(root: unknown, limit: number, steps?: JsonWalkSteps): 
  * Postgres's jsonb text, or undefined when the opamp-server would refuse
  * it. The API's tests hold the second equal to Postgres's own count. Each
  * is exact at and under the 16,384-byte bound, and past it some number
- * above the bound (each walk stops there: Ruling 37 n5).
+ * above the bound (each walk stops there).
  */
 function jsonTextBytes(value: unknown, steps?: JsonWalkSteps): { canonical: number; jsonb: number } | undefined {
   const canonical = jsonBytes(value, "canonical", JSON_FIELD_MAXIMUM_BYTES, steps);
@@ -622,15 +617,15 @@ export function annotationsTextBytes(value: unknown, steps?: JsonWalkSteps): { c
 }
 
 /* ---------------------------------------------------------------------------
- * A group's annotations and a server group's mounts (D17c-1 decisions 5, 30
- * and 31; Preflight rulings 6 and 15). The opamp-server stores a group's
- * `annotations` (a JSON object, or null) and returns it unchanged, its keys
- * sorted, and never reads it; the platform keeps its own data under the
- * key "telflo": `{"telflo": {"dockerMounts": [{hostPath, containerPath,
- * readOnly}]}}`, each mount a `-v` line of the group's container install
- * (and, on a Kubernetes fleet's group, `kubernetes`: below). Other keys are
- * another client's, kept as they are. The mounts' rules and their words live
- * here, for the group dialog, the install dialog and the API alike.
+ * A group's annotations and a server group's mounts. The opamp-server stores a
+ * group's `annotations` (a JSON object, or null) and returns it unchanged, its
+ * keys sorted, and never reads it; the platform keeps its own data under the
+ * key "telflo":
+ * `{"telflo": {"dockerMounts": [{hostPath, containerPath, readOnly}]}}`, each
+ * mount a `-v` line of the group's container install (and, on a Kubernetes
+ * fleet's group, `kubernetes`: below). Other keys are another client's, kept
+ * as they are. The mounts' rules and their words live here, for the group
+ * dialog, the install dialog and the API alike.
  */
 
 /** The annotations' key the platform keeps its data under. */
@@ -670,8 +665,7 @@ function mountPathAsDockerReadsIt(path: string): string {
 
 /**
  * A container path's problem, or null: a mount path, neither the
- * container's root nor the image's own directory or anything under it
- * (Preflight ruling 15).
+ * container's root nor the image's own directory or anything under it.
  */
 export function containerPathProblem(path: string): string | null {
   const problem = mountPathProblem(path);
@@ -719,16 +713,15 @@ export const DockerMountsSchema = z
   });
 
 /* ---------------------------------------------------------------------------
- * A Kubernetes group's settings (D17d-1 decisions 2, 17 and 18; Preflight
- * rulings 11 and 12). The opamp-server keeps no Kubernetes field: the
- * platform keeps a `kubernetes-supervisor` fleet's group's role, namespace,
- * replicas and hostPath volumes under its annotations' "telflo" key,
- * `{"telflo": {"kubernetes": {role, namespace, replicas?, volumes}}}`, for
- * D17d-2's Helm values. The group's role on screen comes from
- * collectorGroupRole (the fleet's Default group is the Agent, the group
- * named `cluster` the Cluster, any other a gateway pool), never from the
- * stored `role`, which a write sets to it. A namespace, a gateway's name
- * and a volume's paths are configuration text: no message here holds one.
+ * A Kubernetes group's settings. The opamp-server keeps no Kubernetes field:
+ * the platform keeps a `kubernetes-supervisor` fleet's group's role,
+ * namespace, replicas and hostPath volumes under its annotations' "telflo"
+ * key, `{"telflo": {"kubernetes": {role, namespace, replicas?, volumes}}}`,
+ * for its Helm install's values. The group's role on screen comes from
+ * collectorGroupRole (the fleet's Default group is the Agent, the group named
+ * `cluster` the Cluster, any other a gateway pool), never from the stored
+ * `role`, which a write sets to it. A namespace, a gateway's name and a
+ * volume's paths are configuration text: no message here holds one.
  */
 
 /** A Kubernetes group's roles: the Agent (one collector per node), the Cluster, a gateway pool. */
@@ -753,12 +746,10 @@ export const COLLECTOR_GROUP_REPLICAS_MINIMUM = 1;
 export const COLLECTOR_GROUP_REPLICAS_MAXIMUM = 1000;
 
 /**
- * A gateway's name (Preflight ruling 12): the platform's chart names the
- * gateway's Service after it
- * (`charts/supervisor-collector/templates/gateway-service.yaml:5`; a
+ * A gateway's name: the platform's chart names the gateway's Service after
+ * it (`charts/supervisor-collector/templates/gateway-service.yaml:5`; a
  * DNS-1035 label: it starts with a letter), its Helm release (at most 53)
- * and a StatefulSet whose pods need at most 52 characters after it (D18
- * Q65).
+ * and a StatefulSet whose pods need at most 52 characters after it.
  */
 export const KUBERNETES_GATEWAY_NAME_MAXIMUM_LENGTH = 52;
 export const KUBERNETES_GATEWAY_NAME_PATTERN = /^[a-z]([-a-z0-9]*[a-z0-9])?$/;
@@ -773,16 +764,16 @@ export const KUBERNETES_VOLUMES_MAXIMUM = 32;
 /**
  * The node logs the platform's chart mounts into the Agent itself
  * (`charts/supervisor-collector/templates/node-daemonset.yaml:45`, the
- * `varlogpods` mount; its volume at :60-61; D18 Q65).
+ * `varlogpods` mount; its volume at :60-61).
  */
 export const KUBERNETES_AGENT_LOG_PATH = "/var/log/pods";
 
-/** The words of a Kubernetes group's refusals (B's item 17), fixed: none repeats a name, a namespace or a path. */
+/** The words of a Kubernetes group's refusals, fixed: none repeats a name, a namespace or a path. */
 export const KUBERNETES_VOLUMES_MAXIMUM_MESSAGE = `A group holds at most ${KUBERNETES_VOLUMES_MAXIMUM} volumes.`;
 export const KUBERNETES_MOUNT_PATH_TWICE = "Each mount path once.";
 export const KUBERNETES_VOLUME_NAME_TWICE = "Two mount paths would name the same volume: change one.";
 /**
- * The Agent's volume at the path its chart mounts (Ruling 65): the API's 400
+ * The Agent's volume at the path its chart mounts: the API's 400
  * details carry it too, where no hint sits above it, so it names the mount
  * itself rather than pointing at the dialog's hint.
  */
@@ -804,9 +795,9 @@ export function kubernetesNamespaceProblem(namespace: string): string | null {
 }
 
 /**
- * A gateway's name's problem, or null (Preflight ruling 12): a DNS-1035
- * label of at most 52 characters, none of the reserved names. A taken name
- * is the API's to answer (`collector_group_name_taken`).
+ * A gateway's name's problem, or null: a DNS-1035 label of at most 52
+ * characters, none of the reserved names. A taken name is the API's to
+ * answer (`collector_group_name_taken`).
  */
 export function gatewayNameProblem(name: string): string | null {
   if (name === "") return "A gateway name is required.";
@@ -825,8 +816,7 @@ export function gatewayNameProblem(name: string): string | null {
 /**
  * The name the platform's chart gives a volume mounted at `mountPath`
  * (`charts/supervisor-collector/templates/_helpers.tpl:45`,
- * `tsc.extraVolumeMounts`, and `:53`, `tsc.extraVolumes`, exactly; D18
- * Q65):
+ * `tsc.extraVolumeMounts`, and `:53`, `tsc.extraVolumes`, exactly):
  * `printf "extra-%s" (regexReplaceAll "[^a-z0-9]+" (.mountPath | trimPrefix
  * "/" | lower) "-" | trimPrefix "-" | trimSuffix "-") | trunc 63 |
  * trimSuffix "-"`. Two mount paths naming the same volume break the
@@ -924,10 +914,10 @@ export const KubernetesAnnotationsSchema = z
 export type KubernetesAnnotations = z.infer<typeof KubernetesAnnotationsSchema>;
 
 /**
- * A group's role on its fleet (Preflight rulings 11 and 24): none on a
- * `server` fleet; on a `kubernetes-supervisor` fleet the Default group is
- * the Agent (`node`), the group named `cluster` the Cluster, any other a
- * gateway pool. Never read from the stored `role`.
+ * A group's role on its fleet: none on a `server` fleet; on a
+ * `kubernetes-supervisor` fleet the Default group is the Agent (`node`),
+ * the group named `cluster` the Cluster, any other a gateway pool. Never
+ * read from the stored `role`.
  */
 export function collectorGroupRole(group: { isDefault: boolean; name: string }, fleetType: FleetType): KubernetesRole | null {
   if (fleetType !== "kubernetes-supervisor") return null;
@@ -938,9 +928,9 @@ export function collectorGroupRole(group: { isDefault: boolean; name: string }, 
 /**
  * The platform's data under the annotations' "telflo" key, as the platform
  * writes it: a server group's mounts, a Kubernetes group's settings, each
- * optional (D17d-1 decision 17). Which one a group may hold is its fleet
- * type's: the API refuses the other (`kubernetes` on a server fleet's group,
- * `dockerMounts` on a Kubernetes fleet's).
+ * optional. Which one a group may hold is its fleet type's: the API refuses
+ * the other (`kubernetes` on a server fleet's group, `dockerMounts` on a
+ * Kubernetes fleet's).
  */
 export const TelfloAnnotationsSchema = z
   .object({ dockerMounts: DockerMountsSchema.optional(), kubernetes: KubernetesAnnotationsSchema.optional() })
@@ -1032,10 +1022,9 @@ export function dockerMountsOf(annotations: Record<string, unknown> | null | und
 }
 
 /**
- * The annotations a group write sends for `mounts` (Preflight ruling 30):
- * the object read with its "telflo" key replaced, every other key kept;
- * "telflo" removed when there are no mounts, and null when nothing is
- * left.
+ * The annotations a group write sends for `mounts`: the object read with its
+ * "telflo" key replaced, every other key kept; "telflo" removed when there
+ * are no mounts, and null when nothing is left.
  */
 export function annotationsWithDockerMounts(
   annotations: Record<string, unknown> | null | undefined,
@@ -1049,8 +1038,8 @@ export function annotationsWithDockerMounts(
 
 /**
  * A Kubernetes group's settings as the platform reads them from its
- * annotations (Preflight ruling 11; the web's flag is `kubernetesReadable`,
- * as D17c-1's `mountsReadable`): none when it has none (no annotations, no
+ * annotations (the web's flag is `kubernetesReadable`, as the mounts'
+ * `mountsReadable`): none when it has none (no annotations, no
  * "telflo" key, no `kubernetes`: the Agent before its first save);
  * `readable: false` and none when "telflo" or its `kubernetes` holds what
  * the platform can't read (another client's shape, a setting breaking a
@@ -1095,12 +1084,12 @@ export function kubernetesOf(annotations: Record<string, unknown> | null | undef
 }
 
 /**
- * The annotations a Kubernetes group's write sends for `kubernetes`
- * (Preflight ruling 11): the object read with its "telflo" key rebuilt as
- * `{kubernetes}` only (a stray `dockerMounts` dropped: they are a `docker
- * run`'s), every other key kept, the settings rebuilt from their own fields
- * (Ruling 40's principle: whatever else a caller's object holds is left
- * out); "telflo" removed for none, and null when nothing is left.
+ * The annotations a Kubernetes group's write sends for `kubernetes`: the
+ * object read with its "telflo" key rebuilt as `{kubernetes}` only (a stray
+ * `dockerMounts` dropped: they are a `docker run`'s), every other key kept,
+ * the settings rebuilt from their own fields (whatever else a caller's
+ * object holds is left out); "telflo" removed for none, and null when
+ * nothing is left.
  */
 export function annotationsWithKubernetes(
   annotations: Record<string, unknown> | null | undefined,
@@ -1127,12 +1116,11 @@ export function annotationsWithKubernetes(
  * optional; null clears one (the create: unset); an annotations object
  * replaces the group's whole. `assignedVersionId` names a version of a
  * configuration the person can see, which must be published: the platform
- * sends its published copy's id (decision 14). A Kubernetes group's
- * settings are its annotations' `telflo.kubernetes` (D17d-1 decision 2),
- * which the API checks against the fleet's type once it has read it
- * (Preflight ruling 13). `variableGroupId` (D20 decisions 4 and 5) names
- * one of the organization's variable groups, its collectors' text filled
- * in with its overrides first (404 `variable_group_not_found` for one the
+ * sends its published copy's id. A Kubernetes group's settings are its
+ * annotations' `telflo.kubernetes`, which the API checks against the
+ * fleet's type once it has read it. `variableGroupId` names one of the
+ * organization's variable groups, its collectors' text filled in with its
+ * overrides first (404 `variable_group_not_found` for one the
  * organization doesn't hold).
  */
 const collectorGroupFields = {
@@ -1148,9 +1136,9 @@ export const CreateCollectorGroupRequestSchema = z
 export type CreateCollectorGroupRequest = z.infer<typeof CreateCollectorGroupRequestSchema>;
 
 /**
- * A group's rename, assignment, annotations or variable group: at least
- * one field; null clears one (not the name). A Kubernetes fleet's group is never renamed
- * (409 `collector_group_name_fixed`, D17d-1 decision 18).
+ * A group's rename, assignment, annotations or variable group: at least one
+ * field; null clears one (not the name). A Kubernetes fleet's group is never
+ * renamed (409 `collector_group_name_fixed`).
  */
 export const UpdateCollectorGroupRequestSchema = z
   .object({ name: CollectorGroupNameSchema.optional(), ...collectorGroupFields })
@@ -1160,11 +1148,11 @@ export const UpdateCollectorGroupRequestSchema = z
 export type UpdateCollectorGroupRequest = z.infer<typeof UpdateCollectorGroupRequestSchema>;
 
 /**
- * A collector's pin as the browser sends it (decision 14): a version of a
- * configuration the person can see, which must be published (the platform
- * sends its published copy's id); null unpins. A pin wins over the group's
- * assignment. One kind since D16c (any other, `import` among them, is
- * refused), kept a discriminated union so a kind can come back.
+ * A collector's pin as the browser sends it: a version of a configuration
+ * the person can see, which must be published (the platform sends its
+ * published copy's id); null unpins. A pin wins over the group's
+ * assignment. One kind (any other, `import` among them, is refused), kept
+ * a discriminated union so another kind can be added.
  */
 export const CollectorPinRequestSchema = z
   .discriminatedUnion("kind", [z.object({ kind: z.literal("version"), versionId: uuid }).strict()])
@@ -1173,12 +1161,12 @@ export const CollectorPinRequestSchema = z
 export type CollectorPinRequest = z.infer<typeof CollectorPinRequestSchema>;
 
 /**
- * Pin, or unpin, up to 500 of the fleet's collectors at once, and (D20,
- * Q103) set or clear the variable group pinned on them: at least one of
- * `pin` and `pinnedVariableGroupId`, and a field left out leaves each
- * collector's as it is ("Leave as is"). A null `pin` unpins (each follows
- * its group's version); a null `pinnedVariableGroupId` returns each to its
- * group's variable group.
+ * Pin, or unpin, up to 500 of the fleet's collectors at once, and set or
+ * clear the variable group pinned on them: at least one of `pin` and
+ * `pinnedVariableGroupId`, and a field left out leaves each collector's as
+ * it is ("Leave as is"). A null `pin` unpins (each follows its group's
+ * version); a null `pinnedVariableGroupId` returns each to its group's
+ * variable group.
  */
 export const PinCollectorsRequestSchema = z
   .object({
@@ -1192,9 +1180,9 @@ export const PinCollectorsRequestSchema = z
 export type PinCollectorsRequest = z.infer<typeof PinCollectorsRequestSchema>;
 
 /**
- * A collector's rename, move to another of the fleet's groups, pin or
- * unpin, or (D20 decision 4) the variable group pinned on it, independent
- * of the pin (null returns it to its group's): at least one field.
+ * A collector's rename, move to another of the fleet's groups, pin or unpin,
+ * or the variable group pinned on it, independent of the pin (null returns it
+ * to its group's): at least one field.
  */
 export const UpdateCollectorRequestSchema = z
   .object({
@@ -1317,7 +1305,7 @@ export const CollectorSchema = z
     fleetId: uuid,
     groupId: uuid,
     pin: CollectorPinSchema.nullable(),
-    /** D20: a variable group pinned on it, independent of `pin`: its overrides win over its group's variable group's. Or null. */
+    /** A variable group pinned on it, independent of `pin`: its overrides win over its group's variable group's. Or null. */
     pinnedVariableGroupId: uuid.nullable(),
     resolution: CollectorResolutionSchema.nullable(),
     served: CollectorServedSchema.nullable(),
@@ -1366,13 +1354,12 @@ export const CollectorErrorsPageSchema = z
   .strict();
 
 /**
- * What uses each of a configuration's published versions (decision 13), by
- * its id (`publishedVersionId`): the collector groups assigned it and how
- * many collectors are pinned to it, with the platform's names beside it
+ * What uses each of a configuration's published versions, by its id
+ * (`publishedVersionId`): the collector groups assigned it and how many
+ * collectors are pinned to it, with the platform's names beside it
  * (`version`, null where the platform holds no live version recording it)
  * and the version as the opamp-server recorded it when it was published
- * (`recorded`, Ruling 23: kept when `version` is null). `inUse` while any
- * is used. Only for a configuration the person can see.
+ * (`recorded`: kept when `version` is null). `inUse` while any is used. Only for a configuration the person can see.
  */
 export const ConfigurationFleetUsageSchema = z
   .object({
@@ -1413,7 +1400,7 @@ export type ConfigurationFleetUsageResponse = z.infer<typeof ConfigurationFleetU
 // Refusals.
 
 /**
- * Ruling 19's words, exactly: every failure of the opamp-server's that isn't
+ * The words, exactly, for every failure of the opamp-server's that isn't
  * the person's to fix, 503 `fleets_unavailable`. A write's can follow a
  * change the opamp-server made (a reply lost after its commit), hence
  * "may or may not".
@@ -1422,36 +1409,35 @@ export const FLEETS_UNAVAILABLE_MESSAGE =
   "Fleet management is unavailable right now. A change you were making may or may not have been made: reload before trying again.";
 
 /**
- * Ruling 6's words, exactly: a configuration's delete whose fleet usage
+ * The words, exactly, for a configuration's delete whose fleet usage
  * couldn't be read, 503 `fleets_unavailable`. The check runs before
- * anything is deleted, so it says so (D16b Task 5).
+ * anything is deleted, so it says so.
  */
 export const FLEETS_UNAVAILABLE_AT_DELETE_MESSAGE =
   "Couldn't check whether a fleet uses this configuration, so nothing was deleted.";
 
 /**
- * The fleet routes' own codes (Preflight ruling 8). The person's to fix,
- * passed on from the opamp-server: `fleet_conflict`, `fleet_label_taken`,
- * `fleet_archived`, `collector_group_name_taken`,
- * `collector_group_is_default`, `collector_name_taken`,
- * `enrollment_token_revoked`, `enrollment_token_expired`,
- * `enrollment_token_default_exists` (D17c-1 decision 29) (409);
+ * The fleet routes' own codes. The person's to fix, passed on from the
+ * opamp-server: `fleet_conflict`, `fleet_label_taken`, `fleet_archived`,
+ * `collector_group_name_taken`, `collector_group_is_default`,
+ * `collector_name_taken`, `enrollment_token_revoked`,
+ * `enrollment_token_expired`, `enrollment_token_default_exists` (409);
  * `fleet_not_found`, `collector_group_not_found`, `collector_not_found`,
  * `enrollment_token_not_found` (404). `fleets_unavailable` (503) for
  * every other failure; `configuration_version_not_published` (422) for an
- * assignment or a pin naming a version that isn't published. Installing
- * (D17c-1): `collector_group_unassigned`, `collector_group_assignment_deleted`,
+ * assignment or a pin naming a version that isn't published. Installing:
+ * `collector_group_unassigned`, `collector_group_assignment_deleted`,
  * `collector_version_not_offered`, `fleet_type_not_installable` (409) and
  * `install_unavailable` (503, the templates can't be read). A Kubernetes
- * fleet's group's rename (D17d-1 decision 18): `collector_group_name_fixed`
- * (409, COLLECTOR_GROUP_NAME_FIXED_MESSAGE). A Kubernetes group's Helm
- * install (D17d-2): `collector_group_settings_unreadable` (409,
- * COLLECTOR_GROUP_SETTINGS_UNREADABLE_MESSAGE). They also
- * answer the organization's (`organization_not_found`), the
- * configurations' (`configuration_version_not_found`), the session's
- * (`rate_limited`, 429 with Retry-After) and the envelope's
- * (`invalid_request`, 400: a list's cursor or a time the opamp-server
- * refused, or a body the contract refuses).
+ * fleet's group's rename: `collector_group_name_fixed` (409,
+ * COLLECTOR_GROUP_NAME_FIXED_MESSAGE). A Kubernetes group's Helm install:
+ * `collector_group_settings_unreadable` (409,
+ * COLLECTOR_GROUP_SETTINGS_UNREADABLE_MESSAGE). They also answer the
+ * organization's (`organization_not_found`), the configurations'
+ * (`configuration_version_not_found`), the session's (`rate_limited`, 429
+ * with Retry-After) and the envelope's (`invalid_request`, 400: a list's
+ * cursor or a time the opamp-server refused, or a body the contract
+ * refuses).
  */
 export const FLEET_ERROR_CODES = [
   "fleet_not_found",
@@ -1469,29 +1455,29 @@ export const FLEET_ERROR_CODES = [
   "enrollment_token_default_exists",
   "fleets_unavailable",
   "configuration_version_not_published",
-  // Installing (D17c-1 decisions 36, 38 and 47).
+  // Installing.
   "install_unavailable",
   "collector_group_unassigned",
   "collector_group_assignment_deleted",
   "collector_version_not_offered",
   "fleet_type_not_installable",
-  // Kubernetes groups (D17d-1 decision 18).
+  // Kubernetes groups.
   "collector_group_name_fixed",
-  // A Kubernetes group's Helm install (D17d-2 decision 15; Preflight ruling 3).
+  // A Kubernetes group's Helm install.
   "collector_group_settings_unreadable",
-  // The public install with no group named, on a Kubernetes fleet holding several (D25 decision 37).
+  // The public install with no group named, on a Kubernetes fleet holding several.
   "collector_group_required",
 ] as const;
 
 export type FleetErrorCode = (typeof FLEET_ERROR_CODES)[number];
 
-/** `collector_group_name_fixed`'s words (D17d-1 decision 18): D17d-2's Helm release is named after the group. */
+/** `collector_group_name_fixed`'s words: the group's Helm release is named after the group. */
 export const COLLECTOR_GROUP_NAME_FIXED_MESSAGE = "A Kubernetes group's name can't change: its Helm release is named after it.";
 
 /**
- * `collector_group_settings_unreadable`'s words (409; D17d-2 decision 15,
- * Preflight ruling 3): a Kubernetes group's settings the platform can't
- * read (kubernetesOf's `readable: false`, a stored role that isn't the
- * group's, a Cluster or a gateway without settings) refuse its install.
+ * `collector_group_settings_unreadable`'s words (409): a Kubernetes group's
+ * settings the platform can't read (kubernetesOf's `readable: false`, a
+ * stored role that isn't the group's, a Cluster or a gateway without
+ * settings) refuse its install.
  */
 export const COLLECTOR_GROUP_SETTINGS_UNREADABLE_MESSAGE = "This group's Kubernetes settings can't be read: save them in Edit first.";

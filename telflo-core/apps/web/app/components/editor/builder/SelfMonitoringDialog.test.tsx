@@ -13,14 +13,14 @@ import { EDIT_SELF_MONITORING, selectIsDirty, selectUndoDescription, useEditorSt
 import { builderStore, componentNamed, openText } from "~/test/builder-store.js";
 
 /*
- * The Self-monitoring dialog (D9b decision 7; plan Task 9), opened from the
- * canvas action as a person would. Its fields read `service.telemetry` from
- * the text (`0750`, references, aliases); Apply writes only what the person
- * changed, by key path, as one entry "Edit self-monitoring"; a draft with no
- * differences writes nothing; nothing the dialog doesn't show is touched (a
- * console reader, an unknown key); readers and processors are appended and
- * removed by item; a resource attribute is renamed in place; Remove Section
- * removes the section's lines; a telemetry that isn't a mapping is read-only.
+ * The Self-monitoring dialog, opened from the canvas action as a person
+ * would. Its fields read `service.telemetry` from the text (`0750`,
+ * references, aliases); Apply writes only what the person changed, by key
+ * path, as one entry "Edit self-monitoring"; a draft with no differences
+ * writes nothing; nothing the dialog doesn't show is touched (a console
+ * reader, an unknown key); readers and processors are appended and removed by
+ * item; a resource attribute is renamed in place; Remove Section removes the
+ * section's lines; a telemetry that isn't a mapping is read-only.
  */
 
 const TEXT = [
@@ -266,7 +266,7 @@ describe("Apply writes only what changed", () => {
     expect(byId("sm-prom-port")).toHaveValue("0750");
   });
 
-  it("a write the store refuses keeps the dialog open with the draft, and no success toast (Ruling 66)", async () => {
+  it("a write the store refuses keeps the dialog open with the draft, and no success toast", async () => {
     const user = await openDialog();
     await retypeInto(user, byId("sm-prom-port"), "9090");
     const { setTelemetryValues } = builderStore();
@@ -288,7 +288,7 @@ describe("Apply writes only what changed", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
-  it("writes what a field still holds when Apply is clicked without the field losing focus (Ruling 71)", async () => {
+  it("writes what a field still holds when Apply is clicked without the field losing focus", async () => {
     await openDialog();
     const port = byId("sm-prom-port");
     port.focus();
@@ -303,8 +303,8 @@ describe("Apply writes only what changed", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
-  it("the body stays mounted with the draft until Radix unmounts it, so a close animation added later wouldn't blank it; the next opening takes the text again (Rulings 73, 80)", async () => {
-    // A guard, not the app's behaviour: neither app has a close animation (ui/dialog's `animate-out` classes have no CSS),
+  it("the body stays mounted with the draft until Radix unmounts it, so a close animation added later wouldn't blank it; the next opening takes the text again", async () => {
+    // A guard, not the app's behavior: neither app has a close animation (ui/dialog's `animate-out` classes have no CSS),
     // so the dialog closes at once. Stubbed here, an exit animation makes Radix keep the closed content mounted until it ends.
     const computed = window.getComputedStyle.bind(window);
     vi.spyOn(window, "getComputedStyle").mockImplementation((element, pseudo) => {
@@ -450,7 +450,7 @@ describe("the lists are written by item", () => {
     expect((telemetryOf(text())!.traces as Tree).processors).toEqual([{ simple: { exporter: { console: {} } } }]);
   });
 
-  it("a key typed under a mapping the text holds as null, then cleared, keeps that mapping's line and comment (Ruling 70)", async () => {
+  it("a key typed under a mapping the text holds as null, then cleared, keeps that mapping's line and comment", async () => {
     const yaml = BARE.replace("service:\n", "service:\n  telemetry:\n    logs: # keep me\n    traces:\n      level: basic\n");
     const user = await openDialog(yaml);
     await openSection(user, "Logs");
@@ -513,7 +513,7 @@ describe("resource attributes", () => {
     expect(text()).toBe(TEXT);
   });
 
-  it("a key another attribute has is refused with the message under the row, as text; the row shows its key (Ruling 67)", async () => {
+  it("a key another attribute has is refused with the message under the row, as text; the row shows its key", async () => {
     const user = await openDialog();
     await openSection(user, "Resource Attributes");
     const key = () => screen.getAllByRole("textbox", { name: "Attribute key" })[0]!;
@@ -548,7 +548,7 @@ describe("resource attributes", () => {
     expect(entries()).toBe(1);
   });
 
-  it("Add Attribute then Apply with nothing typed writes nothing: no entry, no toast (Ruling 69)", async () => {
+  it("Add Attribute then Apply with nothing typed writes nothing: no entry, no toast", async () => {
     const user = await openDialog(BARE);
     await openSection(user, "Resource Attributes");
     await user.click(button("Add Attribute"));
@@ -561,7 +561,7 @@ describe("resource attributes", () => {
     expect(toast.success).not.toHaveBeenCalled();
   });
 
-  it("a row whose key is still empty is dropped at Apply, a value typed or unset included; the rest is written (Ruling 69)", async () => {
+  it("a row whose key is still empty is dropped at Apply, a value typed or unset included; the rest is written", async () => {
     const user = await openDialog();
     await openSection(user, "Resource Attributes");
     await user.click(button("Add Attribute"));
@@ -588,7 +588,7 @@ describe("resource attributes", () => {
     );
   });
 
-  it("a blank row dropped at Apply keeps a resource the text had, with its comment: {} as it was, null as {} (Rulings 79, 78)", async () => {
+  it("a blank row dropped at Apply keeps a resource the text had, with its comment: {} as it was, null as {}", async () => {
     const withResource = (resource: string) =>
       BARE.replace("service:\n", `service:\n  telemetry:\n    resource: ${resource}# keep me\n    logs:\n      level: info\n`);
     // `{}`: nothing written, no entry, no toast.
@@ -602,7 +602,7 @@ describe("resource attributes", () => {
     expect(toast.success).not.toHaveBeenCalled();
     cleanup();
 
-    // An explicit null: the line and its comment stay, emptied as `{}` (Ruling 78's rule).
+    // An explicit null: the line and its comment stay, emptied as `{}`.
     user = await openDialog(withResource(""));
     await openSection(user, "Resource Attributes");
     await user.click(button("Add Attribute"));
@@ -612,7 +612,7 @@ describe("resource attributes", () => {
     expect(entries()).toBe(1);
   });
 
-  it("a held key another attribute has, at Apply, keeps the dialog open with the message: nothing written (Ruling 82)", async () => {
+  it("a held key another attribute has, at Apply, keeps the dialog open with the message: nothing written", async () => {
     const user = await openDialog();
     await openSection(user, "Resource Attributes");
     await retypeInto(user, byId("sm-prom-port"), "9090");
@@ -676,7 +676,7 @@ describe("Remove Section", () => {
     expect(button("Remove Section")).toBeDisabled();
   });
 
-  it("is enabled for an explicit null telemetry, which it removes, though that isn't configured (Ruling 68)", async () => {
+  it("is enabled for an explicit null telemetry, which it removes, though that isn't configured", async () => {
     const yaml = BARE.replace("service:\n", "service:\n  telemetry: null # nothing\n");
     openText(yaml);
     const user = userEvent.setup();
@@ -692,7 +692,7 @@ describe("Remove Section", () => {
     expect(button("Remove Section")).toBeDisabled();
   });
 
-  it("refused by the store, keeps the dialog open with its draft, and no success toast (Ruling 72)", async () => {
+  it("refused by the store, keeps the dialog open with its draft, and no success toast", async () => {
     const user = await openDialog();
     await retypeInto(user, byId("sm-prom-port"), "9090");
     const refuse = vi.fn(() => false);
@@ -730,7 +730,7 @@ describe("a service.telemetry that isn't a mapping", () => {
   });
 });
 
-describe("a text changed while the dialog is open (Ruling 65)", () => {
+describe("a text changed while the dialog is open", () => {
   function WithShortcuts() {
     useUndoRedo();
     return <CanvasActions />;
@@ -885,7 +885,7 @@ describe("the legacy metrics.address", () => {
   });
 });
 
-describe("the canvas's shortcuts stay out of the dialog (Preflight ruling 23)", () => {
+describe("the canvas's shortcuts stay out of the dialog", () => {
   function WithShortcuts() {
     useUndoRedo();
     return <CanvasActions />;
@@ -917,7 +917,7 @@ describe("the canvas's shortcuts stay out of the dialog (Preflight ruling 23)", 
   });
 });
 
-describe("privacy (decision 10)", () => {
+describe("privacy", () => {
   it("no value reaches an attribute, and no field sits inside a <form>", async () => {
     const MARK = "MARKER";
     const yaml = TEXT.replace("${env:HOST}", `${MARK}-host`)
@@ -958,7 +958,7 @@ describe("Clear canvas keeps telemetry", () => {
   });
 });
 
-describe("the resource attribute rows, keyed by their attributes (D9c Ruling 79)", () => {
+describe("the resource attribute rows, keyed by their attributes", () => {
   it("a key renamed to an integer-like one as another row's × is pressed: the × removes its own attribute", async () => {
     const user = await openDialog(BARE.replace("service:\n", "service:\n  telemetry:\n    resource:\n      b: x\n      a: y\n"));
     await openSection(user, "Resource Attributes");

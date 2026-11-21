@@ -33,9 +33,9 @@ import {
   versionTrigger,
 } from "./support/versions-page.js";
 
-// A configuration's versions in the editor (D10), in the browser: the
+// A configuration's versions in the editor, in the browser: the
 // version in the address, the picker, creating and renaming a version,
-// switching through D8's Unsaved Changes guard, and the selection each
+// switching through the Unsaved Changes guard, and the selection each
 // person's `/editor/{id}` opens. Configurations and their versions are seeded
 // by SQL (support/database.ts), except those the picker creates. Each test
 // works in organizations of its own, so tests and browsers run in parallel.
@@ -49,7 +49,7 @@ const V2_YAML = "exporters:\n  debug: {}\n";
  * `newContext`: another browser with its own cookie jar, the tour marked
  * done, closed when the test ends. In every browser the editor's tour is
  * marked done (`skipEditorTour`): these tests aren't about it, and it would
- * cover the page on a first visit (D9a decision 14).
+ * cover the page on a first visit.
  */
 const test = base.extend<{ newContext: () => Promise<BrowserContext> }>({
   context: async ({ context }, use) => {
@@ -247,12 +247,12 @@ test("renaming v2 while v1 is open shows the name in v2's row, leaves v1 open, a
   await open(page, v1);
   const label = `Baseline ${randomUUID().slice(0, 8)}`;
 
-  // Another row's pencil than the open one's (D10 Ruling 42): choosing its row would open v2.
+  // Another row's pencil than the open one's: choosing its row would open v2.
   await openPicker(page);
   await versionRow(page, 2).getByRole("button", { name: "Rename version" }).click();
   const dialog = page.getByRole("dialog", { name: "Rename Version" });
   const field = dialog.getByLabel("Version name");
-  // Focused when it opens, by the pointer too (Ruling 34): `fill` would focus it regardless.
+  // Focused when it opens, by the pointer too: `fill` would focus it regardless.
   await expect(field).toBeFocused();
   await expect(field).toHaveValue("Version 2");
   await field.fill(label);
@@ -289,7 +289,7 @@ test("/editor/{id} opens the version last selected, after a reload and in a seco
   const member = await seedUser({ password: PASSWORD });
   const group = await addMember({ userId: admin.userId, role: "admin" });
   await addMember({ userId: member.userId, organizationId: group.organizationId, role: "contributor" });
-  // Published (its version 1), so the other member sees it (D11b decision 1).
+  // Published (its version 1), so the other member sees it.
   const configuration = await seedConfiguration({
     organizationId: group.organizationId,
     createdByUserId: admin.userId,
@@ -386,14 +386,14 @@ test("after a switch, Undo has nothing to undo", async ({ page }) => {
   });
 });
 
-test("by keyboard alone, a row's pencil renames its version and Create New Version creates one (D10 Ruling 28)", async ({ page }) => {
+test("by keyboard alone, a row's pencil renames its version and Create New Version creates one", async ({ page }) => {
   const { configurationId, versionIds } = await seedSignedIn(page, { v2Yaml: V2_YAML });
   const v1 = versionPath(configurationId, versionIds[1]!);
   await open(page, v1);
   const renamed = `Keyboard ${randomUUID().slice(0, 8)}`;
   const created = `Created by keyboard ${randomUUID().slice(0, 8)}`;
   const trigger = versionTrigger(page);
-  // v2's pencil, while v1 is open (D10 Ruling 42): Enter on it must not choose its row.
+  // v2's pencil, while v1 is open: Enter on it must not choose its row.
   const pencil = versionRow(page, 2).getByRole("button", { name: "Rename version" });
   const create = versionList(page).getByRole("button", { name: "Create New Version" });
 

@@ -14,13 +14,12 @@ import {
 import type { TestDatabases } from "./testing.js";
 
 /**
- * users.kind, service_accounts, api_tokens and the token lookup (D22
- * decisions 5 to 12 and 18, migration 1700000000035; Preflight rulings 1
- * and 2): the backstops and the tables' constraints, as the owner and as
- * the API's role (`db`); row-level security and the lookup, as the API's
- * role. schema.integration.test.ts has the migration's catalogue (up, down,
+ * users.kind, service_accounts, api_tokens and the token lookup (migration
+ * 1700000000035): the backstops and the tables' constraints, as the owner and
+ * as the API's role (`db`); row-level security and the lookup, as the API's
+ * role. schema.integration.test.ts has the migration's catalog (up, down,
  * up). No test prints a token: a failing assertion compares hashes, ids or
- * booleans (decision 48).
+ * booleans.
  */
 describe("service accounts and API tokens", () => {
   let databases: TestDatabases;
@@ -153,7 +152,7 @@ describe("service accounts and API tokens", () => {
           constraint: "ck_users_service_account_domain",
         });
       }
-      // The exact domain only: a person at a subdomain is admitted (Q140), and a service account in capitals.
+      // The exact domain only: a person at a subdomain is admitted, and a service account in capitals.
       await expect(insertUser({ email: `${randomUUID()}x@sub.service-accounts.telflo.invalid` })).resolves.toMatchObject({
         kind: "human",
       });
@@ -288,7 +287,7 @@ describe("service accounts and API tokens", () => {
   });
 
   describe("service_accounts", () => {
-    it("stores an account in the shape D22's create writes", async () => {
+    it("stores an account in the shape the API's create writes", async () => {
       const { serviceAccountId, organizationId, adminId, user, serviceAccount, membership } = await createServiceAccount("CI deploys");
       expect(user).toMatchObject({ kind: "service", password_hash: null, accepted_terms_version: null, deleted_at: null });
       expect(user.email_verified_at).toBeInstanceOf(Date);

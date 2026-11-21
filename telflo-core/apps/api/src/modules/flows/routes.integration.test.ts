@@ -24,13 +24,13 @@ import { UNCALLED_FILE_STORE } from "../../testing/file-store.js";
 import { UNCALLED_TESTING } from "../../testing/otelcol-testing.js";
 import { hashPassword } from "../identity/password.js";
 
-// The opamp-server every server needs (D11b decision 8): this file's own fake.
+// The opamp-server every server needs: this file's own fake.
 const opamp = useFakeOpampServer();
 
 const csrfHeaders = { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE };
 const PASSWORD = "a-sufficiently-long-password";
 
-/** The committed catalogue's distribution, its default version, another it offers, and one it deprecated (D13a). */
+/** The committed catalog's distribution, its default version, another it offers, and one it deprecated. */
 const CONTRIB = "otelcol-contrib";
 const CONTRIB_DEFAULT = "0.162.0";
 const OFFERED = "0.161.0";
@@ -56,7 +56,7 @@ const DESCRIPTION = `The ${DESCRIPTION_MARKER} flow.\n\nA second paragraph.`;
 /** The card's fields, exactly: the showcase's answer has these and nothing else. */
 const CARD_KEYS = ["authorName", "name", "signals", "slug", "summary", "tags", "updatedAt"];
 
-/** A published flow's fields, exactly (D31-1 decision 34): a flow in full but its id, published, sortOrder and createdAt. */
+/** A published flow's fields, exactly: a flow in full but its id, published, sortOrder and createdAt. */
 const PUBLISHED_KEYS = [
   "authorName",
   "authorUrl",
@@ -74,7 +74,7 @@ const PUBLISHED_KEYS = [
   "yaml",
 ];
 
-/** The 429 every limiter answers (D2a decision 9). */
+/** The 429 every limiter answers. */
 const RATE_LIMITED = { error: { code: "rate_limited", message: "Too many attempts. Please wait and try again." } };
 
 function accessCookie(response: LightMyRequestResponse): string {
@@ -109,7 +109,7 @@ function bodyOf(row: Selectable<FlowsTable>) {
   };
 }
 
-/** A flow row as the open flow read answers it (D31-1 decision 34). */
+/** A flow row as the open flow read answers it. */
 function publishedOf(row: Selectable<FlowsTable>) {
   const { id: _id, published: _published, sortOrder: _sortOrder, createdAt: _createdAt, ...published } = bodyOf(row);
   return published;
@@ -129,13 +129,12 @@ function cardOf(row: Selectable<FlowsTable>) {
 }
 
 /**
- * The flows endpoints (D12 decisions 2, 10 and 11; Preflight rulings 6, 13
- * and 19) against Postgres. Every flow here is the test's own, slugged
- * `test-…`, inserted as the tables' owner or created through the API:
- * truncateAll empties the seeded ones before every test (Ruling 13), and the
- * one test that needs them puts them back with insertSeededFlows. The
- * catalogue is the committed one: Contrib, offering 0.159.0 to 0.162.0, with
- * 0.147.0 deprecated.
+ * The flows endpoints against Postgres. Every flow here is the test's own,
+ * slugged `test-…`, inserted as the tables' owner or created through the API:
+ * truncateAll empties the seeded ones before every test, and the one test that
+ * needs them puts them back with insertSeededFlows. The catalog is the
+ * committed one: Contrib, offering 0.159.0 to 0.162.0, with 0.147.0
+ * deprecated.
  */
 describe("the flows endpoints", () => {
   let databases: TestDatabases;
@@ -225,7 +224,7 @@ describe("the flows endpoints", () => {
       payload: { organizationId: group.id },
     });
     expect(switched.statusCode).toBe(200);
-    // A no-op when the sign-in already landed there (D36-1 decision 56): no new cookie, the token sent stands.
+    // A no-op when the sign-in already landed there: no new cookie, the token sent stands.
     return { ...account, organization: group, access: (switched.headers["set-cookie"] === undefined ? accessCookie(response) : accessCookie(switched)) };
   }
 
@@ -275,7 +274,7 @@ describe("the flows endpoints", () => {
       .orderBy("id")
       .execute();
 
-  /** The admin dialog's fields for a flow, every one set, on a pin the catalogue offers but not its default. */
+  /** The admin dialog's fields for a flow, every one set, on a pin the catalog offers but not its default. */
   const flowInput = (overrides: Record<string, unknown> = {}) => ({
     slug: "test-created",
     name: "Created Flow",
@@ -293,7 +292,7 @@ describe("the flows endpoints", () => {
     ...overrides,
   });
 
-  it("the committed catalogue offers 0.161.0 and 0.162.0 and deprecated 0.147.0, as these tests assume", async () => {
+  it("the committed catalog offers 0.161.0 and 0.162.0 and deprecated 0.147.0, as these tests assume", async () => {
     const rows = await databases.ownerDb
       .selectFrom("collector_versions")
       .select(["version", "deprecated"])
@@ -308,7 +307,7 @@ describe("the flows endpoints", () => {
     ]);
   });
 
-  describe("GET /api/v1/flow-showcase (decision 10, Preflight ruling 6)", () => {
+  describe("GET /api/v1/flow-showcase", () => {
     it("answers a signed-out visitor every published flow's card, in the gallery's order, with no YAML, no hidden flow and no cache header", async () => {
       const later = await addFlow({ sort_order: 20, name: "Alpha" });
       const hidden = await addFlow({ sort_order: 5, published: false });
@@ -378,12 +377,11 @@ describe("the flows endpoints", () => {
   });
 
   /*
-   * D31-1 decisions 5, 19, 34 and 43 (Preflight rulings 1 and 2): the open
-   * flow read, for the playground, with no session: the published flows
-   * only, YAML included, never from a cache, 60 a minute per address over
-   * both routes, its request line the route's pattern only.
+   * The open flow read, for the playground, with no session: the published
+   * flows only, YAML included, never from a cache, 60 a minute per address
+   * over both routes, its request line the route's pattern only.
    */
-  describe("GET /api/v1/published-flows and /api/v1/published-flows/:slug (D31-1 decision 34)", () => {
+  describe("GET /api/v1/published-flows and /api/v1/published-flows/:slug", () => {
     /** A server of its own whose open read allows `max` a minute per address, every other limit the production one's. */
     async function serverWithPublishedReads(max: number): Promise<FastifyInstance> {
       const limited = buildServer({
@@ -551,7 +549,7 @@ describe("the flows endpoints", () => {
     });
   });
 
-  describe("the anonymous reads switched off, TELFLO_PUBLIC_FLOWS' default (D36-1 decision 31, Preflight ruling 7)", () => {
+  describe("the anonymous reads switched off, TELFLO_PUBLIC_FLOWS' default", () => {
     /** A server with public flows off (and the playground, which needs them), its open read limited to one a minute per address. */
     async function serverWithPublicFlowsOff(): Promise<FastifyInstance> {
       const settings = loadSettings(process.env);
@@ -608,7 +606,7 @@ describe("the flows endpoints", () => {
     });
   });
 
-  describe("GET /api/v1/flows (decision 10)", () => {
+  describe("GET /api/v1/flows", () => {
     it("answers 401 signed out", async () => {
       await addFlow();
       const response = await call("GET", "/api/v1/flows");
@@ -638,7 +636,7 @@ describe("the flows endpoints", () => {
       expect(response.json()).toEqual({ flows: [bodyOf(hidden), bodyOf(shown)] });
     });
 
-    it("answers a user who hasn't accepted the current terms, as the catalogue does: flows are no one's data", async () => {
+    it("answers a user who hasn't accepted the current terms, as the catalog does: flows are no one's data", async () => {
       const flow = await addFlow();
       const { access } = await signedIn("organizationAdmin", { accepted_terms_version: "2025-01-01" });
       const response = await call("GET", "/api/v1/flows", access);
@@ -648,7 +646,7 @@ describe("the flows endpoints", () => {
     });
   });
 
-  describe("GET /api/v1/flows/:slug (decision 10)", () => {
+  describe("GET /api/v1/flows/:slug", () => {
     it("answers a published flow in full to anyone signed in, with no cache", async () => {
       const flow = await addFlow({ author_name: "ClickStack", source_url: "https://example.com/source" });
       const { access } = await signedIn("contributor");
@@ -687,7 +685,7 @@ describe("the flows endpoints", () => {
     });
   });
 
-  describe("POST /api/v1/flows (decision 11)", () => {
+  describe("POST /api/v1/flows", () => {
     it("creates a flow from every field for a product admin, source telflo and no author link, both timestamps the API's clock, and round-trips every field", async () => {
       const admin = await signedIn("productAdmin");
       const at = tick();
@@ -791,7 +789,7 @@ describe("the flows endpoints", () => {
       expect(await flowAudits()).toEqual([]);
     });
 
-    it("refuses a pin the catalogue doesn't offer: an unknown distribution 400 collector_distribution_unknown, an unknown or deprecated version 400 collector_version_unknown, writing nothing", async () => {
+    it("refuses a pin the catalog doesn't offer: an unknown distribution 400 collector_distribution_unknown, an unknown or deprecated version 400 collector_version_unknown, writing nothing", async () => {
       const { access } = await signedIn("productAdmin");
       const refusals: Array<[Record<string, unknown>, unknown]> = [
         [{ collectorDistribution: "clickstack" }, DISTRIBUTION_UNKNOWN],
@@ -852,7 +850,7 @@ describe("the flows endpoints", () => {
       expect(over.statusCode).toBe(400);
     });
 
-    it("refuses a body over the route's 4 MiB 413 payload_too_large, writing and auditing nothing (Ruling 23)", async () => {
+    it("refuses a body over the route's 4 MiB 413 payload_too_large, writing and auditing nothing", async () => {
       const { access } = await signedIn("productAdmin");
       const payload = JSON.stringify(flowInput({ yaml: `${YAML}${"a".repeat(4 * 1024 * 1024)}` }));
       expect(Buffer.byteLength(payload)).toBeGreaterThan(4 * 1024 * 1024);
@@ -901,7 +899,7 @@ describe("the flows endpoints", () => {
     });
   });
 
-  describe("PATCH /api/v1/flows/:id (decision 11, Preflight ruling 19)", () => {
+  describe("PATCH /api/v1/flows/:id", () => {
     it("changes every field for a product admin, updated_at from the API's clock and created_at as it was, and round-trips each", async () => {
       const flow = await addFlow({ author_name: "Before", source_url: "https://example.com/before" });
       const admin = await signedIn("productAdmin");
@@ -1062,7 +1060,7 @@ describe("the flows endpoints", () => {
       });
     });
 
-    it("refuses a body over the route's 4 MiB 413 payload_too_large, changing and auditing nothing (Ruling 23)", async () => {
+    it("refuses a body over the route's 4 MiB 413 payload_too_large, changing and auditing nothing", async () => {
       const flow = await addFlow();
       const { access } = await signedIn("productAdmin");
       tick();
@@ -1117,7 +1115,7 @@ describe("the flows endpoints", () => {
     });
   });
 
-  describe("DELETE /api/v1/flows/:id (decision 11)", () => {
+  describe("DELETE /api/v1/flows/:id", () => {
     it("deletes it for good for a product admin, audits flow.deleted with the slug, and leaves the configurations created from it as they were", async () => {
       const flow = await addFlow({ yaml_content: YAML, description: DESCRIPTION });
       const other = await addFlow();
@@ -1183,14 +1181,13 @@ describe("the flows endpoints", () => {
     });
   });
 
-  // Rulings 23 and 37: a refused write's 400 carries Zod's
-  // issues as `details` (errors.ts), which name each refused field's path,
-  // code and message, never a string field's value (a too-long or
-  // unstorable YAML or description included). By design of the error
-  // handler they may echo other values: an enum's (`signals`) received value
-  // and its options, an unknown field's name. So only the YAML and the
-  // description carry the markers here, and the signals case's value holds
-  // none.
+  // A refused write's 400 carries Zod's issues as `details` (errors.ts),
+  // which name each refused field's path, code and message, never a string
+  // field's value (a too-long or unstorable YAML or description included).
+  // By design of the error handler they may echo other values: an enum's
+  // (`signals`) received value and its options, an unknown field's name. So
+  // only the YAML and the description carry the markers here, and the
+  // signals case's value holds none.
   it("answers a create or a change refused by validation 400 invalid_request, whose body and log lines never hold its YAML or description, writing nothing", async () => {
     const admin = await signedIn("productAdmin");
     const flow = await addFlow();

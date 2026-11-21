@@ -16,22 +16,19 @@ import {
 } from "./support/fake-opamp-server.js";
 import { signInThroughApi } from "./support/session.js";
 
-// The fake opamp-server's control port (D17a decision 30, Preflight ruling
-// 6; D17b-1 decision 33, Preflight ruling 3; D17b-2 decision 21, Preflight
-// ruling 5): the one start-fake-opamp-server.ts serves is up beside the E2E
-// API's fake, and the control port, against a fresh fake, enrolls
-// collectors with what they report of themselves, sets their last-seen
-// time, drift state and reported attributes, records their errors and
-// seeds a fleet's token history through the fake's own helpers, which
-// the fake's contract routes then answer, and refuses what it
-// should (409 for a helper's refusal, 400 for a bad body, 404 for anything
-// else; a sha256 or date the contract wouldn't carry and an oversized body
-// among the 400s, read to its end so the connection lives on), changing
-// nothing; it listens on the loopback only. As
-// fake-otelcol-testing.e2e.ts does for the collector tester's control route
-// (D14a Ruling 36). No page but the last two tests', which go through the
-// E2E API (its request context), the platform's own routes: one pins a
-// collector to a published version and reads back what the control port
+// The fake opamp-server's control port: the one start-fake-opamp-server.ts
+// serves is up beside the E2E API's fake, and the control port, against a
+// fresh fake, enrolls collectors with what they report of themselves, sets
+// their last-seen time, drift state and reported attributes, records their
+// errors and seeds a fleet's token history through the fake's own helpers,
+// which the fake's contract routes then answer, and refuses what it should
+// (409 for a helper's refusal, 400 for a bad body, 404 for anything else; a
+// sha256 or date the contract wouldn't carry and an oversized body among the
+// 400s, read to its end so the connection lives on), changing nothing; it
+// listens on the loopback only. As fake-otelcol-testing.e2e.ts does for the
+// collector tester's control route. No page but the last two tests', which go
+// through the E2E API (its request context), the platform's own routes: one
+// pins a collector to a published version and reads back what the control port
 // seeded, the other pages the token history the control port seeded.
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -220,7 +217,7 @@ test("the control port enrolls a collector on the fleet's default token, seen no
       lastSeenAt: lastSeenAt.toISOString(),
       liveness: "warning",
     });
-    // The fleet's summary (D17a decision 17) counts both, last seen the newest.
+    // The fleet's summary counts both, last seen the newest.
     expect(await summaryOf(fake, organizationId, fleetId)).toMatchObject({
       collectors: 2,
       online: 1,
@@ -511,7 +508,7 @@ test("the control port refuses: a helper's refusal 409, a bad body 400, anything
     const collectorPath = `${controlUrl}/organizations/${organizationId}/collectors/${collector.id}`;
     const errorsPath = `${collectorPath}/errors`;
     const tokenEventsPath = `${controlUrl}/organizations/${organizationId}/fleets/${fleetId}/token-events`;
-    // The imports path a test once added imports through: no route since D16c removed importing.
+    // An imports path: the fake has no such route.
     const importsPath = `${controlUrl}/organizations/${organizationId}/fleets/${fleetId}/imports`;
     const hash = "a".repeat(64);
     // Instants outside the years 0001 to 9999 UTC once the offset is applied
@@ -541,7 +538,7 @@ test("the control port refuses: a helper's refusal 409, a bad body 400, anything
       ["PATCH", collectorPath, JSON.stringify({ reportd: { ip: "10.0.0.1" } }), "the body holds a field the control port doesn't take"],
       ["PATCH", collectorPath, JSON.stringify({ lastSeenAt: 1_700_000_000_000 }), "lastSeenAt isn't a string"],
       ["PATCH", collectorPath, JSON.stringify({ served: { kind: "other", id: randomUUID() } }), "served.kind isn't publication or null"],
-      // D16c: an import is no kind of served state.
+      // An import is no kind of served state.
       ["PATCH", collectorPath, JSON.stringify({ served: { kind: "import", id: randomUUID() } }), "served.kind isn't publication or null"],
       ["PATCH", collectorPath, JSON.stringify({ served: { kind: null, id: randomUUID(), sha256: "a" } }), "served.id is set with no kind"],
       ["PATCH", collectorPath, JSON.stringify({ effective: { sha256: "a", status: "done" } }), "effective.status isn't applied, applying or failed"],
@@ -626,7 +623,7 @@ test("the control port refuses: a helper's refusal 409, a bad body 400, anything
     }
 
     // Far past the cap, each sent several times: every 400 arrives. A
-    // probabilistic regression net only: before the Task 4 review's fix a
+    // probabilistic regression net only: with the body left undrained a
     // reset connection met about one 8 MiB send in six, so these rounds
     // would likely, not surely, catch its return. The proof that the body is
     // drained is the raw-socket test below (the connection stays open).

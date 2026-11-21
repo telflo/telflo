@@ -30,11 +30,10 @@ import {
 import { PersonalApiTokensCard } from "./PersonalApiTokensCard.js";
 
 /*
- * Settings › Account's "API tokens" (D25 decisions 3, 28 and 50; Preflight
- * ruling 22): the person's own tokens through D22's table and dialogs, with
- * the person's calls (no organization) and words. A token is built at run
- * time and never printed (D22 Rulings 99 and 102): booleans with fixed
- * labels only while one is on the page. A token's name is the person's
+ * Settings › Account's "API tokens": the person's own tokens through the
+ * shared tokens table and dialogs, with the person's calls (no organization)
+ * and words. A token is built at run time and never printed: booleans with
+ * fixed labels only while one is on the page. A token's name is the person's
  * content: visible text only, never an attribute, a toast or the title.
  */
 
@@ -52,7 +51,7 @@ describe("PersonalApiTokensCard", () => {
   });
   afterEach(() => unquiet());
 
-  it("lists the person's tokens with D22's table, says in fixed words who a token acts as, and names each Revoke by aria-labelledby", async () => {
+  it("lists the person's tokens with the shared tokens table, says in fixed words who a token acts as, and names each Revoke by aria-labelledby", async () => {
     vi.spyOn(apiClient, "getPersonalApiTokens").mockResolvedValue({
       items: [apiToken({ name: NAME, access: "write", expiresAt: "2026-12-01T12:00:00.000Z", isExpired: false })],
     });
@@ -63,7 +62,7 @@ describe("PersonalApiTokensCard", () => {
       "A personal token acts as you, with your role, in every organization you belong to: send the organization's id in the X-Telflo-Org header (GET /api/public/v1/orgs lists your organizations and their ids). Organization admins can't see or revoke it.",
     );
     expect(screen.getByText(PERSONAL_API_TOKENS_SCOPE_WORDS)).toBeInTheDocument();
-    // The API reference (D25 decision 49): a plain link to the API's own page, with its slash.
+    // The API reference: a plain link to the API's own page, with its slash.
     const reference = screen.getByRole("link", { name: "API reference" });
     expect([reference.getAttribute("href"), reference.getAttribute("target"), reference.parentElement!.textContent]).toEqual([
       "/api/public/v1/docs/",

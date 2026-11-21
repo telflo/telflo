@@ -9,13 +9,12 @@ import {
   type VariableGroupOverride,
 } from "@telflo/contracts";
 
-// Organization variables and variable groups for the browser tests (D20
-// decision 40), made through the E2E API as the page's session
-// (`page.request`, the CSRF header set), as support/collectors.ts makes
-// fleets: the E2E API writes them to its fake opamp-server, which fills
-// them in where a collector's, a run's or a validation's text references
-// them. Each test works in an organization of its own, so the names may
-// repeat across tests.
+// Organization variables and variable groups for the browser tests, made
+// through the E2E API as the page's session (`page.request`, the CSRF header
+// set), as support/collectors.ts makes fleets: the E2E API writes them to its
+// fake opamp-server, which fills them in where a collector's, a run's or a
+// validation's text references them. Each test works in an organization of its
+// own, so the names may repeat across tests.
 
 const CSRF = { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE };
 

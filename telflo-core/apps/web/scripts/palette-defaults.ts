@@ -11,13 +11,12 @@ import { editText, valuesEqual } from "~/lib/graph/text-edits.js";
 import type { PaletteComponent, PipelineSignalType } from "~/lib/graph/types.js";
 
 /*
- * The palette's defaults, as every offered collector is asked about them
- * (D13b decision 9, Preflight ruling 22): for each distribution in the
- * catalogue, each version it offers and each palette entry that version's
- * toolbox shows (D13a decision 6), the text a drop of that entry writes,
- * spelled as the version's pin knows it (decision 5), wired into the
- * smallest configuration the collector accepts (a receiver and an exporter around it, in
- * one pipeline of a signal it supports; an extension enabled in
+ * The palette's defaults, as every offered collector is asked about them:
+ * for each distribution in the catalog, each version it offers and each
+ * palette entry that version's toolbox shows, the text a drop of that entry
+ * writes, spelled as the version's pin knows it, wired into the smallest
+ * configuration the collector accepts (a receiver and an exporter around
+ * it, in one pipeline of a signal it supports; an extension enabled in
  * `service.extensions`; a connector between two pipelines).
  *
  * The drop is the store's (`dropComponent`): `droppedNode` with
@@ -33,7 +32,7 @@ import type { PaletteComponent, PipelineSignalType } from "~/lib/graph/types.js"
  * the validator's binary tests run every offered collector over
  * (`tests/test_binary_palette.py`). `npm run fixture:palette-defaults
  * --workspace @telflo/web` writes it (through Vitest, which reads the
- * catalogue as the web's build does); `palette-defaults.test.ts` checks the
+ * catalog as the web's build does); `palette-defaults.test.ts` checks the
  * committed file is what this produces and never writes it.
  */
 
@@ -124,14 +123,14 @@ export interface PaletteDefaultsFixture {
   cases: PaletteDefaultCase[];
 }
 
-/** The part of a catalogue file's version this reads. */
+/** The part of a catalog file's version this reads. */
 export interface CatalogueVersion {
   version: string;
   deprecated: boolean;
   supportedComponents: CollectorSupportedComponents | null;
 }
 
-/** `value` as a catalogue version, or undefined when it isn't one. */
+/** `value` as a catalog version, or undefined when it isn't one. */
 function catalogueVersion(value: unknown): CatalogueVersion | undefined {
   if (typeof value !== "object" || value === null) return undefined;
   const { version, deprecated, supportedComponents } = value as Record<string, unknown>;
@@ -140,7 +139,7 @@ function catalogueVersion(value: unknown): CatalogueVersion | undefined {
   return { version, deprecated, supportedComponents: supported.data };
 }
 
-/** Each catalogue file's `versions`, by the file's path, as Vite bundles them (as the renames are). */
+/** Each catalog file's `versions`, by the file's path, as Vite bundles them (as the renames are). */
 const CATALOGUE_VERSION_FILES = import.meta.glob<unknown>("../../../../catalog/distributions/*.json", {
   eager: true,
   import: "versions",
@@ -163,7 +162,7 @@ export function readCatalogueVersions(files: Readonly<Record<string, unknown>>):
   return byDistribution;
 }
 
-/** Every distribution's versions, as the catalogue lists them. */
+/** Every distribution's versions, as the catalog lists them. */
 export const CATALOGUE_VERSIONS = readCatalogueVersions(CATALOGUE_VERSION_FILES);
 
 /** The offered (not deprecated) versions, oldest first. */
@@ -322,8 +321,8 @@ export function paletteDefaultsFixture(
   }
   return {
     description:
-      "What a drop of each palette entry writes, per offered collector version, in the smallest configuration around it " +
-      "(D13b decision 9). Generated: never edit by hand.",
+      "What a drop of each palette entry writes, per offered collector version, in the smallest configuration around it. " +
+      "Generated: never edit by hand.",
     script: PALETTE_DEFAULTS_SCRIPT,
     cases,
   };

@@ -74,33 +74,29 @@ import {
 import { volumeProblemKey, VolumesEditor, volumesOf, type VolumeField, type VolumeRow } from "./VolumesEditor.js";
 
 /*
- * A Kubernetes fleet's group dialog (D17d-1 decisions 6, 17, 18 and 24;
- * Preflight rulings 11–13, 23, 24 and 31–37; ADR 0018): one Dialog for the
- * Agent, the Cluster and the gateway pools, on D17b-2's `GroupDialog` (its
- * published version picker, refusals, hang guard and sessions; `GroupDialog`
- * itself stays the server fleet's). Per the D17d-1 Parity Notes:
+ * A Kubernetes fleet's group dialog: one Dialog for the Agent, the Cluster
+ * and the gateway pools, on `GroupDialog` (its published version picker,
+ * refusals, hang guard and sessions; `GroupDialog` itself stays the server
+ * fleet's). Its details:
  *
  * - **Titles**: "Add gateway"; `Assign a published version to {Agent |
  *   Cluster | the gateway's name}` for a group with nothing assigned (the
  *   Cluster before its group exists among them); `Edit {…}` otherwise.
- * - **Gateway name** (Add gateway only: no Kubernetes group is renamed,
- *   decision 18), prefilled "gateway", trimmed, checked at submit by
- *   `gatewayNameProblem` (a DNS-1035 label of at most 52 characters, no
- *   reserved name: Preflight ruling 12), a taken name the API's words under
- *   it.
- * - **Published version**: `GroupDialog`'s picker and choice (Rulings 34,
- *   35, 36, 72): a create and an unassigned group's Assign show the picker
- *   alone, a version required for both (the Agent's and a gateway's Assign
- *   as the Cluster's: D17d-1 Ruling 53); an assigned group's Edit offers
- *   "Nothing assigned" too, and "A deleted configuration's version" for
- *   such an assignment. No starter.
- * - **Variable group** and **Variables used** (D20 defaults 23; Q83, Q86;
- *   Preflight ruling 32): `GroupDialog`'s, the same Select ("None
- *   (organization values)" first, the list read at the opening), the same
- *   rule for `variableGroupId` (sent only when it differs from the group's
- *   as it opened; a create only for one chosen; a change alone enables the
- *   save), the same check of the version chosen before Save, and a 422's
- *   names under its words.
+ * - **Gateway name** (Add gateway only: no Kubernetes group is renamed),
+ *   prefilled "gateway", trimmed, checked at submit by `gatewayNameProblem`
+ *   (a DNS-1035 label of at most 52 characters, no reserved name), a taken
+ *   name the API's words under it.
+ * - **Published version**: `GroupDialog`'s picker and choice: a create and
+ *   an unassigned group's Assign show the picker alone, a version required
+ *   for both (the Agent's and a gateway's Assign as the Cluster's); an
+ *   assigned group's Edit offers "Nothing assigned" too, and "A deleted
+ *   configuration's version" for such an assignment. No starter.
+ * - **Variable group** and **Variables used**: `GroupDialog`'s, the same
+ *   Select ("None (organization values)" first, the list read at the
+ *   opening), the same rule for `variableGroupId` (sent only when it
+ *   differs from the group's as it opened; a create only for one chosen; a
+ *   change alone enables the save), the same check of the version chosen
+ *   before Save, and a 422's names under its words.
  * - **Namespace**, prefilled from the group's settings, else
  *   `telflo-collectors`; **Replicas** (a gateway's only), 1 when none
  *   stored; each trimmed, checked at submit by the contracts' rules
@@ -109,72 +105,68 @@ import { volumeProblemKey, VolumesEditor, volumesOf, type VolumeField, type Volu
  *   the namespace as typed.
  * - An Edit whose namespace changes from the one installed into warns that a
  *   Helm release already installed keeps running in the old one, in the order
- *   Helm accepts for the row's role (D18 Ruling 27: the Agent and the Cluster
- *   uninstall first, a gateway after; `namespaceChangeWarning`), with the
- *   quoted `helm uninstall` for the old namespace (D17d-2 decision 4, the
- *   owner's Q54; Preflight ruling 31: the release and the opening's
+ *   Helm accepts for the row's role (the Agent and the Cluster uninstall
+ *   first, a gateway after; `namespaceChangeWarning`), with the quoted
+ *   `helm uninstall` for the old namespace (the release and the opening's
  *   namespace, in a copy box, shown only while the change is unsaved: the old
  *   namespace is kept nowhere after the save). The old namespace is
- *   `releaseNamespaceOf`'s (D17d-2 Ruling 44): the one saved, or, for the
- *   Agent before its first save, the default its Helm facts installed it into
- *   (`telflo-collectors`). No warning where the Helm facts refuse the group
- *   (Ruling 49: settings Telflo can't read, a stored role not the row's, a
- *   gateway whose name isn't one): nothing was installed from them, so there
- *   is no release to name, and the sentence never shows without its command.
+ *   `releaseNamespaceOf`'s: the one saved, or, for the Agent before its first
+ *   save, the default its Helm facts installed it into (`telflo-collectors`).
+ *   No warning where the Helm facts refuse the group (settings Telflo can't
+ *   read, a stored role not the row's, a gateway whose name isn't one):
+ *   nothing was installed from them, so there is no release to name, and the
+ *   sentence never shows without its command.
  * - **Volumes** (`VolumesEditor`): the group's hostPath volumes, recipes and
  *   warnings; their problems under each row's field.
  * - **The settings** are written under the annotations' `telflo.kubernetes`
- *   (`annotationsWithKubernetes`: every other key kept, a stray
- *   `dockerMounts` dropped), the role always the row's (`collectorGroupRole`'s:
- *   the Agent `node`, the Cluster `cluster`, a gateway `gateway`), sent when
- *   the fields differ from what they showed at the opening: always for a
- *   create, and with any save of a group with none saved (the Agent's first
- *   save) or with ones Telflo can't read ("…Saving here replaces them."),
- *   whose fields start from the defaults. Such a group's stored settings
- *   already differ from what the dialog shows (the defaults stand in), so
- *   its Edit opens with Save enabled and saves the settings shown (Ruling
- *   58); its Assign, while nothing is assigned, still takes a version.
- *   Saved settings the fields can't show as stored (a gateway's without
- *   replicas, a stored role not the row's) open as the fields show them,
- *   unchanged: they enable no save by
- *   themselves, and a version save alone leaves them; the next save that
- *   changes a field writes the row's role and the replicas shown (Ruling 53:
- *   a submit is enabled only by a change from what the dialog showed).
+ *   (`annotationsWithKubernetes`: every other key kept, a stray `dockerMounts`
+ *   dropped), the role always the row's (`collectorGroupRole`'s: the Agent
+ *   `node`, the Cluster `cluster`, a gateway `gateway`), sent when the fields
+ *   differ from what they showed at the opening: always for a create, and with
+ *   any save of a group with none saved (the Agent's first save) or with ones
+ *   Telflo can't read ("…Saving here replaces them."), whose fields start from
+ *   the defaults. Such a group's stored settings already differ from what the
+ *   dialog shows (the defaults stand in), so its Edit opens with Save enabled
+ *   and saves the settings shown; its Assign, while nothing is assigned, still
+ *   takes a version. Saved settings the fields can't show as stored (a
+ *   gateway's without replicas, a stored role not the row's) open as the fields
+ *   show them, unchanged: they enable no save by themselves, and a version save
+ *   alone leaves them; the next save that changes a field writes the row's role
+ *   and the replicas shown (a submit is enabled only by a change from what the
+ *   dialog showed).
  * - **The Cluster's Assign** before its group exists is one `POST` named
- *   `cluster` with its version and settings (Preflight ruling 31). A `409
- *   collector_group_name_taken` (another member set it up meanwhile, or a
- *   retry after an unknown outcome made it) says "The Cluster was set up
- *   meanwhile: close and reopen to see it.", reads the tab again, and keeps
- *   the submit disabled: never retried as a `PATCH` (D17c-1 Ruling 61's
- *   principle). Add gateway is one `POST` too. Every other save is one
- *   `PATCH` of what changed (`assignedVersionId`, `annotations`), never a
- *   `name`.
+ *   `cluster` with its version and settings. A
+ *   `409 collector_group_name_taken` (another member set it up meanwhile,
+ *   or a retry after an unknown outcome made it) says "The Cluster was set
+ *   up meanwhile: close and reopen to see it.", reads the tab again, and
+ *   keeps the submit disabled: never retried as a `PATCH`. Add gateway is
+ *   one `POST` too. Every other save is one `PATCH` of what changed
+ *   (`assignedVersionId`, `annotations`), never a `name`.
  * - **An Edit changing the settings** reads the group again under the
  *   write's hang guard and merges into its fresh annotations; when the
  *   settings changed since the opening (another member saved meanwhile) the
  *   save is refused, "This group's settings changed since you opened it:
  *   close and reopen to see them.", nothing sent, and the tab reads its
- *   groups again (Preflight ruling 32; D17c-1 Rulings 61 and 64). A version
- *   save alone reads nothing.
+ *   groups again. A version save alone reads nothing.
  * - Refusals as `GroupDialog`'s: inline (`DialogErrorAlert`), "Group not
  *   found" and the fleet's 404 toasted, closed and reloaded, an unknown
  *   outcome's 503 words kept open (closing then reloads), the organization's
  *   or the terms' refusal closing and revalidating, a session ended silent;
  *   a 400's details mapped to the fields (`kubernetesDetailKey`), one at the
  *   settings themselves or their role (no field shows either) the form's
- *   alert (Ruling 53).
+ *   alert.
  * - The session's baseline (the fields, the title, what the request and the
  *   settings-changed check compare against, the fields' values that a
- *   change is judged against) is the row as it opened, a
- *   snapshot, never the live prop (D17c-1 Ruling 66): a poll or a reload
- *   landing while the dialog is open changes nothing in it.
+ *   change is judged against) is the row as it opened, a snapshot, never
+ *   the live prop: a poll or a reload landing while the dialog is open
+ *   changes nothing in it.
  *
- * Privacy (D17d-1's paragraph of ADR 0024): a namespace, a gateway's name,
- * a volume's paths and a gateway's address are configuration text. Their
- * fields, the address, the namespace warning and the volumes sit inside
- * `ph-no-capture`; each is in no attribute but its own input's `value`
- * (React writes a controlled input's), inside it; ids are `useId`'s, the
- * placeholders fixed, every Select's values ids or fixed words.
+ * Privacy: a namespace, a gateway's name, a volume's paths and a gateway's
+ * address are configuration text. Their fields, the address, the namespace
+ * warning and the volumes sit inside `ph-no-capture`; each is in no
+ * attribute but its own input's `value` (React writes a controlled
+ * input's), inside it; ids are `useId`'s, the placeholders fixed, every
+ * Select's values ids or fixed words.
  */
 
 export const ADD_GATEWAY_TITLE = "Add gateway";
@@ -185,11 +177,11 @@ export const EDIT_KUBERNETES_DESCRIPTION =
 export const EDIT_GATEWAY_DESCRIPTION =
   "Change the group's published version, variable group, namespace, replicas or volumes. The group's collectors that aren't pinned follow a new version on their next poll; pinned ones keep their pin.";
 
-/** A Kubernetes group's settings Telflo can't read (Preflight ruling 32). */
+/** A Kubernetes group's settings Telflo can't read. */
 export const KUBERNETES_UNREADABLE = "This group's Kubernetes settings were saved in a form Telflo can't read. Saving here replaces them.";
-/** A settings save refused because another member saved the group's settings since the opening (Preflight ruling 32). */
+/** A settings save refused because another member saved the group's settings since the opening. */
 export const SETTINGS_CHANGED_MESSAGE = "This group's settings changed since you opened it: close and reopen to see them.";
-/** The Cluster's create answered `collector_group_name_taken` (Preflight ruling 31). */
+/** The Cluster's create answered `collector_group_name_taken`. */
 export const CLUSTER_SET_UP_MEANWHILE = "The Cluster was set up meanwhile: close and reopen to see it.";
 
 export const GATEWAY_NAME_PREFILL = "gateway";
@@ -197,17 +189,16 @@ export const GATEWAY_NAME_PLACEHOLDER = "traces-sampling";
 export const GATEWAY_ADDRESS_LABEL = "Apps send telemetry to:";
 
 /**
- * An Edit's namespace change (decision 24): the namespace installed into and
- * the new one, by the row's role (D18 Ruling 27). The Agent's and the
- * Cluster's release owns their cluster-scoped ClusterRole and binding, so
- * Helm refuses an install into the new namespace while it exists: uninstall
- * first. The Agent's state is the node's hostPath named by the fullname
- * (neither names the namespace), so its collectors stay the same; the
- * Cluster's is its StatefulSet's volume claim in the old namespace, which the
- * uninstall leaves behind, so it enrolls again. A gateway owns nothing
- * outside its namespace: install into the new one, then uninstall; its new
- * pods enroll as new collectors (D18 Ruling 42: each role's warning says what
- * happens to its collectors).
+ * An Edit's namespace change: the namespace installed into and the new one,
+ * by the row's role. The Agent's and the Cluster's release owns their
+ * cluster-scoped ClusterRole and binding, so Helm refuses an install into the
+ * new namespace while it exists: uninstall first. The Agent's state is the
+ * node's hostPath named by the fullname (neither names the namespace), so its
+ * collectors stay the same; the Cluster's is its StatefulSet's volume claim
+ * in the old namespace, which the uninstall leaves behind, so it enrolls
+ * again. A gateway owns nothing outside its namespace: install into the new
+ * one, then uninstall; its new pods enroll as new collectors (each role's
+ * warning says what happens to its collectors).
  */
 export function namespaceChangeWarning(role: KubernetesRole, from: string, to: string): string {
   const running = `A Helm release already installed keeps running in ${from}`;
@@ -226,7 +217,7 @@ export interface KubernetesGroupTarget {
   group: CollectorGroup | null;
 }
 
-/** The dialog's title (decision 24). */
+/** The dialog's title. */
 export function kubernetesGroupDialogTitle({ role, group }: KubernetesGroupTarget): string {
   if (role === "gateway" && group === null) return ADD_GATEWAY_TITLE;
   const label = role === "gateway" && group !== null ? group.name : KUBERNETES_ROLE_LABELS[role];
@@ -392,7 +383,7 @@ function KubernetesGroupSession({
   onChanged,
   onCloseAutoFocus,
 }: KubernetesGroupDialogProps & { target: KubernetesGroupTarget }) {
-  // The session's baseline is the row as it opened, never the live prop (D17c-1 Ruling 66).
+  // The session's baseline is the row as it opened, never the live prop.
   const [target] = useState(liveTarget);
   const { role, group } = target;
   const isAdd = role === "gateway" && group === null;
@@ -407,13 +398,13 @@ function KubernetesGroupSession({
   const variableGroupSelectId = useId();
 
   const [stored] = useState(() => kubernetesSettingsOf(group));
-  // The namespace the group's release was installed into (the Agent's with none saved: the default, Ruling 44) and its
-  // release's uninstall there, as the opening found them: the warning's.
+  // The namespace the group's release was installed into (the Agent's with none saved: the default) and its release's
+  // uninstall there, as the opening found them: the warning's.
   const [installedNamespace] = useState(() => (group === null ? null : releaseNamespaceOf(group)));
   const [savedUninstall] = useState(() => (group === null ? null : helmUninstallOf(group)));
   const saved = stored.kubernetes;
   const assigned = group?.assignedVersion ?? null;
-  // The settings fields as they opened: the saved settings, else the defaults (Ruling 53's baseline).
+  // The settings fields as they opened: the saved settings, else the defaults (the submit's baseline).
   const [opening] = useState(() => ({
     namespace: saved?.namespace ?? KUBERNETES_DEFAULT_NAMESPACE,
     replicas: String(saved?.replicas ?? COLLECTOR_GROUP_REPLICAS_MINIMUM),
@@ -431,7 +422,7 @@ function KubernetesGroupSession({
   const [saving, setSaving] = useState(false);
   const savingRef = useRef(false);
   const outcomeUnknownRef = useRef(false);
-  // The Cluster's create found it set up meanwhile: no retry from this session (Preflight ruling 31).
+  // The Cluster's create found it set up meanwhile: no retry from this session.
   const [clusterTaken, setClusterTaken] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [problems, setProblems] = useState<SettingsProblems>(NO_SETTINGS_PROBLEMS);
@@ -439,7 +430,7 @@ function KubernetesGroupSession({
   const configurations = usePublishedConfigurations(open, read, organizationId);
   const versions = useConfigurationVersions(read, organizationId, configurationId);
   const pickerKept = useConfigurationPickerKept();
-  // The variable group (D20 default 23): the group's as it opened, else None; the list read at the opening.
+  // The variable group: the group's as it opened, else None; the list read at the opening.
   const offeredVariableGroups = useOfferedVariableGroups(open, read, organizationId);
   const [variableGroupChoice, setVariableGroupChoice] = useState<string>(group?.variableGroupId ?? NO_VARIABLE_GROUP_CHOICE);
   const chosenVariableGroupId = variableGroupChoice === NO_VARIABLE_GROUP_CHOICE ? null : variableGroupChoice;
@@ -463,8 +454,8 @@ function KubernetesGroupSession({
     volumes: volumesOf(fields.volumes),
   });
   const settings = settingsOf({ namespace, replicas, volumes: volumeRows });
-  // Changed only against what the fields showed at the opening (Ruling 53): a gateway saved without replicas, or a
-  // stored role not the row's, shows as the fields show it and enables nothing by itself.
+  // Changed only against what the fields showed at the opening: a gateway saved without replicas, or a stored role
+  // not the row's, shows as the fields show it and enables nothing by itself.
   const fieldsChanged = !sameKubernetesSettings(settingsOf(opening), settings);
 
   const request = ((): { kind: "disabled" } | { kind: "create"; body: CreateCollectorGroupRequest } | { kind: "update"; body: UpdateCollectorGroupRequest } => {
@@ -477,7 +468,7 @@ function KubernetesGroupSession({
     }
     const body: UpdateCollectorGroupRequest = {};
     if (choice === "version") {
-      // An unassigned group's Assign takes a version, as the Cluster's create (Ruling 53).
+      // An unassigned group's Assign takes a version, as the Cluster's create.
       if (versionId === null) {
         if (configurationId !== null || isUnassigned(group)) return { kind: "disabled" };
       } else if (versionId !== group.assignedVersion?.versionId) {
@@ -487,7 +478,7 @@ function KubernetesGroupSession({
       body.assignedVersionId = null;
     }
     // The settings go with a change of the fields, and from a group whose settings are none or unreadable: the defaults the
-    // fields show already differ from what is stored, so saving them is a change (Ruling 58).
+    // fields show already differ from what is stored, so saving them is a change.
     if (fieldsChanged || saved === null) body.annotations = annotationsWithKubernetes(group.annotations, settings);
     if (chosenVariableGroupId !== group.variableGroupId) body.variableGroupId = chosenVariableGroupId;
     return Object.keys(body).length === 0 ? { kind: "disabled" } : { kind: "update", body };
@@ -498,7 +489,7 @@ function KubernetesGroupSession({
   const hint = choice === "nothing" ? HINT_NOTHING : sendsVersion ? HINT_VERSION : null;
 
   const typedNamespace = namespace.trim();
-  // No warning for a group the Helm facts refuse (Ruling 49: no namespace, so no command): the sentence and its
+  // No warning for a group the Helm facts refuse (no namespace, so no command): the sentence and its
   // `helm uninstall` show together or not at all.
   const namespaceWarning =
     installedNamespace !== null && savedUninstall !== null && typedNamespace !== "" && typedNamespace !== installedNamespace
@@ -595,8 +586,8 @@ function KubernetesGroupSession({
   };
 
   /**
-   * A settings change's annotations (Preflight ruling 32): the group read again under the write's hang guard, the
-   * settings merged into its fresh annotations, checked again whole; stopped when its settings changed since the opening.
+   * A settings change's annotations: the group read again under the write's hang guard, the settings merged into its
+   * fresh annotations, checked again whole; stopped when its settings changed since the opening.
    */
   const freshAnnotations = async (sentIn: string, opened: CollectorGroup, signal: AbortSignal) => {
     let groups: CollectorGroup[];

@@ -113,7 +113,7 @@ describe("useUndoRedo", () => {
     expect(store().pendingDelete).toBeNull();
   });
 
-  it("leaves Delete, Backspace and Cmd/Ctrl+D to the controls of a marked container (the Configuration tab) and of Radix popper content; undo still works there (Preflight ruling 23)", () => {
+  it("leaves Delete, Backspace and Cmd/Ctrl+D to the controls of a marked container (the Configuration tab) and of Radix popper content; undo still works there", () => {
     renderHook(() => useUndoRedo());
     act(() => {
       store().tidyUp();
@@ -146,11 +146,11 @@ describe("useUndoRedo", () => {
     // Undo is the page's, there too.
     expect(press({ key: "z", ctrlKey: true }, checkbox)).toBe(true);
     expect(store().history.past).toHaveLength(0);
-    // Attribute only, no value (decision 10).
+    // Attribute only, no value.
     expect(OWN_KEYS_PROPS).toEqual({ "data-own-keys": "" });
   });
 
-  it("keeps undo and redo out of a container marked as its own history (the Self-monitoring dialog) and of popper content while one is open; a field there keeps its own (Ruling 65)", () => {
+  it("keeps undo and redo out of a container marked as its own history (the Self-monitoring dialog) and of popper content while one is open; a field there keeps its own", () => {
     renderHook(() => useUndoRedo());
     act(() => {
       store().tidyUp();
@@ -194,7 +194,7 @@ describe("useUndoRedo", () => {
     dialog.remove();
     expect(press({ key: "z", ctrlKey: true }, option)).toBe(true);
     expect(store().history.past).toHaveLength(0);
-    // Attributes only, no value (decision 10).
+    // Attributes only, no value.
     expect(OWN_HISTORY_PROPS).toEqual({ "data-own-keys": "", "data-own-history": "" });
   });
 

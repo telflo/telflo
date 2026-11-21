@@ -1,4 +1,4 @@
-"""Hang guards (D13b ruling 36): a test whose code under test could hang runs
+"""Hang guards: a test whose code under test could hang runs
 that code where a hang can be seen and stopped, and a hang fails the test.
 
 The limit is a guard, never a timing assertion: it is far above what the

@@ -5,18 +5,16 @@ import { Button } from "~/components/ui/button.js";
 import { ConfigurationStatusBadge } from "./ConfigurationCard.js";
 
 /*
- * The list view: the configurations columns (ADR 0018), as plain table
- * markup with the Table primitives' classes (D7 Preflight ruling 10; no
- * @tanstack/react-table). Per the D7 Parity Notes:
+ * The list view: the configurations columns, as plain table markup with the
+ * Table primitives' classes (no @tanstack/react-table):
  * - the headers are plain, styled as sort buttons, and don't sort: the
- *   order is the API's (decision 6);
- * - a Status column, after Owner (D11b decision 6), then a Distribution
- *   column (D13a decision 10): the distribution tag, its tooltip fixed text
- *   but for the catalogue's label;
+ *   order is the API's;
+ * - a Status column, after Owner, then a Distribution column: the
+ *   distribution tag, its tooltip fixed text but for the catalog's label;
  * - no "Untitled" fallback, since a name is required;
  * - Delete shows only where it's allowed: the author's row, or any row for
- *   an admin (D11b decision 2).
- * The name is a button, not a link (D7 Preflight ruling 11).
+ *   an admin.
+ * The name is a button, not a link.
  */
 
 const HEAD_CLASS =
@@ -28,12 +26,12 @@ interface ConfigurationsTableProps {
   configurations: Configuration[];
   /** The signed-in user, whose own configurations are marked "(you)". */
   currentUserId: string;
-  /** Whether the signed-in member may delete a configuration (D11b decision 2): its author, or an admin. */
+  /** Whether the signed-in member may delete a configuration: its author, or an admin. */
   canDelete: (configuration: Configuration) => boolean;
   onOpen: (configuration: Configuration) => void;
   /** `from` the Delete pressed (the playground's prompt gives the focus back there). */
   onDelete: (configuration: Configuration, from?: HTMLElement) => void;
-  /** The collector catalogue, for the Distribution column's labels and marks; null while unread or failed. */
+  /** The collector catalog, for the Distribution column's labels and marks; null while unread or failed. */
   distributions?: readonly CollectorDistribution[] | null;
 }
 

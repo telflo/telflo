@@ -37,21 +37,20 @@ function RequestNewLink() {
 export const RESET_TOKEN_STORAGE_KEY = "telflo.resetPasswordToken";
 
 /*
- * The reset-password form (ADR 0018). The token comes from the emailed link's
- * fragment, `#token=…`, which the browser never sends to a server, so no
- * proxy or access log records it (D3 decision 9, Ruling 14). It is checked
- * only when the form is submitted, so a mail scanner that prefetches the link
- * consumes nothing.
+ * The reset-password form. The token comes from the emailed link's fragment,
+ * `#token=…`, which the browser never sends to a server, so no proxy or
+ * access log records it. It is checked only when the form is submitted, so a
+ * mail scanner that prefetches the link consumes nothing.
  *
  * The server never sees the fragment, so the token is read after hydration.
  * Until then the card shows neither the form nor the missing-code alert, and
  * the server's render matches the browser's first one. Reading it also takes
  * it out of the address bar, before analytics can record the URL, and keeps
- * it for a reload of the page (D4 Ruling 14); it is forgotten once the reset
- * succeeds or the API says it is no good.
+ * it for a reload of the page; it is forgotten once the reset succeeds or
+ * the API says it is no good.
  *
- * A completed reset signs out every session and does not sign in (decision
- * 5), so success moves to `/login` after two seconds.
+ * A completed reset signs out every session and does not sign in, so
+ * success moves to `/login` after two seconds.
  */
 export function ResetPasswordForm() {
   const navigate = useNavigate();

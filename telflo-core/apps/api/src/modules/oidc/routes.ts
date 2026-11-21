@@ -44,7 +44,7 @@ import { auditUserAgent } from "../../http/audit-user-agent.js";
 export interface OidcRoutesDependencies extends ServerDependencies {
   now: () => Date;
   opampRegistration: OpampRegistration;
-  /** Required, as the password-reset routes' (D21 Preflight ruling 18): a link's and an unlink's emails go after the response. */
+  /** Required, as the password-reset routes': a link's and an unlink's emails go after the response. */
   runAfterResponse: RunAfterResponse;
 }
 
@@ -62,10 +62,10 @@ function requestOrigin(request: FastifyRequest): { ipAddress: string | undefined
 }
 
 /**
- * D2c decision 1's sign-in endpoints. The start and the callback are GETs,
+ * The OIDC sign-in endpoints. The start and the callback are GETs,
  * top-level navigations: neither can carry the CSRF header, and neither
  * needs it. The start only sets a cookie; the callback acts only when its
- * `state` matches the cookie this browser was given (decision 3).
+ * `state` matches the cookie this browser was given.
  *
  * The validator/serializer compilers are server-wide and set once in
  * buildServer, not here.
@@ -80,9 +80,8 @@ export function registerOidcRoutes(
   const { service: sessions, withUserOrganizations } = createDatabaseSessionService(deps);
   const authenticate = createAuthenticate(sessions);
   const userSettings = createUserSettingsRepository(db);
-  // Every repository bound to one transaction (D2c Ruling 9). The user
-  // repository is handed out as its transaction-safe methods only: see
-  // OidcTransaction.
+  // Every repository bound to one transaction. The user repository is handed
+  // out as its transaction-safe methods only: see OidcTransaction.
   const withTransaction: WithOidcTransaction = (work) =>
     db.transaction().execute((transaction) =>
       work({
@@ -112,11 +111,11 @@ export function registerOidcRoutes(
   /** A page on the web app. Every path here is already cleaned by safeRedirectPath. */
   const webUrl = (path: string) => `${settings.publicWebUrl}${path}`;
 
-  /** The sign-in page with the error and the cleaned `redirectTo` kept (D2c decision 4). */
+  /** The sign-in page with the error and the cleaned `redirectTo` kept. */
   const loginUrl = (code: OidcQueryErrorCode, redirectTo: string) =>
     webUrl(`/login?${new URLSearchParams({ error: code, redirectTo }).toString()}`);
 
-  /** Where a link from Settings ends: the Account page with a fixed result code, no personal data (D21 decision 38). */
+  /** Where a link from Settings ends: the Account page with a fixed result code, no personal data. */
   const linkResultUrl = (code: OidcLinkResultCode) =>
     webUrl(`${LINK_REDIRECT_PATH}?${new URLSearchParams({ link: code }).toString()}`);
 
@@ -129,7 +128,7 @@ export function registerOidcRoutes(
 
   const typed = server.withTypeProvider<ZodTypeProvider>();
 
-  // A static read of the settings, so not rate limited (D2c decision 7).
+  // A static read of the settings, so not rate limited.
   typed.get(
     "/api/v1/auth/oidc-providers",
     { schema: { response: { 200: OidcProvidersResponseSchema } } },
@@ -139,8 +138,8 @@ export function registerOidcRoutes(
   typed.get(
     "/api/v1/auth/oidc/:provider",
     {
-      // The shared per-IP bucket (D2c decision 7): the callback can create
-      // an account. The start may answer a 429 with the envelope.
+      // The shared per-IP bucket: the callback can create an account. The
+      // start may answer a 429 with the envelope.
       onRequest: rateLimiters.identityPerIp,
       schema: {
         params: ProviderParamsSchema,
@@ -158,7 +157,7 @@ export function registerOidcRoutes(
       }
       void reply.header("cache-control", "no-store");
       if (result.kind === "unavailable") {
-        // Discovery failed; the next sign-in tries again (D2c decision 2).
+        // Discovery failed; the next sign-in tries again.
         request.log.warn({ err: result.error }, "OIDC provider discovery failed");
         return reply.redirect(loginUrl("oauth_failed", result.redirectTo), 302);
       }
@@ -170,8 +169,8 @@ export function registerOidcRoutes(
   /**
    * The browser is navigating here from the provider, so every outcome is a
    * redirect, never the error envelope: success to the web app, failure to
-   * `/login?error=…`. The flow cookie is cleared whatever happens (D2c
-   * decision 3), a 429 included.
+   * `/login?error=…`. The flow cookie is cleared whatever happens, a 429
+   * included.
    */
   server.get(
     "/api/v1/auth/oidc/:provider/callback",
@@ -180,10 +179,10 @@ export function registerOidcRoutes(
       // The last resort: the service audits and redirects any unexpected
       // failure itself, keeping the flow's `redirectTo`. Anything thrown
       // past it, a hook's 429 included, still ends in a redirect: a link's
-      // to the Account page (D21 Preflight ruling 7), anything else to
-      // sign-in. It writes no audit row and sets no session or theme cookie.
-      // Only an unexpected failure is logged: the query holds the code, and
-      // the request serializer keeps it out of the request's own log lines.
+      // to the Account page, anything else to sign-in. It writes no audit
+      // row and sets no session or theme cookie. Only an unexpected failure
+      // is logged: the query holds the code, and the request serializer
+      // keeps it out of the request's own log lines.
       errorHandler: async (error, request, reply) => {
         const isRateLimited = error instanceof AppError && error.statusCode === 429;
         if (!isRateLimited) request.log.error({ err: error }, "OIDC callback failed");
@@ -221,7 +220,7 @@ export function registerOidcRoutes(
         return reply.redirect(linkResultUrl(result.code), 302);
       }
       setSessionCookies(reply, settings, result.issued);
-      // The stored theme, after the session's cookies and never throwing (D21 decision 23, Preflight ruling 4).
+      // The stored theme, after the session's cookies and never throwing.
       await setStoredThemeCookie(reply, settings, userSettings, result.issued.user.id, request.log);
       // Cleaned when the flow started, and again now it ends.
       return reply.redirect(webUrl(safeRedirectPath(result.redirectTo)), 302);
@@ -229,8 +228,8 @@ export function registerOidcRoutes(
   );
 
   /**
-   * The account's sign-in methods (D21 decision 37): `authenticate` only,
-   * never the terms check (decision 20), and no limit.
+   * The account's sign-in methods: `authenticate` only, never the terms
+   * check, and no limit.
    */
   typed.get(
     "/api/v1/auth/me/sign-in-methods",
@@ -242,13 +241,13 @@ export function registerOidcRoutes(
   );
 
   /**
-   * Starts linking a provider from Settings (D21 decision 38): a POST, so it
-   * carries the CSRF header and the current password stays out of the URL.
-   * The shared per-IP bucket first, then, once the session is known,
-   * sign-in's per-email failure budget keyed by the session's address
-   * (Preflight ruling 9), settled exactly once whatever happens. Answers
-   * the provider's URL for the browser to go to, with the flow cookie set
-   * under its own path (valid from this one), and nothing cached.
+   * Starts linking a provider from Settings: a POST, so it carries the
+   * CSRF header and the current password stays out of the URL. The shared
+   * per-IP bucket first, then, once the session is known, sign-in's
+   * per-email failure budget keyed by the session's address, settled
+   * exactly once whatever happens. Answers the provider's URL for the
+   * browser to go to, with the flow cookie set under its own path (valid
+   * from this one), and nothing cached.
    */
   typed.post(
     "/api/v1/auth/me/identity-link-requests",
@@ -271,9 +270,9 @@ export function registerOidcRoutes(
     async (request, reply) => {
       const authentication = requireAuthentication(request);
       void reply.header("cache-control", "no-store");
-      // Settled exactly once (Preflight ruling 9): a verified password clears
-      // the address; anything else, a password-less start included, keeps
-      // the count only for a wrong current password.
+      // Settled exactly once: a verified password clears the address;
+      // anything else, a password-less start included, keeps the count
+      // only for a wrong current password.
       let isReauthenticated = false;
       let failure: unknown;
       try {
@@ -302,9 +301,9 @@ export function registerOidcRoutes(
   );
 
   /**
-   * Unlinks a provider (D21 decision 39): a DELETE of the identity, with a
-   * body so the current password stays out of the URL. Limited and settled
-   * as the link's start. The sessions are kept.
+   * Unlinks a provider: a DELETE of the identity, with a body so the
+   * current password stays out of the URL. Limited and settled as the
+   * link's start. The sessions are kept.
    */
   typed.delete(
     "/api/v1/auth/me/identities/:provider",

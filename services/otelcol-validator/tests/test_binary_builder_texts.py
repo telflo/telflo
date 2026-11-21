@@ -1,12 +1,11 @@
 """The forward-connector validation cases (2) and the complex
-configuration's (3), against every offered collector (D13b ruling 68;
-marked `binary`, run inside the image with `pytest -m binary`). D9a deferred
-them to D13b; decision 9's cases didn't include them.
+configuration's (3), against every offered collector (marked `binary`, run
+inside the image with `pytest -m binary`).
 
-The collector answers whether the builder's wiring bridges signals (there is
-no client-side `validatePipeline`, decision 18), and the complex
-configuration's text is checked with every offered version, through the
-service's check and through its HTTP API.
+The collector answers whether the builder's wiring bridges signals (there is no
+client-side `validatePipeline`), and the complex configuration's text is
+checked with every offered version, through the service's check and through its
+HTTP API.
 """
 
 from __future__ import annotations

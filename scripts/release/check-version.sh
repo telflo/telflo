@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
-# check-version.sh: one release version, everywhere it is written (D36-2
-# decision 75; Q279). Each place must hold a release version
-# (MAJOR.MINOR.PATCH: digits only, no leading zeros, nothing before or
-# after; scripts/release/version.sh holds the pattern), and every place the
-# same one.
+# check-version.sh: one release version, everywhere it is written. Each
+# place must hold a release version (MAJOR.MINOR.PATCH: digits only, no
+# leading zeros, nothing before or after; scripts/release/version.sh holds
+# the pattern), and every place the same one.
 #
 #   scripts/release/check-version.sh       (no argument; from anywhere)
 #

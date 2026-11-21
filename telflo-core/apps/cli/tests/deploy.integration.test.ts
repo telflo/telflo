@@ -7,11 +7,10 @@ import { SEVERAL_SERVING_MESSAGE } from "../src/ops/deploy.js";
 import { runCli, serviceAccountWithToken, useApiServer } from "./harness.js";
 
 /*
- * telflo deploy against the real API in process (D27 decisions 28 and
- * 33), its opamp-server the harness's fake: a create with --name, the
- * update of the one group serving the configuration, the ambiguity of two,
- * the envelope's refusals and a read token. Tokens are checked with
- * boolean canaries only.
+ * telflo deploy against the real API in process, its opamp-server the
+ * harness's fake: a create with --name, the update of the one group
+ * serving the configuration, the ambiguity of two, the envelope's refusals
+ * and a read token. Tokens are checked with boolean canaries only.
  */
 
 const api = useApiServer();

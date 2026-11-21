@@ -7,7 +7,7 @@ import {
   type DriftCounts,
 } from "./ConfigurationSyncCell.js";
 
-// The Configuration Sync column (D17a decisions 9 and 18, Preflight ruling 11).
+// The Configuration Sync column.
 
 const NONE: DriftCounts = { collectors: 0, inSync: 0, pending: 0, failed: 0, drifted: 0, unassigned: 0 };
 
@@ -44,7 +44,7 @@ describe("ConfigurationSyncCell", () => {
     expect(screen.getByText("all in sync")).toHaveClass("text-muted-foreground");
   });
 
-  it("shows the counts in the warning colour when any collector isn't in sync, never a fraction", () => {
+  it("shows the counts in the warning color when any collector isn't in sync, never a fraction", () => {
     const { container } = render(<ConfigurationSyncCell summary={counts({ failed: 1, inSync: 3 })} />);
     const text = screen.getByText("1 failed · 3 in sync");
     expect(text).toHaveClass("text-warn");

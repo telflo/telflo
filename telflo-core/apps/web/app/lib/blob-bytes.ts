@@ -1,7 +1,7 @@
 /**
  * A blob's bytes, through FileReader where `arrayBuffer` is missing (jsdom's).
  * Shared by the test runs' fixture-shape check and the organization logo's
- * type check (D23-2 decision 52).
+ * type check.
  */
 export function blobBytes(blob: Blob): Promise<Uint8Array> {
   if (typeof blob.arrayBuffer === "function") return blob.arrayBuffer().then((buffer) => new Uint8Array(buffer));

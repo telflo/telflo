@@ -1,5 +1,5 @@
 """The check's own directory never reaches an answer, and the placeholder
-directories it holds (D13b ruling 64).
+directories it holds.
 
 - Every hostmetrics root_path in one check is one directory (the collector
   refuses differing root_paths), whether the rerun repointed it or a
@@ -9,11 +9,11 @@ directories it holds (D13b ruling 64).
   check makes at most MAX_PLACEHOLDER_DIRECTORIES of them.
 - No answer names the check's directory: every string is scrubbed to
   `<validator>`, and a requirement whose captured value lies under it is not
-  emitted (an error, as ruling 41's placeholder rule).
+  emitted (an error, as with a placeholder).
 - The check's directory is removed off the event loop; a removal that fails
   is logged by the error's type, naming no path.
 - A collector output cut at the cap ends at its last complete line, so no
-  fragment of a path the scrub can't recognise survives (ruling 66).
+  fragment of a path the scrub can't recognize survives.
 """
 
 from __future__ import annotations
@@ -169,7 +169,7 @@ def test_file_storage_directories_are_one_per_distinct_value(tmp_path: Path) -> 
 
 
 def test_past_the_bound_directory_references_share_the_overflow_directory(tmp_path: Path) -> None:
-    """Ruling 66: past the cap a directory reference still names an existing
+    """Past the cap a directory reference still names an existing
     directory (one shared by every further key), never a string the
     collector's stat refuses."""
     count = MAX_PLACEHOLDER_DIRECTORIES + 2
@@ -253,10 +253,9 @@ def _masking(stores: int, root_path: bool) -> str:
     ids=["past-the-cap", "cap-then-root"],
 )
 async def test_past_the_bound_the_rerun_still_surfaces_the_build_error(binary_dir: Path, stores: int, root_path: bool) -> None:
-    """Ruling 66 (the review's m1): past the cap the rerun left a value as
-    written, so it stopped at the same requirement and the build error stayed
-    hidden (valid: true). Now every value names a directory and the build
-    error is the answer's."""
+    """Past the cap, a value the rerun left as written would stop it at the
+    same requirement and keep the build error hidden (valid: true). Every
+    value names a directory, so the build error is the answer's."""
     binary = write_collector(binary_dir, "0.162.0", EVERY_DIRECTORY_COLLECTOR)
 
     result = await _check(binary, _masking(stores, root_path))
@@ -470,9 +469,9 @@ exit 1
 
 
 async def test_no_fragment_of_the_check_directory_survives_a_cut(binary_dir: Path) -> None:
-    """Ruling 66 (the review's m2): the cap cut a line inside the check's
-    path, and the scrub, which replaces whole paths only, left its start in
-    the answer. Every path left in the answer is the token's."""
+    """The cap can cut a line inside the check's path, and the scrub, which
+    replaces whole paths only, would leave its start in the answer. Every
+    path left in the answer is the token's."""
     binary = write_collector(binary_dir, "0.162.0", CUT_PATH_COLLECTOR)
 
     result = await _check(binary, "x: 1\n")

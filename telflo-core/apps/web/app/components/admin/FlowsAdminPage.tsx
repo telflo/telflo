@@ -23,19 +23,16 @@ import { isFlowNotFound } from "~/lib/flows/flow-loaders.js";
 import { useCollectorDistributions } from "~/lib/stores/collector-catalogue-store.js";
 
 /*
- * Product admin's flows page (ADR 0018): its header, intro, table, empty
- * state, toasts (D12 Preflight ruling 18, "Flow hidden from /flows" included,
- * now "Flow hidden": the public library left with D36-1 decision 20,
- * Preflight ruling 13) and delete confirmation. Per the D12 Parity Notes:
+ * Product admin's flows page: its header, intro, table, empty state, toasts
+ * ("Flow hidden" included) and delete confirmation:
  * - the flows come from the API (`GET /api/v1/flows`, the hidden ones too
- *   for a product admin), and every write goes through it (D12 decision 11);
- * - an edit sends only the fields it changed, so a pin the catalogue has
- *   retired since stays unless the admin changes it (Preflight ruling 19);
- * - the Collector column marks a pin the catalogue no longer offers
- *   (decision 16), so the admin knows "Use this flow" moves copies to the
- *   default;
+ *   for a product admin), and every write goes through it;
+ * - an edit sends only the fields it changed, so a pin the catalog has
+ *   retired since stays unless the admin changes it;
+ * - the Collector column marks a pin the catalog no longer offers, so the
+ *   admin knows "Use this flow" moves copies to the default;
  * - the Visible switch's accessible name is given by hidden text rather than
- *   an `aria-label`, so the flow's name is in no attribute (ADR 0024);
+ *   an `aria-label`, so the flow's name is in no attribute;
  * - a 403 `product_admin_required` (the flag cleared since the page opened)
  *   goes to `/app`, replacing the page in the history;
  * - a flow deleted since the list was read (404 `flow_not_found`, another
@@ -44,14 +41,14 @@ import { useCollectorDistributions } from "~/lib/stores/collector-catalogue-stor
  *   reads the list again, so its row goes;
  * - the dialog's and the confirmation's close gives the focus back to the
  *   button that opened it (New flow, the row's Edit or Delete), else, its
- *   row gone, to the header's New flow (D14b Ruling 46): opened without a
- *   Radix trigger, they left it on the body. The confirmation closes at the
- *   click, before the delete and the list's re-read have answered, so the
- *   focus goes back to the row's Delete first; once the list is read again
- *   without the row, it goes to New flow (D14b Ruling 52).
+ *   row gone, to the header's New flow: opened without a Radix trigger,
+ *   they would leave it on the body. The confirmation closes at the click,
+ *   before the delete and the list's re-read have answered, so the focus
+ *   goes back to the row's Delete first; once the list is read again
+ *   without the row, it goes to New flow.
  */
 
-/** The pin's mark in the Collector column (D12 decision 16): the catalogue no longer offers it. */
+/** The pin's mark in the Collector column: the catalog no longer offers it. */
 export const PIN_NO_LONGER_OFFERED = "No longer offered";
 
 export function FlowsAdminPage() {
@@ -68,7 +65,7 @@ export function FlowsAdminPage() {
   const newFlowRef = useRef<HTMLButtonElement>(null);
   /** The Delete of a row being deleted: once the list is read again, the focus left with it goes to New flow. */
   const deletedFrom = useRef<HTMLElement | null>(null);
-  /** How many deletes have settled, the list read again: each checks the focus once rendered (D14b Ruling 52). */
+  /** How many deletes have settled, the list read again: each checks the focus once rendered. */
   const [deletesSettled, setDeletesSettled] = useState(0);
 
   /** The flag was cleared since the gate let the admin in: the page goes, as the gate sends a non-admin. */
@@ -80,7 +77,7 @@ export function FlowsAdminPage() {
     try {
       setFlows((await getFlows()).flows);
     } catch (error) {
-      // The session is over: the session-ended handler, or Logout, has the page (D12 Ruling 39).
+      // The session is over: the session-ended handler, or Logout, has the page.
       if (!isSessionEnded(error)) toast.error("Failed to load flows");
     } finally {
       setLoading(false);
@@ -157,7 +154,7 @@ export function FlowsAdminPage() {
 
   // A delete settled, its re-read rendered: when the row went, taking the
   // focus that came back to its Delete with it, the focus goes to New flow;
-  // never from where the person has put it since (D14b Ruling 52).
+  // never from where the person has put it since.
   useEffect(() => {
     if (deletesSettled === 0) return;
     const from = deletedFrom.current;
@@ -188,7 +185,7 @@ export function FlowsAdminPage() {
    * As the dialog or the confirmation closes: back to the button that opened
    * it, else (its row gone, or the empty state's New flow gone with the
    * empty state) the header's New flow. Neither has a Radix trigger, so
-   * Radix's own handling would leave the focus on the body (D14b Ruling 46).
+   * Radix's own handling would leave the focus on the body.
    */
   const returnFocus = (event: Event) => {
     event.preventDefault();
@@ -257,7 +254,7 @@ export function FlowsAdminPage() {
                         </Badge>
                       </td>
                       <td className="px-4 py-2.5">
-                        {/* The name in text, which replay masks, not in an attribute (ADR 0024). */}
+                        {/* The name in text, which replay masks, not in an attribute. */}
                         <span id={switchLabelId} className="sr-only">
                           {flow.published
                             ? `Hide ${flow.name} from the gallery`

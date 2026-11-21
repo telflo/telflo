@@ -6,8 +6,8 @@
 {{- $secret := include "telflo.secretName" (list . "postgres") }}
 {{- $opampSecret := include "telflo.opampSecretName" . }}
 {{- /*
-The platform's one Postgres (D33-1 decisions 2, 3 and 25): the databases
-telflo_platform and telflo_opamp_server. Its container is the only place the superuser's
+The platform's one Postgres: the databases telflo_platform and
+telflo_opamp_server. Its container is the only place the superuser's
 password exists. It also holds the platform owner's password and the
 opamp-server's owner and runtime passwords, for the two bootstraps, which the
 image's entrypoint runs once, when it creates the data directory: the

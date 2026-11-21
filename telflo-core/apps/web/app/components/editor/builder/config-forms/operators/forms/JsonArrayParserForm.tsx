@@ -6,17 +6,16 @@ import { SeverityConfigSection } from "../shared/SeverityConfigSection.js";
 import { TimestampConfigSection } from "../shared/TimestampConfigSection.js";
 
 /*
- * The `json_array_parser` operator's form (ADR 0018), over the card's scope
- * (D9c decisions 2 and 8). Ids are the card's (`op-<index>-json-array-…`).
+ * The `json_array_parser` operator's form, over the card's scope.
+ * Ids are the card's (`op-<index>-json-array-…`).
  *
  * - Parse To keeps its required mark, and shows no default: the
  *   collector's `attributes` (`helper/parser.go:27`) takes an array only
  *   with a header (`docs/operators/json_array_parser.md`, `parse_to`), so
- *   the seed writes `body` (decision 3, `operator-catalog.ts`); unset never
- *   shows `attributes` as the value. It is rootable
- *   (`helper/parser.go:35`).
- * Changed (D9b decision 3): unset Parse From shows the collector's `body`
- * (`helper/parser.go:26`); Header, cleared, removes its key.
+ *   the seed writes `body` (`operator-catalog.ts`); unset never shows
+ *   `attributes` as the value. It is rootable (`helper/parser.go:35`).
+ * Unset Parse From shows the collector's `body` (`helper/parser.go:26`);
+ * Header, cleared, removes its key.
  */
 export function JsonArrayParserForm() {
   const opId = useOperatorId();

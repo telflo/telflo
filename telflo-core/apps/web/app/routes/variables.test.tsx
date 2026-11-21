@@ -42,9 +42,7 @@ import {
 vi.mock("~/lib/api-client.server.js", () => ({ fetchCurrentUser: vi.fn() }));
 
 /*
- * The Variables pages (D20 Task 13: defaults 19–22, decision 39; Preflight
- * rulings 26 and 37; Ruling 50), under the signed-in layout as the app
- * routes them.
+ * The Variables pages, under the signed-in layout as the app routes them.
  */
 
 /** Where the page is: the address, its search included, for "the search is never in a URL". */
@@ -110,7 +108,7 @@ afterEach(() => {
   forgetVariableGroupNames();
 });
 
-describe("the routes (default 19)", () => {
+describe("the routes", () => {
   it("routes /variables under the signed-in layout: the Variables index, groups, and a group's page by its id", () => {
     const layout = routes.find((route) => route.file === "routes/app-layout.tsx");
     const variables = layout?.children?.find((route) => route.path === "variables");
@@ -128,7 +126,7 @@ describe("the routes (default 19)", () => {
     expect(groupMeta({} as never)).toEqual([{ title: "Variable group - Telflo" }]);
   });
 
-  it("shows the left nav (Q106, Ruling 80): links to Variables and Variable groups, each with its icon, marking the one shown", async () => {
+  it("shows the left nav: links to Variables and Variable groups, each with its icon, marking the one shown", async () => {
     serveVariables([]);
     vi.spyOn(apiClient, "getVariableGroups").mockResolvedValue([]);
     const user = renderAt("/variables");
@@ -159,7 +157,7 @@ describe("the routes (default 19)", () => {
   });
 });
 
-describe("the Variables page (default 20)", () => {
+describe("the Variables page", () => {
   it("says the note under the title, exactly", async () => {
     serveVariables([]);
     renderAt("/variables");
@@ -169,7 +167,7 @@ describe("the Variables page (default 20)", () => {
     expect(title.nextElementSibling?.querySelector("code")?.textContent).toBe("${org:NAME}");
   });
 
-  it("warns, under the header, that it is not for secrets and that test runs keep the values (Q106, Ruling 80), exactly", async () => {
+  it("warns, under the header, that it is not for secrets and that test runs keep the values, exactly", async () => {
     serveVariables([]);
     renderAt("/variables");
     await screen.findByText("No organization variables yet");
@@ -340,7 +338,7 @@ describe("the Variables page (default 20)", () => {
     expect(screen.getByRole("dialog", { name: "Edit variable" })).toBeInTheDocument();
   });
 
-  it("deletes: the drafts warning, a refusal's list in Ruling 50's words for names that came back null, then \"Variable deleted\"", async () => {
+  it("deletes: the drafts warning, a refusal's list in fixed words for names that came back null, then \"Variable deleted\"", async () => {
     serveVariables([organizationVariable()], []);
     vi.spyOn(apiClient, "getVariableDrafts").mockResolvedValue([
       { id: "7e000000-0000-4000-8000-000000000009", name: "edge-config" },
@@ -392,7 +390,7 @@ describe("the Variables page (default 20)", () => {
   });
 });
 
-describe("the Variables page's privacy (decision 39)", () => {
+describe("the Variables page's privacy", () => {
   const NAME = "CANARY_NAME_5E1";
   const VALUE = "value-canary-5e1";
   const DESCRIPTION = "description-canary-5e1";
@@ -437,8 +435,8 @@ describe("the Variables page's privacy (decision 39)", () => {
   });
 });
 
-describe("the Variable groups page (default 22)", () => {
-  it("keeps its description, warns under it that secrets stay in environment variables (Q106, Ruling 80; Q107), and says how variable groups work below the list", async () => {
+describe("the Variable groups page", () => {
+  it("keeps its description, warns under it that secrets stay in environment variables, and says how variable groups work below the list", async () => {
     vi.spyOn(apiClient, "getVariableGroups").mockResolvedValue([variableGroup()]);
     renderAt("/variables/groups");
     const table = await screen.findByRole("table");
@@ -496,7 +494,7 @@ describe("the Variable groups page (default 22)", () => {
 
     await user.click(await screen.findByRole("button", { name: "Delete EU production" }));
     const alert = await screen.findByRole("alertdialog", { name: "Delete variable group" });
-    // The group's name is configuration text: shown inside ph-no-capture (decision 39; final review side 2, Minor 6).
+    // The group's name is configuration text: shown inside ph-no-capture.
     expect(within(alert).getByText("EU production").closest(".ph-no-capture")).not.toBeNull();
     await user.click(within(alert).getByRole("button", { name: "Delete" }));
     expect(await within(alert).findByText("gateways in edge-prod")).toBeInTheDocument();
@@ -507,7 +505,7 @@ describe("the Variable groups page (default 22)", () => {
   });
 });
 
-describe("a variable group's page (default 22)", () => {
+describe("a variable group's page", () => {
   it("lists every organization variable with its value in the group and its source, Override on each and Reset on an override", async () => {
     vi.spyOn(apiClient, "getVariableGroup").mockResolvedValue(variableGroupDetail());
     serveVariables([organizationVariable(), SECOND]);
@@ -521,7 +519,7 @@ describe("a variable group's page (default 22)", () => {
     expect(source(first!)).toBe("Override");
     expect(within(first!).getByRole("button", { name: "Override OTLP_EP" })).toBeInTheDocument();
     expect(within(first!).getByRole("button", { name: "Reset OTLP_EP" })).toBeInTheDocument();
-    // Decision 15 (Q94): an override's "changed {when} by {email}" beneath its source; an organization value's none.
+    // An override's "changed {when} by {email}" beneath its source; an organization value's none.
     const changed = changedLines(CHANGED_AT, { userId: "7c000000-0000-4000-8000-000000000001", email: "ana@example.com" });
     expect(within(first!).getByText(`changed ${changed.at} by ana@example.com`)).toBeInTheDocument();
     expectNoAttributeHolds("ana@example.com");
@@ -557,7 +555,7 @@ describe("a variable group's page (default 22)", () => {
 
     await user.click(screen.getByRole("button", { name: "Reset OTLP_EP" }));
     const alert = await screen.findByRole("alertdialog", { name: "Reset override" });
-    // The variable's name is configuration text: its ${org:NAME} inside ph-no-capture (decision 39; final review side 2, Minor 6).
+    // The variable's name is configuration text: its ${org:NAME} inside ph-no-capture.
     expect(within(alert).getByText("${org:OTLP_EP}").closest(".ph-no-capture")).not.toBeNull();
     await user.click(within(alert).getByRole("button", { name: "Reset" }));
     expect(await screen.findByText("Override reset")).toBeInTheDocument();
@@ -582,7 +580,7 @@ describe("a variable group's page (default 22)", () => {
   });
 });
 
-describe("the fleet screens' variable group names follow these pages (final review side 2, Minor 1)", () => {
+describe("the fleet screens' variable group names follow these pages", () => {
   it("the list's answer names the groups for the fleet screens", async () => {
     vi.spyOn(apiClient, "getVariableGroups").mockResolvedValue([variableGroup()]);
     renderAt("/variables/groups");
@@ -623,7 +621,7 @@ describe("the fleet screens' variable group names follow these pages (final revi
   });
 });
 
-describe("the in-use lists (Q102; Preflight ruling 43)", () => {
+describe("the in-use lists", () => {
   it("says the collector groups a version's list was cut short of, from the exact total", () => {
     const groups = Array.from({ length: 100 }, (_, index) => groupUse(index + 1));
     render(<VariableInUseList details={variableInUse([versionUse(1, { groups })], { totalGroups: 150 })} />);
@@ -647,7 +645,7 @@ describe("the in-use lists (Q102; Preflight ruling 43)", () => {
   });
 });
 
-describe("the Variable groups pages' privacy (decision 39)", () => {
+describe("the Variable groups pages' privacy", () => {
   const NAME = "group-name-canary-3c9";
   const DESCRIPTION = "group-description-canary-3c9";
   const VALUE = "override-value-canary-3c9";
@@ -741,7 +739,7 @@ describe("the Variable groups pages' privacy (decision 39)", () => {
   });
 });
 
-describe("a variable group's Edit keeps its opening's baseline (D17c-1 Ruling 66)", () => {
+describe("a variable group's Edit keeps its opening's baseline", () => {
   it("a 503 whose reload brings a renamed group leaves the dialog's fields, and Save's change check, as they opened", async () => {
     vi.spyOn(apiClient, "getVariableGroup")
       .mockResolvedValueOnce(variableGroupDetail())

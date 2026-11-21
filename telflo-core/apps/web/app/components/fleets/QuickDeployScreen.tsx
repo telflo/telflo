@@ -9,13 +9,12 @@ import { NoDefaultToken } from "./InstallContainerSection.js";
 import { SecretCopyBox } from "~/components/secrets/SecretCopyBox.js";
 
 /*
- * The install dialog's Quick Deploy screen (D17c-2 decisions 15, 30 and 32;
- * Preflight rulings 17 and 19; ADR 0018), presentational: the dialog holds
- * the link, the bearer and the reveal.
+ * The install dialog's Quick Deploy screen, presentational: the dialog
+ * holds the link, the bearer and the reveal.
  *
  * - "Quick Deploy command ready", what the command does (the systemd
  *   service's, or the foreground's), when the link expires and where it is
- *   extended or revoked, and decision 30's warning.
+ *   extended or revoked, and the warning.
  * - Before the reveal, the preview (`quickDeployPreview`: the bearer and the
  *   link's secret masked) and "Reveal & copy command" ("Preparing…"); once
  *   revealed, the command in a `SecretCopyBox` ("Copy command", one line a
@@ -25,15 +24,15 @@ import { SecretCopyBox } from "~/components/secrets/SecretCopyBox.js";
  *   with another valid default token (revoked and replaced since the link
  *   was made), "This link's token was revoked: make a new link." in place of
  *   the reveal, "Done" offered; with none, `NoDefaultToken`.
- * - Privacy (decision 32): the command (the bearer and the link's secret)
- *   only in the `SecretCopyBox` (`ph-no-capture`); the preview holds the
- *   root path and the display name, configuration text, inside
- *   `ph-no-capture` too; none of them in an attribute.
- * - D17d-2's Helm values link (Preflight rulings 23 and 27): one click, no
- *   reveal (the bearer comes with the link's download), so `oneClick`
- *   shows the command, built at once, in the box and nothing in its place
- *   once the dialog has closed (the command gone, the screen kept through
- *   the exit animation); its own `description` and `warning`.
+ * - Privacy: the command (the bearer and the link's secret) only in the
+ *   `SecretCopyBox` (`ph-no-capture`); the preview holds the root path and
+ *   the display name, configuration text, inside `ph-no-capture` too; none
+ *   of them in an attribute.
+ * - A Helm values link: one click, no reveal (the bearer comes with the
+ *   link's download), so `oneClick` shows the command, built at once, in
+ *   the box and nothing in its place once the dialog has closed (the
+ *   command gone, the screen kept through the exit animation); its own
+ *   `description` and `warning`.
  */
 
 export const QUICK_DEPLOY_TITLE = "Quick Deploy command ready";

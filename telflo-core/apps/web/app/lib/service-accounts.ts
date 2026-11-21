@@ -8,46 +8,45 @@ import { useStillCurrent } from "~/lib/configurations.js";
 import { isManagementLost, useLeaveManagement } from "~/lib/organizations.js";
 
 /*
- * Settings › Service Accounts' words and reads (D22 decisions 41-46, 48 and
- * 49; Preflight ruling 30). Every toast and failure is fixed words: a
- * service account's name and address, a token's name, the token and its
- * prefix are visible text in the masked shell only, never in a toast, a
- * title, an attribute or a URL.
+ * Settings › Service Accounts' words and reads. Every toast and failure is
+ * fixed words: a service account's name and address, a token's name, the token
+ * and its prefix are visible text in the masked shell only, never in a toast,
+ * a title, an attribute or a URL.
  */
 
-/** The failure toasts (Preflight ruling 30). */
+/** The failure toasts. */
 export const SERVICE_ACCOUNTS_LOAD_FAILED_MESSAGE = "Failed to load service accounts";
 export const SERVICE_ACCOUNT_LOAD_FAILED_MESSAGE = "Failed to load service account";
 export const SERVICE_ACCOUNT_CREATE_FAILED_MESSAGE = "Failed to create service account";
 export const SERVICE_ACCOUNT_RENAME_FAILED_MESSAGE = "Failed to rename";
 export const SERVICE_ACCOUNT_DELETE_FAILED_MESSAGE = "Failed to delete service account";
 export const API_TOKEN_CREATE_FAILED_MESSAGE = "Failed to create token";
-/** A revoke's failure, in revoke's word (Q131). */
+/** A revoke's failure, in revoke's word. */
 export const API_TOKEN_REVOKE_FAILED_MESSAGE = "Failed to revoke token";
 /** The list read when the reveal closes, failed: the token was made and stays. */
 export const API_TOKENS_REFRESH_FAILED_MESSAGE = "Token created, but the list could not refresh";
 
-/** A failed first read says so, rather than showing the empty state (Preflight ruling 30). */
+/** A failed first read says so, rather than showing the empty state. */
 export const SERVICE_ACCOUNTS_UNREADABLE = "Service accounts could not be loaded.";
 export const SERVICE_ACCOUNT_UNREADABLE = "The service account could not be loaded.";
 
-/** The successes (decisions 42-44): fixed words, never a name (decision 49). */
+/** The successes: fixed words, never a name. */
 export const SERVICE_ACCOUNT_CREATED_MESSAGE = "Service account created";
 export const SERVICE_ACCOUNT_RENAMED_MESSAGE = "Service account renamed";
 export const SERVICE_ACCOUNT_DELETED_MESSAGE = "Service account deleted";
 export const API_TOKEN_REVOKED_MESSAGE = "Token revoked";
 
-/** The reveal's sentence (decision 9; Q137's "revoke"). */
+/** The reveal's sentence. */
 export const API_TOKEN_REVEAL_WORDS = "This is the only time you'll see it. If you lose it, revoke this token and create a new one.";
 
-/** The delete dialog's kept-work sentence (decision 46(c); Ruling 107: only configurations and their versions show a creator). */
+/** The delete dialog's kept-work sentence (only configurations and their versions show a creator). */
 export const SERVICE_ACCOUNT_DELETE_KEPT_WORDS =
   "Configurations, configuration versions, validation pipelines and rules, and test suites and runs it created are kept; configurations and their versions still show its address as their creator.";
 export const SERVICE_ACCOUNT_DELETE_CONFIRM_WORDS = "This cannot be undone. Type the account's name to confirm.";
 
 /**
- * The delete dialog's token sentence by the listed count (decision 46(a)),
- * never "Its 1 tokens" or "Its 0 tokens".
+ * The delete dialog's token sentence by the listed count, never "Its 1
+ * tokens" or "Its 0 tokens".
  */
 export function serviceAccountDeleteTokenWords(tokenCount: number): string {
   if (tokenCount === 0) return "It will be removed from this organization.";
@@ -75,7 +74,7 @@ export function listedPrefix(prefix: string): string {
 /**
  * The refusals whose message is toasted as it is: the service-account and
  * token codes, a request the API refused (`invalid_request`) and a limit's
- * 429 (Preflight ruling 30). Their messages are fixed words (decision 50).
+ * 429. Their messages are fixed words.
  */
 const REFUSAL_CODES: ReadonlySet<string> = new Set<string>([...SERVICE_ACCOUNT_ERROR_CODES, "invalid_request", "rate_limited"]);
 
@@ -172,11 +171,10 @@ export function useServiceAccountRead<Value>(
 }
 
 /**
- * A service account's token calls for the token dialogs (D22; D25 Preflight
- * ruling 22): the account's create and revoke in the organization; an
- * answer belongs on screen while that organization is still the active one;
- * a refusal saying management is lost leaves the page through
- * `useLeaveManagement`; the service-account words.
+ * A service account's token calls for the token dialogs: the account's create
+ * and revoke in the organization; an answer belongs on screen while that
+ * organization is still the active one; a refusal saying management is lost
+ * leaves the page through `useLeaveManagement`; the service-account words.
  */
 export function useServiceAccountTokenCalls(organizationId: string, serviceAccountId: string): ApiTokenCalls {
   const leaveManagement = useLeaveManagement();

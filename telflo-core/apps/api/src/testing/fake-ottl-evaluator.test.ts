@@ -10,13 +10,12 @@ import {
   type FakeOttlEvaluatorFault,
 } from "./fake-ottl-evaluator.js";
 
-// The fake OTTL evaluator's own contract checks (D15a Task 5; plan Preflight
-// ruling 28): it must catch a request that breaks
-// services/ottl-evaluator/openapi.yaml, and a reply of its own that does, or
-// the client's and the API's tests against it prove nothing; and it must
-// answer by the request, as the browser tests rely on. These tests send raw
-// requests, shaped as the client's are, then broken. D25 Task 3 added the
-// lint's (POST /ottl/v1/lint).
+// The fake OTTL evaluator's own contract checks: it must catch a request that
+// breaks services/ottl-evaluator/openapi.yaml, and a reply of its own that
+// does, or the client's and the API's tests against it prove nothing; and it
+// must answer by the request, as the browser tests rely on. These tests send
+// raw requests, shaped as the client's are, then broken. The last block checks
+// the lint's (POST /ottl/v1/lint).
 
 let fake: FakeOttlEvaluator;
 
@@ -178,7 +177,7 @@ describe("the fake ottl-evaluator's request validation", () => {
   });
 });
 
-describe("the fake ottl-evaluator's answers by the request (Preflight ruling 28)", () => {
+describe("the fake ottl-evaluator's answers by the request", () => {
   it("names its markers", () => {
     expect(FAKE_OTTL_EVALUATOR_MARKERS).toEqual(["invalid", "fail", "error", "busy", "unavailable"]);
     expect(fakeOttlEvaluatorMarker("fail")).toBe("fake-ottl-evaluator: fail");
@@ -284,7 +283,7 @@ describe("the fake ottl-evaluator's answers by the request (Preflight ruling 28)
   });
 });
 
-describe("the fake ottl-evaluator's lint (D25 Task 3)", () => {
+describe("the fake ottl-evaluator's lint", () => {
   it("accepts a lint the contract takes and records it as lint; catches one it refuses, answering 400", async () => {
     expect((await lint({ context: "log", conditions: ["true"], statements: [], valueExpressions: ["body"] })).status).toBe(200);
     expect(fake.takeRequests()).toEqual([
@@ -420,8 +419,8 @@ describe("the fake ottl-evaluator's close", () => {
       body: JSON.stringify({ signal: "logs", rule: { kind: "contains_text", target: "output", pattern: "x" } }),
     });
     // Wait until the fake has read it (the request is then recorded): on that condition, since the request
-    // crosses a real socket and no count of event-loop turns bounds it, with a hang guard under vitest's 5 s
-    // (D23-2 Ruling 153).
+    // crosses a real socket and no count of event-loop turns bounds it, with a hang guard under
+    // vitest's 5 s.
     let received = 0;
     await vi.waitFor(
       () => {

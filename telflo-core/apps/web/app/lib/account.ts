@@ -13,13 +13,13 @@ import { abortAfter } from "~/lib/abort-after.js";
 import { ApiError, isSessionEnded } from "~/lib/api-client.js";
 
 /*
- * The Account page's words (D21 decisions 35-40 and 45): fixed sentences
- * only. Personal data (the email, a linked identity's email, a session's IP,
- * its browser and system and its times) is visible text in the masked shell,
- * never in a toast, a title, an attribute or a URL.
+ * The Account page's words: fixed sentences only. Personal data (the email,
+ * a linked identity's email, a session's IP, its browser and system and its
+ * times) is visible text in the masked shell, never in a toast, a title, an
+ * attribute or a URL.
  */
 
-/** The browser families as the Sessions card words them (decision 40). */
+/** The browser families as the Sessions card words them. */
 export const BROWSER_WORDS: Readonly<Record<SessionBrowser, string>> = {
   firefox: "Firefox",
   chrome: "Chrome",
@@ -29,7 +29,7 @@ export const BROWSER_WORDS: Readonly<Record<SessionBrowser, string>> = {
   other: "Unknown browser",
 };
 
-/** The system families as the Sessions card words them (decision 40). */
+/** The system families as the Sessions card words them. */
 export const SYSTEM_WORDS: Readonly<Record<SessionSystem, string>> = {
   macos: "macOS",
   windows: "Windows",
@@ -45,7 +45,7 @@ export function sessionTitle(session: Pick<AccountSession, "browser" | "os">): s
   return `${BROWSER_WORDS[session.browser]} on ${SYSTEM_WORDS[session.os]}`;
 }
 
-/** What `/settings/account?link=<code>` shows (decision 38): `linked` a success, the rest errors. */
+/** What `/settings/account?link=<code>` shows: `linked` a success, the rest errors. */
 export const LINK_RESULT_WORDS: Readonly<Record<OidcLinkResultCode, string>> = {
   linked: "Google sign-in linked.",
   identity_in_use: "That Google account is already linked to another Telflo account.",
@@ -59,7 +59,7 @@ export function isLinkResultCode(value: string): value is OidcLinkResultCode {
   return (OIDC_LINK_RESULT_CODES as readonly string[]).includes(value);
 }
 
-/** Change Password's words (decision 35). */
+/** Change Password's words. */
 export const PASSWORDS_DO_NOT_MATCH_MESSAGE = "Passwords do not match";
 export const PASSWORD_TOO_SHORT_MESSAGE = `Password must be at least ${PASSWORD_MINIMUM_LENGTH} characters`;
 /**
@@ -72,7 +72,7 @@ export const PASSWORD_TOO_LONG_MESSAGE = `Password must be at most ${NEW_PASSWOR
 export const PASSWORD_UPDATED_MESSAGE = "Password updated successfully";
 export const PASSWORD_UPDATE_FAILED_MESSAGE = "Failed to update password";
 
-/** Set a Password's words (decision 36). */
+/** Set a Password's words. */
 export const SET_PASSWORD_DESCRIPTION = "Your account signs in with Google. We'll email you a link to set a password.";
 export const SET_PASSWORD_FAILED_MESSAGE = "Failed to send the link";
 
@@ -81,19 +81,19 @@ export function setPasswordSentWords(email: string): string {
   return `We sent a link to ${email}. Open it to set your password. Setting it signs you out on every device.`;
 }
 
-/** Sign-in methods' words (decisions 37-39). */
+/** Sign-in methods' words. */
 export const SIGN_IN_METHODS_LOAD_FAILED_MESSAGE = "Failed to load sign-in methods";
 export const LINK_START_FAILED_MESSAGE = LINK_RESULT_WORDS.link_failed;
 export const UNLINK_FAILED_MESSAGE = "Failed to remove the sign-in";
 
-/** Sessions' words (decision 40). */
+/** Sessions' words. */
 export const SESSIONS_LOAD_FAILED_MESSAGE = "Failed to load sessions";
 export const SESSION_SIGNED_OUT_MESSAGE = "Session signed out.";
 export const SESSION_SIGN_OUT_FAILED_MESSAGE = "Failed to sign out the session";
 export const SIGNED_OUT_EVERYWHERE_MESSAGE = "Signed out everywhere";
 export const SIGN_OUT_EVERYWHERE_FAILED_MESSAGE = "Failed to sign out everywhere";
 
-/** The account routes' refusals, and a limit's 429: their messages are fixed words (decision 21). */
+/** The account routes' refusals, and a limit's 429: their messages are fixed words. */
 const ACCOUNT_REFUSALS: ReadonlySet<string> = new Set<string>([...ACCOUNT_ERROR_CODES, "rate_limited"]);
 
 /** Whether `error` is the API refusing with `code`. */
@@ -110,7 +110,7 @@ export function accountFailureMessage(error: unknown, fallback: string): string 
   return error instanceof ApiError && ACCOUNT_REFUSALS.has(error.code) ? error.message : fallback;
 }
 
-/** A link start's failure (decision 38): a provider that can't be reached says the link's own words. */
+/** A link start's failure: a provider that can't be reached says the link's own words. */
 export function linkStartFailureMessage(error: unknown): string {
   return isAccountRefusal(error, "provider_unavailable") ? LINK_START_FAILED_MESSAGE : accountFailureMessage(error, LINK_START_FAILED_MESSAGE);
 }

@@ -1,5 +1,5 @@
 /**
- * Federated identity and terms acceptance (D2c decisions 5 and 6).
+ * Federated identity and terms acceptance.
  *
  * user_identities links a user to a provider's subject: a user may have
  * several providers' identities, at most one per provider, and a subject
@@ -23,7 +23,7 @@ export const up = (pgm) => {
     );
 
     comment on table user_identities is
-      'a user''s identity at a federated provider (D2c decision 5). Sign-in
+      'a user''s identity at a federated provider. Sign-in
        finds the user by (provider, provider_subject), never by email.';
     comment on column user_identities.provider is
       'the configured provider''s id, such as google.';
@@ -42,8 +42,8 @@ export const up = (pgm) => {
     create unique index uq_user_identities_user_id_provider
       on user_identities (user_id, provider);
     comment on index uq_user_identities_user_id_provider is
-      'at most one identity per provider per user (D2c decision 5). Also
-       serves lookups by user_id.';
+      'at most one identity per provider per user. Also serves lookups
+       by user_id.';
 
     alter table users alter column accepted_terms_version drop not null;
     alter table users add column terms_accepted_at timestamptz;
@@ -61,10 +61,10 @@ export const up = (pgm) => {
        accepted none (an account created through a provider, until the terms
        dialog). The current version is CURRENT_TERMS_VERSION in
        @telflo/contracts; any other value means the terms must be accepted
-       again (D2c decision 6).';
+       again.';
     comment on column users.terms_accepted_at is
       'when accepted_terms_version was accepted; null exactly when it is.
-       Rows from before D2c were backfilled from created_at.';
+       Rows from before this migration were backfilled from created_at.';
   `);
 };
 

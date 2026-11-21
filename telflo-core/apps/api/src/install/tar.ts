@@ -1,11 +1,11 @@
 import { gzipSync } from "node:zlib";
 
 /*
- * A gzipped POSIX ustar archive (D17c-1 decision 37, Preflight ruling 13),
- * written here rather than by a library (Q7): regular files only, each at
- * the archive's root, owned by uid and gid 0 with empty owner names, its
- * mode given, its time the render's. A name over 100 bytes, or one holding
- * a `/`, is refused: the bundle's files are a template directory's names.
+ * A gzipped POSIX ustar archive, written here rather than by a library:
+ * regular files only, each at the archive's root, owned by uid and gid 0
+ * with empty owner names, its mode given, its time the render's. A name
+ * over 100 bytes, or one holding a `/`, is refused: the bundle's files are
+ * a template directory's names.
  */
 
 export interface TarFile {

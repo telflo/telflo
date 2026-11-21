@@ -2,8 +2,6 @@
 at a staged ``input.log``, run the collector, wait until it is ready, hold,
 stop.
 
-D14a Task 4:
-
 - **Readiness** (``wait_ready``): the hold doesn't count from the spawn, so
   a slow start can't eat into it. It starts once the collector says it is
   ready (`_shared._wait_for_ready_marker`), or at the
@@ -12,8 +10,8 @@ D14a Task 4:
   symlink; the directories of a container-runtime path are made inside the
   run's workspace, mode 0700.
 - The strategy is split into its phases (`app/executors/base.py`).
-- **A pipeline with a Kubernetes processor waits for its informer**
-  (Ruling 30), as the OTLP replay does: the input isn't staged before the
+- **A pipeline with a Kubernetes processor waits for its informer**,
+  as the OTLP replay does: the input isn't staged before the
   collector starts but once it is ready and the informer wait is over
   (``feed``), written beside the staged path and renamed onto it, so filelog
   finds the whole file at its next poll (a file that appears after start is
@@ -110,9 +108,9 @@ def _stage(source: Path, staged: Path, root: Path) -> None:
 
 
 def _stage_whole(source: Path, staged: Path, root: Path) -> None:
-    """Stage the input while the collector runs (Ruling 30): written in
-    full beside it first, then renamed onto ``staged``, so filelog never
-    reads part of it."""
+    """Stage the input while the collector runs: written in full beside it
+    first, then renamed onto ``staged``, so filelog never reads part of
+    it."""
     temporary = root / STAGING_TEMPORARY_NAME
     _write_new(temporary, source)
     os.rename(temporary, staged)
@@ -126,7 +124,7 @@ class FilelogPullStrategy:
     def __init__(self) -> None:
         self.staged: Path | None = None
         self.ready_marker_seen: bool | None = None
-        # Staged in ``feed``, after the informer wait (Ruling 30).
+        # Staged in ``feed``, after the informer wait.
         self.deferred = False
 
     def prepare(self, ctx: ExecutorContext) -> tuple[str, list[MutationAdvisory]]:
@@ -163,7 +161,7 @@ class FilelogPullStrategy:
 
     async def feed(self, ctx: ExecutorContext, collector) -> None:  # noqa: ANN001
         # No port to probe, no push to coordinate: a deferred input is
-        # staged now, once the informer wait is over (Ruling 30).
+        # staged now, once the informer wait is over.
         if self.deferred and self.staged is not None:
             await asyncio.to_thread(_stage_whole, ctx.cached_fixture, self.staged, ctx.run_workspace.root)
         return None

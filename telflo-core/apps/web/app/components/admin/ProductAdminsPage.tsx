@@ -22,15 +22,15 @@ import { useUserStore } from "~/lib/stores/user-store.js";
 import { failureMessage } from "~/lib/test-runs/messages.js";
 
 /*
- * `/product-admin/product-admins` (D29 decisions 5, 27, 28, 39 and 41; Parity
- * Notes). The current product admins (Email, "(you)" on the caller's row, a
- * Remove on each row), and "Add product admin" taking an exact email.
+ * `/product-admin/product-admins`. The current product admins (Email, "(you)"
+ * on the caller's row, a Remove on each row), and "Add product admin" taking
+ * an exact email.
  *
  * - The list is `GET /api/v1/product-admin/product-admins`, read again after
  *   each add and removal; only the latest read is shown (the reads ref), and
  *   a read that never answers is aborted after 10 s and toasts as a failure;
  *   a failed read with nothing listed shows "Try again" in the table's
- *   place, never "No product admins" (Ruling 264's state, Ruling 271).
+ *   place, never "No product admins".
  * - Add sends the trimmed email (`POST …/product-admins`): "Product admin
  *   added" (a grant, or a person who already was one), the field emptied;
  *   a refusal toasts the API's fixed words (404 "No verified account uses
@@ -51,7 +51,7 @@ import { failureMessage } from "~/lib/test-runs/messages.js";
  * - Each dialog's close gives the focus back to the Remove that opened it,
  *   or, when its row has gone, to the email field (useReturnFocus).
  *
- * Other people's emails are personal data (decision 41): visible text only,
+ * Other people's emails are personal data: visible text only,
  * inside the shell's `ph-mask` (the dialog too: Radix portals it into
  * `<body>`, which the shell masks); the typed email inside `ph-no-capture`,
  * uncontrolled (never React state), with no placeholder; never in an
@@ -86,7 +86,7 @@ export function ProductAdminsPage() {
   const myId = useUserStore((state) => state.current?.user.id ?? null);
   const [listed, setListed] = useState<{ admins: ProductAdmin[]; read: number }>({ admins: [], read: 0 });
   const [loaded, setLoaded] = useState(false);
-  /** The latest read failed: "Try again" in the table's place while nothing is listed, never "No product admins" (Ruling 264's state). */
+  /** The latest read failed: "Try again" in the table's place while nothing is listed, never "No product admins". */
   const [loadFailed, setLoadFailed] = useState(false);
   const [hasEmail, setHasEmail] = useState(false);
   const [adding, setAdding] = useState(false);
@@ -117,7 +117,7 @@ export function ProductAdminsPage() {
         leave();
         return;
       }
-      // The session is over: the session-ended handler, or Logout, has the page (D12 Ruling 39).
+      // The session is over: the session-ended handler, or Logout, has the page.
       if (!isSessionEnded(error)) toast.error(PRODUCT_ADMINS_LOAD_FAILED_MESSAGE);
     } finally {
       timeout.clear();
@@ -211,7 +211,7 @@ export function ProductAdminsPage() {
           Add product admin
         </h2>
         <p className="mt-1 text-[13px] text-muted-foreground">The exact email of a verified account.</p>
-        {/* The typed email is personal data: blocked from replay, never React state (decision 41). */}
+        {/* The typed email is personal data: blocked from replay, never React state. */}
         <form className="ph-no-capture mt-3 flex items-end gap-2" onSubmit={(event) => void handleAdd(event)} noValidate>
           <div className="flex-1 max-w-sm">
             <Label htmlFor={`${idPrefix}-email`}>Email</Label>
@@ -311,7 +311,7 @@ interface RemoveProductAdminDialogProps {
   onCloseAutoFocus: (event: Event) => void;
 }
 
-/** The confirmation of decision 39, not closable while it removes. */
+/** The removal's confirmation, not closable while it removes. */
 function RemoveProductAdminDialog({ target, onClose, doRemove, onCloseAutoFocus }: RemoveProductAdminDialogProps) {
   const open = target !== null;
   const opening = useOpeningKey(open);

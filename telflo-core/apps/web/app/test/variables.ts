@@ -7,7 +7,7 @@ import type {
   VariableInUseDetails,
 } from "@telflo/contracts";
 
-/** The Variables pages' fixtures (D20 Task 13): variables, variable groups and their overrides, and the in-use details. */
+/** The Variables pages' fixtures: variables, variable groups and their overrides, and the in-use details. */
 
 export const VARIABLE_ID = "7a000000-0000-4000-8000-000000000001";
 export const OTHER_VARIABLE_ID = "7a000000-0000-4000-8000-000000000002";

@@ -1,11 +1,10 @@
-// New in D15a Task 2 (spec decisions 2, 3, 8 and 11; plan Preflight rulings
-// 5-10). Package rules checks a run's validation rules against its output
-// and the collector's log: text rules (whitespace-tolerant, decision 8),
+// Package rules checks a run's validation rules against its output
+// and the collector's log: text rules (whitespace-tolerant),
 // regex rules (Go's regexp, RE2) and OTTL rules (pkg/ottlassert). It is the
 // work the evaluator's child process does (child.go); the HTTP side, in
 // internal/server, only checks a request's shape, runs the child under its
-// limits and writes the answer. Every kind runs here (decision 2), with the
-// answer's shapes of Preflight ruling 5.
+// limits and writes the answer. Every kind runs here, with the answer's
+// shapes (Result, below).
 
 package rules
 
@@ -14,8 +13,8 @@ import (
 	"encoding/json"
 )
 
-// The five kinds of rule (D15a decision 12). A request naming any other
-// kind, a retired one included, is refused by its shape (400).
+// The five kinds of rule. A request naming any other kind, a retired one
+// included, is refused by its shape (400).
 const (
 	KindContainsText     = "contains_text"
 	KindNotContainsText  = "not_contains_text"
@@ -37,10 +36,10 @@ const (
 // The signals a run's output can carry.
 var Signals = []string{"logs", "traces", "metrics"}
 
-// The limits of Preflight rulings 5 and 10. The request's own caps (the
-// body, the rule count) are internal/server's.
+// The evaluation's limits. The request's own caps (the body, the rule
+// count) are internal/server's.
 const (
-	// MaxRules is how many rules one request may carry (D15a decision 13).
+	// MaxRules is how many rules one request may carry.
 	MaxRules = 200
 	// MaxTextBytes caps a pattern, a condition and an expression, in bytes
 	// (the database counts them in bytes too, octet_length).
@@ -77,10 +76,10 @@ const (
 	checkEveryBytes = 64 << 10
 )
 
-// The messages Preflight rulings 6, 7 and 10 set.
+// The answer's fixed messages.
 const (
 	// NotCheckedDeadline is each unfinished rule's error when the rules took
-	// longer than the evaluation's deadline (the owner, spec decision 30).
+	// longer than the evaluation's deadline.
 	NotCheckedDeadline = "Not checked: the rules took longer than 20 s to check."
 	// NotCheckedMemory is each unfinished rule's error when the kernel
 	// killed the evaluation for its memory.
@@ -124,8 +123,8 @@ type Count struct {
 }
 
 // Result is one rule's outcome, as the answer carries it. Error means
-// Passed is false and Detail is null (decision 3: a rule's own error fails
-// it). Detail is one of the four shapes below, already encoded, or null.
+// Passed is false and Detail is null (a rule's own error fails it). Detail
+// is one of the four shapes below, already encoded, or null.
 type Result struct {
 	ID       string          `json:"id"`
 	Passed   bool            `json:"passed"`
@@ -229,7 +228,7 @@ func failed(id, message string) Result {
 
 // TooComplex is validate's problem when its check was killed at its limit,
 // naming the field it was checking: "The pattern is too complex to check.",
-// or the condition, or the expression (the controller's Ruling 33).
+// or the condition, or the expression.
 func TooComplex(field string) string {
 	name := "condition"
 	switch field {

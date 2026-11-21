@@ -21,7 +21,7 @@ function renderUnavailable(props: ComponentProps<typeof EditorUnavailable>) {
   return userEvent.setup();
 }
 
-describe("EditorUnavailable (D8 decision 12)", () => {
+describe("EditorUnavailable", () => {
   it('says "Configuration not found" and links back to /app, with no "Try again"', async () => {
     const user = renderUnavailable({ reason: "not_found" });
 
@@ -36,7 +36,7 @@ describe("EditorUnavailable (D8 decision 12)", () => {
     expect(await screen.findByText("landed on /app")).toBeInTheDocument();
   });
 
-  it('says "Version not found" with "Open the latest version" linking to /editor/{id}, and the link back (D10 decision 9)', async () => {
+  it('says "Version not found" with "Open the latest version" linking to /editor/{id}, and the link back', async () => {
     const user = renderUnavailable({ reason: "version_not_found", configurationId: CONFIGURATION_ID });
 
     expect(await screen.findByText("Version not found")).toBeInTheDocument();

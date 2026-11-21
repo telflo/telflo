@@ -26,56 +26,53 @@ import type { ValuePath } from "~/lib/graph/text-edits.js";
 import type { ValueView } from "~/lib/graph/value-view.js";
 
 /*
- * The Prometheus receiver's form (ADR 0018), over the form's fields
- * (D9d decision 2, D9b's contract). The scrape jobs are a sortable
- * list of cards; each card's fields write their own key under
- * `config.scrape_configs.<index>` (`FormScope`), so keys the form doesn't
- * show (relabeling, service discovery, a job's `labels`) stay.
+ * The Prometheus receiver's form, over the form's fields. The scrape jobs
+ * are a sortable list of cards; each card's fields write their own key
+ * under `config.scrape_configs.<index>` (`FormScope`), so keys the form
+ * doesn't show (relabeling, service discovery, a job's `labels`) stay.
  *
  * The receiver hands `config:` to Prometheus' strict loader (contrib
  * v0.162.0 `receiver/prometheusreceiver/config.go:187-205`; prometheus
  * v3.14.0 `config/config.go:81`), so a job's keys and values are
  * Prometheus' own.
  *
- * - Dragging a job moves its own lines (`form.move`); a card's expanded
- *   state follows the card (`useCardKeys`), not the index.
- *   The first card starts expanded. Ids are by index
- *   (`job-name-0`, sortable `job-0`), never a value (decision 13).
+ * - Dragging a job moves its own lines (`form.move`); a card's expanded state
+ *   follows the card (`useCardKeys`), not the index. The first card starts
+ *   expanded. Ids are by index (`job-name-0`, sortable `job-0`), never a
+ *   value.
  * - Static Targets are the first target group's `targets`
  *   (`static_configs.0.targets`): Add Target appends
  *   `localhost:8080`, and on a job with no target group writes
  *   `static_configs: [{targets: [localhost:8080]}]`; other groups and a
  *   group's `labels` stay as written.
- * - Fixed (decision 3): Report Extra Scrape Metrics writes
+ * - Report Extra Scrape Metrics writes
  *   `config.global.extra_scrape_metrics`, Prometheus' own key, which each
- *   job falls back to (`config/config.go:540, 943-945`), not
- *   the receiver's `report_extra_scrape_metrics`, removed in v0.149.0 and
- *   refused (contrib `CHANGELOG.md:3911-3913`; `config.go:30-58` has no such
- *   field). A key already in the text is left alone (D13).
- * - Fixed (decision 3): Add Job seeds the first `job-N` (N from the job
- *   count + 1 up) no job has: Prometheus refuses two jobs of one name
- *   (`config/config.go:444`), and `job-${count + 1}`
- *   alone could repeat one.
- * - Fixed (decision 3; Preflight ruling 29): the Security box's TLS is
- *   `PrometheusTLSSection` (`TLS12`/`TLS13`, no server-only fields), its
- *   ids by the job's index (`prometheus-job-0-tls-…`), never the job's
- *   name.
- * - Changed (decision 7): basic authentication and authorization exclude
- *   each other (prometheus/common v0.71.0 `config/http_config.go:434-437`):
- *   writing into one removes the other in the same change, with a toast.
- *   Each block goes with its last key cleared (a pruning
- *   scope; a key it doesn't show, `password`, keeps it).
- * - Changed (decision 4): Honor Timestamps shows ticked while unset
- *   (Prometheus' default, `config/config.go:208`); Scrape Timeout's default
- *   says it is the interval when that is shorter (`config/config.go:913-
- *   915`); Scheme shows its default as a hint, not a value; the interval
- *   and timeout are checked with Prometheus' grammar (`1d`, `1h30m`;
+ *   job falls back to (`config/config.go:540, 943-945`), not the receiver's
+ *   `report_extra_scrape_metrics`, removed in v0.149.0 and refused (contrib
+ *   `CHANGELOG.md:3911-3913`; `config.go:30-58` has no such field). A key
+ *   already in the text is left alone.
+ * - Add Job seeds the first `job-N` (N from the job count + 1 up) no job
+ *   has: Prometheus refuses two jobs of one name (`config/config.go:444`),
+ *   and `job-${count + 1}` alone could repeat one.
+ * - The Security box's TLS is `PrometheusTLSSection` (`TLS12`/`TLS13`, no
+ *   server-only fields), its ids by the job's index
+ *   (`prometheus-job-0-tls-…`), never the job's name.
+ * - Basic authentication and authorization exclude each other
+ *   (prometheus/common v0.71.0 `config/http_config.go:434-437`): writing
+ *   into one removes the other in the same change, with a toast. Each block
+ *   goes with its last key cleared (a pruning scope; a key it doesn't show,
+ *   `password`, keeps it).
+ * - Honor Timestamps shows ticked while unset (Prometheus' default,
+ *   `config/config.go:208`); Scrape Timeout's default says it is the
+ *   interval when that is shorter (`config/config.go:913- 915`); Scheme
+ *   shows its default as a hint, not a value; the interval and timeout are
+ *   checked with Prometheus' grammar (`1d`, `1h30m`;
  *   `shared/prometheus-duration.ts`).
- * - Job Name keeps `""` when cleared (an item's key;
- *   Prometheus refuses it, `config/config.go:868-870`, D13).
+ * - Job Name keeps `""` when cleared (an item's key; Prometheus refuses it,
+ *   `config/config.go:868-870`, and the config validation reports it).
  */
 
-/** Decision 7's toasts (the plan's copy). */
+/** The toasts for a setting a change removes with it. */
 export const REMOVED_AUTHORIZATION = "Removed authorization: it can't be used with basic authentication.";
 export const REMOVED_BASIC_AUTH = "Removed basic authentication: it can't be used with authorization.";
 

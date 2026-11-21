@@ -3,8 +3,7 @@ import { seedUser } from "./support/database.js";
 import { linkFrom, waitForEmail } from "./support/mail.js";
 import { signInThroughForm, waitForHydration } from "./support/session.js";
 
-// Resending the confirmation email from the sign-in form (D3; deferred by
-// D2a).
+// Resending the confirmation email from the sign-in form.
 
 const PASSWORD = "correct horse battery staple";
 const CONFIRMATION_SUBJECT = "Confirm your Telflo email address";

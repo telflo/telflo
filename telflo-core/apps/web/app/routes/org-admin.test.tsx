@@ -270,7 +270,7 @@ describe("the Permissions page (/org-admin)", () => {
     expect(screen.queryByText("invited@example.com")).not.toBeInTheDocument();
   });
 
-  it("names the active organization, in bold, in the invite dialog's description (Q261)", async () => {
+  it("names the active organization, in bold, in the invite dialog's description", async () => {
     serveLists();
     const user = renderPermissions();
 
@@ -281,7 +281,7 @@ describe("the Permissions page (/org-admin)", () => {
     expect(within(dialog).getByText("Group", { selector: "strong" })).toBeInTheDocument();
   });
 
-  it("names the active personal workspace under its default name, its email (Q263), as the <email>'s organization, from /me's type (Q262), on a site with open registration (D36-1 decision 57)", async () => {
+  it("names the active personal workspace under its default name, its email, as the <email>'s organization, from /me's type, on a site with open registration", async () => {
     serveLists();
     const signedIn = currentUserWithRole("admin");
     const personal = { ...signedIn.organizations[0]!, name: "viewer@example.com" };
@@ -303,7 +303,7 @@ describe("the Permissions page (/org-admin)", () => {
     expect(within(dialog).getByText("viewer@example.com's", { selector: "strong" })).toBeInTheDocument();
   });
 
-  it("offers no Invite Member in the active personal workspace on an invite-only site, the open source's default, and says why in its place (D36-1 decision 57, Q268)", async () => {
+  it("offers no Invite Member in the active personal workspace on an invite-only site, the open source's default, and says why in its place", async () => {
     serveLists();
     const signedIn = currentUserWithRole("admin");
     const personal = { ...signedIn.organizations[0]!, name: "viewer@example.com" };
@@ -429,7 +429,7 @@ describe("the Permissions page (/org-admin)", () => {
   // has it suspended the page is leaving for /login: the list neither throws
   // to the error boundary, which below root is root's own and replaced the
   // whole app (the sidebar, Logout's toast) with "Oops!", nor toasts, nor
-  // leaves (D12 Ruling 40).
+  // leaves.
   it.each([
     ["members", "Invited", "2", "Active", "/org-admin", "invited@example.com"],
     ["invitations", "Active", "3", "Invited", "/org-admin/active-members", "contributor@example.com"],

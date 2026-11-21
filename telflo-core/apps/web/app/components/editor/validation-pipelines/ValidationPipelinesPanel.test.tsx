@@ -1,6 +1,5 @@
 /**
- * The Testing tab's Validation subtab (D15a Task 8: decisions 5, 6, 12, 13
- * and 18; Preflight rulings 26 and 27): validation pipelines created
+ * The Testing tab's Validation subtab: validation pipelines created
  * (taken pipelines disabled) and deleted (confirmed); each rule editor
  * mode's fields and the rule it saves; Record count's and Between's
  * refusals; the OTTL contexts per signal; builder rules reopening in their
@@ -9,34 +8,31 @@
  * the stale warning against the editor's text; the empty states, a failed
  * read and its Retry; a published version's rules editable; where the focus
  * goes; and replay's rule (no rule text in an attribute outside
- * `ph-no-capture`). Ruling 45's follow-up: a rule's context never changes
- * silently (a builder only on the context it saves), the form's problems
- * announced politely, Go's blank, every field held during a save, the
- * count's bound, a builder rule's and a mode change's PATCH, and the API's
- * refusal under the builders. Ruling 46: each of a refusal's problems under
- * the field it names, else the mode's main field. Ruling 50: two problems on
- * one field. Ruling 56: a save's answer acts only on its dialog's session
- * (P1, P1b, New validation pipeline's), Go's whitespace trimmed (P3), the
- * 8,192-byte bound (P4), an unreadable request's words inline, a teammate's
- * delete (404) closing the editor, the focus to the card's header, and only
- * logs, traces and metrics pipelines offered. Ruling 57: a rule's Edit and
- * Delete held while a change or delete of it is under way (probe A), the
- * focus to "+ Pipeline" when the card is gone (probe B), Name's and
- * Description's problems cleared as they are edited (probe C), the
- * attribute builder's Go trim, Save kept held through an abandoned answer,
- * and the too-long problem under the field that makes it so (probe D).
- * Ruling 59: a change answered after the version was left and come back to
- * mid-save opens in Edit (the review's probe), the focus to "+ Pipeline"
- * when the card goes under a rule's delete confirmation or with a delete
- * answered "validation pipeline not found", and a refused change (400, 503,
- * the server not reached) giving its rule's Edit and Delete back.
- * Ruling 61: the focus to the card now at its place, else "+ Pipeline",
- * when a card goes under its pipeline's delete confirmation (probe E), and
- * a change answered after the version was left and come back to read again,
- * a teammate's later change kept (probe F).
- * Ruling 26: a card editor's save answered after a version switch (the
- * editor gone with its card) toasts nothing; an edit given a prefill too
- * opens the rule as stored.
+ * `ph-no-capture`). Also: a rule's context never changes silently (a
+ * builder only on the context it saves), the form's problems announced
+ * politely, Go's blank, every field held during a save, the count's bound,
+ * a builder rule's and a mode change's PATCH, and the API's refusal under
+ * the builders; each of a refusal's problems under the field it names, else
+ * the mode's main field, and two problems on one field; a save's answer
+ * acting only on its dialog's session (New validation pipeline's too), Go's
+ * whitespace trimmed, the 8,192-byte bound, an unreadable request's words
+ * inline, a teammate's delete (404) closing the editor, the focus to the
+ * card's header, and only logs, traces and metrics pipelines offered; a
+ * rule's Edit and Delete held while a change or delete of it is under way,
+ * the focus to "+ Pipeline" when the card is gone, Name's and Description's
+ * problems cleared as they are edited, the attribute builder's Go trim, Save
+ * kept held through an abandoned answer, and the too-long problem under the
+ * field that makes it so; a change answered after the version was left and
+ * come back to mid-save opening in Edit, the focus to "+ Pipeline" when the
+ * card goes under a rule's delete confirmation or with a delete answered
+ * "validation pipeline not found", and a refused change (400, 503, the
+ * server not reached) giving its rule's Edit and Delete back; the focus to
+ * the card now at its place, else "+ Pipeline", when a card goes under its
+ * pipeline's delete confirmation, and a change answered after the version
+ * was left and come back to read again, a teammate's later change kept; and
+ * a card editor's save answered after a version switch (the editor gone
+ * with its card) toasting nothing, and an edit given a prefill too opening
+ * the rule as stored.
  *
  * Rendered in the whole tab, as the Suites subtab's tests are: Monaco is
  * stubbed; the API is its client's functions, spied on, over a little
@@ -246,7 +242,7 @@ async function expand(user: User, pipeline: string) {
   return each;
 }
 
-/** Chooses `option` in the combobox labelled `label`, inside `scope`. */
+/** Chooses `option` in the combobox labeled `label`, inside `scope`. */
 async function choose(user: User, scope: HTMLElement, label: string, option: string) {
   await user.click(within(scope).getByRole("combobox", { name: label }));
   await user.click(await screen.findByRole("option", { name: option }));
@@ -481,7 +477,7 @@ function cardSync(pipeline: string) {
   return screen.getByText(pipeline, { selector: "li span.font-mono" }).closest("li")!;
 }
 
-describe("the stale warning (decision 18's correction: the editor's current text)", () => {
+describe("the stale warning (against the editor's current text)", () => {
   const WARNING = "pipeline not found in current YAML";
   const TITLE = "This pipeline is not defined in the current YAML — rules here won't run until it is.";
 
@@ -567,7 +563,7 @@ describe("a validation pipeline's rules", () => {
     }
   });
 
-  it("are deleted only once confirmed (new): 'Delete validation rule?' with its name; Cancel deletes nothing, the focus back to its Delete; then to the next row's Edit, else the previous one's, else Add Validation Rule", async () => {
+  it("are deleted only once confirmed: 'Delete validation rule?' with its name; Cancel deletes nothing, the focus back to its Delete; then to the next row's Edit, else the previous one's, else Add Validation Rule", async () => {
     const { deleteRule } = serveApi();
     const second = validationRuleFixture({ id: "0199f400-0000-7000-8000-000000000002", position: 2, name: "zq-second" });
     api.pipelines = [LOGS];
@@ -615,7 +611,7 @@ describe("a validation pipeline's rules", () => {
     expect(screen.getByRole("alertdialog", { name: "Delete validation rule?" })).toBeInTheDocument();
   });
 
-  it("are editable on a published version (decision 13): a pipeline created, a rule added, changed and deleted", async () => {
+  it("are editable on a published version: a pipeline created, a rule added, changed and deleted", async () => {
     const { createRule, updateRule, deleteRule } = serveApi();
     const published = versionFixture({ yamlContent: YAML, ...PUBLISHED_FIELDS });
     useEditorStore.getState().load({ organizationId: GROUP_ID, configuration: MINE, version: published });
@@ -727,7 +723,7 @@ describe("the rule editor's modes (all four, and the rules they save)", () => {
     });
   });
 
-  it("Record count refuses a negative count, a fraction, an empty one, and an unordered Between (new), Add rule held", async () => {
+  it("Record count refuses a negative count, a fraction, an empty one, and an unordered Between, Add rule held", async () => {
     serveApi();
     api.pipelines = [LOGS];
     const { user } = await renderValidation();
@@ -799,7 +795,7 @@ describe("the rule editor's modes (all four, and the rules they save)", () => {
     });
   });
 
-  it("announces the form's problems in a polite live region kept in place across the modes, each tied to its field (Ruling 45)", async () => {
+  it("announces the form's problems in a polite live region kept in place across the modes, each tied to its field", async () => {
     serveApi();
     api.pipelines = [LOGS];
     const { user } = await renderValidation();
@@ -990,7 +986,7 @@ describe("a rule reopened", () => {
   const ottlRule = (ottl: ValidationRule["ottl"]) =>
     validationRuleFixture({ kind: "ottl", target: "output", pattern: null, ottl, name: "zq-ottl", description: "" });
 
-  it("opens a text rule in Match output text with its fields; Save sends the rule whole (Ruling 38)", async () => {
+  it("opens a text rule in Match output text with its fields; Save sends the rule whole", async () => {
     const { user, dialog } = await edit(validationRuleFixture({ target: "stderr", kind: "contains_regex", pattern: "^zq" }));
 
     expect(within(dialog).getByRole("combobox", { name: "Rule type" })).toHaveTextContent("Match output text");
@@ -1054,7 +1050,7 @@ describe("a rule reopened", () => {
       { context: "resource", condition: "true", quantifier: "count", count: { operator: "gte", value: 1 } },
     ],
   ] as const)(
-    "opens %s, a builder's shape on a context its builder doesn't save, in OTTL condition mode; a rename PATCHes the same context (Ruling 45)",
+    "opens %s, a builder's shape on a context its builder doesn't save, in OTTL condition mode; a rename PATCHes the same context",
     async (_what, validationPipeline, ottl) => {
       const { user, dialog } = await edit(ottlRule(ottl), validationPipeline);
 
@@ -1145,7 +1141,7 @@ describe("a rule reopened", () => {
   });
 });
 
-describe("the API's refusals at Save (decision 6)", () => {
+describe("the API's refusals at Save", () => {
   /** The logs pipeline's editor, adding an OTTL rule with Ben's broken condition. */
   async function brokenCondition() {
     const spies = serveApi();
@@ -1223,7 +1219,7 @@ describe("the API's refusals at Save (decision 6)", () => {
     expect(toastError).not.toHaveBeenCalled();
   });
 
-  /** A 400 validation_rule_invalid as the API answers it: the first problem's words, each problem with its field in details (Ruling 46). */
+  /** A 400 validation_rule_invalid as the API answers it: the first problem's words, each problem with its field in details. */
   function invalid(...problems: { field: string; message: string }[]) {
     return new ApiError("validation_rule_invalid", problems[0]!.message, { status: 400, details: { problems } });
   }
@@ -1246,7 +1242,7 @@ describe("the API's refusals at Save (decision 6)", () => {
     return within(field.parentElement!).getByRole("alert");
   }
 
-  it("shows a distinct rule's broken expression under the value expression, not the Row filter: only the expression invalid (Ruling 46)", async () => {
+  it("shows a distinct rule's broken expression under the value expression, not the Row filter: only the expression invalid", async () => {
     const { createRule, user, dialog } = await distinctRule();
     const words = 'OTTL syntax error: 1:12: unexpected token "<EOF>" (expected "]")';
     createRule.mockRejectedValueOnce(invalid({ field: "ottl.expression", message: words }));
@@ -1384,7 +1380,7 @@ describe("the API's refusals at Save (decision 6)", () => {
     expect(within(dialog).queryByRole("alert")).toBeNull();
   });
 
-  it("shows two problems naming one field both under it, the field described by both (Ruling 50)", async () => {
+  it("shows two problems naming one field both under it, the field described by both", async () => {
     const { createRule, user, dialog } = await brokenCondition();
     const first = 'OTTL syntax error: 1:22: unexpected token "<EOF>" (expected "\\"")';
     const second = "OTTL syntax error: zq the second problem";
@@ -1402,7 +1398,7 @@ describe("the API's refusals at Save (decision 6)", () => {
     expect(within(dialog).getAllByRole("alert")).toHaveLength(2);
   });
 
-  describe("an unreadable request (400 invalid_request): the API's words inline, never the generic toast (Ruling 56)", () => {
+  describe("an unreadable request (400 invalid_request): the API's words inline, never the generic toast", () => {
     /** The envelope's issue, as fastify-type-provider-zod words a request schema's (errors.ts forwards `error.validation`). */
     const zodIssue = (path: string[], message: string) => ({
       keyword: "custom",
@@ -1468,7 +1464,7 @@ describe("the API's refusals at Save (decision 6)", () => {
     });
   });
 
-  it("reads 'Saving...' while the API answers, every field held (Ruling 45), and gives them back on a refusal", async () => {
+  it("reads 'Saving...' while the API answers, every field held, and gives them back on a refusal", async () => {
     const { createRule, user, dialog } = await brokenCondition();
     await choose(user, dialog, "Require", "Matching count…");
     let refuse: (error: unknown) => void = () => undefined;
@@ -1521,7 +1517,7 @@ describe("the focus as the dialogs close", () => {
   });
 });
 
-describe("a Play all under way while a Validation dialog shows (D14b Ruling 50's rule, extended)", () => {
+describe("a Play all under way while a Validation dialog shows", () => {
   it("keeps the rule editor and what was typed in it: no switch to Tests under it, the run still queued", async () => {
     serveApi();
     api.pipelines = [LOGS];
@@ -1551,7 +1547,7 @@ describe("a Play all under way while a Validation dialog shows (D14b Ruling 50's
   });
 });
 
-describe("replay (Preflight ruling 27; ADR 0024)", () => {
+describe("replay", () => {
   it("puts the panel and every dialog's content in ph-no-capture, and no pipeline name or rule text in an attribute outside it", async () => {
     serveApi();
     const zqPipeline = validationPipelineFixture({ id: "0199f300-0000-7000-8000-000000000002", pipeline: "logs/zqotlp" });
@@ -1625,8 +1621,8 @@ describe("replay (Preflight ruling 27; ADR 0024)", () => {
   });
 });
 
-describe("a save's answer and the dialog's session (Ruling 56)", () => {
-  it("P1: a rule's add answered after Escape doesn't close the editor opened since, nor toasts; the rule joins the list all the same", async () => {
+describe("a save's answer and the dialog's session", () => {
+  it("a rule's add answered after Escape doesn't close the editor opened since, nor toasts; the rule joins the list all the same", async () => {
     const { createRule } = serveApi();
     api.pipelines = [LOGS];
     const { user } = await renderValidation();
@@ -1662,7 +1658,7 @@ describe("a save's answer and the dialog's session (Ruling 56)", () => {
     expect(createRule).toHaveBeenLastCalledWith(...TARGET, LOGS.id, expect.objectContaining({ pattern: "zq-second" }));
   });
 
-  it("P1b: a change refused after Escape puts nothing under the next rule's fields, nor toasts", async () => {
+  it("a change refused after Escape puts nothing under the next rule's fields, nor toasts", async () => {
     const { updateRule } = serveApi();
     const other = validationRuleFixture({ id: "0199f400-0000-7000-8000-000000000003", position: 2, pattern: "zq-other", name: "zq-other-rule" });
     const second = validationRuleFixture({ id: "0199f400-0000-7000-8000-000000000002", position: 3, pattern: "zq-second", name: "zq-second-rule" });
@@ -1673,7 +1669,7 @@ describe("a save's answer and the dialog's session (Ruling 56)", () => {
     const refusals: ((error: unknown) => void)[] = [];
     updateRule.mockImplementation(() => new Promise((_resolve, reject) => refusals.push(reject)));
 
-    // Two abandoned saves, of two rules (a rule being saved is held, Ruling 57): one the evaluator refuses, one the evaluator can't check.
+    // Two abandoned saves, of two rules (a rule being saved is held): one the evaluator refuses, one the evaluator can't check.
     for (const opener of ["Edit rule 1: zq-no-secrets", "Edit rule 2: zq-other-rule"]) {
       await user.click(within(logs).getByRole("button", { name: opener }));
       const first = await screen.findByRole("dialog", { name: "Edit validation rule" });
@@ -1742,8 +1738,8 @@ describe("a save's answer and the dialog's session (Ruling 56)", () => {
   });
 });
 
-describe("the editor's text as the API reads it (Ruling 56)", () => {
-  it("P3: trims only Go's whitespace around a pattern, a condition and an expression: a U+FEFF (not Go's whitespace) is kept and saves", async () => {
+describe("the editor's text as the API reads it", () => {
+  it("trims only Go's whitespace around a pattern, a condition and an expression: a U+FEFF (not Go's whitespace) is kept and saves", async () => {
     const { createRule } = serveApi();
     api.pipelines = [LOGS];
     const { user } = await renderValidation();
@@ -1774,7 +1770,7 @@ describe("the editor's text as the API reads it (Ruling 56)", () => {
     });
   });
 
-  it("P4: holds a pattern past 8,192 bytes of UTF-8 as a form problem tied to it, announced, in the API's words; 8,192 bytes save", async () => {
+  it("holds a pattern past 8,192 bytes of UTF-8 as a form problem tied to it, announced, in the API's words; 8,192 bytes save", async () => {
     const { createRule } = serveApi();
     api.pipelines = [LOGS];
     const { user } = await renderValidation();
@@ -1840,7 +1836,7 @@ describe("the editor's text as the API reads it (Ruling 56)", () => {
   });
 });
 
-describe("a rule or pipeline a teammate deleted (404, Ruling 56)", () => {
+describe("a rule or pipeline a teammate deleted (404)", () => {
   it("closes the rule editor on a change answered 'rule not found', toasting the API's words; the rule leaves the list, the focus to Add Validation Rule", async () => {
     const { updateRule } = serveApi();
     api.pipelines = [LOGS];
@@ -1895,7 +1891,7 @@ describe("a rule or pipeline a teammate deleted (404, Ruling 56)", () => {
   });
 });
 
-describe("the focus with neither the editor's opener nor Add Validation Rule there (Ruling 56)", () => {
+describe("the focus with neither the editor's opener nor Add Validation Rule there", () => {
   it("goes to the card's header while the rules are read again after a failed first read", async () => {
     const { listRules } = serveApi();
     listRules.mockRejectedValueOnce(new ApiError("internal_error", "Internal error", { status: 500 }));
@@ -1925,7 +1921,7 @@ describe("the focus with neither the editor's opener nor Add Validation Rule the
   });
 });
 
-describe("New validation pipeline's choices (Ruling 56)", () => {
+describe("New validation pipeline's choices", () => {
   it("offers only logs, traces and metrics pipelines: not a profiles one, which the API would refuse", async () => {
     serveApi();
     useEditorStore.getState().load({
@@ -1945,8 +1941,8 @@ describe("New validation pipeline's choices (Ruling 56)", () => {
   });
 });
 
-describe("Ruling 57: a rule held while it saves, the focus with its card gone, and the review's fixes", () => {
-  it("holds a rule's Edit and Delete while its change is under way, its editor closed (probe A): reopened once it answers, on what the API kept", async () => {
+describe("a rule held while it saves, the focus with its card gone, problems cleared, Go's trim, Save held and the too-long bound", () => {
+  it("holds a rule's Edit and Delete while its change is under way, its editor closed: reopened once it answers, on what the API kept", async () => {
     const { updateRule } = serveApi();
     api.pipelines = [LOGS];
     api.rules = { [LOGS.id]: [RULE] };
@@ -2011,7 +2007,7 @@ describe("Ruling 57: a rule held while it saves, the focus with its card gone, a
     expect(within(logs).getByRole("button", { name: "Delete rule 1: zq-no-secrets" })).not.toHaveAttribute("aria-disabled");
   });
 
-  it("gives the focus to + Pipeline when a change answered 'validation pipeline not found' takes the card away (probe B)", async () => {
+  it("gives the focus to + Pipeline when a change answered 'validation pipeline not found' takes the card away", async () => {
     const { updateRule } = serveApi();
     api.pipelines = [LOGS, TRACES];
     api.rules = { [LOGS.id]: [RULE] };
@@ -2029,7 +2025,7 @@ describe("Ruling 57: a rule held while it saves, the focus with its card gone, a
     await waitFor(() => expect(screen.getByRole("button", { name: "Add validation pipeline" })).toHaveFocus());
   });
 
-  it("clears the API's problems under Name or Description as that field is edited, the others kept (probe C)", async () => {
+  it("clears the API's problems under Name or Description as that field is edited, the others kept", async () => {
     const { createRule } = serveApi();
     api.pipelines = [LOGS];
     const { user } = await renderValidation();
@@ -2124,7 +2120,7 @@ describe("Ruling 57: a rule held while it saves, the focus with its card gone, a
     expect(within(cardSync("logs")).getByText("Does not contain: zq-second")).toBeInTheDocument();
   });
 
-  it("puts Record attribute's too-long condition under the key when the key makes it so, else under the value (probe D)", async () => {
+  it("puts Record attribute's too-long condition under the key when the key makes it so, else under the value", async () => {
     serveApi();
     api.pipelines = [LOGS];
     const { user } = await renderValidation();
@@ -2152,8 +2148,8 @@ describe("Ruling 57: a rule held while it saves, the focus with its card gone, a
   });
 });
 
-describe("Ruling 59: a late answer placed, the focus with the card gone under a rule's confirmation, a refused change released", () => {
-  it("opens a rule's Edit on the change that landed while the version was left and come back to mid-save, not on the rules read meanwhile (the review's probe)", async () => {
+describe("a late answer placed, the focus with the card gone under a rule's confirmation, a refused change released", () => {
+  it("opens a rule's Edit on the change that landed while the version was left and come back to mid-save, not on the rules read meanwhile", async () => {
     const { updateRule } = serveApi();
     api.pipelines = [LOGS];
     api.rules = { [LOGS.id]: [RULE] };
@@ -2273,7 +2269,7 @@ describe("Ruling 59: a late answer placed, the focus with the card gone under a 
   });
 });
 
-describe("Ruling 61: a late answer read again, and the focus with a card gone under its pipeline's confirmation", () => {
+describe("a late answer read again, and the focus with a card gone under its pipeline's confirmation", () => {
   /** Saves a change to RULE in its editor, Escapes it, and leaves the save hanging until `settle` is called. */
   async function abandonSave(user: User, updateRule: MockInstance<typeof apiClient.updateValidationRule>, logs: HTMLElement) {
     const settle = {
@@ -2296,7 +2292,7 @@ describe("Ruling 61: a late answer read again, and the focus with a card gone un
     return settle;
   }
 
-  it("gives the focus to + Pipeline when the card goes under its pipeline's delete confirmation, no other card there (probe E)", async () => {
+  it("gives the focus to + Pipeline when the card goes under its pipeline's delete confirmation, no other card there", async () => {
     const { updateRule } = serveApi();
     api.pipelines = [LOGS];
     api.rules = { [LOGS.id]: [RULE] };
@@ -2332,7 +2328,7 @@ describe("Ruling 61: a late answer read again, and the focus with a card gone un
     await waitFor(() => expect(within(cardSync("traces")).getByRole("button", { expanded: false })).toHaveFocus());
   });
 
-  it("gives the focus to + Pipeline when Delete is clicked in a confirmation whose card has vanished, no other card there (Ruling 63)", async () => {
+  it("gives the focus to + Pipeline when Delete is clicked in a confirmation whose card has vanished, no other card there", async () => {
     const { updateRule, deletePipeline } = serveApi();
     api.pipelines = [LOGS];
     api.rules = { [LOGS.id]: [RULE] };
@@ -2351,7 +2347,7 @@ describe("Ruling 61: a late answer read again, and the focus with a card gone un
     await waitFor(() => expect(screen.getByRole("button", { name: "Add validation pipeline" })).toHaveFocus());
   });
 
-  it("gives the focus to the card now at its place when Delete is clicked in a confirmation whose card has vanished (Ruling 63)", async () => {
+  it("gives the focus to the card now at its place when Delete is clicked in a confirmation whose card has vanished", async () => {
     const { updateRule, deletePipeline } = serveApi();
     api.pipelines = [LOGS, TRACES];
     api.rules = { [LOGS.id]: [RULE] };
@@ -2369,7 +2365,7 @@ describe("Ruling 61: a late answer read again, and the focus with a card gone un
     await waitFor(() => expect(within(cardSync("traces")).getByRole("button", { expanded: false })).toHaveFocus());
   });
 
-  it("opens Edit on a teammate's change committed after mine, when mine answers after the version was left and come back to (probe F)", async () => {
+  it("opens Edit on a teammate's change committed after mine, when mine answers after the version was left and come back to", async () => {
     const { updateRule, listRules } = serveApi();
     api.pipelines = [LOGS];
     api.rules = { [LOGS.id]: [RULE] };
@@ -2401,7 +2397,7 @@ describe("Ruling 61: a late answer read again, and the focus with a card gone un
   });
 });
 
-describe("Ruling 26: a save answered after the editor has gone, and an edit given a prefill", () => {
+describe("a save answered after the editor has gone, and an edit given a prefill", () => {
   it.each([
     ["an add, refused", "add", "refuse"],
     ["a change, refused", "change", "refuse"],
@@ -2467,7 +2463,7 @@ describe("Ruling 26: a save answered after the editor has gone, and an edit give
       'attributes["a"] != nil and IsMatch(body, "zq.*")',
     ],
     [
-      "a builder-shaped OTTL rule, recognised",
+      "a builder-shaped OTTL rule, recognized",
       validationRuleFixture({
         kind: "ottl",
         pattern: null,
@@ -2499,7 +2495,7 @@ describe("Ruling 26: a save answered after the editor has gone, and an edit give
       expect(within(dialog).getByRole("combobox", { name: "Require" })).toHaveTextContent("At least one matches");
     }
     if (mode === "Record attribute") {
-      // Recognised from the stored rule, never the prefill's resource / none.
+      // Recognized from the stored rule, never the prefill's resource / none.
       expect(within(dialog).getByRole("combobox", { name: "Require" })).toHaveTextContent("All records match");
       expect(within(dialog).getByRole("combobox", { name: "Scope" })).toHaveTextContent("Record");
       expect(within(dialog).getByRole("combobox", { name: "Operator" })).toHaveTextContent("Equals");

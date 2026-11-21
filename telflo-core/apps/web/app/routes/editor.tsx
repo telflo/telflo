@@ -40,61 +40,57 @@ import { selectIsCanvasLocked, selectIsDirty, useEditorStore } from "~/lib/store
 import { useCurrentUser } from "~/lib/use-current-user.js";
 
 /*
- * `/editor/{id}/{versionId}`: the editor page (ADR 0018; D8 decisions 8 and
- * 12), with its title, its loading state and its composed layout. Its rules
- * are in the D8 and D10 Parity Notes:
- * - the version is in the address (D10 decision 9), one route, so the page
- *   stays mounted while its version changes. `/editor/{id}` opens the
- *   version the API answers (the person's selection, else the newest) and
- *   replaces the address with that version's; the configurations list links
- *   there. Every version the page settles on is recorded as the person's
- *   selection, best effort: a failure says nothing and changes nothing;
- * - the builder (D9a): the toolbox, the canvas with its actions, and the
- *   panel's Configuration and YAML tabs, in that order. Selecting a node or a
- *   pipeline group switches to Configuration; the tab is disabled while the
- *   canvas is locked (manual edit mode, or text it can't show; decisions 2
- *   and 3). The canvas, the tabs and the toolbar share the editor's store,
- *   not props;
+ * `/editor/{id}/{versionId}`: the editor page, with its title, its loading
+ * state and its composed layout. Its rules:
+ * - the version is in the address, one route, so the page stays mounted
+ *   while its version changes. `/editor/{id}` opens the version the API
+ *   answers (the person's selection, else the newest) and replaces the
+ *   address with that version's; the configurations list links there. Every
+ *   version the page settles on is recorded as the person's selection, best
+ *   effort: a failure says nothing and changes nothing;
+ * - the builder: the toolbox, the canvas with its actions, and the panel's
+ *   Configuration and YAML tabs, in that order. Selecting a node or a pipeline
+ *   group switches to Configuration; the tab is disabled while the canvas is
+ *   locked (manual edit mode, or text it can't show). The canvas, the tabs and
+ *   the toolbar share the editor's store, not props;
  * - the configuration and its version are fetched through the browser client
- *   in an effect, never in a server loader (D2b's Handoffs), and Monaco
- *   renders only in the browser;
+ *   in an effect, never in a server loader, and Monaco renders only in the
+ *   browser;
  * - an unknown configuration shows "Configuration not found", never the
  *   previous one left on screen; so does an id that isn't a UUID, with no
- *   request (Preflight ruling 17: React Router decodes the parameter, so `..`
- *   would reach another API path). An unknown version, or a version id that
- *   isn't a UUID (with no request), shows "Version not found" with "Open the
- *   latest version" (D10 decision 9). A load that fails otherwise toasts
- *   "Failed to load configuration", says so in the page, and offers "Try
- *   again"; a 401 `unauthenticated` only says so in the page (D12 Ruling 39):
- *   the session-ended handler, or Logout, is taking the browser to `/login`;
+ *   request (React Router decodes the parameter, so `..` would reach another
+ *   API path). An unknown version, or a version id that isn't a UUID (with
+ *   no request), shows "Version not found" with "Open the latest version". A
+ *   load that fails otherwise toasts "Failed to load configuration", says so
+ *   in the page, and offers "Try again"; a 401 `unauthenticated` only says
+ *   so in the page: the session-ended handler, or Logout, is taking the
+ *   browser to `/login`;
  * - Cmd/Ctrl+S saves outside Monaco too, and the browser's own save dialog
- *   never opens here (decision 5);
- * - unsaved text is guarded (decision 15): leaving
- *   by navigation opens the Unsaved Changes dialog (useNavigationGuard), and
- *   closing or reloading the tab asks the browser's own question. The
- *   sidebar refuses switching organization and signing out meanwhile;
- * - the tour (D9a decision 14) starts once, the first time, and only once
- *   the configuration has loaded, so it never picks the empty canvas's steps
- *   for a full one;
- * - a published version is read-only (D11b decision 4; Preflight ruling 11),
- *   with the banner above the canvas. Its Configuration tab still opens, its
- *   forms disabled, so a node can be inspected; the tab is disabled only by
- *   the canvas's own lock. A published version is never dirty, so the guards
- *   never ask, except over text a stale tab typed before a teammate
- *   published it (Preflight ruling 12), which is unsaved work: leaving still
- *   asks, and "Save & Continue" says the version is published and stays.
- * - the collector catalogue is read once, when the page mounts, for the
- *   toolbar's collector picker (D13a decision 8); until it answers, or if
- *   it can't, the picker shows the pin as text.
+ *   never opens here;
+ * - unsaved text is guarded: leaving by navigation opens the Unsaved Changes
+ *   dialog (useNavigationGuard), and closing or reloading the tab asks the
+ *   browser's own question. The sidebar refuses switching organization and
+ *   signing out meanwhile;
+ * - the tour starts once, the first time, and only once the configuration
+ *   has loaded, so it never picks the empty canvas's steps for a full one;
+ * - a published version is read-only, with the banner above the canvas. Its
+ *   Configuration tab still opens, its forms disabled, so a node can be
+ *   inspected; the tab is disabled only by the canvas's own lock. A
+ *   published version is never dirty, so the guards never ask, except over
+ *   text a stale tab typed before a teammate published it, which is unsaved
+ *   work: leaving still asks, and "Save & Continue" says the version is
+ *   published and stays.
+ * - the collector catalog is read once, when the page mounts, for the
+ *   toolbar's collector picker; until it answers, or if it can't, the picker
+ *   shows the pin as text.
  * - the open version's text is checked by the collector validator while the
- *   page is mounted (`useCollectorValidation`; D13b decision 13): at once
- *   when a version opens or the pin changes, 2 s after the text changes.
- * - the panel's third tab, Testing (D14a decision 21), kept mounted, is
- *   disabled with Configuration: in manual edit mode and while the canvas
- *   can't show the text.
+ *   page is mounted (`useCollectorValidation`): at once when a version
+ *   opens or the pin changes, 2 s after the text changes.
+ * - the panel's third tab, Testing, kept mounted, is disabled with
+ *   Configuration: in manual edit mode and while the canvas can't show
+ *   the text.
  * The layout route supplies the shell. No attribute here carries the name,
- * the YAML, a label or an email (ADR 0024; decision 18): they are text, which
- * replay masks.
+ * the YAML, a label or an email: they are text, which replay masks.
  */
 
 const CONFIGURATION_VERSION_NOT_FOUND: ConfigurationErrorCode = "configuration_version_not_found";
@@ -126,14 +122,14 @@ interface OrganizationCheck {
 /**
  * A created version the store took on while the address still named the
  * version settled on (`adoptCreatedVersion` runs before its push), and the
- * history entry the page was on then (D10 Ruling 21).
+ * history entry the page was on then.
  */
 interface Adoption {
   versionId: string;
   entry: string;
 }
 
-/** The same id, in either case: an address may spell a UUID in upper case, and the API answers in lower (D10 Preflight ruling 5). */
+/** The same id, in either case: an address may spell a UUID in upper case, and the API answers in lower. */
 function sameId(one: string | null | undefined, other: string | null | undefined): boolean {
   return one != null && other != null && one.toLowerCase() === other.toLowerCase();
 }
@@ -143,7 +139,7 @@ function adoptedOn(adoption: Adoption | null, versionId: string, entry: string):
   return adoption !== null && sameId(adoption.versionId, versionId) && adoption.entry === entry;
 }
 
-/** Whether a load found no such version of the configuration (D10 decision 4). */
+/** Whether a load found no such version of the configuration. */
 function isVersionGone(error: unknown): boolean {
   return error instanceof ApiError && error.code === CONFIGURATION_VERSION_NOT_FOUND;
 }
@@ -157,7 +153,7 @@ export function meta(_args: Route.MetaArgs) {
 
 export default function EditorPage() {
   const { configurationId = "", versionId } = useParams();
-  /** The history entry: a new one, even at the same address, is another navigation (D10 Ruling 21). */
+  /** The history entry: a new one, even at the same address, is another navigation. */
   const { key: entry } = useLocation();
   const navigate = useNavigate();
   const organizationId = useCurrentUser()?.organization.id ?? null;
@@ -166,10 +162,10 @@ export default function EditorPage() {
   const { revalidate } = useRevalidator();
   const save = useSaveConfiguration();
   const guard = useNavigationGuard(save);
-  // The toolbar's collector picker reads it from its store (D13a decision 8).
+  // The toolbar's collector picker reads it from its store.
   useCollectorDistributions();
   // The collector validator checks the open version's text, for the YAML
-  // tab's bar and Apply and the canvas's chip (D13b Preflight ruling 21).
+  // tab's bar and Apply and the canvas's chip.
   useCollectorValidation();
   const isDirty = useEditorStore(selectIsDirty);
   const isCanvasLocked = useEditorStore(selectIsCanvasLocked);
@@ -184,7 +180,7 @@ export default function EditorPage() {
   /**
    * A load under way, or one that ended without a version to show, for the
    * address it was for; null once a load has put its version in the store,
-   * whose holding the address then decides (D10 Preflight ruling 5).
+   * whose holding the address then decides.
    */
   const [outcome, setOutcome] = useState<{ address: string; status: Exclude<LoadStatus, "loaded"> } | null>(null);
   const [attempt, setAttempt] = useState(0);
@@ -203,7 +199,7 @@ export default function EditorPage() {
   const latestLoad = useRef(0);
   /** The version `/editor/{id}` is being replaced with, until the address names one. */
   const replacingWith = useRef<string | null>(null);
-  /** The selection last recorded, so each settled version is recorded once (D10 Preflight ruling 17). */
+  /** The selection last recorded, so each settled version is recorded once. */
   const recordedSelection = useRef<string | null>(null);
   /**
    * The created version adopted while the address names the version settled
@@ -222,7 +218,7 @@ export default function EditorPage() {
   // never sees a dirty editor that isn't there. Declared before the load, so
   // on a new id it runs first. Another version of the same configuration is
   // the load's to forget (below): this would empty the store on the
-  // address's replace (D10 Preflight ruling 4).
+  // address's replace.
   useEffect(
     () => () => {
       settle(null);
@@ -259,15 +255,15 @@ export default function EditorPage() {
   /*
    * Loads the version the address names, for the active organization
    * (`useCurrentUser()`'s, since a switch or removal elsewhere changes it
-   * without a remount): `getConfigurationVersion` for `/editor/{id}/{versionId}`;
-   * for `/editor/{id}`, `getConfiguration`, whose version then replaces the
-   * address (D10 decision 9), keeping the configuration's id as typed (a
-   * change of its case would be another configuration to the effect above).
+   * without a remount): `getConfigurationVersion` for
+   * `/editor/{id}/{versionId}`; for `/editor/{id}`, `getConfiguration`, whose
+   * version then replaces the address, keeping the configuration's id as typed
+   * (a change of its case would be another configuration to the effect above).
    *
    * The layout revalidates on every navigation (`shouldRevalidate`), so the
    * address changes with renders between, and the page never fetches what
-   * it already holds (D10 Preflight ruling 4). It holds the address when it
-   * has settled on that configuration and:
+   * it already holds. It holds the address when it has settled on that
+   * configuration and:
    * - the address names no version while its own replace is under way;
    * - the address names the version settled on: the one loaded, or the one
    *   a create left behind (`adoptCreatedVersion` runs before its push, so
@@ -275,22 +271,22 @@ export default function EditorPage() {
    *   still names the source; that is never fetched). The second holds only
    *   on the history entry the create was adopted on: a later entry naming
    *   the source (the picker's choice of it while the push waits, which
-   *   abandons the push) fetches the source (D10 Ruling 21);
+   *   abandons the push) fetches the source;
    * - the address names the version the store holds, in the same
    *   configuration and organization: a create's push has landed, and the
    *   page settles on the created version.
    * Anything else is fetched, and a version held until then goes first, as
    * another configuration's does above: the undo history, manual edit mode
-   * and the selection with it (D10 decision 13).
+   * and the selection with it.
    *
-   * It loads again what it holds only when the active organization isn't
-   * the one it was loaded in and the editor is clean (D8 Preflight ruling
-   * 4): a loaded version with unsaved text is never reloaded over, and its
-   * saves still name the organization it was loaded in, which the API then
-   * refuses, keeping the text. The check runs again when the editor becomes
-   * clean (`isDirty` is a dependency for that, and for a create's adoption),
-   * so an organization changed while it was dirty loads then; one switched
-   * back to meanwhile loads nothing.
+   * It loads again what it holds only when the active organization isn't the
+   * one it was loaded in and the editor is clean: a loaded version with
+   * unsaved text is never reloaded over, and its saves still name the
+   * organization it was loaded in, which the API then refuses, keeping the
+   * text. The check runs again when the editor becomes clean (`isDirty` is a
+   * dependency for that, and for a create's adoption), so an organization
+   * changed while it was dirty loads then; one switched back to meanwhile
+   * loads nothing.
    *
    * Before reloading, the page asks the layout for the session's organization
    * again, once for each difference it sees while clean, keeping the editor
@@ -361,7 +357,7 @@ export default function EditorPage() {
     const thisLoad = ++latestLoad.current;
     const loading = `${configurationId}/${versionId ?? ""}`;
     organizationCheck.current = null;
-    // Another version than the one held: it goes now (D10 decision 13).
+    // Another version than the one held: it goes now.
     if (!holds) useEditorStore.getState().reset();
     settle(null);
     setOutcome({ address: loading, status: "loading" });
@@ -419,9 +415,9 @@ export default function EditorPage() {
   ]);
 
   // Every version the page settles on becomes the person's selection, which
-  // `/editor/{id}` opens next (D10 decision 9): best effort, so a failure
-  // says nothing and changes nothing. Once per settled version (StrictMode
-  // runs effects twice; D10 Preflight ruling 17).
+  // `/editor/{id}` opens next: best effort, so a failure says nothing and
+  // changes nothing. Once per settled version (StrictMode runs effects
+  // twice).
   useEffect(() => {
     if (settledOn === null) return;
     const { organizationId: loadedIn, configurationId: ofConfiguration, versionId: selected } = settledOn;
@@ -432,9 +428,9 @@ export default function EditorPage() {
   }, [settledOn]);
 
   // Cmd/Ctrl+S anywhere on the page saves, and never opens the browser's save
-  // dialog, even with nothing to save (decision 5). Inside Monaco its own
-  // command saves, and this never sees the key (YamlEditor). The save writes
-  // every edit a field holds first (held-edits; D9b decision 2).
+  // dialog, even with nothing to save. Inside Monaco its own command saves,
+  // and this never sees the key (YamlEditor). The save writes every edit a
+  // field holds first (held-edits).
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (isSaveShortcut(event)) {
@@ -460,13 +456,13 @@ export default function EditorPage() {
   const retry = useCallback(() => setAttempt((value) => value + 1), []);
 
   /*
-   * Whether the store holds what the address names (D10 Preflight ruling 5),
-   * in either case: that version of that configuration; any version of it
-   * for `/editor/{id}`, until the replace lands; or, while a create's push
-   * is on its way, the created version under the source's address, on the
-   * history entry it was adopted on (D10 Ruling 21; until the page has
-   * recorded the adoption, the entry is this one). A version still to be
-   * fetched is loading, so the one before is never editable meanwhile.
+   * Whether the store holds what the address names, in either case: that
+   * version of that configuration; any version of it for `/editor/{id}`,
+   * until the replace lands; or, while a create's push is on its way, the
+   * created version under the source's address, on the history entry it
+   * was adopted on (until the page has recorded the adoption, the entry is
+   * this one). A version still to be fetched is loading, so the one before
+   * is never editable meanwhile.
    */
   const holdsAddress =
     sameId(heldConfigurationId, configurationId) &&
@@ -529,7 +525,7 @@ export default function EditorPage() {
       icon: Settings,
       content: <ConfigurationPanel />,
       disabled: isCanvasLocked,
-      // Its sections, cards, held rows and scroll survive a look at the YAML (Ruling 86).
+      // Its sections, cards, held rows and scroll survive a look at the YAML.
       keepMounted: true,
     },
     {
@@ -543,8 +539,8 @@ export default function EditorPage() {
       ),
     },
     {
-      // D14a decision 21: the third tab, kept mounted, and disabled whenever
-      // Configuration is (manual edit mode, text the canvas can't show).
+      // The third tab, kept mounted, and disabled whenever Configuration is
+      // (manual edit mode, text the canvas can't show).
       id: "testing",
       label: "Testing",
       icon: FlaskConical,

@@ -3,12 +3,12 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import { startFakeOpampServer, type FakeOpampServer } from "./fake-opamp-server.js";
 import { AFTER_LATEST_INSTANT, EARLIEST_INSTANT } from "./fake-opamp-server-fleets.js";
 
-// The fake opamp-server's fleet model (D16b Task 1, plan Preflight ruling 4):
-// each of D16a's 25 operations answered as the contract documents and the
-// Go server answers, through a plain HTTP client, every request and reply
-// checked against vendor/opamp-server/openapi.yaml (afterEach reads
-// the violations, so an undocumented reply fails the test that caused it).
-// The clock is the fake's `now`, moved by each test.
+// The fake opamp-server's fleet model: each of its 25 operations answered as
+// the contract documents and the Go server answers, through a plain HTTP
+// client, every request and reply checked against
+// vendor/opamp-server/openapi.yaml (afterEach reads the violations, so an
+// undocumented reply fails the test that caused it). The clock is the fake's
+// `now`, moved by each test.
 
 let fake: FakeOpampServer;
 const BASE = Date.parse("2026-10-13T09:00:00.000Z");
@@ -202,7 +202,7 @@ type Request = [method: string, path: string, body?: unknown];
 
 const fleetPath = (i: Ids) => `/organizations/${i.org}/fleets/${i.fleet}`;
 
-/** Each of the 25 operations (D17b-2 added the token events, D17c-1 a new default token; D16a's 25 were 23 once D16c removed importing), as a valid request naming `ids`. */
+/** Each of the 25 operations, as a valid request naming `ids`. */
 const OPERATIONS: [string, (i: Ids) => Request][] = [
   ["getConfigurationUsage", (i) => ["GET", `/organizations/${i.org}/configurations/${i.configuration}/usage`]],
   ["getLimits", (i) => ["GET", `/organizations/${i.org}/limits`]],
@@ -422,7 +422,7 @@ describe("the fleet model's bodies", () => {
     expect(fake.snapshotOf(world.organizationId)).toEqual(before);
   });
 
-  // D17d-1 decision 2: openapi.yaml lost role, namespace, replicas and volumes.
+  // openapi.yaml has no role, namespace, replicas or volumes.
   it.each(["role", "namespace", "replicas", "volumes"])(
     "refuses a group's old Kubernetes field %s as the contract does, 400 on either fleet type, recording the violation",
     async (field) => {
@@ -741,7 +741,7 @@ describe("the fleet model's collector groups", () => {
     expect(fake.snapshotOf(organizationId)).toEqual(before);
   });
 
-  // D17d-1 decision 2: the opamp-server keeps no Kubernetes field and never reads a group's annotations.
+  // The opamp-server keeps no Kubernetes field and never reads a group's annotations.
   it.each(["server", "kubernetes-supervisor"])(
     "keeps a Kubernetes group's settings in a %s fleet's group's annotations, unread, in canonical form",
     async (type) => {
@@ -762,7 +762,7 @@ describe("the fleet model's collector groups", () => {
     },
   );
 
-  // D17c-1 decision 30: collector_groups.go and store/collectorgroups' CanonicalAnnotations.
+  // As collector_groups.go and store/collectorgroups' CanonicalAnnotations do.
   it.each(["server", "kubernetes-supervisor"])(
     "keeps a %s fleet's group's annotations in canonical form (keys sorted at every level): created, kept by a rename, replaced whole, cleared; updatedAt only on a change",
     async (type) => {
@@ -909,7 +909,7 @@ describe("the fleet model's collector groups", () => {
     expect(code(await call("PATCH", `${groups}/${randomUUID()}`, { name: "x" }))).toBe("collector_group_not_found");
   });
 
-  it("deletes a group with its collectors and their errors (D17d-1 decision 3), no other's; the Default group itself is 409", async () => {
+  it("deletes a group with its collectors and their errors, no other's; the Default group itself is 409", async () => {
     const world = await aWorld();
     const groups = `/organizations/${world.organizationId}/fleets/${world.fleetId}/groups`;
     const collectors = `/organizations/${world.organizationId}/fleets/${world.fleetId}/collectors`;
@@ -1026,7 +1026,7 @@ describe("the fleet model's enrollment tokens", () => {
     expect(code(foreign)).toBe("fleet_not_found");
   });
 
-  // Task 1's review (Ruling 19): every seeded event a time the contract's date-time can carry.
+  // Every seeded event a time the contract's date-time can carry.
   it("seeds token events only at times from the year 0001 to 9999, recording nothing otherwise", async () => {
     const organizationId = await anOrganization();
     const created = await aFleet(organizationId);
@@ -1094,7 +1094,7 @@ describe("the fleet model's enrollment tokens", () => {
     expect(listed).toHaveLength(4);
   });
 
-  it("answers each fleet's last seen and rotate token state in its summary, as the server's stores (D17a Preflight ruling 2)", async () => {
+  it("answers each fleet's last seen and rotate token state in its summary, as the server's stores", async () => {
     const organizationId = await anOrganization();
     const other = await anOrganization();
     const DAY = 24 * HOUR;
@@ -1316,7 +1316,7 @@ describe("the fleet model's enrollment tokens", () => {
     expect([missing.status, code(missing)]).toEqual([404, "enrollment_token_not_found"]);
   });
 
-  // D17c-1 decision 29: enrollment_tokens.go's issueDefaultEnrollmentToken.
+  // As enrollment_tokens.go's issueDefaultEnrollmentToken does.
   it("issues a new default token only once the fleet's default token is revoked: 201 no-store with an issued event, the revoked one kept; 409 enrollment_token_default_exists otherwise, changing nothing", async () => {
     const organizationId = await anOrganization();
     const created = await aFleet(organizationId);
@@ -1647,7 +1647,7 @@ describe("the fleet model's collector list", () => {
     expect((await list(w.organizationId, w.fleetId, `?sort=name&cursor=${cursor}`)).status).toBe(200);
   });
 
-  it("answers a fleet the organization doesn't hold 404 on a first page, and an empty page after a cursor (Ruling 38)", async () => {
+  it("answers a fleet the organization doesn't hold 404 on a first page, and an empty page after a cursor", async () => {
     const w = await threeCollectors();
     const cursor = (await list(w.organizationId, w.fleetId, "?limit=1")).body.nextCursor as string;
     const other = randomUUID();
@@ -1691,7 +1691,7 @@ describe("the fleet model's collector changes", () => {
     expect(fake.snapshotOf(organizationId)).toMatchObject({ collectors: expect.not.arrayContaining([expect.objectContaining({ pinned: expect.anything() })]) });
   });
 
-  it("pins nothing for a published version the organization doesn't hold (422), or a pin of another kind (400, an import's since D16c)", async () => {
+  it("pins nothing for a published version the organization doesn't hold (422), or a pin of another kind (400, an import's)", async () => {
     const organizationId = await anOrganization();
     const created = await aFleet(organizationId);
     const collector = fake.enrollCollector(organizationId, created.fleet.id);
@@ -1806,7 +1806,7 @@ describe("the fleet model's limits", () => {
   });
 });
 
-describe("the fleet model's usage and the in-use refusal (D16a decision 31)", () => {
+describe("the fleet model's usage and the in-use refusal", () => {
   it("answers each published version newest first, with its groups by fleet then group, its pinned collectors and inUse", async () => {
     const organizationId = await anOrganization();
     const configurationId = randomUUID();

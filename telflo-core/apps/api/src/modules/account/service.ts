@@ -81,20 +81,19 @@ export function createAccountService(deps: AccountServiceDependencies): IAccount
 
   return {
     /**
-     * Changes the password with the current one (D21 decision 35), in D3
-     * Rulings 15 and 17's order: read the user; no password is `409
-     * password_not_set`; verify the current one and hash the new one, both
-     * outside any transaction; then, in one transaction, lock the user's row
-     * first, reread the hash under the lock and refuse if it changed since
-     * the verify (a reset or another change committed in between: the
-     * password verified is no longer the account's), set the new hash,
+     * Changes the password with the current one, in this order: read the user;
+     * no password is `409 password_not_set`; verify the current one and hash
+     * the new one, both outside any transaction; then, in one transaction, lock
+     * the user's row first, reread the hash under the lock and refuse if it
+     * changed since the verify (a reset or another change committed in between:
+     * the password verified is no longer the account's), set the new hash,
      * consume every outstanding reset link, and audit the change.
      *
-     * Every session is kept, this one included (Q114). A sign-in that
-     * verified the old password rereads the hash `for share` before its
-     * session starts, and so is refused once this commits. The email
-     * follows the commit; a failed send is the runner's to log, and never
-     * undoes the change.
+     * Every session is kept, this one included. A sign-in that verified
+     * the old password rereads the hash `for share` before its session
+     * starts, and so is refused once this commits. The email follows the
+     * commit; a failed send is the runner's to log, and never undoes the
+     * change.
      */
     async changePassword(input: ChangePasswordInput): Promise<void> {
       const { context, origin } = input;
@@ -112,8 +111,8 @@ export function createAccountService(deps: AccountServiceDependencies): IAccount
       const newHash = await hashPassword(input.newPassword);
       const at = now();
 
-      // Lock order (D3 Ruling 17, Preflight ruling 10): the user's row, then
-      // token rows. Every D21 transaction locks the user first.
+      // Lock order: the user's row, then token rows. Every account
+      // transaction locks the user first.
       const outcome = await withTransaction(async (transaction): Promise<ChangeOutcome> => {
         await transaction.users.lockForUpdate(user.id);
         const currentHash = await transaction.users.findPasswordHashForShare(user.id);
@@ -121,7 +120,7 @@ export function createAccountService(deps: AccountServiceDependencies): IAccount
         if (currentHash !== verifiedHash) return { status: "changed_since" };
         if (!(await transaction.users.setPasswordHash(user.id, newHash, at))) return { status: "gone" };
         // A link requested before the change would replace the new password
-        // within its hour: every outstanding one goes (decision 35).
+        // within its hour: every outstanding one goes.
         await transaction.passwordResetTokens.consumeAllForUser(user.id, at);
         await transaction.audit.record({
           action: "user.password_changed",

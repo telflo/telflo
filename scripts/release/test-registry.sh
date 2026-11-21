@@ -1,7 +1,7 @@
 # shellcheck shell=bash
 # shellcheck disable=SC2034 # TR_* are the callers' to read.
-# test-registry.sh: shared pieces of the release scripts' self-tests (D36-2
-# Task 5). Sourced by *.test.sh only, never by a release script.
+# test-registry.sh: shared pieces of the release scripts' self-tests. Sourced
+# by *.test.sh only, never by a release script.
 #
 #   tr_fixture <tar> <version> <revision> <variant> [no-attest]
 #       writes an OCI archive made offline (Python, no build): an image index

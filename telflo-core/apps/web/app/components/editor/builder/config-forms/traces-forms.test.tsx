@@ -34,13 +34,12 @@ import { formControls } from "~/test/form-controls.js";
 
 /*
  * The jaeger and zipkin receivers, the zipkin exporter, the probabilistic
- * sampler and span processors, and the spanmetrics connector (D9d Task 7):
- * their forms over the form contract. Each field is driven as a
- * person would on the traces corpus text (comments, an anchor and its
- * aliases, flow and block lists, a bare `0750` the collector reads as a
- * number), LF and CRLF, and writes only its key. Seven span processor cases
- * are included. The fixes and cascades each have a test that fails if the
- * bug returns.
+ * sampler and span processors, and the spanmetrics connector: their forms
+ * over the form contract. Each field is driven as a person would on the
+ * traces corpus text (comments, an anchor and its aliases, flow and block
+ * lists, a bare `0750` the collector reads as a number), LF and CRLF, and
+ * writes only its key. Seven span processor cases are included. The
+ * cascades each have a test.
  *
  * Collector claims cite contrib v0.162.0: `receiver/jaegerreceiver`,
  * `receiver/zipkinreceiver`, `exporter/zipkinexporter`,
@@ -600,7 +599,7 @@ const CASES: FieldCase[] = [
   },
 ];
 
-describe("every field of each form writes only its key (decision 2)", () => {
+describe("every field of each form writes only its key", () => {
   it.each(CASES.flatMap((c) => [[`${c.name}, LF`, c, false] as const, [`${c.name}, CRLF`, c, true] as const]))(
     "%s",
     async (_name, c, crlf) => {
@@ -622,7 +621,7 @@ describe("every field of each form writes only its key (decision 2)", () => {
   );
 });
 
-describe("opening writes nothing (decision 2)", () => {
+describe("opening writes nothing", () => {
   /** What each form shows once opened, at least: its text fields, every control, and a field. */
   const OPENED: Record<string, { textboxes: number; all: number; field: string }> = {
     [JAEGER]: { textboxes: 12, all: 19, field: "thrift-compact-buffer" },
@@ -635,7 +634,7 @@ describe("opening writes nothing (decision 2)", () => {
     [SM]: { textboxes: 13, all: 19, field: "dimensions-1-default" },
     [SM_DELTA]: { textboxes: 8, all: 14, field: "timestamp-cache-size" },
   };
-  // One test per form and text, each with its own time limit (D9c Ruling 54).
+  // One test per form and text, each with its own time limit.
   it.each(Object.keys(OPENED).flatMap((key) => [[key, "LF", CORPUS] as const, [key, "CRLF", CRLF(CORPUS)] as const]))(
     "opening %s (%s), every section, focusing every field, writes nothing and leaves the editor clean",
     async (key, _name, base) => {
@@ -704,7 +703,7 @@ describe("JaegerReceiverForm", () => {
     expect(protocol(valueOf(JAEGER), "grpc")).toEqual({ endpoint: "0.0.0.0:14250" });
   });
 
-  it("shows the collector's localhost defaults as placeholders and hints (factory.go:23-28; Preflight ruling 30)", () => {
+  it("shows the collector's localhost defaults as placeholders and hints (factory.go:23-28)", () => {
     renderForm(JAEGER, jaegerText("    protocols:\n      grpc:\n      thrift_http:\n      thrift_binary:\n      thrift_compact:\n"));
     for (const [id, endpoint] of [
       ["grpc-endpoint", "localhost:14250"],
@@ -750,7 +749,7 @@ describe("JaegerReceiverForm", () => {
     expect(screen.queryByText("No TCP protocols enabled")).toBeNull();
   });
 
-  it("a protocol that is a scalar is on, read-only, with D9b's hint; Security then shows the hint, not the alert", async () => {
+  it("a protocol that is a scalar is on, read-only, with the unshowable-value hint; Security then shows the hint, not the alert", async () => {
     const user = renderForm(JAEGER, jaegerText("    protocols:\n      grpc: 0.0.0.0:14250\n"));
     expect(byId("protocol-grpc")).toBeChecked();
     expect(byId("protocol-grpc")).toBeDisabled();
@@ -841,7 +840,7 @@ describe("ProbabilisticSamplerForm", () => {
     expect(valueOf(PROB)).toEqual({ fail_closed: true });
   });
 
-  it("Sampling Precision is written as typed, 0 and 15 included (config.go:125-129 refuses them; D13), never clamped to 1-14", async () => {
+  it("Sampling Precision is written as typed, 0 and 15 included (config.go:125-129 refuses them), never clamped to 1-14", async () => {
     const user = renderForm(PROB, probText("    sampling_percentage: 10\n"));
     await openSection(user, "Advanced");
     expect(byId("sampling-precision")).toHaveAttribute("placeholder", "4");
@@ -873,7 +872,7 @@ describe("ProbabilisticSamplerForm", () => {
     expect(valueOf(PROB)).toEqual({ sampling_percentage: 10, attribute_source: "traceID", from_attribute: "logID" });
   });
 
-  it("From Attribute, once shown, stays shown for the form's session: cleared under traceID, it doesn't vanish (D9d Ruling 43)", async () => {
+  it("From Attribute, once shown, stays shown for the form's session: cleared under traceID, it doesn't vanish", async () => {
     const before = probText("    sampling_percentage: 10\n    from_attribute: logID\n");
     const user = renderForm(PROB, before);
     await openSection(user, "Logs Sampling");
@@ -965,7 +964,7 @@ describe("SpanProcessorForm cases", () => {
   });
 });
 
-describe("SpanProcessorForm: the status code (decision 7)", () => {
+describe("SpanProcessorForm: the status code", () => {
   const errorText = spanText("    status:\n      code: Error\n      description: upstream failed # why\n");
 
   it.each(["Ok", "Unset"])(
@@ -992,7 +991,7 @@ describe("SpanProcessorForm: the status code (decision 7)", () => {
     expect(infoToasts()).toEqual([]);
   });
 
-  it("Leave status unchanged removes status, with no toast; the select is labelled (fixed id span-status-code)", async () => {
+  it("Leave status unchanged removes status, with no toast; the select is labeled (fixed id span-status-code)", async () => {
     const user = renderForm(SPAN, errorText);
     await openSection(user, "Status Override");
     expect(screen.getByLabelText("Status Code")).toBe(byId("span-status-code"));
@@ -1012,7 +1011,7 @@ describe("SpanProcessorForm: the status code (decision 7)", () => {
     expect(await optionsOf(user, byId("span-status-code"))).toEqual(["Leave status unchanged", "Ok", "Error", "Unset", "ERROR"]);
   });
 
-  it("a status that isn't a mapping is read-only with D9b's hint", async () => {
+  it("a status that isn't a mapping is read-only with the unshowable-value hint", async () => {
     const user = renderForm(SPAN, spanText("    status: Error\n"));
     await openSection(user, "Status Override");
     expect(byId("span-status-code")).toBeDisabled();
@@ -1042,7 +1041,7 @@ describe("SpanProcessorForm: the lists", () => {
   });
 });
 
-describe("SpanProcessorForm: the filters (decision 3)", () => {
+describe("SpanProcessorForm: the filters", () => {
   it("a side's first service is written with match_type: strict, one entry (filterset/config.go:38-48 refuses names without one)", async () => {
     const user = renderForm(SPAN, spanText("    status:\n      code: Ok\n"));
     await openSection(user, "Filtering");
@@ -1093,7 +1092,7 @@ describe("SpanProcessorForm: the filters (decision 3)", () => {
     expect(valueOf(SPAN).exclude).toEqual({ match_type: "strict", span_kinds: ["SPAN_KIND_CLIENT"] });
   });
 
-  it("the Filtering count is both sides' names; a side that isn't a mapping is read-only with D9b's hint", async () => {
+  it("the Filtering count is both sides' names; a side that isn't a mapping is read-only with the unshowable-value hint", async () => {
     const user = renderForm(SPAN, spanText("    include:\n      match_type: strict\n      services: [a, b]\n      span_names: [c]\n    exclude: [x]\n"));
     expect(screen.getByRole("button", { name: /^Filtering\s*3$/ })).toBeInTheDocument();
     await openSection(user, "Filtering");
@@ -1106,7 +1105,7 @@ describe("SpanProcessorForm: the filters (decision 3)", () => {
 
 const smText = (lines: string) => ownText("connectors", "spanmetrics", lines);
 
-describe("SpanmetricsConnectorForm: the buckets (decision 4)", () => {
+describe("SpanmetricsConnectorForm: the buckets", () => {
   it("each bucket is written as typed: 2ms a duration string, a bare number plain (config.go:139-144 reads []time.Duration)", async () => {
     const user = renderForm(SM, smText(""));
     await typeInto(user, byId("histogram-buckets"), "2ms, 1s, 100");
@@ -1154,7 +1153,7 @@ describe("SpanmetricsConnectorForm: the buckets (decision 4)", () => {
   });
 });
 
-describe("SpanmetricsConnectorForm: explicit or exponential (config.go:172-174; decision 7)", () => {
+describe("SpanmetricsConnectorForm: explicit or exponential (config.go:172-174)", () => {
   it("buckets typed while exponential is set remove it, one entry, with the toast", async () => {
     const before = LF(CORPUS);
     const user = renderForm(SM_DELTA, before);
@@ -1179,7 +1178,7 @@ describe("SpanmetricsConnectorForm: explicit or exponential (config.go:172-174; 
     expect(infoToasts()).toEqual([]);
   });
 
-  it("Max Size cleared removes max_size only: exponential: {} stays, an exponential histogram at 160 (connector.go initHistogramMetrics; D9d Ruling 44), no toast", async () => {
+  it("Max Size cleared removes max_size only: exponential: {} stays, an exponential histogram at 160 (connector.go initHistogramMetrics), no toast", async () => {
     const user = renderForm(SM, smText("    histogram:\n      unit: s\n      exponential:\n        max_size: 160\n"));
     await retypeInto(user, byId("exponential-max-size"), "");
     expect(valueOf(SM)).toEqual({ histogram: { unit: "s", exponential: {} } });
@@ -1189,7 +1188,7 @@ describe("SpanmetricsConnectorForm: explicit or exponential (config.go:172-174; 
     expect(hint(EXPONENTIAL_IN_USE)).toBeInTheDocument();
   });
 
-  it("Histogram Buckets says exponential buckets are in use while histogram.exponential is set, {} included (D9d Ruling 44)", async () => {
+  it("Histogram Buckets says exponential buckets are in use while histogram.exponential is set, {} included", async () => {
     for (const exponential of ["      exponential:\n        max_size: 100\n", "      exponential: {}\n"]) {
       const user = renderForm(SM, smText(`    histogram:\n${exponential}`));
       expect(hint(EXPONENTIAL_IN_USE)).toBeInTheDocument();
@@ -1208,7 +1207,7 @@ describe("SpanmetricsConnectorForm: explicit or exponential (config.go:172-174; 
     }
   });
 
-  it("with explicit and exponential both written, which the collector refuses (config.go:172-174), Histogram Buckets says so instead (D9d Ruling 45)", () => {
+  it("with explicit and exponential both written, which the collector refuses (config.go:172-174), Histogram Buckets says so instead", () => {
     for (const both of [
       "    histogram:\n      explicit:\n        buckets: [2ms]\n      exponential:\n        max_size: 100\n",
       "    histogram:\n      explicit: {}\n      exponential: {}\n",
@@ -1272,7 +1271,7 @@ describe("SpanmetricsConnectorForm: temporality (config.go:188-193, 206-213)", (
   });
 });
 
-describe("SpanmetricsConnectorForm: events and dimensions (decision 3)", () => {
+describe("SpanmetricsConnectorForm: events and dimensions", () => {
   it("Enable Events Metrics with no dimensions also writes the README's exception.type dimension, one entry, no toast (config.go:168-170)", async () => {
     const user = renderForm(SM, smText("    namespace: spans\n"));
     await openSection(user, "Advanced");
@@ -1352,7 +1351,7 @@ describe("SpanmetricsConnectorForm: events and dimensions (decision 3)", () => {
 
 // ── Privacy ──
 
-describe("privacy (decision 13)", () => {
+describe("privacy", () => {
   it("puts no config value in any attribute: every section open, the menus open, held rows", async () => {
     const MARK = "zq-mark";
     const marked = [
@@ -1474,8 +1473,8 @@ describe("privacy (decision 13)", () => {
 
 // ── The copy, word for word ──
 
-describe("the plan's and the spec's copy", () => {
-  it("toasts, hints and alerts read exactly as the plan and the Parity Notes give them", () => {
+describe("the forms' copy", () => {
+  it("the toasts', hints' and alerts' words, exactly", () => {
     expect(REMOVED_DESCRIPTION).toBe("Removed the error description: it's only used with Error.");
     expect(REMOVED_EXPLICIT).toBe("Removed the explicit buckets: the collector uses either explicit or exponential buckets.");
     expect(REMOVED_EXPONENTIAL).toBe("Removed the exponential histogram: the collector uses either explicit or exponential buckets.");

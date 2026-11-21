@@ -18,32 +18,28 @@ import type { ValuePath } from "~/lib/graph/text-edits.js";
 import type { ValueView } from "~/lib/graph/value-view.js";
 
 /*
- * The OTLP receiver's form (ADR 0018), over the form's fields (D9b
- * decisions 2 to 4):
- * each field writes its own key under `protocols.grpc` or `protocols.http`.
+ * The OTLP receiver's form, over the form's fields: each field writes its
+ * own key under `protocols.grpc` or `protocols.http`.
  *
- * A protocol is on while its key is under `protocols`, whatever its value:
- * a bare `grpc:` (null) is on, the collector's default configuration
- * (decision 4).
- * Turning a protocol on writes its default endpoint as its value
- * (`{ endpoint: localhost:4317 }`, `localhost:4318`), turning it off
- * removes it, each one change. A protocol whose value is a scalar or a list
- * shows on, read-only, with decision 3's hint; a `protocols` that is a
- * scalar or a list makes both boxes read-only (unticked: no protocol is
- * under it), with the hint (Ruling 74). While no protocol is on and one
- * can't be shown, the sections show the hint rather than "Enable at least
- * one protocol…". The form never holds
- * the config.
+ * A protocol is on while its key is under `protocols`, whatever its value: a
+ * bare `grpc:` (null) is on, the collector's default configuration. Turning a
+ * protocol on writes its default endpoint as its value
+ * (`{ endpoint: localhost:4317 }`, `localhost:4318`), turning it off removes
+ * it, each one change. A protocol whose value is a scalar or a list shows on,
+ * read-only, with `UNSHOWABLE_VALUE_MESSAGE`; a `protocols` that is a scalar
+ * or a list makes both boxes read-only (unticked: no protocol is under it),
+ * with the hint. While no protocol is on and one can't be shown, the sections
+ * show the hint rather than "Enable at least one protocol…". The form never
+ * holds the config.
  *
- * The TLS sections are the server sections (Preflight ruling 4);
- * CORS is under HTTP. The compression list is written by item: a box
- * ticked appends its algorithm, unticked removes its item, and the last one
- * unticked removes the list (with an empty list confighttp
- * decompresses nothing). 0 can be entered (decision 4).
+ * The TLS sections are the server sections; CORS is under HTTP. The
+ * compression list is written by item: a box ticked appends its algorithm,
+ * unticked removes its item, and the last one unticked removes the list
+ * (with an empty list confighttp decompresses nothing). 0 can be entered.
  *
- * The collector's defaults, checked at core v0.162.0 (Preflight ruling 8),
- * show while a key is unset (decision 3): endpoints `localhost:4317` and
- * `localhost:4318` (`otlpreceiver.createDefaultConfig`); transport tcp
+ * The collector's defaults, checked at core v0.162.0, show while a key is
+ * unset: endpoints `localhost:4317` and `localhost:4318`
+ * (`otlpreceiver.createDefaultConfig`); transport tcp
  * (`configgrpc.NewDefaultServerConfig`); max receive message 4 MiB
  * (configgrpc leaves 0 to grpc-go's 4 MiB); max request body 20971520
  * (`confighttp.defaultMaxRequestBodySize`); every encoding accepted while
@@ -52,11 +48,10 @@ import type { ValueView } from "~/lib/graph/value-view.js";
  * `keepalive` defaults); URL paths `/v1/traces`, `/v1/metrics`, `/v1/logs`
  * (`otlpreceiver.createDefaultConfig`).
  *
- * Not offered (Ruling 52): a "Profiles URL Path" field for
- * `profiles_url_path`, which the receiver doesn't have at v0.162.0 (it
- * serves profiles at `/v1development/profiles`, `defaultProfilesURLPath`);
- * the form has no field for it, and a key already in the text is left
- * alone.
+ * Not offered: a "Profiles URL Path" field for `profiles_url_path`, which
+ * the receiver doesn't have at v0.162.0 (it serves profiles at
+ * `/v1development/profiles`, `defaultProfilesURLPath`); the form has no
+ * field for it, and a key already in the text is left alone.
  */
 
 type Protocol = "grpc" | "http";
@@ -81,7 +76,7 @@ type ProtocolState = "on" | "off" | "unshowable";
 /**
  * On while the key is under `protocols` (a bare `grpc:` included); read-only
  * when its value can't hold settings, or when `protocols` itself isn't a
- * mapping (Ruling 74).
+ * mapping.
  */
 function protocolState(protocols: ValueView, value: ValueView, protocol: Protocol): ProtocolState {
   if (protocols.kind === "absent") return "off";
@@ -187,7 +182,7 @@ export function OTLPReceiverForm() {
   const grpcEnabled = grpc === "on";
   const httpEnabled = http === "on";
   const present = (protocol: Protocol) => protocols.kind === "map" && Object.hasOwn(protocols.value, protocol);
-  // No protocol on: say to enable one, or, when one can't be shown, why nothing is (Ruling 74).
+  // No protocol on: say to enable one, or, when one can't be shown, why nothing is.
   const unshowable = grpc === "unshowable" || http === "unshowable";
 
   const toggle = (protocol: Protocol) => (on: boolean) => {

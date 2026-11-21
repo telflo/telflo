@@ -16,18 +16,18 @@ import {
 } from "./resource-registry.js";
 
 /*
- * The cross-tenant suite (D5 decision 5), generated from the resource
- * registry. Every organization resource gets the same tests: organization
- * B's context can't list, read, change or remove organization A's row
- * through the resource's repository, while A's own context can. Every one
- * with row-level security also gets raw SQL as the API's role. Nobody writes
- * these per resource: registering it is what adds them.
+ * The cross-tenant suite, generated from the resource registry. Every
+ * organization resource gets the same tests: organization B's context can't
+ * list, read, change or remove organization A's row through the resource's
+ * repository, while A's own context can. Every one with row-level security
+ * also gets raw SQL as the API's role. Nobody writes these per resource:
+ * registering it is what adds them.
  *
  * Each seed is a row A's own member can see: for the configuration tables,
- * another member's published configuration, or a draft version 2 of one
- * (D11b Preflight ruling 7), since another member's draft is invisible to
- * them by design. Drafts' privacy within one organization has its own
- * suite, draft-privacy.integration.test.ts.
+ * another member's published configuration, or a draft version 2 of one,
+ * since another member's draft is invisible to them by design. Drafts'
+ * privacy within one organization has its own suite,
+ * draft-privacy.integration.test.ts.
  *
  * A resource whose repository has no remove (a child table, whose rows go
  * with their parent's) declares `removeUnsupported`. Its two remove tests
@@ -38,7 +38,7 @@ import {
  * all the same.
  *
  * Each seed is made for A's own member, whom the suite acts as in A's
- * context: a test file is visible to its owner alone (D14a decision 7).
+ * context: a test file is visible to its owner alone.
  */
 
 /** What an entry's `operations` returns: without `update` or `remove` when the entry declares them unsupported. */
@@ -105,7 +105,7 @@ describe("cross-tenant isolation", () => {
       const declared = Object.fromEntries(
         resourceRegistry.map((resource) => [
           resource.table,
-          // A global table may have its own kind (a person's rows, D25 Preflight ruling 2); a system one has none.
+          // A global table may have its own kind (a person's rows); a system one has none.
           resource.kind === "system" ? false : (resource.hasRowLevelSecurity ?? false),
         ]),
       );
@@ -113,7 +113,7 @@ describe("cross-tenant isolation", () => {
       expect(declared).toEqual(inDatabase);
     });
 
-    it("grants the API's role no SELECT on a system table: it reaches one only through the product-admin functions (D29 decision 21)", async () => {
+    it("grants the API's role no SELECT on a system table: it reaches one only through the product-admin functions", async () => {
       const systemTables = resourceRegistry.filter((resource) => resource.kind === "system").map((resource) => resource.table);
       expect(systemTables.sort()).toEqual(["user_deletion_records", "user_feedback"]);
       for (const table of systemTables) {

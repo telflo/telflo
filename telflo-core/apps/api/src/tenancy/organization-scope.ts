@@ -15,11 +15,11 @@ import type { Database } from "@telflo/db";
 import type { AuthContext } from "../database/context.js";
 
 /*
- * The organization scope (D5 decision 5; spec §3.7 item 2): the only way an
- * organization-scoped repository reaches its tables. Every select, update and
- * delete it builds is filtered to the context's organization, every insert
- * has the organization set, and no update can change it, so a repository
- * method has no way to name another organization or move a row into one. Row-level security (decision 3) is the backstop
+ * The organization scope: the only way an organization-scoped repository
+ * reaches its tables. Every select, update and delete it builds is filtered to
+ * the context's organization, every insert has the organization set, and no
+ * update can change it, so a repository method has no way to name another
+ * organization or move a row into one. Row-level security is the backstop
  * behind it, on the tables that have it.
  */
 

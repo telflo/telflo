@@ -29,13 +29,13 @@ import { UNCALLED_FILE_STORE } from "../../testing/file-store.js";
 import { UNCALLED_TESTING } from "../../testing/otelcol-testing.js";
 import { hashPassword } from "../identity/password.js";
 
-// The opamp-server every server needs (D11b decision 8): this file's own fake.
+// The opamp-server every server needs: this file's own fake.
 const opamp = useFakeOpampServer();
 
 const csrfHeaders = { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE };
 const PASSWORD = "a-sufficiently-long-password";
 
-/** The spec's words, exactly (D11b decision 11, Preflight rulings 8, 9 and 15; the envelope's). */
+/** The refusals' words, exactly: the publish's own and the envelope's. */
 const MESSAGES = {
   configurationNotFound: "Configuration not found",
   versionNotFound: "Version not found",
@@ -53,7 +53,7 @@ const MESSAGES = {
   rateLimited: "Too many attempts. Please wait and try again.",
 };
 
-/** A version as the picker lists it (D10 decision 4), as a publish answers it. */
+/** A version as the picker lists it, as a publish answers it. */
 interface VersionSummaryBody {
   id: string;
   versionNumber: number;
@@ -114,12 +114,11 @@ function createGate() {
 }
 
 /**
- * D11b decisions 9 to 12 and Preflight rulings 8, 9 and 15 against
- * Postgres, through the API as its own role, with the OpenAPI-checked fake
- * as the opamp-server. The server's client is the fake's, wrapped in
- * process: every call is recorded, and a test can put a hook in front of
- * any method (a gate on `postPublication`, a fault armed just before it, an
- * answer the fake can't be pushed to give).
+ * The publish and its refusals against Postgres, through the API as its own
+ * role, with the OpenAPI-checked fake as the opamp-server. The server's client
+ * is the fake's, wrapped in process: every call is recorded, and a test can
+ * put a hook in front of any method (a gate on `postPublication`, a fault
+ * armed just before it, an answer the fake can't be pushed to give).
  */
 describe("publishing a version", () => {
   let settings: AppSettings;
@@ -187,7 +186,7 @@ describe("publishing a version", () => {
       calls.push({ operation: "deleteConfigurationPublications", args });
       return (hooks.deleteConfigurationPublications ?? delegate().deleteConfigurationPublications)(...args);
     },
-    // D16a's fleet model (D16b Task 2).
+    // The fleet model.
     getConfigurationUsage: recorded("getConfigurationUsage"),
     getLimits: recorded("getLimits"),
     setLimits: recorded("setLimits"),
@@ -306,7 +305,7 @@ describe("publishing a version", () => {
     expect(response.json()).toEqual({ error: { code, message } });
   }
 
-  /** No log line holds any of `privates` (D11b decision 14; D11a decision 12). */
+  /** No log line holds any of `privates`. */
   function expectNotLogged(...privates: string[]): void {
     expect(logLines.length).toBeGreaterThan(0);
     for (const value of privates) {
@@ -355,7 +354,7 @@ describe("publishing a version", () => {
       payload: { organizationId },
     });
     expect(response.statusCode).toBe(200);
-    // A no-op when the sign-in already landed there (D36-1 decision 56): no new cookie, the token sent stands.
+    // A no-op when the sign-in already landed there: no new cookie, the token sent stands.
     return response.headers["set-cookie"] === undefined ? access : cookieValue(response, "telflo_access");
   };
 
@@ -394,7 +393,7 @@ describe("publishing a version", () => {
       ...(access === undefined ? {} : { cookies: { telflo_access: access } }),
     });
 
-  /** A publish with a body (D11b Ruling 30): `payload` as JSON, or `body` raw with its own content type. */
+  /** A publish with a body: `payload` as JSON, or `body` raw with its own content type. */
   const publishWith = (
     access: string,
     organizationId: string,
@@ -492,7 +491,7 @@ describe("publishing a version", () => {
     return response.json<{ version: { id: string } }>().version;
   };
 
-  /** A save of the version's YAML and an empty graph, pinning it to `collectorVersion` (D13a decision 8). */
+  /** A save of the version's YAML and an empty graph, pinning it to `collectorVersion`. */
   const pinned = (
     access: string,
     organizationId: string,
@@ -509,7 +508,7 @@ describe("publishing a version", () => {
       payload: { yamlContent: yaml, ...EMPTY_GRAPH, collectorVersion },
     });
 
-  /** A version of `distribution` the catalogue offers other than `pin`. */
+  /** A version of `distribution` the catalog offers other than `pin`. */
   const anotherOfferedPin = async (distribution: string, pin: string) =>
     (
       await ownerDb
@@ -565,8 +564,8 @@ describe("publishing a version", () => {
   };
 
   /**
-   * A fleet of the organization in the fake (D16a), created through its own
-   * client as the person: its id and its Default group's.
+   * A fleet of the organization in the fake, created through its own client
+   * as the person: its id and its Default group's.
    */
   const fleetIn = async (organizationId: string, userId: string, email: string) => {
     const result = await opamp.client.createFleet(organizationId, {
@@ -582,7 +581,7 @@ describe("publishing a version", () => {
 
   /**
    * A personal user with a configuration whose version 1 holds `yaml`
-   * (saved at the clock's time), labelled `label` unless null.
+   * (saved at the clock's time), labeled `label` unless null.
    */
   const withSavedVersion = async ({
     yaml = yamlWith(`marker-${randomUUID()}`),
@@ -607,7 +606,7 @@ describe("publishing a version", () => {
         label,
       });
       // The last save's: a millisecond past the clock, since it shares the
-      // creation's (Ruling 33).
+      // creation's.
       const savedAt = (await versionRow(version.id)).updated_at;
       expect(savedAt.getTime()).toBe(clock.getTime() + 1);
       // A millisecond the snapshot and the record must both keep.
@@ -629,7 +628,7 @@ describe("publishing a version", () => {
         sha256: createHash("sha256").update(Buffer.from(yaml, "utf8")).digest("hex"),
         publishedBy: { id: account.user.id, email: account.user.email },
         publishedAt: clock.toISOString(),
-        // The configuration's distribution and the version's pin (D13a decision 7).
+        // The configuration's distribution and the version's pin.
         collector: {
           distribution: (await configurationRow(configuration.id)).collector_distribution,
           version: version.collector_version,
@@ -651,7 +650,7 @@ describe("publishing a version", () => {
       expect(row.publication_id).toBe(put!.publicationId);
       expect(row.published_by_user_id).toBe(account.user.id);
       expect(row.yaml_content).toBe(yaml);
-      // The version's updated_at stays its last save (D10); the configuration's moves.
+      // The version's updated_at stays its last save; the configuration's moves.
       expect(row.updated_at).toEqual(savedAt);
       expect((await configurationRow(configuration.id)).updated_at).toEqual(clock);
 
@@ -665,7 +664,7 @@ describe("publishing a version", () => {
           updatedAt: savedAt.toISOString(),
           publishedAt: clock.toISOString(),
           publishedBy: { userId: account.user.id, email: account.user.email },
-          // Its pin, which the catalogue offers (D13a decisions 4 and 8).
+          // Its pin, which the catalog offers.
           collectorVersion: version.collector_version,
           collectorVersionDeprecated: false,
           collectorVersionDeprecatedNote: null,
@@ -675,7 +674,7 @@ describe("publishing a version", () => {
       expectNotLogged(marker, yaml, name, label, account.user.email, FAKE_OPAMP_SERVER_SECRET);
     });
 
-    it("sends the configuration's distribution and the version's pin as the snapshot's collector, which the opamp-server keeps exactly (D13a decision 7)", async () => {
+    it("sends the configuration's distribution and the version's pin as the snapshot's collector, which the opamp-server keeps exactly", async () => {
       const { organization, access, configuration, version, yaml } = await withSavedVersion();
       const other = await anotherOfferedPin(version.collector_distribution, version.collector_version);
       const repinned = await pinned(access, organization.id, configuration.id, version.id, yaml, other);
@@ -704,7 +703,7 @@ describe("publishing a version", () => {
       });
     });
 
-    it("refuses with 409 configuration_version_changed when a save changes only the collector version between the put and the record, and removes the snapshot after the response (D13a Preflight ruling 3)", async () => {
+    it("refuses with 409 configuration_version_changed when a save changes only the collector version between the put and the record, and removes the snapshot after the response", async () => {
       const { organization, access, configuration, version, yaml } = await withSavedVersion();
       const other = await anotherOfferedPin(version.collector_distribution, version.collector_version);
       const gate = createGate();
@@ -819,7 +818,7 @@ describe("publishing a version", () => {
         expect.objectContaining({ metadata: expect.objectContaining({ publicationId: secondPut!.publicationId }) }),
       ]);
       // Two snapshots until the response has gone: the loser's is removed
-      // after it, by its id (Ruling 29).
+      // after it, by its id.
       expect(await snapshotIdsIn(organization.id, configuration.id)).toEqual(
         [firstPut!.publicationId, secondPut!.publicationId].sort(),
       );
@@ -850,7 +849,7 @@ describe("publishing a version", () => {
 
       const pending = publish(access, organization.id, configuration.id, version.id);
       await gate.reached;
-      // No lock is held across the call (decision 9), so the save goes through.
+      // No lock is held across the call, so the save goes through.
       tick();
       await saved(access, organization.id, configuration.id, version.id, "receivers: {}\n");
       const savedRow = await configurationRow(configuration.id);
@@ -929,7 +928,7 @@ describe("publishing a version", () => {
       expectNotLogged(marker, name, "Kept label", account.user.email, FAKE_OPAMP_SERVER_SECRET);
     });
 
-    it("keeps the unrecorded snapshot with a warning naming ids only, not an error, when the opamp-server says it is in use (D16a decision 31)", async () => {
+    it("keeps the unrecorded snapshot with a warning naming ids only, not an error, when the opamp-server says it is in use", async () => {
       const marker = `marker-${randomUUID()}`;
       const { account, organization, access, configuration, version, name } = await withSavedVersion({
         yaml: yamlWith(marker),
@@ -970,7 +969,7 @@ describe("publishing a version", () => {
       expectNotLogged(marker, name, "Kept label", account.user.email, FAKE_OPAMP_SERVER_SECRET);
     });
 
-    it("refuses with 409 configuration_version_changed when a rename lands between the put and the record, and removes the snapshot after the response (Ruling 29)", async () => {
+    it("refuses with 409 configuration_version_changed when a rename lands between the put and the record, and removes the snapshot after the response", async () => {
       const { organization, access, configuration, version } = await withSavedVersion({ label: "Put label" });
       const before = await configurationRow(configuration.id);
       const gate = createGate();
@@ -991,7 +990,7 @@ describe("publishing a version", () => {
       expect(puts()[0]!.publication.version.label).toBe("Put label");
       await expectDraft(version.id);
       expect((await versionRow(version.id)).label).toBe("Renamed label");
-      // A rename moves neither updated_at (D10 decision 6); the record touched nothing.
+      // A rename moves neither updated_at; the record touched nothing.
       expect(await configurationRow(configuration.id)).toEqual(before);
       expect(await publishAudits()).toEqual([]);
 
@@ -1059,7 +1058,7 @@ describe("publishing a version", () => {
       expect(await snapshotIdsIn(organization.id, configuration.id)).toEqual([publicationId]);
     });
 
-    describe("the version the caller's tab saw (D11b Ruling 30): expectedUpdatedAt", () => {
+    describe("the version the caller's tab saw: expectedUpdatedAt", () => {
       /** A published configuration's draft version 2 in a group, which its creator's tab and a teammate both see. */
       const sharedDraft = async () => {
         const creator = await memberActiveInGroup("admin");
@@ -1115,7 +1114,7 @@ describe("publishing a version", () => {
         expect(calls).toEqual([]);
       });
 
-      it("refuses a save in the same clock millisecond as the one the tab saw: every save moves updatedAt forward (Ruling 33)", async () => {
+      it("refuses a save in the same clock millisecond as the one the tab saw: every save moves updatedAt forward", async () => {
         const { creator, teammate, configuration, draft } = await sharedDraft();
         const savedAt = async (access: string, yaml: string) => {
           const response = await save(access, creator.group.id, configuration.id, draft.id, yaml);
@@ -1179,7 +1178,7 @@ describe("publishing a version", () => {
         expect(puts()[0]!.publication.yaml).toBe("exporters: {debug: {}}\n");
       });
 
-      it("publishes what is saved when the caller sends no body, or an empty one (D25's public API)", async () => {
+      it("publishes what is saved when the caller sends no body, or an empty one, as the public API does", async () => {
         const { creator, configuration, draft } = await sharedDraft();
         const second = await newVersion(
           creator.access,
@@ -1336,7 +1335,7 @@ describe("publishing a version", () => {
       });
     });
 
-    describe("ensuring the organization (D11a decision 20)", () => {
+    describe("ensuring the organization", () => {
       it("registers an organization the opamp-server doesn't know, before the put", async () => {
         const { organization, access, configuration, version } = await withSavedVersion();
         expect((await opamp.client.getOrganization(organization.id)).kind).toBe("not_found");
@@ -1431,7 +1430,7 @@ describe("publishing a version", () => {
       });
     });
 
-    describe("a reference no organization variable can have (D20 Ruling 55): 400 naming yaml, nothing written", () => {
+    describe("a reference no organization variable can have: 400 naming yaml, nothing written", () => {
       const TOO_LONG = "This configuration references an organization variable name over 128 characters, which no variable can have.";
       const ref = (name: string) => "${org:" + name + "}";
       const yamlReferencing = (name: string, marker: string) => `exporters:\n  otlp:\n    endpoint: ${ref(name)}\n# ${marker}\n`;
@@ -1468,8 +1467,8 @@ describe("publishing a version", () => {
         expectNotLogged(marker, name);
       });
 
-      // One publish a test (Task 10's review: the four in one test neared
-      // the 5 s default under load).
+      // One publish a test: four in one test neared the 5 s default under
+      // load.
       it.each([
         ["a live reference to a 128-character name", () => yamlReferencing(`A${"B".repeat(127)}`, randomUUID())],
         ["an escaped reference to a longer name", () => `a: $${ref(`A${"B".repeat(200)}`)}\n`],
@@ -1501,7 +1500,7 @@ describe("publishing a version", () => {
         expectNotLogged(marker, name, account.user.email, FAKE_OPAMP_SERVER_SECRET);
       });
 
-      it("answers the put's other invalid codes (a hash that doesn't match, a 413) 500, the platform's own bug, recording nothing (Ruling 71)", async () => {
+      it("answers the put's other invalid codes (a hash that doesn't match, a 413) 500, the platform's own bug, recording nothing", async () => {
         const marker = `marker-${randomUUID()}`;
         const { account, organization, access, configuration, version, name } = await withSavedVersion({ yaml: yamlWith(marker) });
         hooks.postPublication = (organizationId, publicationId, publication) =>
@@ -1597,7 +1596,7 @@ describe("publishing a version", () => {
       });
     });
 
-    describe("who may publish what (D11b decisions 1 and 2)", () => {
+    describe("who may publish what", () => {
       it("lets a teammate publish a published configuration's draft version", async () => {
         const creator = await memberActiveInGroup("admin");
         const teammate = await memberActiveInGroup("contributor", creator.group.id);
@@ -1626,8 +1625,8 @@ describe("publishing a version", () => {
       });
 
       // The record re-reads the membership under the organization's lock
-      // (lockAsMember, D10's lock order), so a member removed while the
-      // opamp-server took the snapshot records nothing (Ruling 26).
+      // (lockAsMember), so a member removed while the opamp-server took the
+      // snapshot records nothing.
       it.each([
         [
           "their membership is removed",
@@ -1873,7 +1872,7 @@ describe("publishing a version", () => {
       cookies: { telflo_access: access },
     });
 
-  describe("DELETE …/configurations/:configurationId: its snapshots' clean-up (D11b decision 12)", () => {
+  describe("DELETE …/configurations/:configurationId: its snapshots' clean-up", () => {
     it("removes the configuration's snapshots from the opamp-server after the response, and only its own", async () => {
       const { organization, access, configuration, version } = await withSavedVersion();
       expect((await publish(access, organization.id, configuration.id, version.id)).statusCode).toBe(200);
@@ -1886,7 +1885,7 @@ describe("publishing a version", () => {
       calls = [];
 
       expect((await remove(access, organization.id, configuration.id)).statusCode).toBe(204);
-      // Only the usage asked (D16b decision 19); the clean-up not yet: the answer didn't wait for it.
+      // Only the usage asked; the clean-up not yet: the answer didn't wait for it.
       expect(calls).toEqual([{ operation: "getConfigurationUsage", args: [organization.id, configuration.id] }]);
       expect(await snapshotsIn(organization.id, configuration.id)).toHaveLength(2);
 
@@ -1929,7 +1928,7 @@ describe("publishing a version", () => {
       expectNotLogged(marker, name, account.user.email, organization.name, FAKE_OPAMP_SERVER_SECRET);
     });
 
-    it("stands when a group is assigned a published version after the usage read: the clean-up keeps the snapshots with a warning naming ids only (D16b Preflight ruling 7)", async () => {
+    it("stands when a group is assigned a published version after the usage read: the clean-up keeps the snapshots with a warning naming ids only", async () => {
       const marker = `marker-${randomUUID()}`;
       const { account, organization, access, configuration, version, name } = await withSavedVersion({
         yaml: yamlWith(marker),
@@ -1956,7 +1955,7 @@ describe("publishing a version", () => {
       ).toBe("updated");
       gate.release();
 
-      // The delete stands: the residue ruling 7 accepts.
+      // The delete stands: the kept snapshots are an accepted residue.
       expect((await deleting).statusCode).toBe(204);
       expect((await configurationRow(configuration.id)).deleted_at).toEqual(clock);
       await runner.settle();
@@ -2015,7 +2014,7 @@ describe("publishing a version", () => {
     });
   });
 
-  describe("DELETE …/configurations/:configurationId: refused while a fleet uses it (D16b decision 19; Preflight rulings 6 and 12)", () => {
+  describe("DELETE …/configurations/:configurationId: refused while a fleet uses it", () => {
     /** A personal user's configuration with version 1 published, and its published copy's id. */
     const withPublished = async () => {
       const saved = await withSavedVersion();

@@ -1,12 +1,11 @@
 import type { CreateApiTokenRequest, CreatedApiTokenResponse } from "@telflo/contracts";
 
 /*
- * What the token dialogs need of whoever owns the tokens (D25 decision 50,
- * Preflight ruling 22): a service account's (D22, lib/service-accounts.ts'
- * `useServiceAccountTokenCalls`) or the signed-in person's own
- * (lib/personal-api-tokens.ts' `usePersonalApiTokenCalls`). The create and
- * the revoke, whether an answer still belongs on screen, a failure that
- * ends the page's purpose, and the failure words. Every word is fixed: a
+ * What the token dialogs need of whoever owns the tokens: a service account's
+ * (lib/service-accounts.ts' `useServiceAccountTokenCalls`) or the signed-in
+ * person's own (lib/personal-api-tokens.ts' `usePersonalApiTokenCalls`). The
+ * create and the revoke, whether an answer still belongs on screen, a failure
+ * that ends the page's purpose, and the failure words. Every word is fixed: a
  * token, its prefix and its name never reach a toast.
  */
 export interface ApiTokenCalls {

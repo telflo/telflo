@@ -1,5 +1,5 @@
 {
-  "description": "kwok's five release binaries, baked into the tester's image under /opt/kwok/v<kwokVersion>/ by scripts/download-kwok.py, each checked against its sha256 for linux/amd64 and linux/arm64 (D14a spec decision 6, Preflight ruling 19). All are Apache-2.0 upstream releases, never modified (ADR 0019's reviewed components). kwokctl.yaml names the same paths and Kubernetes version; tests/test_kwok_manifest.py keeps the two in step.",
+  "description": "kwok's five release binaries, baked into the tester's image under /opt/kwok/v<kwokVersion>/ by scripts/download-kwok.py, each checked against its sha256 for linux/amd64 and linux/arm64. All are Apache-2.0 upstream releases, never modified (reviewed components). kwokctl.yaml names the same paths and Kubernetes version; tests/test_kwok_manifest.py keeps the two in step.",
   "kwokVersion": "0.7.0",
   "kubernetesVersion": "1.31.6",
   "binaries": [

@@ -1,18 +1,16 @@
-// New in D15a Task 2 (plan Task 2; docs/conventions/go.md, "Code shape"),
-// after the opamp-server's management/conformance_test.go: openapi.yaml
+// After the opamp-server's management/conformance_test.go: openapi.yaml
 // is what the platform's client and its fake are written against, so every
 // documented answer is produced here by the real handler (real children
 // included), and each request and each reply is validated against the file
 // with kin-openapi. Both ways: a request the file refuses must be one the
 // server refuses (and kin-openapi must refuse it too: the rule is
 // documented), a route the server registers must be in the file, and an
-// operation in the file must be registered.
+// operation in the file must be registered. The lint's answers
+// (POST /ottl/v1/lint) are among them.
 //
-// D25 Task 3 added the lint's answers (POST /ottl/v1/lint).
-//
-// kin-openapi v0.149.0 is a test-only dependency (the controller's Ruling
-// 30): no file outside a _test.go imports it, so it is never in the binary
-// the license check scans.
+// kin-openapi v0.149.0 is a test-only dependency: no file outside a
+// _test.go imports it, so it is never in the binary the license check
+// scans.
 
 package server
 
@@ -439,9 +437,8 @@ func TestEveryDocumentedAnswerConformsToOpenAPI(t *testing.T) {
 	}
 }
 
-// New in D15a's final fix wave (Ruling 55): "evaluate every detail"
-// answers, and the file accepts, a failed result with no error and no
-// detail but an advisory (rule e's empty matches).
+// "evaluate every detail" answers, and the file accepts, a failed result
+// with no error and no detail but an advisory (rule e's empty matches).
 func TestEveryDetailIncludesAFailedResultWithOnlyAnAdvisory(t *testing.T) {
 	c := conformanceCases()[1]
 	if c.name != "evaluate every detail" {
@@ -567,7 +564,7 @@ func TestTheReplyValidationCatchesAMalformedReply(t *testing.T) {
 	}
 }
 
-// kin-openapi is a test-only dependency (Ruling 30): the license check scans
+// kin-openapi is a test-only dependency: the license check scans
 // the binary's modules, so no file but a test may import it.
 func TestKinOpenAPIIsATestOnlyDependency(t *testing.T) {
 	root := filepath.Join("..", "..")

@@ -30,12 +30,10 @@ import { COLLECTOR_NOT_FOUND_MESSAGE } from "./CollectorDetailsDialog.js";
 import { CollectorsTab, KUBERNETES_NOT_SHOWING_UP_TIPS, KUBERNETES_WAITING_DETAIL } from "./CollectorsTab.js";
 import { KUBERNETES_PIN_NOTE } from "./EditCollectorDialog.js";
 
-// A server fleet's Collectors tab (D17b-1 decisions 2, 3, 21, 27 and 29;
-// Preflight rulings 9, 10 and 17) over the real page hook, the browser
+// A server fleet's Collectors tab over the real page hook, the browser
 // client's calls answered by a small fake of the API's list: the search on
 // Enter, the count with Prev disabled on page 1, the no-match state, the
-// install-first empty state and the waiting state with its help (D17c-1
-// decision 44).
+// install-first empty state and the waiting state with its help.
 
 const GONE = () => new ApiError("fleet_not_found", "Fleet not found.", { status: 404 });
 const UNAVAILABLE = () => new ApiError("fleets_unavailable", FLEETS_UNAVAILABLE_MESSAGE, { status: 503 });
@@ -162,7 +160,7 @@ afterEach(() => {
   delete (document as { visibilityState?: DocumentVisibilityState }).visibilityState;
 });
 
-describe("CollectorsTab's states (decision 21)", () => {
+describe("CollectorsTab's states", () => {
   it('shows "Loading collectors…" until the first page answers', async () => {
     let release!: () => void;
     api.hold = new Promise((resolve) => (release = resolve));
@@ -191,7 +189,6 @@ describe("CollectorsTab's states (decision 21)", () => {
     expect(getCollectors).toHaveBeenCalledTimes(2);
   });
 
-  // D17c-1 decision 44.
   it("shows an empty fleet the install state before an install, with Install collector, no table and no pager", async () => {
     serve();
     const user = renderTab();
@@ -224,7 +221,7 @@ describe("CollectorsTab's states (decision 21)", () => {
       "A command naming a group that has since been deleted is refused: copy a new one.",
       "Re-installing on a container host: remove the old container first (docker rm -f telflo-collector); keep the telflo-opamp volume to keep the same collector.",
     ]);
-    // No endpoint: the tab can't know it (Preflight ruling 22).
+    // No endpoint: the tab can't know it.
     expect(help.textContent).not.toMatch(/https?:|wss?:/);
   });
 
@@ -295,7 +292,7 @@ describe("CollectorsTab's states (decision 21)", () => {
   });
 });
 
-describe("CollectorsTab's pager (decision 2)", () => {
+describe("CollectorsTab's pager", () => {
   it("shows the count of the summary with Prev and Next, Prev disabled on page 1 and Next on the last", async () => {
     api.rows = manyCollectors(120);
     const { getCollectors } = serve();
@@ -347,7 +344,7 @@ describe("CollectorsTab's pager (decision 2)", () => {
   });
 });
 
-describe("CollectorsTab's toolbar (decisions 3 and 21)", () => {
+describe("CollectorsTab's toolbar", () => {
   it("searches on Enter, trimmed, from page 1; an empty box searches nothing", async () => {
     api.rows = manyCollectors(120);
     const { getCollectors } = serve();
@@ -537,7 +534,7 @@ describe("CollectorsTab's toolbar (decisions 3 and 21)", () => {
   });
 });
 
-describe("CollectorsTab's sorting (decision 21)", () => {
+describe("CollectorsTab's sorting", () => {
   it("sorts by Name ascending first, then alternates, from page 1; Last seen likewise; the sorted header's aria-sort follows", async () => {
     api.rows = manyCollectors(120).reverse();
     const { getCollectors } = serve();
@@ -566,7 +563,7 @@ describe("CollectorsTab's sorting (decision 21)", () => {
   });
 });
 
-describe("CollectorsTab's poll (decision 10)", () => {
+describe("CollectorsTab's poll", () => {
   it("re-reads the page shown with its cursor and query every 15 s, and a row follows", async () => {
     api.rows = manyCollectors(60);
     const { getCollectors } = serve();
@@ -585,7 +582,7 @@ describe("CollectorsTab's poll (decision 10)", () => {
   });
 });
 
-describe("CollectorsTab's selection (decision 27)", () => {
+describe("CollectorsTab's selection", () => {
   async function loadedWithSelection(rows: Collector[] = manyCollectors(120)) {
     api.rows = rows;
     const served = serve();
@@ -680,7 +677,7 @@ describe("CollectorsTab's selection (decision 27)", () => {
   });
 });
 
-describe("CollectorsTab's details (decision 24; Preflight ruling 17)", () => {
+describe("CollectorsTab's details", () => {
   /** The details' reads: the collector as the fake holds it, the tokens and no errors. */
   function serveDetails() {
     return {
@@ -750,7 +747,7 @@ describe("CollectorsTab's details (decision 24; Preflight ruling 17)", () => {
   });
 });
 
-describe("CollectorsTab's edit and delete (decisions 26 and 28; Preflight rulings 8 and 17)", () => {
+describe("CollectorsTab's edit and delete", () => {
   /** The edit's opening reads, the update (a rename the fake then holds) and the delete (the row gone). */
   function serveWrites() {
     return {
@@ -859,7 +856,7 @@ describe("CollectorsTab's edit and delete (decisions 26 and 28; Preflight ruling
   });
 });
 
-describe("CollectorsTab's selection bar and bulk actions (decision 27; Preflight rulings 5 and 13)", () => {
+describe("CollectorsTab's selection bar and bulk actions", () => {
   /** The bulk dialogs' calls over the fake: the pin's reads, the pin, a move (the row's group) and a delete (the row gone). */
   function serveBulk() {
     return {
@@ -978,7 +975,7 @@ describe("CollectorsTab's selection bar and bulk actions (decision 27; Preflight
     expect(screen.queryByText(/selected$/)).toBeNull();
   });
 
-  it("without the groups, disables Move to group with ruling 5's words; bulk pin's Follow the group stays allowed (D16c)", async () => {
+  it("without the groups, disables Move to group, saying the groups couldn't be read; bulk pin's Follow the group stays allowed", async () => {
     api.groupsFailure = UNAVAILABLE();
     const rows = manyCollectors(3);
     const { user } = await selectTwo(rows);
@@ -1015,7 +1012,7 @@ describe("CollectorsTab's selection bar and bulk actions (decision 27; Preflight
     await waitFor(() => expect(screen.queryByRole(role)).toBeNull());
   });
 
-  it("holds no collector or group name in an attribute: the bar, and each bulk dialog open (decision 32)", async () => {
+  it("holds no collector or group name in an attribute: the bar, and each bulk dialog open", async () => {
     const first = "canary-collector-c051";
     const second = "canary-collector-d162";
     const groupName = "canary-group-e273";
@@ -1038,8 +1035,7 @@ describe("CollectorsTab's selection bar and bulk actions (decision 27; Preflight
   });
 });
 
-// D17b-1's final fix wave (final review B's Major; D14b Ruling 46's pattern): no dialog here has a Radix
-// trigger, so each close gives the focus back to its opener itself, else to a fallback.
+// No dialog here has a Radix trigger, so each close gives the focus back to its opener itself, else to a fallback.
 describe("CollectorsTab's focus as a dialog closes", () => {
   /** Every dialog's calls over the fake: the details' reads, the edit's, the writes (as the fake holds them). */
   function serveDialogs() {
@@ -1180,7 +1176,7 @@ describe("CollectorsTab's focus as a dialog closes", () => {
     await focusIsOn(() => button("collector-002"));
   });
 
-  it("moves on from the row's Delete once a reload answered after the close removes the row (D14b Ruling 52)", async () => {
+  it("moves on from the row's Delete once a reload answered after the close removes the row", async () => {
     const user = await loaded();
     await user.click(button("Delete collector-002"));
     const dialog = await screen.findByRole("alertdialog", { name: "Delete collector record" });
@@ -1197,7 +1193,7 @@ describe("CollectorsTab's focus as a dialog closes", () => {
     await focusIsOn(() => button("collector-001"));
   });
 
-  // The review of cfaf57d: a poll's rows before the close never spend the delete's flag; its reload's do.
+  // A poll's rows before the close never spend the delete's flag; its reload's do.
   it("moves on from the row's Delete when a poll sent before the delete opened answers with it, and the reload, late, removes the row", async () => {
     const user = await loaded();
     const before = [...api.rows];
@@ -1236,7 +1232,7 @@ describe("CollectorsTab's focus as a dialog closes", () => {
     await focusIsOn(() => button("collector-001"));
   });
 
-  // The review of 32f39ff: what counts is when a read began, not who asked for it: the person's own Refresh, sent before the delete, is no reload.
+  // What counts is when a read began, not who asked for it: the person's own Refresh, sent before the delete, is no reload.
   it("moves on from the row's Delete when a Refresh sent before the delete opened answers with it, and the reload, late, removes the row", async () => {
     const user = await loaded();
     const before = [...api.rows];
@@ -1341,7 +1337,7 @@ describe("CollectorsTab's focus as a dialog closes", () => {
     expect(document.activeElement).toBe(button("Edit collector-003"));
   });
 
-  // The follow-up: only a write's reload moves the focus on; a poll after a close with no write never does.
+  // Only a write's reload moves the focus on; a poll after a close with no write never does.
   it("never moves the focus when a poll takes away the row an Escape (no write) went back to", async () => {
     const user = await loaded();
     await user.click(button("collector-002"));
@@ -1359,7 +1355,7 @@ describe("CollectorsTab's focus as a dialog closes", () => {
     expect(document.activeElement).toBe(document.body);
   });
 
-  // The last review: a dialog opened anew forgets an earlier write whose reload never rendered rows (it failed).
+  // A dialog opened anew forgets an earlier write whose reload never rendered rows (it failed).
   it("never moves the focus when a poll takes away the row an Escape went back to, after an earlier write's reload failed", async () => {
     const user = await loaded();
     await user.click(button("Edit collector-002"));
@@ -1480,13 +1476,13 @@ describe("CollectorsTab's focus as a dialog closes", () => {
     await user.keyboard("{Escape}");
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     await focusIsOn(bar);
-    // The focus given it is seen: the buttons' ring (the follow-up), not an outline removed alone.
+    // The focus given it is seen: the buttons' ring, not an outline removed alone.
     expect(bar()).toHaveClass("focus-visible:ring-2", "focus-visible:ring-ring/40");
     expect(bar()).not.toHaveClass("focus:outline-none");
   });
 });
 
-// ADR 0024, decisions 13 and 32: no collector, group or fleet name and no address in any attribute.
+// No collector, group or fleet name and no address in any attribute.
 describe("CollectorsTab's privacy", () => {
   it("holds no collector, group or fleet name and no address in an attribute: rows, tooltips, the filter open and chosen, the search box holding a name", async () => {
     const name = "canary-collector-5d0b";
@@ -1504,7 +1500,7 @@ describe("CollectorsTab's privacy", () => {
     const canaries = [name, groupName, label, address];
     for (const text of canaries) expectNoAttributeHolds(text);
     const table = screen.getByRole("table");
-    // Each row's Status, Configuration (Ruling 55), Version (D16c Ruling 21) and Last seen.
+    // Each row's Status, Configuration, Version and Last seen.
     for (const text of canaries) expect(await expectNoAttributeHoldsInOpenTooltips(text, table)).toBe(12);
 
     await user.click(checkbox(`Select ${name}`));
@@ -1529,7 +1525,7 @@ describe("CollectorsTab's privacy", () => {
   });
 });
 
-// D17d-1 decision 23; Preflight rulings 25–29: a Kubernetes-supervisor fleet's tab.
+// A Kubernetes-supervisor fleet's tab.
 describe("CollectorsTab on a Kubernetes-supervisor fleet", () => {
   const kubernetesFleet = (overrides: Partial<FleetDetail> = {}) =>
     fleetDetail({ type: "kubernetes-supervisor", summary: { ...EMPTY_SUMMARY, collectors: api.rows.length }, ...overrides });
@@ -1557,11 +1553,11 @@ describe("CollectorsTab on a Kubernetes-supervisor fleet", () => {
       "Each collector names its group (COLLECTOR_GROUP_ID): one naming no group, or a group that has since been deleted, is refused.",
     ]);
     expect(help).not.toHaveTextContent(/docker|Linux|install command/i);
-    // The command in monospace, as the server tip's docker logs (Ruling 50).
+    // The command in monospace, as the server tip's docker logs.
     expect(within(help).getByText("kubectl logs")).toHaveClass("font-mono");
     expect(onInstall).not.toHaveBeenCalled();
     await user.keyboard("{Escape}");
-    // D17d-2 decision 23: the route's Helm install dialog.
+    // The route's Helm install dialog.
     const install = screen.getByRole("button", { name: "Install with Helm" });
     await user.click(install);
     expect(onInstall).toHaveBeenCalledWith(install);
@@ -1592,7 +1588,7 @@ describe("CollectorsTab on a Kubernetes-supervisor fleet", () => {
     expect(filter()).toHaveTextContent(/^Agent$/);
   });
 
-  // D17d-2 decision 25 (Ruling 44): the tab hands its groups to the deletes, which name each group's release.
+  // The tab hands its groups to the deletes, which name each group's release.
   it("gives a row's delete and the bulk delete the tab's groups: each names its pods' groups' helm uninstall", async () => {
     api.groups = [collectorGroup(), gatewaysGroup({ annotations: kubernetesAnnotations({ namespace: "edge" }) })];
     const [first, second] = manyCollectors(2);
@@ -1652,7 +1648,7 @@ describe("CollectorsTab on a Kubernetes-supervisor fleet", () => {
     await user.keyboard("{Escape}");
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
 
-    // The edit: its Name input's value holds the pod's name (D17b-1 Preflight ruling 15's exception), nothing else.
+    // The edit: its Name input's value holds the pod's name (the privacy rule's one exception), nothing else.
     await user.click(screen.getByRole("button", { name: `Edit ${pod}` }));
     const edit = await screen.findByRole("dialog", { name: "Edit collector" });
     expect(within(edit).getByText(KUBERNETES_PIN_NOTE)).toBeInTheDocument();

@@ -1,4 +1,4 @@
-"""D13b ruling 30: a text nested deeper than `MAX_DEPTH` is answered invalid,
+"""A text nested deeper than `MAX_DEPTH` is answered invalid,
 `The configuration nests too deeply.`, without running the collector.
 
 The composer recursed once or twice per level (libyaml's in C, past Python's
@@ -107,7 +107,7 @@ async def test_at_the_bound_the_collector_judges(binary_dir: Path, tmp_path: Pat
 
 
 # ---------------------------------------------------------------------------
-# What aliases nest (the review of 207bc02's alias-chain note)
+# What aliases nest
 # ---------------------------------------------------------------------------
 
 
@@ -121,8 +121,8 @@ def alias_chain(links: int, depth: int = 95) -> str:
 
 
 def test_an_alias_chain_is_as_deep_as_it_expands() -> None:
-    """207bc02 counted only the text's own nesting: forty links of 95 were
-    3,800 levels once expanded, and the walks raised RecursionError (500)."""
+    """Counting only the text's own nesting isn't enough: forty links of 95
+    are 3,800 levels once expanded, past what the walks can recurse."""
     text = alias_chain(40)
     bounded_yaml.check_depth(text)  # the text itself is within the bound
 

@@ -39,11 +39,10 @@ import {
   variablesUndefinedDetailsSchema,
 } from "./schemas.js";
 
-// D16a Ruling 58: the platform's list of the opamp-server's error codes is
-// the contract's, read from vendor/opamp-server/openapi.yaml as the
-// fake reads it: a code the server adds without the platform learning it
-// fails the platform's envelope parse (and so its call) instead of being
-// answered.
+// The platform's list of the opamp-server's error codes is the contract's,
+// read from vendor/opamp-server/openapi.yaml as the fake reads it: a code the
+// server adds without the platform learning it fails the platform's envelope
+// parse (and so its call) instead of being answered.
 const OPENAPI_PATH = resolve(
   dirname(fileURLToPath(import.meta.url)),
   "../../../../../vendor/opamp-server/openapi.yaml",
@@ -89,8 +88,7 @@ describe("OPAMP_SERVER_ERROR_CODES", () => {
   });
 });
 
-// D16b Preflight ruling 3: the fleet model's mirrors keep the file's names,
-// patterns and bounds.
+// The fleet model's mirrors keep the file's names, patterns and bounds.
 describe("NAME_PATTERN", () => {
   it.each(["FleetLabel", "CollectorGroupName", "CollectorInstanceName"])("is exactly openapi.yaml's %s pattern, read with the u flag", (name) => {
     const pattern = contractSchemas()[name]?.pattern;
@@ -161,7 +159,7 @@ describe("the fleet model's mirrors", () => {
     ["CollectorInstanceErrorList", collectorInstanceErrorListSchema],
     ["OrganizationLimits", organizationLimitsSchema],
     ["ConfigurationUsage", configurationUsageSchema],
-    // D20 (Task 9).
+    // The organization variables.
     ["Variable", variableSchema],
     ["VariableList", variableListSchema],
     ["VariableGroup", variableGroupSchema],
@@ -206,11 +204,10 @@ describe("the fleet model's mirrors", () => {
   });
 });
 
-// D20 (Task 9; Preflight rulings 1 and 23): the variables' mirrors keep the
-// file's patterns and bounds, lengths in code points. The file writes
-// U+2028 and U+2029 as YAML escapes, which its parser reads as the
-// characters; the client's pattern writes them as regular-expression
-// escapes, never the characters.
+// The variables' mirrors keep the file's patterns and bounds, lengths in
+// code points. The file writes U+2028 and U+2029 as YAML escapes, which its
+// parser reads as the characters; the client's pattern writes them as
+// regular-expression escapes, never the characters.
 describe("the variables' mirrors", () => {
   const variable = {
     id: "5d6c7b8a-9e0f-4a1b-8c2d-3e4f5a6b7c8d",
@@ -243,7 +240,7 @@ describe("the variables' mirrors", () => {
     expect(variableSchema.safeParse({ ...variable, name: "1ST" }).success).toBe(false);
   });
 
-  it("holds a value to exactly openapi.yaml's VariableValue pattern, its separators written as escapes, 0 to 1,024 code points (Q104)", () => {
+  it("holds a value to exactly openapi.yaml's VariableValue pattern, its separators written as escapes, 0 to 1,024 code points", () => {
     const contract = contractSchemas().VariableValue;
     const pattern = contract?.pattern ?? "";
 
@@ -281,7 +278,7 @@ describe("the variables' mirrors", () => {
     expect(variableGroupSchema.safeParse({ ...group, overrideCount: 151 }).success).toBe(false);
   });
 
-  it("lists as the file bounds: 150 variables (Q104), 100 variable groups, 150 overrides, 100 details entries", () => {
+  it("lists as the file bounds: 150 variables, 100 variable groups, 150 overrides, 100 details entries", () => {
     expect(variableListSchema.safeParse({ variables: Array.from({ length: 150 }, () => variable) }).success).toBe(true);
     expect(variableListSchema.safeParse({ variables: Array.from({ length: 151 }, () => variable) }).success).toBe(false);
     expect(variableGroupListSchema.safeParse({ variableGroups: Array.from({ length: 101 }, () => group) }).success).toBe(false);

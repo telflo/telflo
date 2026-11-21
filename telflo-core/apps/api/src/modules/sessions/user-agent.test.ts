@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import { parseUserAgent, USER_AGENT_PARSED_LENGTH } from "./user-agent.js";
 
 /*
- * The sessions list's families (D21 decision 40, Preflight ruling 17), over
- * real user agents: at least one per family and per system, Playwright's
- * three browsers, a bot, nothing at all and a very long string.
+ * The sessions list's families, over real user agents: at least one per
+ * family and per system, Playwright's three browsers, a bot, nothing at all
+ * and a very long string.
  */
 
 const MAC = "Macintosh; Intel Mac OS X 10_15_7";
@@ -49,7 +49,7 @@ const cases: Array<[label: string, userAgent: string | null, browser: string, os
     "ios",
   ],
   [
-    // An `iPad;` string, as iPadOS 12 sent and an iPad asking for the mobile site still does (ruling 17).
+    // An `iPad;` string, as iPadOS 12 sent and an iPad asking for the mobile site still does.
     "Safari on iPad",
     "Mozilla/5.0 (iPad; CPU OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1 Mobile/15E148 Safari/604.1",
     "safari",
@@ -109,7 +109,7 @@ const cases: Array<[label: string, userAgent: string | null, browser: string, os
     "chrome",
     "chromeos",
   ],
-  // Playwright's three desktop descriptors read the same whatever the host (ruling 17).
+  // Playwright's three desktop descriptors read the same whatever the host.
   [
     "Playwright's Desktop Chrome",
     `Mozilla/5.0 (${WINDOWS}) ${WEBKIT} Chrome/153.0.8010.12 Safari/537.36`,
@@ -146,7 +146,7 @@ const cases: Array<[label: string, userAgent: string | null, browser: string, os
   ["null: no user agent recorded", null, "other", "other"],
 ];
 
-describe("parseUserAgent (D21 decision 40)", () => {
+describe("parseUserAgent", () => {
   it.each(cases)("%s", (_label, userAgent, browser, os) => {
     expect(parseUserAgent(userAgent)).toEqual({ browser, os });
   });

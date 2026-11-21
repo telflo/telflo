@@ -15,7 +15,7 @@ import {
 } from "./routing.js";
 
 /*
- * Product admins (D29 decisions 5, 27 and 28; Task 3):
+ * Product admins:
  *
  *   * `GET /api/v1/product-admin/product-admins`: `{ items: [{ id, email }] }`,
  *     by email (SystemRepository.listProductAdmins).
@@ -30,7 +30,7 @@ import {
  *     shared with feedback's acknowledge and dismiss).
  *
  * The answers are product-admins-service.ts's; the audit rows the
- * SystemRepository's (decision 20).
+ * SystemRepository's.
  */
 export function registerProductAdminsRoutes(
   server: FastifyInstance,

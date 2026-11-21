@@ -1,6 +1,6 @@
-// The cookie choice (D4 decision 8): kept in localStorage under its key,
-// and a change is announced with its event, which lib/analytics.ts and the
-// consent components listen for.
+// The cookie choice: kept in localStorage under its key, and a change is
+// announced with its event, which lib/analytics.ts and the consent
+// components listen for.
 const CONSENT_KEY = "telflo_cookie_consent";
 export const CONSENT_CHANGED_EVENT = "telflo:cookie-consent-changed";
 

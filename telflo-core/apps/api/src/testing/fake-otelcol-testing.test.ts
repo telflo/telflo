@@ -9,11 +9,11 @@ import {
   type FakeOtelcolTestingFault,
 } from "./fake-otelcol-testing.js";
 
-// The fake collector tester's own contract checks (D14a Task 6): it must
-// catch a request that breaks services/otelcol-testing/openapi.yaml, and a
-// reply of its own that does, or the client's and the API's tests against it
-// prove nothing; and it must answer by the text, as the browser tests rely
-// on. These tests send raw requests, shaped as the client's are, then broken.
+// The fake collector tester's own contract checks: it must catch a request
+// that breaks services/otelcol-testing/openapi.yaml, and a reply of its own
+// that does, or the client's and the API's tests against it prove nothing;
+// and it must answer by the text, as the browser tests rely on. These tests
+// send raw requests, shaped as the client's are, then broken.
 
 let fake: FakeOtelcolTesting;
 
@@ -287,7 +287,7 @@ describe("the fake otelcol-testing's answers by the text", () => {
   });
 });
 
-describe("the fake otelcol-testing's changes-attributes marker (D15b Preflight ruling 6)", () => {
+describe("the fake otelcol-testing's changes-attributes marker", () => {
   const attribute = (key: string, value: string) => ({ key, value: { stringValue: value } });
   /** A record's attributes before the run: one kept, one changed, one removed. */
   const before = () => [attribute("kept", "k"), attribute("e2e.changed", "before"), attribute("e2e.removed", "gone")];

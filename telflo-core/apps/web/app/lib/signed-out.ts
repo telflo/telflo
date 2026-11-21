@@ -10,12 +10,11 @@ import { clearStagedEdit } from "~/lib/playground/staged-edit-key.js";
  * - a session the server ended (the API client's session-ended path: a 401
  *   `unauthenticated`, or a refused refresh), once per ended session,
  *   suspended or not: the next person on this browser is the risk either
- *   way (Ruling 317).
+ *   way.
  *
- * It removes the visitor's staged playground edit (D31-1 decision 4, Q211:
- * signing out removes it) and resets PostHog so the next person isn't taken
- * for this one (`signedOutLocally`, D4 decision 8, Ruling 14). The stores'
- * own clean-up stays with `signOutWith`.
+ * It removes the visitor's staged playground edit and resets PostHog so the
+ * next person isn't taken for this one (`signedOutLocally`). The stores' own
+ * clean-up stays with `signOutWith`.
  */
 export function signedOutInThisBrowser(): void {
   clearStagedEdit();

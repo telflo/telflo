@@ -17,21 +17,18 @@ import { checkedVersion, seededFlows } from "~/test/seeded-flows.js";
 
 /*
  * What each offered version's committed schema tells the YAML tab, run
- * through monaco-yaml's own worker (D13c decision 13, Preflight rulings 9,
- * 11 and 15).
+ * through monaco-yaml's own worker.
  *
- * Where upstream agrees (ruling 11), the checks are behaviour rather than
- * key lists: a component's settings are what completion offers inside it,
- * and a text either warns or doesn't.
- * Its journald surface is upstream's at each version, which has
- * `include_log_record_original` (its "omits" check doesn't port), and the
- * `matches` items are open; file_storage is open (upstream has no schema
- * for it, decision 8); clickhouse, awss3 / aws_s3 and failover are
- * upstream's. Its `telfloVariableRef` definition became the `${…}`
- * reference every non-string setting accepts (decision 10). Its ClickStack
- * flows block is at the end (D12 decision 15, Preflight ruling 12). The
- * palette's seeded keys are covered by otelcol-schema-warnings.test.ts,
- * which runs every palette default (and every seeded flow).
+ * Where upstream agrees, the checks are behavior rather than key lists: a
+ * component's settings are what completion offers inside it, and a text
+ * either warns or doesn't. The journald surface is upstream's at each
+ * version, which has `include_log_record_original`, and the `matches` items
+ * are open; file_storage is open (upstream has no schema for it);
+ * clickhouse, awss3 / aws_s3 and failover are upstream's. Every non-string
+ * setting accepts a `${…}` reference. The ClickStack flows block is at the
+ * end. The palette's seeded keys are covered by
+ * otelcol-schema-warnings.test.ts, which runs every palette default (and
+ * every seeded flow).
  */
 
 const DISTRIBUTION = "otelcol-contrib";
@@ -328,7 +325,7 @@ describe.each(VERSIONS)(`${DISTRIBUTION} %s's schema`, (version) => {
     });
   });
 
-  // Decision 4: where upstream's schema omits or mistypes what the collector
+  // Where upstream's schema omits or mistypes what the collector
   // reads, that part is open (the generator's open-parts.json, each checked
   // against the Go). Most of them no palette default or corpus text reaches,
   // so a schema closing one again would pass the warnings test; these texts
@@ -458,11 +455,10 @@ describe.each(VERSIONS)(`${DISTRIBUTION} %s's schema`, (version) => {
     ]);
   });
 
-  // D13b's handoff (decision 15, Preflight ruling 15): upstream's ecs and gcp
-  // detectors declare only their resource attributes (and gcp its labels),
-  // so a client_config under them warns. The collector refuses it on
-  // 0.159.0 and ignores it from 0.160.0 (the confighttp regression): either
-  // way it does nothing.
+  // Upstream's ecs and gcp detectors declare only their resource attributes
+  // (and gcp its labels), so a client_config under them warns. The
+  // collector refuses it on 0.159.0 and ignores it from 0.160.0 (the
+  // confighttp regression): either way it does nothing.
   it("warns about client_config under resourcedetection's ecs and gcp detectors", async () => {
     const text = component(
       "processors",
@@ -525,7 +521,7 @@ describe.each(VERSIONS)(`${DISTRIBUTION} %s's schema`, (version) => {
 
   describe("completion under receivers:", () => {
     const schemaReceivers = schema.properties.receivers!;
-    /** The aliases the schema accepts: `^name(/.+)?$`, a name completion never offers (decision 5). */
+    /** The aliases the schema accepts: `^name(/.+)?$`, a name completion never offers. */
     const aliases = Object.keys(schemaReceivers.patternProperties)
       .map((pattern) => /^\^([^/()]+)\(\/\.\+\)\?\$$/.exec(pattern)?.[1])
       .filter((alias): alias is string => alias !== undefined);
@@ -558,7 +554,7 @@ describe.each(VERSIONS)(`${DISTRIBUTION} %s's schema`, (version) => {
     expect(await worker.hover(text, positionOf(text, "endpoint", 2))).toMatch(/^Endpoint configures the address for this network connection\./);
   });
 
-  it("shows hover without the schema's source, as the editor's options say (`hoverSchemaSource: false`, Preflight ruling 13)", async () => {
+  it("shows hover without the schema's source, as the editor's options say (`hoverSchemaSource: false`)", async () => {
     const text = "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: 0.0.0.0:4317\n";
     const hover = await worker.hover(text, positionOf(text, "endpoint", 2));
     expect(hover).not.toBeNull();
@@ -605,29 +601,28 @@ describe.each(VERSIONS)(`${DISTRIBUTION} %s's schema`, (version) => {
   });
 });
 
-// The shipped ClickStack flows, on D13c's generated schemas (D12 decision 15,
-// Preflight ruling 12): every seeded flow whose YAML names
-// CLICKHOUSE_ENDPOINT, each against the schema of the version a copy of it
-// gets (Ruling 37, `checkedVersion`: its pin while offered, else the
+// The shipped ClickStack flows, on the generated schemas: every seeded flow
+// whose YAML names CLICKHOUSE_ENDPOINT, each against the schema of the version
+// a copy of it gets (`checkedVersion`: its pin while offered, else the
 // distribution's default, so a retired pin, whose schema the generator
 // deletes, moves the check rather than breaking it). Today otel-to-clickstack
 // and datadog-to-clickstack-migration-bridge are on 0.162.0,
-// clickhouse-failover-gateway-s3-overflow on 0.159.0. Every key a flow sets
-// on a clickhouse exporter (any instance), on its sending_queue, and on a
+// clickhouse-failover-gateway-s3-overflow on 0.159.0. Every key a flow sets on
+// a clickhouse exporter (any instance), on its sending_queue, and on a
 // file_storage extension where the flow declares one, must be one the schema
 // allows, or the editor draws squiggles on a flow Telflo ships.
 //
-// The generated schema names a component's bare type under `properties`
-// and its instances under the pattern `^name/.+$`,
-// both a `$ref` to one definition in `$defs` (followed here, as a chain, to
-// the node holding the settings). So `bothForms` finds both entries and
-// checks they are one definition, and a key is checked against every entry
-// that applies to the flow's id (`clickhouse` the bare one,
-// `clickhouse/rrweb` the pattern). A node is closed only with
-// `additionalProperties: false` (then a key is allowed when it is listed
-// under `properties` or matches its `patternProperties`); file_storage's
-// definition is open (upstream has no schema for it, D13c decision 8), so
-// every key of it is allowed, which this checks rather than assumes.
+// The generated schema names a component's bare type under `properties` and
+// its instances under the pattern `^name/.+$`, both a `$ref` to one
+// definition in `$defs` (followed here, as a chain, to the node holding the
+// settings). So `bothForms` finds both entries and checks they are one
+// definition, and a key is checked against every entry that applies to the
+// flow's id (`clickhouse` the bare one, `clickhouse/rrweb` the pattern). A
+// node is closed only with `additionalProperties: false` (then a key is
+// allowed when it is listed under `properties` or matches its
+// `patternProperties`); file_storage's definition is open (upstream has no
+// schema for it), so every key of it is allowed, which this checks rather
+// than assumes.
 describe("the seeded ClickStack flows", () => {
   /** A schema node as these tests read it. */
   interface SchemaNode {

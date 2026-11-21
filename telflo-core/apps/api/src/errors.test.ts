@@ -64,7 +64,7 @@ describe("registerErrorHandling — the 400 branch", () => {
     const server = buildProbeServer();
     // Malformed JSON: Fastify's own content-type parser rejects this before
     // the Zod validator ever runs. Its error also carries statusCode 400,
-    // which is exactly the case the old `error.statusCode === 400` check
+    // which is exactly the case a plain `error.statusCode === 400` check
     // could not distinguish from a real validation failure — but it is
     // still a genuine client mistake, and must be reported as one.
     const response = await server.inject({
@@ -151,13 +151,13 @@ describe("registerErrorHandling — the 400 branch", () => {
 });
 
 /*
- * D25 Ruling 175: on the public surface a 400's details carry each issue's
- * path and Zod's code only, never a value the caller sent; the browser's
- * routes keep Zod's issues as before. Booleans for the markers.
+ * On the public surface a 400's details carry each issue's path and Zod's
+ * code only, never a value the caller sent; the browser's routes keep Zod's
+ * issues. Booleans for the markers.
  */
-describe("registerErrorHandling — the public surface's validation details (D25 Ruling 175)", () => {
+describe("registerErrorHandling — the public surface's validation details", () => {
   const MARKER = "MarkerValue175";
-  // Built at run time, as every token in a test (D22 decision 48).
+  // Built at run time, as every token in a test.
   const TOKEN = `tf_${randomBytes(32).toString("base64url")}`;
   const Body = z.object({ kind: z.enum(["read", "write"]), items: z.array(z.object({ size: z.number() }).strict()).optional() }).strict();
   const Query = z.object({ validate: z.enum(["true", "false"]).optional() }).strict();
@@ -203,7 +203,7 @@ describe("registerErrorHandling — the public surface's validation details (D25
     expect(response.json()).toEqual({ error: { code: "invalid_request", message: "The request was not valid.", details } });
   });
 
-  it("names any path segment that isn't a schema's camelCase key <unknown>, whatever the issue (Ruling 176)", () => {
+  it("names any path segment that isn't a schema's camelCase key <unknown>, whatever the issue", () => {
     const issueAt = (path: unknown[], code = "invalid_type") => ({ params: { issue: { code, path, received: MARKER, message: MARKER } } });
     const details = publicValidationDetails([
       issueAt(["labels", "my key", "value"]),
@@ -232,13 +232,13 @@ describe("registerErrorHandling — the public surface's validation details (D25
 });
 
 /*
- * D25 Ruling 187: a public 400 `invalid_request` carries one of two shapes,
- * Zod's `{ path, code }` (above) or a route's or a service's own
+ * A public 400 `invalid_request` carries one of two shapes, Zod's
+ * `{ path, code }` (above) or a route's or a service's own
  * `{ path, message }`. The fleets area's Zod-like entries (fieldDetail),
  * which the browser's screens read, become `{ path, message }` on the
  * public surface only.
  */
-describe("registerErrorHandling — the public surface's refusal details (D25 Ruling 187)", () => {
+describe("registerErrorHandling — the public surface's refusal details", () => {
   const MESSAGE = "Not a variable this group's published version reads.";
   const errors: Record<string, () => AppError> = {
     fieldDetail: () => new AppError("invalid_request", "Refused.", 400, [fieldDetail(["env", 1, "name"], MESSAGE), fieldDetail("cursor", "Not a cursor.")]),
@@ -330,10 +330,10 @@ describe("registerErrorHandling — AppError logging", () => {
 /**
  * Fastify's framework errors (server.ts' `frameworkErrors`): a URL the
  * router refuses before any route or hook. Fastify's own reply quotes the
- * path, which may hold a quick-deploy link's secret (D17c-2); ours answers
- * generic words and logs the error's code, never the URL. On a path that
- * may hold a secret, the public route's plain text and headers (Ruling 36);
- * elsewhere the envelope.
+ * path, which may hold a quick-deploy link's secret; ours answers generic
+ * words and logs the error's code, never the URL. On a path that may hold a
+ * secret, the public route's plain text and headers; elsewhere the
+ * envelope.
  */
 describe("respondToFrameworkError", () => {
   const SECRET = "tqd_FRAMEWORKerrorCANARYframeworkERRORcanary0000";
@@ -392,7 +392,7 @@ describe("respondToFrameworkError", () => {
     ["a malformed escape", "/api/public/v1/fleets/abc%zz", 400, "invalid_request", "The request was not valid."],
     ["a parameter over maxParamLength", `/api/public/v1/fleets/${"x".repeat(120)}`, 414, "uri_too_long", "The request's URL is too long."],
     ["a malformed escape in another spelling", "/API/Public/v1/fleets/abc%zz", 400, "invalid_request", "The request was not valid."],
-  ])("answers %s under /api/public/v1 with the envelope, no-store as every public reply (D25 Ruling 187)", async (_label, url, status, code, message) => {
+  ])("answers %s under /api/public/v1 with the envelope, no-store as every public reply", async (_label, url, status, code, message) => {
     const server = Fastify({ logger: false, frameworkErrors: respondToFrameworkError });
     registerErrorHandling(server);
     server.get("/api/public/v1/fleets/:fleetId", (_request, reply) => reply.send("stand-in"));
@@ -405,9 +405,9 @@ describe("respondToFrameworkError", () => {
   });
 
   /*
-   * D23-2 decision 47: a path that may hold a library link answers the
-   * same plain text. The canary is visibly fake (no key signed it) and is
-   * checked by booleans only.
+   * A path that may hold a library link answers the same plain text. The
+   * canary is visibly fake (no key signed it) and is checked by booleans
+   * only.
    */
   const LINK_BODY = `FAKE${"LinkCanary0".repeat(6)}abcdefg`;
   const LINK = `tll_${LINK_BODY}`;

@@ -17,7 +17,7 @@ import { UNCALLED_OTELCOL_VALIDATOR } from "../../testing/otelcol-validator.js";
 import { UNCALLED_FILE_STORE } from "../../testing/file-store.js";
 import { UNCALLED_TESTING } from "../../testing/otelcol-testing.js";
 
-// The opamp-server every server needs (D11b decision 8): this file's own fake.
+// The opamp-server every server needs: this file's own fake.
 const opamp = useFakeOpampServer();
 
 const csrfHeaders = { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE };
@@ -69,8 +69,7 @@ function expectCleared(response: LightMyRequestResponse): void {
 /**
  * A response's headers without the per-IP limit's `x-ratelimit-*`, which
  * count down from one request to the next whatever the address, and `date`,
- * which can tick between them: what is left must not differ by address (D3
- * decision 2).
+ * which can tick between them: what is left must not differ by address.
  */
 function comparableHeaders(response: LightMyRequestResponse): Record<string, unknown> {
   return Object.fromEntries(
@@ -210,7 +209,7 @@ describe("password reset routes", () => {
       expect(responses[0]!.json()).toEqual({ status: "accepted" });
 
       // Every response is in, and nothing that depends on the address has
-      // happened: the route did not wait for the work (D3 decision 2).
+      // happened: the route did not wait for the work.
       expect(mailer.sent).toEqual([]);
       expect(await countRows("password_reset_tokens")).toBe(0);
       expect(await countRows("audit_events")).toBe(0);
@@ -250,12 +249,12 @@ describe("password reset routes", () => {
   });
 
   /**
-   * D22 decision 22: a service account's address is an unknown address to
-   * the reset request (and so to D21's Set a Password, which shares it).
+   * A service account's address is an unknown address to the reset request
+   * (and so to the settings' Set a Password, which shares it).
    * Without the human-only lookup it would be mailed a link to set a
    * password on an account that must never hold one.
    */
-  describe("a service account's address (D22 decision 22)", () => {
+  describe("a service account's address", () => {
     it("a service account's address answers 202 and sends nothing, audited no_account", async () => {
       const { organization } = await user();
       const { user: serviceAccount } = await addServiceAccount(ownerDb, { organizationId: organization.id });
@@ -326,7 +325,7 @@ describe("password reset routes", () => {
       }
     });
 
-    it("a completed reset doesn't touch the theme cookie: only the session's are cleared (D21 decision 23)", async () => {
+    it("a completed reset doesn't touch the theme cookie: only the session's are cleared", async () => {
       const account = await user();
       cookieValue(await signIn(account.user.email, OLD_PASSWORD), "telflo_access");
       const token = await resetTokenFor(account.user.email);
@@ -536,10 +535,10 @@ describe("password reset routes", () => {
         ).map((row) => row.token_hash);
 
       it("lets exactly one of two completions with one token succeed", async () => {
-        // D2a Ruling 6's technique: a separate connection holds the token's
-        // row lock until both completions are blocked at the database, so
-        // they really race. The first to lock the user's row waits on the
-        // token's; the other waits on the user's row behind it.
+        // A separate connection holds the token's row lock until both
+        // completions are blocked at the database, so they really race.
+        // The first to lock the user's row waits on the token's; the
+        // other waits on the user's row behind it.
         const account = await user();
         const token = await resetTokenFor(account.user.email);
 
@@ -573,7 +572,7 @@ describe("password reset routes", () => {
         }
       });
 
-      it("leaves one live link, the second request's, after two concurrent requests for one user (D3 Ruling 16)", async () => {
+      it("leaves one live link, the second request's, after two concurrent requests for one user", async () => {
         // The locker holds the user's row, as a reset request's transaction
         // does, until the first request's work is blocked on it and then the
         // second's. Each reads the clock before it blocks, a second apart, so
@@ -634,12 +633,12 @@ describe("password reset routes", () => {
         }
       });
 
-      describe("a reset request and a completion for one user at once (D3 Ruling 17)", () => {
+      describe("a reset request and a completion for one user at once", () => {
         // Both lock the user's row before any token row, so whichever reaches
-        // it second waits for the first to commit. Before Ruling 17 a
-        // completion consumed its token and then waited for the user's row,
-        // while a request held the user's row and waited to consume that
-        // token: Postgres broke the deadlock (40P01) by failing one of them.
+        // it second waits for the first to commit. In the other order a
+        // completion would consume its token and then wait for the user's
+        // row, while a request held the user's row and waited to consume that
+        // token: Postgres would break the deadlock (40P01) by failing one.
         // A locker holds the user's row until both are blocked, the first to
         // block first in line.
 

@@ -33,20 +33,20 @@ import { useFakeOttlEvaluator } from "../testing/ottl-evaluator.js";
 import { validatePublicReply } from "../testing/public-api-openapi.js";
 
 /*
- * The cross-tenant suite's public surface (D25 decision 53): every public
- * route the server registers, driven by organization B's tokens against
- * organization A's ids, on the real server as the API's own role. B's
- * callers are B's service account (a write token) and a person of B's with
- * a personal write token, sending `X-Telflo-Org: B`; each of A's ids
- * answers the resource's 404 (its id is another organization's, so it
- * isn't found), and an id of A's in a body of a route on B's own resource
- * the same. The same person naming A in `X-Telflo-Org` (they aren't A's
- * member) answers the one 403 organization_access_denied. Lists, `/whoami`
- * and `/orgs` never show A; creates land in B's organization, never A's.
- * The routes without an organization's id (the open routes, the global
- * flows, /validate and /ottl/lint, which store nothing) are listed with
- * their reason. The table is checked to cover every registered public route
- * (HEAD aside), and the last test reads A's resources back unchanged.
+ * The cross-tenant suite's public surface: every public route the server
+ * registers, driven by organization B's tokens against organization A's
+ * ids, on the real server as the API's own role. B's callers are B's
+ * service account (a write token) and a person of B's with a personal write
+ * token, sending `X-Telflo-Org: B`; each of A's ids answers the resource's
+ * 404 (its id is another organization's, so it isn't found), and an id of
+ * A's in a body of a route on B's own resource the same. The same person
+ * naming A in `X-Telflo-Org` (they aren't A's member) answers the one 403
+ * organization_access_denied. Lists, `/whoami` and `/orgs` never show A;
+ * creates land in B's organization, never A's. The routes without an
+ * organization's id (the open routes, the global flows, /validate and
+ * /ottl/lint, which store nothing) are listed with their reason. The table
+ * is checked to cover every registered public route (HEAD aside), and the
+ * last test reads A's resources back unchanged.
  *
  * Tokens are built at run time and never printed: every reply's canary (a
  * boolean) runs before anything else reads it.
@@ -101,7 +101,7 @@ interface Caller {
 const B_CALLERS: readonly Caller[] = [
   { label: "B's service account", token: (world) => world.b.write },
   { label: "B's person (personal token, X-Telflo-Org: B)", token: (world) => world.b.personal, organization: (world) => world.b.id },
-  // A service account's token ignores X-Telflo-Org (decision 23): still B's organization, A's ids still 404.
+  // A service account's token ignores X-Telflo-Org: still B's organization, A's ids still 404.
   { label: "B's service account (X-Telflo-Org: A, ignored)", token: (world) => world.b.write, organization: (world) => world.a.id },
 ];
 
@@ -146,7 +146,7 @@ const ROWS: readonly Row[] = [
   { kind: "none", route: `GET ${P}/openapi.json`, reason: "an open route: the document" },
   { kind: "none", route: `GET ${P}/docs`, reason: "an open route: the reference page's 301" },
   { kind: "none", route: `GET ${P}/docs/*`, reason: "an open route: the reference page and its assets" },
-  { kind: "none", route: `POST ${P}/validate/anonymous`, reason: "an open route (D27): no token, no organization, a text checked for no one" },
+  { kind: "none", route: `POST ${P}/validate/anonymous`, reason: "an open route: no token, no organization, a text checked for no one" },
   { kind: "identity", route: `GET ${P}/whoami`, url: `${P}/whoami` },
   { kind: "identity", route: `GET ${P}/orgs`, url: `${P}/orgs` },
   { kind: "list", route: `GET ${P}/configurations`, url: `${P}/configurations`, idsOf: itemsIds, foreignIds: (w) => [w.a.configurationId] },
@@ -284,8 +284,8 @@ const ROWS: readonly Row[] = [
       payload: { configurationId: w.a.configurationId, versionNumber: 1 },
     }),
   },
-  { kind: "none", route: `GET ${P}/flows`, reason: "the published flows are global (decision 45), no organization's" },
-  { kind: "none", route: `GET ${P}/flows/:slug`, reason: "the published flows are global (decision 45), no organization's" },
+  { kind: "none", route: `GET ${P}/flows`, reason: "the published flows are global, no organization's" },
+  { kind: "none", route: `GET ${P}/flows/:slug`, reason: "the published flows are global, no organization's" },
   {
     kind: "foreign",
     route: `POST ${P}/test-runs`,
@@ -314,7 +314,7 @@ const ROWS: readonly Row[] = [
 const methodOf = (route: string) => route.slice(0, route.indexOf(" "));
 const patternOf = (route: string) => route.slice(route.indexOf(" ") + 1);
 
-describe("cross-tenant isolation on the public surface (D25 decision 53)", () => {
+describe("cross-tenant isolation on the public surface", () => {
   let db: Kysely<Database>;
   let ownerDb: Kysely<Database>;
   let server: FastifyInstance;
@@ -534,7 +534,7 @@ describe("cross-tenant isolation on the public surface (D25 decision 53)", () =>
         const created = await call("POST", patternOf(row.route), row.request(), caller.token(world), caller.organization?.(world));
         expect([caller.label, created.statusCode]).toEqual([caller.label, 201]);
         const id = created.json<{ id: string }>().id;
-        // The caller's own list (a person's new configuration is a draft, theirs alone: D11b).
+        // The caller's own list (a person's new configuration is a draft, theirs alone).
         const inB = itemsIds((await call("GET", row.listUrl, { url: row.listUrl }, caller.token(world), caller.organization?.(world))).json());
         const inA = itemsIds((await call("GET", row.listUrl, { url: row.listUrl }, world.a.read)).json());
         expect([caller.label, inB.includes(id), inA.includes(id)]).toEqual([caller.label, true, false]);

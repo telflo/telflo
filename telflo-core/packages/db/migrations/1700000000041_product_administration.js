@@ -1,66 +1,60 @@
 /**
- * Product administration (D29 decisions 17 to 27; Preflight rulings 1, 3,
- * 4, 7 and 13; Rulings 257 and 258): the platform's first
- * cross-organization path, and the two tables only it reaches.
+ * Product administration: the platform's first cross-organization path,
+ * and the two tables only it reaches.
  *
- *   * user_feedback: "Contact us" (decision 22). A person's message, the
- *     organization they were in (context only, never shown), when it came
- *     and how a product admin handled it. Pending while handled_at is null;
- *     outcome is set exactly when handled_at is. The API's role holds
- *     INSERT only (the sender's request writes it): the insert takes its id
- *     from the API (`select uuidv7()`) and never uses RETURNING, which would
- *     need SELECT (Preflight ruling 8). Every read and every change goes
- *     through the definer functions below.
- *   * user_deletion_records: who a deleted person was (decisions 4, 14, 23
- *     and 24): their id, their original email, who deleted them and when.
- *     Written only by the delete function (migration 042), read only by an
- *     operator's SQL as the tables' owner: the API's role holds nothing on
- *     it.
- *   * Both are `system` resources (decision 21): no row-level security, no
- *     organization; migration 009's default privileges would give the
- *     API's role all four privileges, so they are revoked here explicitly
- *     (Preflight ruling 3).
- *   * assert_product_admin() (decision 18, Preflight ruling 1, migration
- *     028's test_runs_require_dispatcher pattern): raises 42501 unless the
- *     database context is a product admin's, as withProductAdminContext
- *     sets it: telflo.product_admin = 'on', telflo.organization_id empty,
- *     telflo.dispatcher not 'on', and telflo.user_id naming a live human
- *     whose is_product_admin is true, read in that statement. EXECUTE for no
- *     one: the functions below call it as their owner. Its refusal carries
- *     the HINT telflo_product_admin_gate (Ruling 260), so the API answers
- *     this refusal, and no other 42501, 403 product_admin_required.
- *   * The product-admin functions (decision 25): SECURITY DEFINER, owned by
- *     the migration role (the tables' owner, so D12's owner-only trigger
- *     lets grant and revoke change the flag), search_path pg_catalog,
- *     platform with schema-qualified tables, EXECUTE revoked from public and
- *     granted to telflo_platform_runtime only; each begins with
+ *   * user_feedback: "Contact us". A person's message, the organization they
+ *     were in (context only, never shown), when it came and how a product
+ *     admin handled it. Pending while handled_at is null; outcome is set
+ *     exactly when handled_at is. The API's role holds INSERT only (the
+ *     sender's request writes it): the insert takes its id from the API
+ *     (`select uuidv7()`) and never uses RETURNING, which would need SELECT.
+ *     Every read and every change goes through the definer functions below.
+ *   * user_deletion_records: who a deleted person was: their id, their
+ *     original email, who deleted them and when. Written only by the delete
+ *     function (migration 042), read only by an operator's SQL as the tables'
+ *     owner: the API's role holds nothing on it.
+ *   * Both are `system` resources: no row-level security, no organization;
+ *     migration 009's default privileges would give the API's role all four
+ *     privileges, so they are revoked here explicitly.
+ *   * assert_product_admin() (migration 028's test_runs_require_dispatcher
+ *     pattern): raises 42501 unless the database context is a product admin's,
+ *     as withProductAdminContext sets it: telflo.product_admin = 'on',
+ *     telflo.organization_id empty, telflo.dispatcher not 'on', and
+ *     telflo.user_id naming a live human whose is_product_admin is true, read
+ *     in that statement. EXECUTE for no one: the functions below call it as
+ *     their owner. Its refusal carries the HINT telflo_product_admin_gate, so
+ *     the API answers this refusal, and no other 42501, 403
+ *     product_admin_required.
+ *   * The product-admin functions: SECURITY DEFINER, owned by the migration
+ *     role (the tables' owner, so migration 026's owner-only trigger lets
+ *     grant and revoke change the flag), search_path pg_catalog, platform with
+ *     schema-qualified tables, EXECUTE revoked from public and granted to
+ *     telflo_platform_runtime only; each begins with
  *     `perform platform.assert_product_admin()`. The API calls them only from
  *     modules/product-admin/repositories/system-repository.ts (a test scans
- *     the source). Every one that writes re-reads the caller under a row
- *     lock (`for share` or stronger) taken with or after its other locks,
- *     users always in id order, and answers `forbidden` when the caller is
- *     no longer a live product admin: a removal committed meanwhile wins
- *     (Rulings 257 and 258). Timestamps they write come from the API's
- *     clock (p_at), never the database's.
+ *     the source). Every one that writes re-reads the caller under a row lock
+ *     (`for share` or stronger) taken with or after its other locks, users
+ *     always in id order, and answers `forbidden` when the caller is no longer
+ *     a live product admin: a removal committed meanwhile wins. Timestamps
+ *     they write come from the API's clock (p_at), never the database's.
  *       - product_admin_list_users: live humans, newest first, searched by
- *         email or by the name of any live organization the person is a
- *         live member of, each with the block of decision 30 (Preflight
- *         ruling 4). The order and the cursor are on created_at to the
+ *         email or by the name of any live organization the person is a live
+ *         member of, each with their block (a live organization that isn't
+ *         theirs alone). The order and the cursor are on created_at to the
  *         millisecond (the API's cursor carries milliseconds: users'
  *         created_at defaults to now(), in microseconds) and the id.
  *       - product_admin_list_product_admins: live humans with the flag, by
  *         email.
- *       - product_admin_grant and product_admin_revoke (decision 27,
- *         Preflight ruling 7).
+ *       - product_admin_grant and product_admin_revoke.
  *       - product_admin_list_feedback and product_admin_count_pending_feedback.
- *       - product_admin_handle_feedback (Preflight ruling 13).
+ *       - product_admin_handle_feedback.
  *     The delete (product_admin_delete_account) is migration 042's.
  *   * users.is_product_admin's comment names the grant and the revoke
  *     beside an operator's SQL.
  *
  * down drops the functions, the gate and both tables with their rows, and
  * restores migration 026's comment on users.is_product_admin: migration
- * 040's catalogue exactly.
+ * 040's catalog exactly.
  */
 
 /** Every function the API's role may run, with its arguments: what the grants name. */
@@ -83,7 +77,7 @@ const liveProductAdmin = (alias) => `${alias}.deleted_at is null and ${alias}.ki
 /** Migration 026's comment on users.is_product_admin, exactly: what down restores. */
 const migration026FlagComment = `
     comment on column users.is_product_admin is
-      'a product admin (D12 decision 3): writes the flows and reaches
+      'a product admin: writes the flows and reaches
        /product-admin. False by default; set and cleared only by an
        operator''s SQL as the tables'' owner (users_product_admin_owner_only),
        and read on every request, so a revocation takes effect at once.';
@@ -107,7 +101,7 @@ export const up = (pgm) => {
     );
 
     comment on table user_feedback is
-      'a person''s message from "Contact us" (D29 decision 22): pending while
+      'a person''s message from "Contact us": pending while
        handled_at is null, then acknowledged (a reply emailed, never stored)
        or dismissed by a product admin. A system resource: no organization
        owns it and no row-level security; the API''s role may only insert it
@@ -183,7 +177,7 @@ export const up = (pgm) => {
     );
 
     comment on table user_deletion_records is
-      'who a deleted person was (D29 decisions 4 and 23): written once by the
+      'who a deleted person was: written once by the
        delete function (product_admin_delete_account), read only by an
        operator''s SQL as the tables'' owner. The API''s role holds nothing on
        it. A system resource: no organization, no row-level security.';
@@ -214,14 +208,14 @@ export const up = (pgm) => {
     revoke all on user_deletion_records from telflo_platform_runtime;
 
     comment on column users.is_product_admin is
-      'a product admin (D12 decision 3): writes the flows and reaches
+      'a product admin: writes the flows and reaches
        /product-admin. False by default; set and cleared only as the
        tables'' owner (users_product_admin_owner_only): by an operator''s SQL,
        and by another product admin through product_admin_grant and
-       product_admin_revoke (D29 decision 27), which run as the owner. Read
+       product_admin_revoke, which run as the owner. Read
        on every request, so a revocation takes effect at once.';
 
-    -- The product-admin context (decision 18, Preflight ruling 1). Not
+    -- The product-admin context. Not
     -- granted to anyone: only the definer functions below, running as the
     -- owner, call it.
     create function assert_product_admin() returns void
@@ -251,7 +245,7 @@ export const up = (pgm) => {
 
     comment on function assert_product_admin() is
       'refuses (42501) unless the database context is a product admin''s, as
-       withProductAdminContext sets it (D29 decision 18): telflo.product_admin
+       withProductAdminContext sets it: telflo.product_admin
        = ''on'', telflo.organization_id empty, telflo.dispatcher not ''on'',
        and telflo.user_id naming a live human whose is_product_admin is true,
        read in this statement. A member''s request and the dispatcher can''t
@@ -298,7 +292,7 @@ export const up = (pgm) => {
              case when u.is_product_admin then null else b.role end
         from platform.users u
         left join lateral (
-          -- The block (decision 30): a live organization the person is a live
+          -- The block: a live organization the person is a live
           -- member of that isn't theirs alone (another live human member, or
           -- an invitation pending at p_at); member before owner, then by
           -- name, then by id.
@@ -345,7 +339,7 @@ export const up = (pgm) => {
     $$;
 
     comment on function product_admin_list_users(text, timestamptz, uuid, integer, timestamptz) is
-      'the Users page''s list (D29 decisions 25 and 30): live humans (no
+      'the Users page''s list: live humans (no
        service account, no deleted person), newest first by created_at to
        the millisecond, then id, after the cursor (both halves or neither),
        at most p_limit (1 to 100). p_query, when not empty, is matched case
@@ -376,8 +370,8 @@ export const up = (pgm) => {
     $$;
 
     comment on function product_admin_list_product_admins() is
-      'every live human holding the product-admin flag, by email (D29
-       decision 25). Only a product admin''s context.';
+      'every live human holding the product-admin flag, by email. Only a
+       product admin''s context.';
 
     create function product_admin_grant(p_email text, p_at timestamptz)
     returns table (outcome text, user_id uuid, email text)
@@ -405,7 +399,7 @@ export const up = (pgm) => {
         return query select 'not_found'::text, null::uuid, null::text;
         return;
       end if;
-      -- The caller and the target together, in id order (Ruling 258).
+      -- The caller and the target together, in id order.
       perform 1 from platform.users u where u.id in (me, target) order by u.id for update;
       if not exists (select 1 from platform.users u where u.id = me and ${liveProductAdmin("u")}) then
         return query select 'forbidden'::text, null::uuid, null::text;
@@ -429,7 +423,7 @@ export const up = (pgm) => {
 
     comment on function product_admin_grant(text, timestamptz) is
       'makes the live, verified human whose email is p_email (trimmed, case
-       aside) a product admin (D29 decision 27): not_found unless one exists;
+       aside) a product admin: not_found unless one exists;
        then, the caller and the target locked together by id (for update),
        forbidden when the caller is no longer a live product admin,
        not_found when the target is no longer live, verified and human,
@@ -454,7 +448,7 @@ export const up = (pgm) => {
         raise exception 'a revoke takes a user and the time' using errcode = 'invalid_parameter_value';
       end if;
       me := ${caller};
-      -- Every live product admin, in id order (Preflight ruling 7): two
+      -- Every live product admin, in id order: two
       -- removals at once queue here, and the second reads the first's
       -- outcome below.
       perform 1 from platform.users u where ${liveProductAdmin("u")} order by u.id for update;
@@ -474,7 +468,7 @@ export const up = (pgm) => {
     $$;
 
     comment on function product_admin_revoke(uuid, timestamptz) is
-      'clears a product admin''s flag (D29 decision 27, Preflight ruling 7):
+      'clears a product admin''s flag:
        every live product admin locked in id order (for update); forbidden
        when the caller is no longer one, not_found unless the target is one,
        last_admin when they are the only one, otherwise revoked
@@ -508,7 +502,7 @@ export const up = (pgm) => {
     comment on function product_admin_list_feedback(timestamptz, uuid, integer) is
       'the pending feedback, newest first, after the cursor (both halves or
        neither), at most p_limit (1 to 100), each with its sender''s current
-       email and whether their account is deleted (D29 decision 25). Only a
+       email and whether their account is deleted. Only a
        product admin''s context.';
 
     create function product_admin_count_pending_feedback()
@@ -525,7 +519,7 @@ export const up = (pgm) => {
     $$;
 
     comment on function product_admin_count_pending_feedback() is
-      'how many feedback items are pending (D29 decisions 25 and 37): a
+      'how many feedback items are pending: a
        number and no personal data. Only a product admin''s context.';
 
     create function product_admin_handle_feedback(p_id uuid, p_outcome text, p_at timestamptz)
@@ -556,9 +550,9 @@ export const up = (pgm) => {
         return query select 'not_found'::text, null::uuid, null::text;
         return;
       end if;
-      -- The caller and the sender, after the item's lock, together by id (for share;
-      -- Rulings 257, 258 and 271): users are locked in id order on every path, and
-      -- the sender's delete (for update) either commits first, seen here, or waits.
+      -- The caller and the sender, after the item's lock, together by id (for share):
+      -- users are locked in id order on every path, and the sender's delete (for
+      -- update) either commits first, seen here, or waits.
       foreach lock_id in array (select array_agg(distinct x order by x) from unnest(array[me, sender]) x) loop
         perform 1 from platform.users u where u.id = lock_id for share;
       end loop;
@@ -580,15 +574,14 @@ export const up = (pgm) => {
     $$;
 
     comment on function product_admin_handle_feedback(uuid, text, timestamptz) is
-      'acknowledges or dismisses a pending feedback item (D29 decisions 25 and
-       34, Preflight ruling 13): the item locked; not_found when it is
-       missing or already handled; then the caller and the sender locked for
-       share, together by id, so a delete of either commits before the read
-       or waits for this one; forbidden when the caller is no longer a live
-       product admin; author_deleted for an
-       acknowledge whose sender is deleted (the item stays pending);
-       otherwise handled by the caller at p_at (the API''s clock), answering
-       the sender''s id and current email. Only a product admin''s context.';
+      'acknowledges or dismisses a pending feedback item: the item locked;
+       not_found when it is missing or already handled; then the caller and the
+       sender locked for share, together by id, so a delete of either commits
+       before the read or waits for this one; forbidden when the caller is no
+       longer a live product admin; author_deleted for an acknowledge whose
+       sender is deleted (the item stays pending); otherwise handled by the
+       caller at p_at (the API''s clock), answering the sender''s id and
+       current email. Only a product admin''s context.';
 
     revoke execute on function ${grantedFunctions.join(", ")} from public;
     grant execute on function ${grantedFunctions.join(", ")} to telflo_platform_runtime;

@@ -17,9 +17,9 @@ def _catalogue(directory: Path, versions: list[dict]) -> Path:
 
 
 def test_the_default_version_is_never_a_deprecated_row(tmp_path: Path) -> None:
-    """D13b ruling 63: `OTELCOL_VERSIONS=default` bakes the offered default
-    (scripts/download-binaries.py), so a retired row still marked default
-    isn't the version the image is expected to hold."""
+    """`OTELCOL_VERSIONS=default` bakes the offered default
+    (scripts/download-binaries.py), so a retired row still marked default isn't
+    the version the image is expected to hold."""
     catalogue = _catalogue(
         tmp_path / "catalog",
         [

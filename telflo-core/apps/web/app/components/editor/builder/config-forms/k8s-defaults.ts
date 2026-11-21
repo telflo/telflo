@@ -1,7 +1,7 @@
 /*
- * The collector's defaults the Kubernetes forms show, at contrib v0.162.0
- * (D9c decisions 4 to 6; plan Task 3). Paths are under
- * `processor/resourcedetectionprocessor/` unless given in full.
+ * The collector's defaults the Kubernetes forms show, at contrib v0.162.0.
+ * Paths are under `processor/resourcedetectionprocessor/` unless given in
+ * full.
  *
  * - `DETECTORS`: the names resourcedetection registers (`factory.go:73-105`),
  *   33 of them. `k8snode` is `k8s_api`'s deprecated alias, registered on its
@@ -28,7 +28,7 @@
  *   (`internal/metadata/generated_feature_gates.go:9-23`;
  *   `options.go:50-149`), in the order the hint names them.
  *
- * D9d's `metrics.<name>.enabled` tables take the same shape (spec Handoffs).
+ * The `metrics.<name>.enabled` tables take the same shape.
  */
 
 /** The collector version these defaults are read from. */
@@ -134,9 +134,11 @@ export const RESOURCE_ATTRIBUTE_DEFAULTS: Readonly<Record<string, DetectorDefaul
   },
   elastic_beanstalk: {
     source: "internal/aws/elasticbeanstalk/metadata.yaml:23-63",
-    // metadata.yaml enables all seven, but `deployment.environment.name` and `deployment.id` are emitted only with the
-    // Alpha (so off) EmitV1DeploymentConventions gate (`internal/aws/elasticbeanstalk/elasticbeanstalk.go:79-105`;
-    // `metadata.yaml:6-20`): off by default at v0.162.0 (D9c Ruling 43).
+    // metadata.yaml enables all seven, but `deployment.environment.name` and
+    // `deployment.id` are emitted only with the Alpha (so off)
+    // EmitV1DeploymentConventions gate
+    // (`internal/aws/elasticbeanstalk/elasticbeanstalk.go:79-105`;
+    // `metadata.yaml:6-20`): off by default at v0.162.0.
     attributes: { "cloud.platform": true, "cloud.provider": true, "deployment.environment": true, "deployment.environment.name": false, "deployment.id": false, "service.instance.id": true, "service.version": true },
   },
   gcp: {

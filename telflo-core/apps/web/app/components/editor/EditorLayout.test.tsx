@@ -35,7 +35,7 @@ beforeEach(() => {
 });
 
 describe("EditorLayout", () => {
-  it("renders the toolbar above the columns (toolbox | centre | panel), and the dialogs", () => {
+  it("renders the toolbar above the columns (toolbox | center | panel), and the dialogs", () => {
     renderLayout();
 
     const toolbar = screen.getByText("The toolbar");
@@ -135,7 +135,7 @@ describe("EditorLayout", () => {
     expect(useEditorStore.getState().activeTab).toBe("second");
   });
 
-  it("collapse shows the 44 px rail: Expand panel, then one button per tab, labelled with its label", async () => {
+  it("collapse shows the 44 px rail: Expand panel, then one button per tab, labeled with its label", async () => {
     const { user } = renderLayout();
 
     const collapse = screen.getByRole("button", { name: "Collapse panel" });
@@ -197,7 +197,7 @@ describe("EditorLayout", () => {
     expect(panel().style.width).toBe("500px");
   });
 
-  describe("a tab kept mounted (Ruling 86)", () => {
+  describe("a tab kept mounted", () => {
     /** A tab's own state: a count its button raises, lost if the tab unmounts. */
     function Counter() {
       const [count, setCount] = useState(0);

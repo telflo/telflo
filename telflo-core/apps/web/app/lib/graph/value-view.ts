@@ -6,8 +6,8 @@ import type { ParsedText } from "./parse.js";
 import type { ValuePath } from "./text-edits.js";
 
 /*
- * What a form shows (D9b decision 3; Preflight ruling 9): a value read from
- * the text's document, not from a copy of the config.
+ * What a form shows: a value read from the text's document, not from a copy
+ * of the config.
  *
  * `readValue(document, base, path)` takes no text: in manual edit mode the
  * store's text is what was typed while its document is still the last one
@@ -21,11 +21,10 @@ import type { ValuePath } from "./text-edits.js";
  * its own keys first, then each merge's in order, as `mergedPairs` in the
  * text edits.
  *
- * A flow mapping or sequence written on one line, with no anchor, alias or
- * tag in it and only string keys (`{"k": "v"}`, `[1, a]`), carries its characters too (D9c
- * Preflight ruling 2): the add operator's value shows what was typed, and
- * the text edits' `plain` writes it back as typed. A block collection
- * carries none.
+ * A flow mapping or sequence written on one line, with no anchor, alias or tag in it and
+ * only string keys (`{"k": "v"}`, `[1, a]`), carries its characters too: the add
+ * operator's value shows what was typed, and the text edits' `plain` writes it back as
+ * typed. A block collection carries none.
  *
  * A form reads a few dozen paths on each render. Each mapping's keys are
  * indexed once per document (a `WeakMap` keyed by the mapping node), so a
@@ -101,7 +100,7 @@ export function nodeAt(document: ParsedText, path: ValuePath): unknown {
 
 /**
  * Whether every mapping key in a node, at any depth, is a string written as
- * a plain or quoted scalar, once per mapping (D9c review): `{1: a, "1": b}`
+ * a plain or quoted scalar, once per mapping: `{1: a, "1": b}`
  * reads as one key, `{true: 1}`, `{~: 1}`, `{[1]: 2}` and `[?]` have keys
  * that aren't strings, and a merge (`<<`) isn't a key. The text edits write
  * such characters as typed only when this holds, and a form shows them only
@@ -148,7 +147,7 @@ function flowSource(node: YAMLMap | YAMLSeq): string | undefined {
       return visit.BREAK;
     },
     Node: (_key, inner) => {
-      // A plain string the collector reads as another type (Ruling 69) couldn't be written back as typed either.
+      // A plain string the collector reads as another type couldn't be written back as typed either.
       const other = isScalar(inner) && inner.type === "PLAIN" && typeof inner.value === "string" && collectorReadsAsOther(inner.value);
       if (!inner.anchor && !inner.tag && !other) return undefined;
       bound = true;

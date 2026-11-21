@@ -2,8 +2,8 @@
  * parseYAMLToGraph layout: imported YAML (flows, CLI-created versions, AI
  * edits, YAML Apply) must land on the canvas without overlapping cards.
  *
- * On `parse` (D9a Parity Notes). Its two texts are corpus files
- * (layout-wide.yaml, layout-routing.yaml).
+ * On `parse`. Its two texts are corpus files (layout-wide.yaml,
+ * layout-routing.yaml).
  */
 import { describe, expect, it } from "vitest";
 

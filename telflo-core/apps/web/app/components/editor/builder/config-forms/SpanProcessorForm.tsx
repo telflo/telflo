@@ -12,40 +12,38 @@ import type { ValueChange } from "~/lib/graph/text-edits.js";
 import type { ValueView } from "~/lib/graph/value-view.js";
 
 /*
- * The span processor's form (ADR 0018), over the form's fields (D9d
- * decision 2, D9b's contract): each field writes its own key. Collector
- * claims are contrib v0.162.0's `processor/spanprocessor` and
+ * The span processor's form, over the form's fields: each field writes its own
+ * key. Collector claims are contrib v0.162.0's `processor/spanprocessor` and
  * `internal/filter`.
  *
- * - Kept: removing the last Attribute Key removes `name.from_attributes`;
- *   removing the last Regex Rule removes `name.to_attributes`, its two boxes
- *   with it. The boxes write
- *   `true` or remove their key. Separator cleared removes its key.
- * - Changed (decision 7): choosing Ok or Unset while the text has a
- *   description removes `status.description` in the same change, with the
- *   toast "Removed the error description: it's only used with Error." (the
- *   collector refuses a description with any other code, `factory.go:35,
- *   70-72`).
- *   "Leave status unchanged" removes `status` (no toast: nothing else
- *   changes). The select has the fixed id `span-status-code` so its label
- *   names it; its unset option is valued `__unset__`
- *   (Preflight ruling 21), and a code outside the three shows as written.
- * - Fixed (decision 3; D9c's hostmetrics filters): a filter side's first
- *   Service or Span Name is written with `match_type: strict`, or the match
- *   chosen before it (the collector refuses a side's names with no
- *   `match_type`, "unrecognized match_type", `filterset/config.go:38-48`);
- *   a match chosen on a side with no names is held by the form until the
- *   first one (a side with nothing to match is refused,
- *   `filterconfig/config.go:162-165`). Beside names with no `match_type`
- *   the select is blank (the collector has no default).
- * - Fixed (D9b decision 4, a person's own config isn't lost): removing a
- *   side's last name removes that list's key, and the whole side only when
- *   nothing but `match_type` is left in it, so its other keys
- *   (`span_kinds`, `attributes`, `resources`, `libraries`, `regexp`) stay.
- * - Kept: the empty-processor warning (`factory.go:60-64` refuses a span
- *   processor with no rename, extraction or status) and the footer.
+ * - Removing the last Attribute Key removes `name.from_attributes`; removing
+ *   the last Regex Rule removes `name.to_attributes`, its two boxes with it.
+ *   The boxes write `true` or remove their key. Separator cleared removes
+ *   its key.
+ * - Choosing Ok or Unset while the text has a description removes
+ *   `status.description` in the same change, with the toast "Removed the
+ *   error description: it's only used with Error." (the collector refuses
+ *   a description with any other code, `factory.go:35, 70-72`). "Leave
+ *   status unchanged" removes `status` (no toast: nothing else changes).
+ *   The select has the fixed id `span-status-code` so its label names it;
+ *   its unset option is valued `__unset__`, and a code outside the three
+ *   shows as written.
+ * - As in hostmetrics' filters, a filter side's first Service or Span Name
+ *   is written with `match_type: strict`, or the match chosen before it
+ *   (the collector refuses a side's names with no `match_type`,
+ *   "unrecognized match_type", `filterset/config.go:38-48`); a match chosen
+ *   on a side with no names is held by the form until the first one (a side
+ *   with nothing to match is refused, `filterconfig/config.go:162-165`).
+ *   Beside names with no `match_type` the select is blank (the collector
+ *   has no default).
+ * - So a person's own config isn't lost, removing a side's last name removes
+ *   that list's key, and the whole side only when nothing but `match_type` is
+ *   left in it, so its other keys (`span_kinds`, `attributes`, `resources`,
+ *   `libraries`, `regexp`) stay.
+ * - The empty-processor warning (`factory.go:60-64` refuses a span processor
+ *   with no rename, extraction or status) and the footer.
  *
- * Ids are fixed; no value reaches an attribute (decision 13).
+ * Ids are fixed; no value reaches an attribute.
  */
 
 export const REMOVED_DESCRIPTION = "Removed the error description: it's only used with Error.";

@@ -1,5 +1,4 @@
-// The kind smoke's TCP probe (scripts/smoke-kind.sh; D33-1 spec decision
-// 35, Preflight ruling 19; D36-2 Preflight ruling 4): run in a throwaway pod
+// The kind smoke's TCP probe (scripts/smoke-kind.sh): run in a throwaway pod
 // of the API's image, mounted from a ConfigMap, as
 //
 //   node /probe/tcp-probe.js <host>:<port>...

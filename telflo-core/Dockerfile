@@ -5,36 +5,34 @@
 #         operator's commands (`telflo-admin`)
 #   web   the React Router server-rendered web app
 #
-# Built by the root docker-compose.yml (ADR 0017), with the repository's root
-# as the build context (D13a Preflight ruling 6), so every path below is from
-# there: telflo-core/ for the workspace, catalog/ for the collector catalogue,
-# install-templates/ for the install templates. The root .dockerignore lets
-# only those (and the Python services' directories) in.
-# scripts/publish-platform-images.sh builds both targets for linux/amd64 and
-# linux/arm64 from HEAD's committed files, as ghcr.io/telflo/telflo/api and
-# .../web (D33-1 decisions 11 and 30), passing VERSION and REVISION (the
+# Built by the root docker-compose.yml, with the repository's root as the
+# build context, so every path below is from there: telflo-core/ for the
+# workspace, catalog/ for the collector catalog, install-templates/ for the
+# install templates. The root .dockerignore lets only those (and the Python
+# services' directories) in. scripts/publish-platform-images.sh builds both
+# targets for linux/amd64 and linux/arm64 from HEAD's committed files, as
+# ghcr.io/telflo/telflo/api and .../web, passing VERSION and REVISION (the
 # version and revision labels).
 #
-# Production-only (D36-1 decisions 43 and 44; Preflight rulings 21-28): each
-# final stage starts from a fresh base and holds only what its component
-# runs: the API its compiled JavaScript (tsc's dist/ of @telflo/contracts,
-# @telflo/db and apps/api), the migrations and its production dependencies;
-# web its server build and its production dependencies. No development
-# dependency (tsx, TypeScript, Vite, the test runners, ...) reaches either:
-# `npm ci --omit=dev -w <workspace>` installs only that workspace's
-# dependency tree (without -w, every workspace's), and never with
-# --omit=optional (argon2's native binary is an optional dependency).
-# scripts/check-no-dev-dependencies.mjs checks a built image against the
-# lockfile. Development keeps running TypeScript from src/ through tsx.
+# Production-only: each final stage starts from a fresh base and holds only
+# what its component runs: the API its compiled JavaScript (tsc's dist/ of
+# @telflo/contracts, @telflo/db and apps/api), the migrations and its
+# production dependencies; web its server build and its production
+# dependencies. No development dependency (tsx, TypeScript, Vite, the test
+# runners, ...) reaches either: `npm ci --omit=dev -w <workspace>` installs
+# only that workspace's dependency tree (without -w, every workspace's), and
+# never with --omit=optional (argon2's native binary is an optional
+# dependency). scripts/check-no-dev-dependencies.mjs checks a built image
+# against the lockfile. Development keeps running TypeScript from src/
+# through tsx.
 #
 # Both run as uid and gid 1000, the base's `node` user, by number, so an
-# orchestrator can check runAsNonRoot (D33-1 decision 12).
+# orchestrator can check runAsNonRoot.
 
-# node:24-bookworm-slim (Node 24.22.2), pinned by its index digest (D36-1
-# decision 44, Preflight ruling 28), the same as scripts/smoke-kind.sh's
-# NODE_BASE. Moving it is a reviewed change (ADR 0019's reviewed
-# components): pull the new tag on the owner's yes and take its index digest
-# from `docker image inspect <tag> --format '{{.RepoDigests}}'`.
+# node:24-bookworm-slim (Node 24.22.2), pinned by its index digest, the same
+# as scripts/smoke-kind.sh's NODE_BASE. Moving it is a reviewed change: pull
+# the new tag and take its index digest from
+# `docker image inspect <tag> --format '{{.RepoDigests}}'`.
 ARG NODE_BASE=node:24-bookworm-slim@sha256:01d566e8d94d8c619591d78652babfccd3c6992a3dffa9ed5ab39e11cf6c70e9
 
 # ---- manifests: the workspace's package files, the npm ci layers' input -----
@@ -57,7 +55,7 @@ COPY telflo-core/ ./
 # ---- api-build: tsc to dist/, the packages pointed at it -------------------
 # Each package the API runs is compiled to its dist/, at the same depth as
 # its src/, so the files read relative to import.meta.url (the migrations,
-# the catalogue, the reference page's assets) resolve as they do from src/;
+# the catalog, the reference page's assets) resolve as they do from src/;
 # the tests and test support are left out (tsconfig.build.json).
 # image/point-at-dist.mjs then copies the non-TypeScript files beside the
 # code and points the three package.json files at dist/ (here only).
@@ -83,30 +81,27 @@ COPY --from=api-build /app/packages/db/dist /app/packages/db/dist
 COPY --from=api-build /app/packages/db/migrations /app/packages/db/migrations
 COPY --from=api-build /app/apps/api/package.json /app/apps/api/package.json
 COPY --from=api-build /app/apps/api/dist /app/apps/api/dist
-# The collector catalogue (D13a decision 2), which the migrations (this
-# image) sync into the database: packages/db finds it at /catalog, four
-# levels above /app/packages/db/dist, as above src/ (Preflight ruling 7).
-# The API process never reads it.
+# The collector catalog, which the migrations (this image) sync into the
+# database: packages/db finds it at /catalog, four levels above
+# /app/packages/db/dist, as above src/. The API process never reads it.
 COPY catalog/ /catalog/
-# The file store's root (D14a decision 2), compose's file-store
-# volume: created here and given to uid 1000 (node), the user the API runs
-# as, so a new volume mounted on it starts with that owner. Only node may
-# enter it.
+# The file store's root, compose's file-store volume: created here and given
+# to uid 1000 (node), the user the API runs as, so a new volume mounted on it
+# starts with that owner. Only node may enter it.
 RUN mkdir -p /var/lib/telflo/file-store \
  && chown 1000:1000 /var/lib/telflo/file-store \
  && chmod 0700 /var/lib/telflo/file-store
-# `telflo-admin` (D36-1 decision 37): the operator's commands, run beside the
-# API with its environment (`kubectl exec deploy/telflo-api -- telflo-admin
-# bootstrap --email <email> --organization <name>`, or `docker compose exec
-# api telflo-admin …`). A shim on PATH, owned by root.
+# `telflo-admin`: the operator's commands, run beside the API with its
+# environment (`kubectl exec deploy/telflo-api -- telflo-admin bootstrap
+# --email <email> --organization <name>`, or `docker compose exec api
+# telflo-admin …`). A shim on PATH, owned by root.
 RUN printf '#!/bin/sh\nexec node /app/apps/api/dist/admin/telflo-admin.js "$@"\n' >/usr/local/bin/telflo-admin \
  && chmod 0755 /usr/local/bin/telflo-admin
-# The install templates' default set (D17c-1 decisions 6 and 35), read on
-# every render from TELFLO_INSTALL_TEMPLATES_DIR (this path by default): an
-# operator replaces it with a directory of their own (a Kubernetes
-# ConfigMap or volume, a customer's air-gapped directory), and compose
-# mounts the repository's install-templates/ over it read-only. Owned by
-# root, readable by node.
+# The install templates' default set, read on every render from
+# TELFLO_INSTALL_TEMPLATES_DIR (this path by default): an operator replaces it
+# with a directory of their own (a Kubernetes ConfigMap or volume, a
+# customer's air-gapped directory), and compose mounts the repository's
+# install-templates/ over it read-only. Owned by root, readable by node.
 COPY install-templates/ /etc/telflo/install-templates/
 WORKDIR /app/apps/api
 # The release's version and its commit (scripts/publish-platform-images.sh
@@ -126,12 +121,12 @@ CMD ["node", "dist/index.js"]
 
 # ---- web-build: the server build ---------------------------------------------
 FROM deps AS web-build
-# The collector catalogue's renames (D13b decision 6, Preflight ruling 15):
-# the build bundles each file's renamedTypes, found at /catalog, six levels
-# above /app/apps/web/app/lib/collector. The server never reads the files.
-# Vite bundles whatever the glob finds, even nothing, so the build is
-# refused here when no distribution file arrived (Ruling 60); the web would
-# otherwise build and then fail as it loads the renames.
+# The collector catalog's renames: the build bundles each file's
+# renamedTypes, found at /catalog, six levels above
+# /app/apps/web/app/lib/collector. The server never reads the files. Vite
+# bundles whatever the glob finds, even nothing, so the build is refused here
+# when no distribution file arrived; the web would otherwise build and then
+# fail as it loads the renames.
 COPY catalog/ /catalog/
 RUN set -- /catalog/distributions/*.json && [ -e "$1" ] || { \
       echo "The web needs catalog/distributions/*.json, the collector catalogue: none at /catalog/distributions." >&2; \
@@ -167,7 +162,7 @@ LABEL org.opencontainers.image.source="https://github.com/telflo/telflo" \
       org.opencontainers.image.description="The Telflo platform's web app (React Router, server-rendered)"
 USER 1000:1000
 EXPOSE 3000
-# The web app's own server (apps/web/server.mjs, D33-1 decision 13): it
-# resolves build/ and public/ against its own folder and logs no request.
-# node runs it directly, never npx (which writes ~/.npm).
+# The web app's own server (apps/web/server.mjs): it resolves build/ and
+# public/ against its own folder and logs no request. node runs it directly,
+# never npx (which writes ~/.npm).
 CMD ["node", "server.mjs"]

@@ -1,5 +1,4 @@
-// New in the follow-up to D15a Task 2's review (the controller's Ruling 33):
-// on Linux a child also gets SIGKILL when serve dies (Pdeathsig), so a serve
+// On Linux a child also gets SIGKILL when serve dies (Pdeathsig), so a serve
 // killed without its shutdown (an OOM kill, a `docker kill`) never leaves a
 // child running. Pdeathsig follows the thread that started the child; Go
 // ends a thread only when a goroutine locked to it exits, and nothing here

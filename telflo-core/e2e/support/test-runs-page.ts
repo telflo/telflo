@@ -1,9 +1,9 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { fakeOtelcolTestingMarker } from "../../apps/api/src/testing/fake-otelcol-testing.js";
 
-// The editor's Testing tab (D14a Tasks 9 and 10) in the browser: its run
-// dialog, the version's runs and the selected run's results. Shared by
-// test-runs.e2e.ts and the privacy reviews' scratch specs.
+// The editor's Testing tab in the browser: its run dialog, the version's runs
+// and the selected run's results. Shared by test-runs.e2e.ts and the other
+// Testing tab specs.
 //
 // The run dialog slides between three slots; the ones slid away are inert
 // and hidden from assistive technology, so a role query finds only the
@@ -177,11 +177,11 @@ export function resultsDialog(page: Page, title: string | RegExp): Locator {
 
 /**
  * Where every Monaco screen-reader live region (`.monaco-aria-container`) in
- * the page is: whether it sits inside a `ph-no-capture` block (D14a
- * Preflight ruling 14), and inside the app shell's one host, shared by every
- * Monaco and never removed (`[data-monaco-aria-host]`, Ruling 48). Only
- * regions attached to the page are found. Read in the page, as a string: the
- * E2E code is typechecked without DOM types.
+ * the page is: whether it sits inside a `ph-no-capture` block, and inside
+ * the app shell's one host, shared by every Monaco and never removed
+ * (`[data-monaco-aria-host]`). Only regions attached to the page are found.
+ * Read in the page, as a string: the E2E code is typechecked without DOM
+ * types.
  */
 export function ariaContainers(page: Page): Promise<{ blocked: boolean; inShellHost: boolean }[]> {
   return page.evaluate<{ blocked: boolean; inShellHost: boolean }[]>(`[...document.querySelectorAll(".monaco-aria-container")].map((element) => ({
@@ -195,8 +195,8 @@ export function ariaContainers(page: Page): Promise<{ blocked: boolean; inShellH
  * alert and status nodes): whether one, or an ancestor, is hidden from
  * assistive technology (`aria-hidden="true"`, as a modal dialog's
  * `hideOthers` sets on the rest of the page), and whether it sits in a
- * `ph-no-capture` block (D14a Rulings 48, 52). Read in the page, as a
- * string: the E2E code is typechecked without DOM types.
+ * `ph-no-capture` block. Read in the page, as a string: the E2E code is
+ * typechecked without DOM types.
  */
 export function liveRegionNodes(page: Page): Promise<{ node: string; hidden: boolean; blocked: boolean }[]> {
   return page.evaluate<{ node: string; hidden: boolean; blocked: boolean }[]>(
@@ -211,8 +211,8 @@ export function liveRegionNodes(page: Page): Promise<{ node: string; hidden: boo
 /**
  * The run dialog's sliding track: its clipping box's horizontal scroll, and
  * whether the slot in view (the one not inert) lies wholly inside the box.
- * D14a Ruling 46: focusing a control in a slot still off to the side must
- * not scroll the box, or the slid-in panel ends part hidden.
+ * Focusing a control in a slot still off to the side must not scroll the
+ * box, or the slid-in panel ends part hidden.
  */
 export function runDialogTrack(page: Page): Promise<{ scrollLeft: number; slotInView: boolean }> {
   return page.evaluate<{ scrollLeft: number; slotInView: boolean }>(`(() => {

@@ -1,10 +1,10 @@
 /*
- * The configurations' calls (D27 decision 26), on D25's routes 4-12 with its field names: `versionNumber`,
- * `publishedVersionNumber` (the highest published), `distribution`,
- * `collectorVersion`, and a version's `label` (the older CLI's
- * `description`). Ids are canonicalized before they're sent (exit 2 when
- * malformed). Nothing here prints; the YAML is configuration text and
- * never reaches an error's message.
+ * The configurations' calls, on routes 4-12 with the public API's field names:
+ * `versionNumber`, `publishedVersionNumber` (the highest published),
+ * `distribution`, `collectorVersion`, and a version's `label`. Ids are
+ * canonicalized before they're sent (exit 2 when malformed). Nothing here
+ * prints; the YAML is configuration text and never reaches an error's
+ * message.
  */
 
 import { InvalidArgumentError } from "commander";
@@ -32,7 +32,7 @@ export const PUSH_UNAVAILABLE_MESSAGE = (message: string): string => `Couldn't v
 export const PUSH_NOT_PUBLISHED_MESSAGE = (versionNumber: number, message: string): string =>
   `Saved v${versionNumber}, but couldn't publish it: ${message}`;
 
-/** The 409s a push answers when another save got there first (decision 26). */
+/** The 409s a push answers when another save got there first. */
 const PUSH_RACE_CODES: ReadonlySet<string> = new Set(["configuration_version_changed", "configuration_version_published"]);
 
 /** Commander's parser for `--version <n>`: a refusal is a usage error (exit 2). */
@@ -92,7 +92,7 @@ export async function pullConfiguration(client: ApiClient, id: string, versionNu
   };
 }
 
-/** Route 6: the configuration and its draft version 1, at the catalogue's default distribution. */
+/** Route 6: the configuration and its draft version 1, at the catalog's default distribution. */
 export async function createConfiguration(client: ApiClient, name: string, yaml: string): Promise<PublicConfigurationDetail> {
   return client.request<PublicConfigurationDetail>("POST", "/configurations", { body: { name, yaml } });
 }
@@ -107,14 +107,14 @@ export type PushResult =
   | { status: "invalid"; errors: ValidationErrorLine[] };
 
 /**
- * `config push` (decision 26): a draft latest is patched with
- * `?validate=true` (route 11); a published latest has the text validated on
- * its pin (route 15), then appended as the next version (route 9, with
- * `label`). Invalid YAML (the validator's verdict, or a 422
- * `configuration_invalid`) is a returned result, nothing saved; a 409
- * (another save first) and a 503 (nothing checked) are ExitErrors, exit 1.
- * `publish` then publishes the saved version (route 12); a refusal there
- * says the version was saved but not published (exit 1).
+ * `config push`: a draft latest is patched with `?validate=true` (route
+ * 11); a published latest has the text validated on its pin (route 15),
+ * then appended as the next version (route 9, with `label`). Invalid YAML
+ * (the validator's verdict, or a 422 `configuration_invalid`) is a returned
+ * result, nothing saved; a 409 (another save first) and a 503 (nothing
+ * checked) are ExitErrors, exit 1. `publish` then publishes the saved
+ * version (route 12); a refusal there says the version was saved but not
+ * published (exit 1).
  */
 export async function pushConfiguration(
   client: ApiClient,
@@ -156,8 +156,8 @@ export async function pushConfiguration(
     try {
       await publishVersion(client, id, saved.versionNumber);
     } catch (error) {
-      // The version is saved: say so, with the ending's own words (Rulings 239 and 243): a 401 still
-      // exits 3 with "Run telflo login.", a network failure or a timeout keeps its exit code.
+      // The version is saved: say so, with the ending's own words: a 401 still exits 3 with "Run telflo login.",
+      // a network failure or a timeout keeps its exit code.
       if (error instanceof ApiError || error instanceof ExitError) {
         throw rewordedError(error, (message) => PUSH_NOT_PUBLISHED_MESSAGE(saved.versionNumber, message));
       }

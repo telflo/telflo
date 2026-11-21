@@ -92,7 +92,7 @@ describe("LoginForm", () => {
     expect(await screen.findByText("landed on /app/settings")).toBeInTheDocument();
   });
 
-  describe("the CLI's sign-in page's fragment (D27 Preflight ruling 13)", () => {
+  describe("the CLI's sign-in page's fragment", () => {
     const FRAGMENT = "#state=SSSSSSSSSSSSSSSSSSSS-_ttttttttttttttttttttt&port=54321&host=ada-laptop";
 
     /** Where the sign-in landed: its path, query and fragment, as the router has them. */
@@ -341,7 +341,7 @@ describe("LoginForm", () => {
     });
   });
 
-  it("links to registration for people without an account, where registration is open (D36-1 decision 23)", async () => {
+  it("links to registration for people without an account, where registration is open", async () => {
     const Stub = createRoutesStub(underSite(SAAS_SITE, [{ path: "/login", Component: () => <LoginForm providers={[]} /> }]));
     render(<Stub initialEntries={["/login"]} />);
     expect(await screen.findByRole("link", { name: /sign up/i })).toHaveAttribute("href", "/register");
@@ -447,7 +447,7 @@ describe("LoginForm", () => {
       expect(screen.getByRole("button", { name: /^sign in$/i })).toBeDisabled();
     });
 
-    it("is usable again when the page comes back from the back/forward cache (Ruling 16)", async () => {
+    it("is usable again when the page comes back from the back/forward cache", async () => {
       const user = userEvent.setup();
       renderAt("/login", [GOOGLE]);
       await user.click(await screen.findByRole("link", GOOGLE_LINK));
@@ -509,12 +509,12 @@ describe("LoginForm", () => {
       );
     });
 
-    it("shows the reserved-domain message for oauth_email_reserved (D22 decision 24)", async () => {
+    it("shows the reserved-domain message for oauth_email_reserved", async () => {
       renderAt("/login?error=oauth_email_reserved");
       expect(await screen.findByRole("alert")).toHaveTextContent("This address can't be used");
     });
 
-    it("shows the invitation-only message for registration_not_open (D36-1 Preflight ruling 5)", async () => {
+    it("shows the invitation-only message for registration_not_open", async () => {
       renderAt("/login?error=registration_not_open");
       expect(await screen.findByRole("alert")).toHaveTextContent(
         "This site is invitation-only. Ask an organization admin for an invitation.",

@@ -291,7 +291,7 @@ describe("registerUser", () => {
   });
 
   it.each(["2025-01-01", `${TEST_TERMS_VERSION} `, "9999-12-31"])(
-    "refuses the terms version %j, which isn't the current one, before looking the email up (Ruling 18)",
+    "refuses the terms version %j, which isn't the current one, before looking the email up",
     async (version) => {
       const service = createIdentityService(harness.deps);
       await expect(service.registerUser({ ...registration, acceptedTermsVersion: version })).rejects.toMatchObject({
@@ -464,7 +464,7 @@ describe("registerUser", () => {
       expect(notice?.text).not.toContain("token=");
     });
 
-    it("tells an account with no password (created with Google) to sign in with Google or set a password (D2c Ruling 19)", async () => {
+    it("tells an account with no password (created with Google) to sign in with Google or set a password", async () => {
       const service = createIdentityService(harness.deps);
       await service.registerUser(registration);
       const existing = harness.usersByEmail.get("person@example.com");
@@ -498,12 +498,11 @@ describe("registerUser", () => {
 
     /**
      * Regression test for the write-free wait described in registerUser's
-     * docstring (Ruling 30 as revisited for D1b): the duplicate path must
-     * take at least as long as recent new-account registrations did after
-     * the hash. The fake account creation is slowed to far above the
-     * fallback, so only a wait sampled from real observations can pass.
-     * Only a lower bound is asserted; timers never fire early, so this is
-     * not flaky under load.
+     * docstring: the duplicate path must take at least as long as recent
+     * new-account registrations did after the hash. The fake account
+     * creation is slowed to far above the fallback, so only a wait
+     * sampled from real observations can pass. Only a lower bound is
+     * asserted; timers never fire early, so this is not flaky under load.
      */
     it("waits out the new-account path's post-hash cost, as sampled from recent registrations", async () => {
       harness.faults.accountDelayMilliseconds = 80;
@@ -804,7 +803,7 @@ describe("resendVerification", () => {
       tokenHash: hashToken(token),
       expiresAt: new Date(at.getTime() + 24 * HOUR),
     });
-    // D3 decision 8: the earlier link still works until it expires.
+    // The earlier link still works until it expires.
     expect(harness.tokensByHash.get(earlierHash)?.consumedAt).toBeNull();
     expect(harness.verificationTokens.consume).not.toHaveBeenCalled();
 

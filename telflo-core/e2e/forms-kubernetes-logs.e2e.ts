@@ -12,22 +12,21 @@ import {
 } from "./support/forms-page.js";
 import { skipEditorTour } from "./support/session.js";
 
-// The Kubernetes, host and logs forms (D9c), in the browser: a Kubernetes
-// form's checkbox list and a hostmetrics filter write their own lines in
-// place, every other line and comment kept (decisions 2, 3 and 5); a filelog
-// field; the operator pipeline's Add Operator dialog, its cards reordered by
-// pointer and by keyboard (the item's lines moving with their comment) and
-// removed (decision 8); Delete file after reading setting Start Position, and
-// syslog's TCP → UDP switch renaming its block in place, each with its toast
-// and no inline alert (decision 7; D9d decision 7). Each change is undone with the toolbar's Undo. Each test
-// works in an organization of its own, so tests and browsers run in
-// parallel.
+// The Kubernetes, host and logs forms, in the browser: a Kubernetes form's
+// checkbox list and a hostmetrics filter write their own lines in place, every
+// other line and comment kept; a filelog field; the operator pipeline's Add
+// Operator dialog, its cards reordered by pointer and by keyboard (the item's
+// lines moving with their comment) and removed; Delete file after reading
+// setting Start Position, and syslog's TCP → UDP switch renaming its block in
+// place, each with its toast and no inline alert. Each change is undone with
+// the toolbar's Undo. Each test works in an organization of its own, so tests
+// and browsers run in parallel.
 //
 // See support/forms-page.ts for how the text is read: each step shows the
 // component again and opens the section it works in if it isn't open (the
 // Configuration tab keeps its open sections, its cards' expansion and its
-// scroll, Ruling 86). Each change is undone before the next: form changes to
-// one component within `HISTORY_THROTTLE_MS` are one undo entry.
+// scroll). Each change is undone before the next: form changes to one
+// component within `HISTORY_THROTTLE_MS` are one undo entry.
 
 const test = base.extend({
   context: async ({ context }, use) => {
@@ -50,7 +49,7 @@ async function showOperatorsCollapsed(page: Page): Promise<void> {
   await expect(page.getByRole("button", { name: "Expand operator" })).toHaveCount(2);
 }
 
-/** File Log's operators, each card expanded (they stay collapsed across a look at the YAML tab, Ruling 86). */
+/** File Log's operators, each card expanded (they stay collapsed across a look at the YAML tab). */
 async function showOperatorsExpanded(page: Page): Promise<void> {
   await showComponent(page, "receiver", "File Log", "Operators");
   await expect(dragHandles(page)).toHaveCount(2);
@@ -323,7 +322,7 @@ test("ticking Delete file after reading sets Start Position to Beginning in the 
   await expect(page.locator("#delete-after-read")).toBeChecked();
   await expect(startAt).toHaveText(/Beginning/);
   await expectAdjusted(page, "Start Position set to Beginning: deleting files needs it.");
-  // D9d decision 7: the "Deletes source files" alert is the hint under the box, always shown.
+  // The "Deletes source files" alert is the hint under the box, always shown.
   await expect(
     page.getByText("Deletes each file once it's read. Needs the filelog.allowFileDeletion feature gate (on by default).", { exact: true }),
   ).toBeVisible();
@@ -375,7 +374,7 @@ test("syslog's transport switched from TCP to UDP renames the block in place, dr
 /** A scrolling element, as the page sees it (the e2e project has no DOM types). */
 type Scrolling = { scrollTop: number; scrollHeight: number };
 
-test("the Configuration tab keeps its open sections, a collapsed operator card and its scroll across a look at the YAML tab (Ruling 86)", async ({
+test("the Configuration tab keeps its open sections, a collapsed operator card and its scroll across a look at the YAML tab", async ({
   page,
 }) => {
   await openSeeded(page, FILELOG);

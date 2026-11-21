@@ -36,13 +36,12 @@ import { builderStore, componentNamed, openText } from "~/test/builder-store.js"
 import { formControls } from "~/test/form-controls.js";
 
 /*
- * The prometheus receiver and exporter and the remote write exporter (D9d
- * Task 5): their forms over the form contract. Each field is driven
- * as a person would on the metrics corpus text (comments, an anchor and a
- * merge, flow and block lists, a bare `0750`), LF and CRLF, and writes only
- * its key. The exporter (5) and remote write (7) cases follow; the remote
- * write http:// alert's two assert it is gone. The fixes each have a test
- * that fails if the bug returns.
+ * The prometheus receiver and exporter and the remote write exporter: their
+ * forms over the form contract. Each field is driven as a person would on
+ * the metrics corpus text (comments, an anchor and a merge, flow and block
+ * lists, a bare `0750`), LF and CRLF, and writes only its key. The exporter
+ * (5) and remote write (7) cases follow; the remote write http:// alert's
+ * two assert it is gone.
  *
  * Collector claims cite contrib v0.162.0 (`receiver/prometheusreceiver`,
  * `exporter/prometheusexporter`, `exporter/prometheusremotewriteexporter`),
@@ -607,7 +606,7 @@ const CASES: FieldCase[] = [
   },
 ];
 
-describe("every field of each form writes only its key (decision 2)", () => {
+describe("every field of each form writes only its key", () => {
   it.each(CASES.flatMap((c) => [[`${c.name}, LF`, c, false] as const, [`${c.name}, CRLF`, c, true] as const]))(
     "%s",
     async (_name, c, crlf) => {
@@ -629,7 +628,7 @@ describe("every field of each form writes only its key (decision 2)", () => {
   );
 });
 
-describe("opening writes nothing (decision 2)", () => {
+describe("opening writes nothing", () => {
   /** What each form shows once opened, at least: its text fields, every control, and a field. */
   const OPENED: Record<string, { textboxes: number; all: number; field: string }> = {
     [RECEIVER]: { textboxes: 26, all: 38, field: "prometheus-job-1-tls-max-version" },
@@ -637,7 +636,7 @@ describe("opening writes nothing (decision 2)", () => {
     [PRW]: { textboxes: 14, all: 22, field: "retry-initial-interval" },
     [MIMIR]: { textboxes: 10, all: 18, field: "prwe-num-consumers" },
   };
-  // One test per form and text, each with its own time limit (D9c Ruling 54).
+  // One test per form and text, each with its own time limit.
   it.each(Object.keys(OPENED).flatMap((key) => [[key, "LF", CORPUS] as const, [key, "CRLF", CRLF(CORPUS)] as const]))(
     "opening %s (%s), every section, card and details, focusing every field, writes nothing and leaves the editor clean",
     async (key, _name, base) => {
@@ -733,7 +732,7 @@ describe("PrometheusReceiverForm: jobs", () => {
     expect(entries()).toBe(1);
   });
 
-  it("a job's other target groups and labels stay; a first group that isn't a mapping is read-only with D9b's hint", async () => {
+  it("a job's other target groups and labels stay; a first group that isn't a mapping is read-only with the unshowable-value hint", async () => {
     const before = receiverText(
       [
         "        - job_name: groups",
@@ -897,7 +896,7 @@ describe("PrometheusReceiverForm: the fixes", () => {
     expect(infoToasts()).toEqual([]);
   });
 
-  it("shows unset as Prometheus' defaults: Honor Timestamps ticked, the timeout's rule, Scheme http, Interval 1m (decision 4)", async () => {
+  it("shows unset as Prometheus' defaults: Honor Timestamps ticked, the timeout's rule, Scheme http, Interval 1m", async () => {
     const user = renderForm(RECEIVER, receiverText("        - job_name: plain\n          static_configs: [{targets: [a:1]}]"));
     await openDetails(user);
     // config/config.go:203-211 (DefaultScrapeConfig), 913-915 (the timeout).
@@ -941,7 +940,7 @@ describe("PrometheusReceiverForm: the fixes", () => {
     expect(screen.getByText("No scrape jobs configured")).toBeInTheDocument();
   });
 
-  it("a scrape_configs it can't show is read-only with D9b's hint; Add Job is disabled", () => {
+  it("a scrape_configs it can't show is read-only with the unshowable-value hint; Add Job is disabled", () => {
     renderForm(RECEIVER, receiverText("").replace("      scrape_configs:\n", "      scrape_configs: not-a-list\n"));
     expect(screen.getByText("This value is written in a form this field can't show. Edit it in the YAML below.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Add Job" })).toBeDisabled();
@@ -1020,7 +1019,7 @@ describe("PrometheusExporterForm cases", () => {
 });
 
 describe("PrometheusExporterForm: the changes", () => {
-  it("Constant Labels have label nouns (Parity Notes, Appearance)", async () => {
+  it("Constant Labels have label nouns", async () => {
     const user = renderForm(EXPORTER);
     await openSection(user, "Constant Labels");
     expect(screen.getByPlaceholderText("Label name")).toHaveValue("region");
@@ -1132,7 +1131,7 @@ describe("PrometheusRemoteWriteExporterForm cases", () => {
     }
   });
 
-  it("doesn't warn of an http:// endpoint without insecure: the alert was false and is gone (decision 4)", async () => {
+  it("doesn't warn of an http:// endpoint without insecure: the alert was false and is gone", async () => {
     const user = renderForm(RW, defaults().replace("https://prometheus.example.com/api/v1/write", "http://clickhouse:9090/write"));
     await openSection(user, "TLS");
     expect(screen.queryByText(/TLS is required by default/)).toBeNull();
@@ -1248,7 +1247,7 @@ describe("PrometheusRemoteWriteExporterForm: the changes", () => {
     expect(screen.queryByText("Enable client CA file reload")).toBeNull();
   });
 
-  it("unticking the TLS section keeps insecure; the box then shows unticked (the controller's ruling)", async () => {
+  it("unticking the TLS section keeps insecure; the box then shows unticked", async () => {
     const before = CORPUS.replace("      insecure: false\n", '      insecure: true # plaintext\n      min_version: "1.2"\n      ca_file: /ca.pem\n');
     const user = renderForm(MIMIR, before);
     await openSection(user, "TLS");
@@ -1263,7 +1262,7 @@ describe("PrometheusRemoteWriteExporterForm: the changes", () => {
     expect(valueOf(MIMIR).tls).toEqual({ insecure: true, min_version: "1.2", max_version: "1.3" });
   });
 
-  it("the insecure box has D9b's HTTP copy and is always shown", async () => {
+  it("the insecure box has the HTTP copy and is always shown", async () => {
     const user = renderForm(PRW);
     await openSection(user, "TLS");
     expect(screen.getByText(INSECURE_COPY.http.label)).toBeInTheDocument();
@@ -1360,7 +1359,7 @@ describe("PrometheusRemoteWriteExporterForm: the changes", () => {
   });
 });
 
-// ── Sortable cards by keyboard (D9b Preflight ruling 15) ──
+// ── Sortable cards by keyboard ──
 
 const ROW_HEIGHT = 40;
 
@@ -1405,7 +1404,7 @@ async function dragByKeyboard(handle: HTMLElement, steps: number) {
 
 // ── Privacy ──
 
-describe("privacy (decision 13)", () => {
+describe("privacy", () => {
   it("puts no job name or config value in any attribute; a job's TLS ids are by its index", async () => {
     const MARK = "zq-mark";
     const marked = [

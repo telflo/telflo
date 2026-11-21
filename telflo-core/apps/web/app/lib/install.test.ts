@@ -19,7 +19,7 @@ import {
   type ContainerCommandParts,
 } from "./install.js";
 
-// The install commands (D17c-1 decisions 40 to 42; Preflight ruling 29).
+// The install commands.
 //
 // `argvOf` runs a command in a real bash with `docker`, `sudo` and `cd`
 // replaced by functions that print their arguments, each ended by U+001E
@@ -55,8 +55,8 @@ const MOUNTS: DockerMount[] = [
   { hostPath: "/data", containerPath: "/var/lib/otelcol", readOnly: false },
 ];
 
-describe("containerCommand (decision 40)", () => {
-  it("is the spec's command, one flag a line, every value quoted once, no bash -c", () => {
+describe("containerCommand", () => {
+  it("is the exact command, one flag a line, every value quoted once, no bash -c", () => {
     const command = containerCommand({
       facts: { ...FACTS, mounts: [MOUNTS[0]!] },
       bearer: BEARER,
@@ -80,7 +80,7 @@ describe("containerCommand (decision 40)", () => {
     expect(command).not.toContain("bash");
   });
 
-  // Every combination of the optional parts: each line present exactly when its part is, in the spec's order.
+  // Every combination of the optional parts: each line present exactly when its part is, in a fixed order.
   const COMBINATIONS = [false, true].flatMap((mounts) =>
     [false, true].flatMap((name) =>
       [false, true].flatMap((variables) => [false, true].map((insecure) => ({ mounts, name, variables, insecure }))),
@@ -160,7 +160,7 @@ describe("containerCommand (decision 40)", () => {
   });
 });
 
-describe("containerCommand's backstops (the Task 5 review)", () => {
+describe("containerCommand's backstops", () => {
   it.each(["OPAMP_ENDPOINT", "OPAMP_TOKEN", "OPAMP_SERVER_NAME", "OPAMP_ALLOW_INSECURE_CONNECTIONS", "COLLECTOR_GROUP_ID"])(
     "refuses %s, a name the install sets itself (docker keeps the last -e: it would replace the install's own)",
     (name) => {
@@ -198,7 +198,7 @@ describe("containerCommand's backstops (the Task 5 review)", () => {
   });
 });
 
-describe("containerPreview: the masked preview never holds the bearer (decisions 40 and 48)", () => {
+describe("containerPreview: the masked preview never holds the bearer", () => {
   const parts = {
     facts: { ...FACTS, mounts: MOUNTS },
     displayName: "edge one",
@@ -221,8 +221,8 @@ describe("containerPreview: the masked preview never holds the bearer (decisions
   });
 });
 
-describe("linuxRunCommands (decisions 41 and 42)", () => {
-  it("is the spec's four lines, the bearer in the first only", () => {
+describe("linuxRunCommands", () => {
+  it("is four exact lines, the bearer in the first only", () => {
     const lines = linuxRunCommands({ method: "all-in-one", arch: "amd64", rootPath: "/etc/otelcol", bearer: BEARER, displayName: "edge one" });
     expect(lines).toBe(
       [
@@ -258,7 +258,7 @@ describe("linuxRunCommands (decisions 41 and 42)", () => {
   });
 });
 
-describe("the fields' rules (decisions 39 to 41)", () => {
+describe("the fields' rules", () => {
   it.each([
     ["", null],
     ["   ", null],
@@ -274,7 +274,7 @@ describe("the fields' rules (decisions 39 to 41)", () => {
     ["a\tb", DISPLAY_NAME_RULE],
   ])("display name %j: %s", (raw, problem) => expect(displayNameProblem(raw)).toBe(problem));
 
-  it("says the display name's rule in the spec's words", () => {
+  it("says the display name's rule in its exact words", () => {
     expect(DISPLAY_NAME_RULE).toBe("Use letters, digits, spaces, dots, dashes and underscores.");
   });
 
@@ -314,7 +314,7 @@ describe("the fields' rules (decisions 39 to 41)", () => {
   });
 });
 
-describe("the Quick Deploy command (D17c-2 decision 29, Preflight ruling 14)", () => {
+describe("the Quick Deploy command", () => {
   it("is the contracts' builder, its preview and its unit, the very ones the stack's smoke prints; the shared pieces the contracts' too", () => {
     // Its lines, through real bash, sh, dash and zsh: packages/contracts/src/quick-deploy-command.test.ts.
     expect(quickDeployCommands).toBe(contracts.quickDeployCommands);

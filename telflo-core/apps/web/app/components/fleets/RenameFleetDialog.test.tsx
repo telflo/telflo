@@ -13,7 +13,7 @@ import { GROUP_ID, PERSONAL_ID } from "~/test/configurations.js";
 import { FLEET_ID, fleet } from "~/test/fleets.js";
 
 /*
- * "Rename fleet" (D17a decisions 25 and 28, Preflight rulings 14 and 15).
+ * "Rename fleet".
  */
 
 const refusal = (code: string, message: string, status: number, options: { details?: unknown } = {}) =>
@@ -167,8 +167,8 @@ describe("RenameFleetDialog", () => {
     expect(updates.requests).toEqual([{ label: "edge-dev" }, { label: "edge-prod" }]);
   });
 
-  // The final review's Minor: the create, archive and delete reload after an
-  // unknown outcome, so a rename's does too, whichever way it closes.
+  // The create, archive and delete reload after an unknown outcome, so a
+  // rename's does too, whichever way it closes.
   it.each([
     ["Cancel", async (user: ReturnType<typeof userEvent.setup>) => user.click(screen.getByRole("button", { name: "Cancel" }))],
     ["Escape", async (user: ReturnType<typeof userEvent.setup>) => user.keyboard("{Escape}")],

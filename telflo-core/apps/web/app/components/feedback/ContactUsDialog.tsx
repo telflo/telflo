@@ -8,21 +8,20 @@ import { createFeedback, isSessionEnded } from "~/lib/api-client.js";
 import { useOpeningKey } from "~/lib/hooks/use-opening-key.js";
 
 /*
- * "Contact us" (D29 decisions 6, 32 and 40; Preflight rulings 16 and 21),
- * the dialog from the Sidebar: "Contact Us", its sentence (the
+ * "Contact us", the dialog from the Sidebar: "Contact Us", its sentence (the
  * curly ‘hello’), a textarea with the placeholder "Type your message
  * here...", Cancel, and Send (disabled while the text is blank, "Sending..."
  * while it sends); the toasts "Thanks for your feedback!" and "Failed to
  * submit feedback". `POST /api/v1/feedback` in the organization the person
  * acts in; every product admin is emailed about it (never its text).
  *
- * The message is the person's own words, personal data (decision 41): the
- * textarea is uncontrolled, inside `ph-no-capture` (no `value` attribute or
- * React state ever holds it; only whether it is blank), at most 5,000
- * characters as the API's cap. The toasts are fixed words. Each opening is
- * a new session (an empty box); the dialog can't close while it sends. A
- * failure keeps it open with the text, to send again; an ended session
- * says nothing (the session-ended handler has the page).
+ * The message is the person's own words, personal data: the textarea is
+ * uncontrolled, inside `ph-no-capture` (no `value` attribute or React state
+ * ever holds it; only whether it is blank), at most 5,000 characters as the
+ * API's cap. The toasts are fixed words. Each opening is a new session (an
+ * empty box); the dialog can't close while it sends. A failure keeps it
+ * open with the text, to send again; an ended session says nothing (the
+ * session-ended handler has the page).
  */
 
 export const CONTACT_US_SENT_MESSAGE = "Thanks for your feedback!";
@@ -31,7 +30,7 @@ export const CONTACT_US_FAILED_MESSAGE = "Failed to submit feedback";
 export interface ContactUsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** The button that opens it (the rail's "Contact us"): the focus goes back to it as the dialog closes, however it closes (Ruling 271). */
+  /** The button that opens it (the rail's "Contact us"): the focus goes back to it as the dialog closes, however it closes. */
   returnFocusTo?: RefObject<HTMLElement | null>;
 }
 

@@ -1,9 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { testRegexInvalid, testRegexNameTaken, testRegexNotFound } from "./errors.js";
 
-// The regex library's refusals (D15b detail 17; Preflight ruling 4): the
-// evaluator's words as they are, cut as a rule's, its problems placed under
-// the entry's `regex`.
+// The regex library's refusals: the evaluator's words as they are, cut as a
+// rule's, its problems placed under the entry's `regex`.
 
 const parts = (error: ReturnType<typeof testRegexInvalid>) => ({
   code: error.code,
@@ -48,7 +47,7 @@ describe("testRegexInvalid", () => {
 });
 
 describe("the other refusals", () => {
-  it("are 404 test_regex_not_found and 409 test_regex_name_taken, in decision 8's words, naming no entry", () => {
+  it("are 404 test_regex_not_found and 409 test_regex_name_taken, in fixed words, naming no entry", () => {
     expect(parts(testRegexNotFound())).toEqual({
       code: "test_regex_not_found",
       statusCode: 404,

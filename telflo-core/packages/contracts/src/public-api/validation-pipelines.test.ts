@@ -5,7 +5,7 @@ import {
   PublicValidationPipelineSchema,
 } from "./validation-pipelines.js";
 
-/* The public validation pipelines' shapes (D25 routes 13-14, decision 32, Preflight ruling 8). */
+/* The public validation pipelines' shapes (routes 13-14). */
 
 const TEXT_RULE = { kind: "contains_text", target: "output", pattern: "x" };
 

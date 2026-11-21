@@ -3,13 +3,12 @@ import { AvatarImage } from "~/components/ui/avatar.js";
 import { organizationLogoPath } from "~/lib/api-client.js";
 
 /*
- * An organization's logo (D23-2 decisions 17, 51 and 57): EITHER the image
- * OR the fallback (the initials), never both. The image is AvatarImage's
- * `<img alt="">` with `ph-no-capture` on the element itself (AvatarImage's
- * own classes), so replay records nothing of it, and no attribute names the
- * organization. If the image fails to load,
- * the fallback shows instead; a new source (a new logo id, a new pick) shows
- * the image again.
+ * An organization's logo: EITHER the image OR the fallback (the initials),
+ * never both. The image is AvatarImage's `<img alt="">` with `ph-no-capture`
+ * on the element itself (AvatarImage's own classes), so replay records
+ * nothing of it, and no attribute names the organization. If the image fails
+ * to load, the fallback shows instead; a new source (a new logo id, a new
+ * pick) shows the image again.
  */
 
 /** Up to `count` initials of a name, upper case: the first letter of each word. */

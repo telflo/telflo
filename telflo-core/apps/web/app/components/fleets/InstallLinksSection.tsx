@@ -8,11 +8,10 @@ import { KUBERNETES_ROLE_LABELS } from "~/lib/kubernetes-groups.js";
 import { INSTALL_LINKS_FAILED_MESSAGE, installLinkExtendable, installLinkStatus, type InstallLinksRead } from "~/lib/tokens.js";
 
 /*
- * Install Links (D17c-2 decisions 4, 14, 31 and 32; Preflight rulings 21–24):
- * the fleet's quick-deploy links on the Tokens tab between the tokens and the
- * History, newest first, 50 a page with "Load more" (`useTokensTab`'s
- * `links`, polled with the tab). Every member sees them. Per the D17c-2
- * Parity Notes:
+ * Install Links: the fleet's quick-deploy links on the Tokens tab between the
+ * tokens and the History, newest first, 50 a page with "Load more"
+ * (`useTokensTab`'s `links`, polled with the tab). Every member sees them.
+ * Its details:
  *
  * - "Install links" and its words; no own refresh (the tab's "Refresh
  *   tokens" reads them too); a later failed read toasts "Failed to load
@@ -27,31 +26,30 @@ import { INSTALL_LINKS_FAILED_MESSAGE, installLinkExtendable, installLinkStatus,
  * - Status (`installLinkStatus`): Revoked, Expired, "Token revoked" (the
  *   default token the link's command carries is no longer valid among the
  *   tab's tokens: the download refuses it), "Group deleted" (its group is
- *   gone: the download refuses it for good; Ruling 47) and Active, in that
+ *   gone: the download refuses it for good) and Active, in that
  *   precedence. An archived fleet's live links read Active (unarchiving
  *   restores them).
  * - Actions: View (always; a deleted group's link shows "A deleted group"),
  *   Extend (`installLinkExtendable`: not on a revoked link, nor on any link
  *   whose default token isn't valid or whose group is deleted, an expired
- *   one included: extending it can't make it work; Rulings 39 and 47) and
- *   Revoke (not on a revoked link), each
- *   named through `aria-labelledby` pointing at hidden text by the link's
- *   creation only, to the second so two links made in one minute read
- *   apart ("Extend the install link created Oct 9, 2026, 7:58:30 AM";
- *   Ruling 39), never a group's name, a path or an email.
+ *   one included: extending it can't make it work) and Revoke (not on a
+ *   revoked link), each named through `aria-labelledby` pointing at hidden
+ *   text by the link's creation only, to the second so two links made in
+ *   one minute read apart ("Extend the install link created Oct 9, 2026,
+ *   7:58:30 AM"), never a group's name, a path or an email.
  * - States: "Loading install links…"; a failed first read "Failed to load
  *   install links" with "Try again" (the tab's reload); the empty state.
  *
- * A Kubernetes-supervisor fleet's (D17d-2 decision 22; Preflight ruling 30):
- * the same section, its Helm values links' Install "Helm values", their Group
- * by the link's role (Agent, Cluster, or the gateway's name: the Agent's
- * group is the fleet's Default group, which only its role names), its help
- * and empty hint in its words (a downloaded values.yaml keeps the fleet's
- * default token: only a new default token takes it back).
+ * A Kubernetes-supervisor fleet's: the same section, its Helm values links'
+ * Install "Helm values", their Group by the link's role (Agent, Cluster, or
+ * the gateway's name: the Agent's group is the fleet's Default group, which
+ * only its role names), its help and empty hint in its words (a downloaded
+ * values.yaml keeps the fleet's default token: only a new default token takes
+ * it back).
  *
- * Privacy (decision 32): no link here holds a secret, a hash or a value; the
- * group's name and the email are text in the masked shell only, never in an
- * attribute; the paths and the variables' names show only in View, inside
+ * Privacy: no link here holds a secret, a hash or a value; the group's name
+ * and the email are text in the masked shell only, never in an attribute;
+ * the paths and the variables' names show only in View, inside
  * `ph-no-capture`.
  */
 
@@ -60,7 +58,7 @@ export const INSTALL_LINKS_HELP =
   "Quick Deploy links made when installing collectors. Revoke a link to stop further downloads; collectors already installed are unaffected.";
 export const INSTALL_LINKS_EMPTY = "No install links for this fleet yet.";
 export const INSTALL_LINKS_EMPTY_HINT = "Links appear here when you make a Quick Deploy command in the install dialog.";
-/** A Kubernetes-supervisor fleet's words (D17d-2 Preflight ruling 30). */
+/** A Kubernetes-supervisor fleet's words. */
 export const KUBERNETES_INSTALL_LINKS_HELP =
   "Helm values links made when installing groups. Revoke a link to stop further downloads; a values.yaml already downloaded keeps the fleet's default token: issue a new default token to take it back.";
 export const KUBERNETES_INSTALL_LINKS_EMPTY_HINT = "Links appear here when you make a Quick Deploy command in the Helm install dialog.";
@@ -72,7 +70,7 @@ export type InstallLinkAction = "viewLink" | "extendLink" | "revokeLink";
 
 /**
  * A link's install in words: "All In One (amd64)", "Own otelcol-contrib (arm64)", with " · systemd" when it installs the
- * service; "Helm values" for a Helm values link (D17d-2 decision 22).
+ * service; "Helm values" for a Helm values link.
  */
 export function installWords(choices: QuickDeployLinkChoices): string {
   if (choices.kind === "helm") return "Helm values";
@@ -87,7 +85,7 @@ export function installLinkName(link: Pick<QuickDeployLink, "createdAt">): strin
 
 /**
  * A link's group as the rows and View show it: its name, or DELETED_GROUP; a Helm values link's Agent and Cluster by
- * their role (D17d-2 Preflight ruling 30), a gateway by its name.
+ * their role, a gateway by its name.
  */
 export function groupWords(link: Pick<QuickDeployLink, "groupName" | "choices">): string {
   if (link.groupName === null) return DELETED_GROUP;

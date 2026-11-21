@@ -33,13 +33,11 @@ import { quickDeploySecretHash } from "../../quick-deploy/secret.js";
 import { apiTokenHash } from "../../service-accounts/tokens.js";
 
 /*
- * The public surface's fleets, collector groups and install (D25 decision
- * 17's routes 17–23; decisions 15, 19, 35–38 and 53; Preflight rulings 10
- * and 11; Rulings 160 and 161), through the real server as the API's own
- * role, with the OpenAPI-checked fake as the opamp-server. Each route:
- * success through a real service account's token, a read token on a write
- * route 403, another organization's ids 404, and every reply checked
- * against the OpenAPI document.
+ * The public surface's fleets, collector groups and install, through the
+ * real server as the API's own role, with the OpenAPI-checked fake as the
+ * opamp-server. Each route: success through a real service account's token,
+ * a read token on a write route 403, another organization's ids 404, and
+ * every reply checked against the OpenAPI document.
  *
  * SECRETS: a `tf_` token, a fleet's bearers, a quick-deploy link's and a
  * Helm values link's secret are checked with boolean canaries only
@@ -63,7 +61,7 @@ const ROUTE = {
 
 type Route = (typeof ROUTE)[keyof typeof ROUTE];
 
-/** The collector version the catalogue offers with binaries for every Linux platform (the quick-deploy suites'). */
+/** The collector version the catalog offers with binaries for every Linux platform (the quick-deploy suites'). */
 const COLLECTOR_VERSION = "0.162.0";
 
 /** Two variables read, NGINX_ENV and BACKEND_API_KEY. */
@@ -117,7 +115,7 @@ interface InstallBody {
   expiresAt: string | null;
 }
 
-describe("the public fleets, groups and install routes (D25 routes 17-23)", () => {
+describe("the public fleets, groups and install routes", () => {
   let settings: AppSettings;
   let db: Kysely<Database>;
   let ownerDb: Kysely<Database>;
@@ -243,7 +241,7 @@ describe("the public fleets, groups and install routes (D25 routes 17-23)", () =
     expect({ status: response.statusCode, code: response.json<{ error?: { code: string } }>().error?.code }).toEqual({ status: statusCode, code });
   };
 
-  /** A refusal's details: on the public surface `[{ path, code }]` or `[{ path, message }]` only (Rulings 175 and 187). */
+  /** A refusal's details: on the public surface `[{ path, code }]` or `[{ path, message }]` only. */
   const detailsOf = (response: LightMyRequestResponse): unknown => response.json<{ error?: { details?: unknown } }>().error?.details;
 
   let labels = 0;
@@ -350,7 +348,7 @@ describe("the public fleets, groups and install routes (D25 routes 17-23)", () =
 
   // ---------------------------------------------------------------------------
 
-  describe("POST /fleets (route 17)", () => {
+  describe("POST /fleets", () => {
     it("creates the fleet with the rotate token's expiry, answering its id and NO bearer, no-store; a read token is 403 and makes nothing", async () => {
       const org = await organization();
       const before = Date.now();
@@ -390,7 +388,7 @@ describe("the public fleets, groups and install routes (D25 routes 17-23)", () =
       expectRefusal(await call("POST", ROUTE.fleets, org.write, { payload: { label: "edge 2", type: "server", expiresIn: "3y" } }), 400, "invalid_request");
       expectRefusal(await call("POST", ROUTE.fleets, org.write, { payload: { label: "edge 2", type: "server", id: randomUUID() } }), 400, "invalid_request");
     });
-    it("spends the bearer budget, as the browser's create (Preflight ruling 11): with one reply a minute, the second create is 429 and makes nothing", async () => {
+    it("spends the bearer budget, as the browser's create: with one reply a minute, the second create is 429 and makes nothing", async () => {
       const limited = build({ ...TEST_RATE_LIMITS, fleetBearerRepliesPerUser: { max: 1, windowMs: 60_000 } });
       await limited.ready();
       try {
@@ -407,7 +405,7 @@ describe("the public fleets, groups and install routes (D25 routes 17-23)", () =
     });
   });
 
-  describe("GET /fleets (route 18)", () => {
+  describe("GET /fleets", () => {
     it("pages the organization's fleets, newest first, with the summary's fields; not another organization's; a cursor that isn't one is 400", async () => {
       const org = await organization();
       const other = await organization();
@@ -427,7 +425,7 @@ describe("the public fleets, groups and install routes (D25 routes 17-23)", () =
       expect([...firstPage.items, ...secondPage.items].map((fleet) => fleet.id).sort()).toEqual([...made].sort());
       const badCursor = await call("GET", ROUTE.fleets, org.read, { query: "?cursor=nonsense" });
       expectRefusal(badCursor, 400, "invalid_request");
-      // The service's own refusal in fixed words (Ruling 187), not the browser's Zod-like entry.
+      // The service's own refusal in fixed words, not the browser's Zod-like entry.
       expect(detailsOf(badCursor)).toEqual([{ path: ["cursor"], message: "Not a cursor of this list's: reload the list." }]);
       const overLimit = await call("GET", ROUTE.fleets, org.read, { query: "?limit=101" });
       expectRefusal(overLimit, 400, "invalid_request");
@@ -438,7 +436,7 @@ describe("the public fleets, groups and install routes (D25 routes 17-23)", () =
 
   // ---------------------------------------------------------------------------
 
-  describe("the groups (routes 20-23)", () => {
+  describe("the groups", () => {
     it("lists a server fleet's groups with their assignment by configuration and number; reads one; another organization's fleet or group, and a malformed id, are 404", async () => {
       const { org, fleet, configuration, defaultGroupId } = await serverWorld();
       const other = await organization();
@@ -519,7 +517,7 @@ describe("the public fleets, groups and install routes (D25 routes 17-23)", () =
           payload: { name: "k8s", configurationId: configuration.id, versionNumber: 1, ...extra },
         });
         expectRefusal(refused, 400, "invalid_request");
-        // The route's own refusal: `{ path, message }` (Ruling 187).
+        // The route's own refusal: `{ path, message }`.
         expect(detailsOf(refused)).toEqual([{ path: Object.keys(extra), message: "Only a kubernetes-supervisor fleet's groups take it." }]);
       }
       expectRefusal(
@@ -627,7 +625,7 @@ describe("the public fleets, groups and install routes (D25 routes 17-23)", () =
 
   // ---------------------------------------------------------------------------
 
-  describe("POST /fleets/{fleetId}/install (route 19)", () => {
+  describe("POST /fleets/{fleetId}/install", () => {
     it("docker: the container command the dialog builds, with the default token's bearer, no-store; audited as a reveal with via and platform; no bearer in a log line or an audit row", async () => {
       const { org, fleet, defaultGroupId } = await serverWorld();
       const mark = bearers.length;
@@ -749,7 +747,7 @@ describe("the public fleets, groups and install routes (D25 routes 17-23)", () =
         groupName: "Default",
       });
       expect(typeof body.expiresAt).toBe("string");
-      // No reveal (Ruling 161): no call, no bearer answered, and the opamp-server recorded no `viewed` event.
+      // No reveal: no call, no bearer answered, and the opamp-server recorded no `viewed` event.
       expect(operations.includes("revealEnrollmentToken")).toBe(false);
       expect(bearers.length).toBe(mark);
       const viewedAfter = await opamp.client.listEnrollmentTokenEvents(org.id, fleet.id, { limit: 100 });
@@ -782,7 +780,7 @@ describe("the public fleets, groups and install routes (D25 routes 17-23)", () =
       expect(loggedAny([secret, VALUE, org.write.slice(3)])).toBe(false);
     });
 
-    it("trims each variable's value as the dialog does (Ruling 174): the command and the link's sealed values hold the trimmed one; a blank value is 400", async () => {
+    it("trims each variable's value as the dialog does: the command and the link's sealed values hold the trimmed one; a blank value is 400", async () => {
       const { org, fleet, defaultGroupId } = await serverWorld();
       const mark = bearers.length;
       const docker = await call("POST", ROUTE.install, org.write, {
@@ -937,7 +935,7 @@ describe("the public fleets, groups and install routes (D25 routes 17-23)", () =
         payload: { platform: "docker", env: [{ name: "NGINX_ENV", value: "x" }, { name: "UNREAD", value: "x" }] },
       });
       expectRefusal(notOffered, 400, "invalid_request");
-      // The service's refusal at the variable's index, never its name (Ruling 187: `{ path, message }`).
+      // The service's refusal at the variable's index, never its name (`{ path, message }`).
       expect(detailsOf(notOffered)).toEqual([{ path: ["env", 1, "name"], message: "Not a variable this group's published version reads." }]);
       expectRefusal(await call("POST", ROUTE.install, org.write, { fleetId: fleet.id, payload: { platform: "linux" } }), 400, "invalid_request");
       expectRefusal(await call("POST", ROUTE.install, org.write, { fleetId: fleet.id, payload: { platform: "docker", arch: "amd64" } }), 400, "invalid_request");

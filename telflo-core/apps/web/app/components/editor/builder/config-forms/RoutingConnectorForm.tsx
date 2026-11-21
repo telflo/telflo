@@ -16,10 +16,9 @@ import type { ValueChange } from "~/lib/graph/text-edits.js";
 import type { ValueView } from "~/lib/graph/value-view.js";
 
 /*
- * The routing connector's form (ADR 0018), over the form's fields
- * (D9d decision 2, D9b's contract). The routes are a sortable list
- * of cards; each card's fields write their own key under `table.<index>`
- * (`ItemScope`), so keys the form doesn't show stay.
+ * The routing connector's form, over the form's fields. The routes are a
+ * sortable list of cards; each card's fields write their own key under
+ * `table.<index>` (`ItemScope`), so keys the form doesn't show stay.
  *
  * - Dragging a route moves its own lines (`form.move`). A card's expanded
  *   state follows the card (`useCardKeys`), not the
@@ -31,35 +30,33 @@ import type { ValueView } from "~/lib/graph/value-view.js";
  *   the route's entry and, in the store, the connector into that
  *   pipeline's receivers, one change with its toast; removing one takes
  *   the connector out of receivers once nothing here names the pipeline,
- *   unless it is the pipeline's only receiver (decision 8,
- *   `connector/routingconnector/router.go` `errPipelineNotFound`). A
+ *   unless it is the pipeline's only receiver
+ *   (`connector/routingconnector/router.go` `errPipelineNotFound`). A
  *   route's last target pipeline can't be removed (its Remove disabled,
  *   with a hint to remove the route): the form never writes
- *   `pipelines: []`, which `config.go:83-91` refuses (final ruling F2);
- *   Default Pipelines' last one takes the key with it.
- * - Fixed (decision 3): Add Route holds a card that isn't in the text
- *   (never `{context: resource, condition: "", pipelines: []}`,
- *   which `config.go:83-91` refuses). Its first expression typed or
- *   pipeline chosen writes the route, `{context: resource, <kind>: typed}`
- *   or `{context: resource, pipelines: [p]}` (Preflight ruling 10; the
- *   route is refused until its expression is typed, D13), keeping
- *   `context: resource`; a context or action chosen before
- *   then is held with it. "No routes configured" hides while a card is
- *   held (final ruling F3).
- * - Changed (decision 4): Context unset is blank, with the hint "Default:
- *   inferred from the expression's paths, else resource" (`router.go:247-
- *   259`); `otelcol` is offered
- *   (`config.go:102`), and Request says it is deprecated (`router.go:234-
- *   237`). Action and Error Mode show their defaults as placeholders: move,
- *   and ignore (the beta gate `connector.routing.defaultErrorModeIgnore`,
- *   `factory.go:19-24`).
- * - Changed (decision 7): Context switched to Request renames a statement
- *   to a condition in place, in the same change, with a toast (the request
- *   context takes conditions only, `config.go:106-112`); with both keys the
- *   statement is removed (Preflight ruling 11).
- * - Changed: Match Using renames the expression's key in place; with
- *   neither key, the chosen kind is held until an expression is typed
- *   (never `statement: ""`). A cleared expression removes its key.
+ *   `pipelines: []`, which `config.go:83-91` refuses; Default Pipelines'
+ *   last one takes the key with it.
+ * - Add Route holds a card that isn't in the text (never
+ *   `{context: resource, condition: "", pipelines: []}`, which
+ *   `config.go:83-91` refuses). Its first expression typed or pipeline
+ *   chosen writes the route, `{context: resource, <kind>: typed}` or
+ *   `{context: resource, pipelines: [p]}` (until its expression is typed,
+ *   the config validation reports the route), keeping `context: resource`; a
+ *   context or action chosen before then is held with it. "No routes
+ *   configured" hides while a card is held.
+ * - Context unset is blank, with the hint "Default: inferred from the
+ *   expression's paths, else resource" (`router.go:247- 259`); `otelcol` is
+ *   offered (`config.go:102`), and Request says it is deprecated
+ *   (`router.go:234- 237`). Action and Error Mode show their defaults as
+ *   placeholders: move, and ignore (the beta gate
+ *   `connector.routing.defaultErrorModeIgnore`, `factory.go:19-24`).
+ * - Context switched to Request renames a statement to a condition
+ *   in place, in the same change, with a toast (the request context takes
+ *   conditions only, `config.go:106-112`); with both keys the statement is
+ *   removed.
+ * - Match Using renames the expression's key in place; with neither key, the
+ *   chosen kind is held until an expression is typed (never `statement: ""`).
+ *   A cleared expression removes its key.
  */
 
 const CONTEXTS = [
@@ -96,13 +93,13 @@ const ERROR_MODES = [
 export const CONTEXT_DESCRIPTION =
   "Where the expression is evaluated. Use the coarsest context that works. · Default: inferred from the expression's paths, else resource";
 
-/** Decision 7's toast for Context switched to Request. */
+/** The toast for Context switched to Request. */
 export const STATEMENT_TO_CONDITION = "Changed the statement to a condition: the request context takes conditions only.";
 
 const TARGETS_HELP =
   "Pipelines that receive matching telemetry — the connector is wired into their receivers automatically. Multiple pipelines fan the data out to all of them.";
 
-/** Under a route's last target pipeline, whose Remove is disabled (final ruling F2; `config.go:83-91` refuses `pipelines: []`). */
+/** Under a route's last target pipeline, whose Remove is disabled (`config.go:83-91` refuses `pipelines: []`). */
 export const ROUTE_KEEPS_LAST_PIPELINE = "A route needs at least one pipeline. Remove the route instead.";
 
 type Kind = "condition" | "statement";
@@ -119,7 +116,7 @@ function kindIn(form: FormSource): Kind | null {
   return null;
 }
 
-/** The held card's item (a route): written once it has an expression or a pipeline (Preflight ruling 10). */
+/** The held card's item (a route): written once it has an expression or a pipeline. */
 function routeReady(item: unknown): boolean {
   if (item === null || typeof item !== "object" || Array.isArray(item)) return false;
   const route = item as Record<string, unknown>;
@@ -299,7 +296,7 @@ function RouteCard({
       form.set(["context"], next);
       return;
     }
-    // config.go:106-112: the request context refuses a statement (Preflight ruling 11).
+    // config.go:106-112: the request context refuses a statement.
     const hasStatement = form.read(["statement"]).kind !== "absent";
     const hasCondition = form.read(["condition"]).kind !== "absent";
     if (!hasStatement) {

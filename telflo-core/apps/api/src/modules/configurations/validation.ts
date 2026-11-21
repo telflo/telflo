@@ -31,77 +31,72 @@ import {
 import type { WithConfigurationTransaction } from "./service.js";
 
 /*
- * A version's validation (D13b decision 12, Preflight rulings 17 and 18,
- * Rulings 32 and 37): the text the editor holds, checked by the collector
+ * A version's validation: the text the editor holds, checked by the collector
  * validator with the configuration's distribution and the version's pin, or
  * the tab's unsaved pick of another version of it.
  *
  * 1. The read, in one transaction as getVersion's, no lock: the
- *    configuration and the version are ones the caller can see (D11b's
- *    draft rules: another member's draft is 404), and where the collector
- *    version stands in the catalogue. It commits before anything else.
+ *    configuration and the version are ones the caller can see (the draft
+ *    rules: another member's draft is 404), and where the collector
+ *    version stands in the catalog. It commits before anything else.
  * 2. A version the distribution doesn't have is 400
  *    `collector_version_unknown`.
- * 3. The person's limits (Ruling 37): 60 checks a minute, a retired answer
- *    counted too, and two waiting on the validator at once; 429
- *    `validation_rate_limited` with Retry-After.
+ * 3. The person's limits: 60 checks a minute, a retired answer counted too,
+ *    and two waiting on the validator at once; 429 `validation_rate_limited`
+ *    with Retry-After.
  * 4. A deprecated version answers `retired`, the validator never asked
- *    (decision 4: it holds only the offered ones).
+ *    (it holds only the offered ones).
  * 5. When the text references organization variables (a live
- *    `${org:NAME}`), their values are read from the opamp-server (D20
- *    decision 27; platform choice P2), outside any transaction, inside the
- *    person's in-flight slot; a read that fails is 503
- *    `variables_unavailable`, the validator never asked. A text with none
- *    reads nothing.
+ *    `${org:NAME}`), their values are read from the opamp-server, outside
+ *    any transaction, inside the person's in-flight slot; a read that
+ *    fails is 503 `variables_unavailable`, the validator never asked. A
+ *    text with none reads nothing.
  * 6. Then the validator is asked, outside any transaction, holding no
  *    connection, with the referenced names' values only: it fills them in
- *    before every check (decision 13's invariant). Any failure of it is 503
+ *    before every check. Any failure of it is 503
  *    `validation_unavailable`.
  *
  * Nothing is stored and nothing is audited. The text, the organization's
  * values and names, the validator's answer and its secret never reach a log
- * line or an error's message (ADR 0024, Q88): the log names ids, the
- * distribution, the version and the result's kind (with an unavailable's
- * reason and status) only.
+ * line or an error's message: the log names ids, the distribution, the
+ * version and the result's kind (with an unavailable's reason and status)
+ * only.
  *
- * D25's `validateText` (decision 34, Preflight ruling 9) checks a text that
- * belongs to no configuration, for the public API's `POST /validate`: the
- * distribution and version named, else the catalogue's defaults (the
- * default distribution, and the distribution's default version). A
- * distribution the catalogue doesn't have is 400
+ * `validateText` checks a text that belongs to no configuration, for the
+ * public API's `POST /validate`: the distribution and version named, else the
+ * catalog's defaults (the default distribution, and the distribution's
+ * default version). A distribution the catalog doesn't have is 400
  * `collector_distribution_unknown` (as is one with no default version when
- * the version is left out: Ruling 168 asks a default only then), a version
- * it doesn't have 400
- * `collector_version_unknown`, a retired one 400 `collector_version_retired`,
- * each before any limit; then steps 3, 5 and 6 as above, the person's
- * organization variables included.
+ * the version is left out: a default is asked only then), a version it
+ * doesn't have 400 `collector_version_unknown`, a retired one 400
+ * `collector_version_retired`, each before any limit; then steps 3, 5 and 6
+ * as above, the person's organization variables included.
  *
- * D27's `validateAnonymousText` (decision 23, Preflight ruling 9) checks a
- * text for the public API's open `POST /validate/anonymous`: no actor, no
- * organization. It resolves the distribution and version as
- * `validateText` does, with its three 400s, on the plain database (the
- * catalogue is a global table), and never reads an organization's
- * variables: the validator is sent the text alone, so a `${org:NAME}` stays
- * as written (no opamp-server read; its only 503 is
+ * `validateAnonymousText` checks a text for the public API's open
+ * `POST /validate/anonymous`: no actor, no organization. It resolves the
+ * distribution and version as `validateText` does, with its three 400s, on
+ * the plain database (the catalog is a global table), and never reads an
+ * organization's variables: the validator is sent the text alone, so a
+ * `${org:NAME}` stays as written (no opamp-server read; its only 503 is
  * `validation_unavailable`). Its limits are the route's, taken before it is
- * called (the anonymous validations', http/rate-limits.ts). It logs
- * nothing of its own but the validator's unavailability (the distribution,
- * the version and the reason); the text and the validator's errors are
- * only ever in its answer.
+ * called (the anonymous validations', http/rate-limits.ts). It logs nothing
+ * of its own but the validator's unavailability (the distribution, the
+ * version and the reason); the text and the validator's errors are only
+ * ever in its answer.
  */
 
 export interface ValidationDependencies {
   withTransaction: WithConfigurationTransaction;
   validator: OtelcolValidatorClient;
-  /** The organization's variables, which the opamp-server holds (D20 decision 1): test runs' read, shared. */
+  /** The organization's variables, which the opamp-server holds: test runs' read, shared. */
   variables: IOrganizationVariables;
   limiter: ValidationLimiter;
   log: Pick<FastifyBaseLogger, "info" | "warn" | "error">;
   /**
-   * The catalogue (a global table), on the plain database: `validateText`
-   * checks a named distribution's existence there, whatever its versions
-   * (Ruling 168); `validateAnonymousText` reads all it needs there (D27
-   * Preflight ruling 9), outside any organization's transaction.
+   * The catalog (a global table), on the plain database: `validateText`
+   * checks a named distribution's existence there, whatever its versions;
+   * `validateAnonymousText` reads all it needs there, outside any
+   * organization's transaction.
    */
   catalogue: Pick<ICollectorCatalogueRepository, "listOffered" | "findDefaults" | "findDistributionDefault" | "findVersionState">;
 }
@@ -114,11 +109,11 @@ export interface ValidationInput {
   collectorVersion?: string | undefined;
 }
 
-/** What a text's validation asks for (D25 decision 34): the text, and the collector to check it with. */
+/** What a text's validation asks for: the text, and the collector to check it with. */
 export interface TextValidationInput {
   /** The text. Never logged. */
   yaml: string;
-  /** Left out, the catalogue's default distribution. */
+  /** Left out, the catalog's default distribution. */
   distribution?: string | undefined;
   /** Left out, the distribution's default version. */
   collectorVersion?: string | undefined;
@@ -159,32 +154,30 @@ export interface IValidationService {
     input: ValidationInput,
   ): Promise<ConfigurationValidation>;
   /**
-   * Checks a text that belongs to no configuration (D25 decision 34) with
-   * the distribution and version named, or the catalogue's defaults. 400
+   * Checks a text that belongs to no configuration with the distribution and
+   * version named, or the catalog's defaults. 400
    * `collector_distribution_unknown`, `collector_version_unknown` or
    * `collector_version_retired`; 429 `validation_rate_limited`; 503
-   * `variables_unavailable` and `validation_unavailable`, as
-   * validateVersion.
+   * `variables_unavailable` and `validation_unavailable`, as validateVersion.
    */
   validateText(actor: Actor, organizationId: string, input: TextValidationInput): Promise<TextValidation>;
   /**
-   * Checks a text for no one (D27 decision 23): as validateText, its three
-   * 400s and 503 `validation_unavailable` included, but with no actor, no
-   * organization, no organization variables and no limit of its own (the
-   * caller's route admits it first).
+   * Checks a text for no one: as validateText, its three 400s and 503
+   * `validation_unavailable` included, but with no actor, no organization, no
+   * organization variables and no limit of its own (the caller's route admits
+   * it first).
    */
   validateAnonymousText(input: TextValidationInput): Promise<TextValidation>;
 }
 
-/** The catalogue's reads a text's validation resolves its collector with: a transaction's, or the plain database's. */
+/** The catalog's reads a text's validation resolves its collector with: a transaction's, or the plain database's. */
 type CatalogueReads = Pick<ICollectorCatalogueRepository, "findDefaults" | "findDistributionDefault" | "findVersionState">;
 
 /**
- * The distribution and version a text is checked with (D25 decision 34,
- * Ruling 168): the ones named, else the catalogue's defaults (a default
- * version is asked only when the version is left out), and the version's
- * state. 400 `collector_distribution_unknown` for a named distribution with
- * no default when the version is left out.
+ * The distribution and version a text is checked with: the ones named, else
+ * the catalog's defaults (a default version is asked only when the version
+ * is left out), and the version's state. 400 `collector_distribution_unknown`
+ * for a named distribution with no default when the version is left out.
  */
 async function resolveTextTarget(
   catalogue: CatalogueReads,
@@ -226,10 +219,10 @@ function textAnswer(
 /**
  * The reasons that mean a deployment to fix rather than a moment's trouble:
  * logged at error. Not `oversized_reply`: any member's text could once cause
- * one (Rulings 69 and 71: 5.1 MiB of requirements, 4.61 MiB of errors).
- * The validator now answers at most 2,290,356 bytes, under the client's
- * 4 MiB, so one means a validator without those bounds; still at warn, like
- * the rest, since a person's text can't be told from a deployment fault.
+ * one (5.1 MiB of requirements, 4.61 MiB of errors). The validator now
+ * answers at most 2,290,356 bytes, under the client's 4 MiB, so one means a
+ * validator without those bounds; still at warn, like the rest, since a
+ * person's text can't be told from a deployment fault.
  */
 const MISCONFIGURATION_REASONS: ReadonlySet<ValidatorUnavailableReason> = new Set(["unauthorized", "malformed_reply"]);
 
@@ -282,9 +275,9 @@ export function createValidationService(deps: ValidationDependencies): IValidati
   }
 
   /**
-   * Asks the validator, holding the person's admission (Ruling 37), with
-   * the organization's values for the names the text references; with no
-   * organization (`undefined`, D27's anonymous text), the text alone and
+   * Asks the validator, holding the person's admission, with the
+   * organization's values for the names the text references; with no
+   * organization (`undefined`, the anonymous text), the text alone and
    * nothing read. An unavailable answer is logged and 503
    * `validation_unavailable`.
    */
@@ -321,7 +314,7 @@ export function createValidationService(deps: ValidationDependencies): IValidati
   return {
     async validateText(actor, organizationId, input) {
       assertActiveOrganization(actor, organizationId);
-      // The named distribution's existence, whatever its versions offer (Ruling 168).
+      // The named distribution's existence, whatever its versions offer.
       const named = input.distribution;
       if (named !== undefined && !(await catalogue.listOffered()).some((distribution) => distribution.id === named)) {
         throw collectorDistributionUnknown();
@@ -353,7 +346,7 @@ export function createValidationService(deps: ValidationDependencies): IValidati
     },
 
     async validateAnonymousText(input) {
-      // The named distribution's existence, whatever its versions offer (Ruling 168), then the rest on the plain database.
+      // The named distribution's existence, whatever its versions offer, then the rest on the plain database.
       const named = input.distribution;
       if (named !== undefined && !(await catalogue.listOffered()).some((distribution) => distribution.id === named)) {
         throw collectorDistributionUnknown();
@@ -376,7 +369,7 @@ export function createValidationService(deps: ValidationDependencies): IValidati
       const target: { distribution: string; collectorVersion: string; state: CollectorVersionState; versionId: string } =
         await withTransaction(actor.context, async (transaction) => {
           // The configuration first, so a deleted one is configuration_not_found
-          // whatever the version, as getVersion's (D10 decision 4).
+          // whatever the version, as getVersion's.
           const configuration = await transaction.configurations.find(id);
           if (!configuration) throw configurationNotFound();
           const version =

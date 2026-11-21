@@ -1,8 +1,8 @@
 #!/bin/bash
-# Tests for scripts/release/check-workflows.sh (D36-2 decision 103): the real
-# .github/workflows pass; each fixture of scripts/release/testdata/workflows/
-# breaks one rule in a copy of the real files and the check must fail naming
-# that rule (and that file). A fixture is
+# Tests for scripts/release/check-workflows.sh: the real .github/workflows
+# pass; each fixture of scripts/release/testdata/workflows/ breaks one rule in
+# a copy of the real files and the check must fail naming that rule (and that
+# file). A fixture is
 #   file: <the workflow it changes>    rule: <the rule it breaks>
 #   <<< (text found exactly once) === (its replacement) >>>, one or more
 #   extra: <a file added to the folder>
@@ -74,7 +74,7 @@ PY
   run --dir "$copy" --root "$root"
   check "$name: the check fails (exit 1) naming the rule $rule in $file" "[ $rc -eq 1 ] && has 'check-workflows: $file: $rule: '"
 done
-check "the fixtures are there (at least one per rule the plan names)" "[ $count -ge 76 ]"
+check "the fixtures are there (at least one per rule)" "[ $count -ge 76 ]"
 # Every rule check-workflows.mjs lists in its header has a fixture that breaks it.
 rules="$(sed -n 's#^//   \([a-z][a-z-]*\)  .*#\1#p' "$root/scripts/release/check-workflows.mjs" | sort -u)"
 covered="$(sed -n 's/^rule: //p' "$fixtures"/*.fixture | sort -u)"

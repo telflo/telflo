@@ -1,7 +1,6 @@
 # The internal services: the collector validator, the collector tester and
-# the OTTL evaluator (D33-1 decisions 19, 20, 23 and 25; Preflight rulings 7
-# and 10; the Appendix's settings table). Sourced by tests/render-tests.sh,
-# which defines every helper used here.
+# the OTTL evaluator. Sourced by tests/render-tests.sh, which defines
+# every helper used here.
 #
 # What matters most: the tester's and the evaluator's secrets reach them
 # ONLY as files (the tester refuses to start with its secret, or any value
@@ -37,7 +36,7 @@ is_services() {
 }
 each_profile "internal services: ClusterIP Services on 8001, 8002 and 8003, each the container's one port" is_services
 
-# The URLs the API is given (Task 1's helpers) name these Services and ports.
+# The URLs the API is given (from _helpers.tpl) name these Services and ports.
 is_urls_match() {
   local h="$CHART_DIR/templates/_helpers.tpl"
   grep -qxF '{{- define "telflo.validatorUrl" -}}http://otelcol-validator:8001{{- end }}' "$h" &&
@@ -137,7 +136,7 @@ no_secret_env_anywhere() {
   done
 }
 each_profile "tester and evaluator: nothing in their Deployments is a secretKeyRef, envFrom or secretRef" no_secret_env_anywhere
-# Each service reads only its own key; the API (Task 6) reads all three.
+# Each service reads only its own key; the API reads all three.
 own_key_only() {
   local keys
   keys="$(awk '$1 ~ /^Deployment\/(otelcol-validator|otelcol-testing|ottl-evaluator)\.spec\.template\.spec\.volumes\[[^]]*\]\.projected\.sources\[[0-9]+\]\.secret\.items\[[0-9]+\]\.key$/ { print $2 }' "$1" | sort | tr '\n' ' ')"
@@ -195,7 +194,7 @@ every_pod_no_token() {
 }
 each_profile "every platform pod: automountServiceAccountToken false and no service links; the opamp-server's: no token" every_pod_no_token
 
-# The writable paths (decision 23): emptyDirs, with their sizes.
+# The writable paths: emptyDirs, with their sizes.
 is_writable() {
   local v t; v="$(is_pod otelcol-validator)"; t="$(is_pod otelcol-testing)"
   [ "$(names_at "$1" "$v.volumes" | tr '\n' ' ')" = "tmp " ] &&
@@ -223,8 +222,8 @@ is_probes() {
 }
 each_profile "probes: the validator's /health; the tester's /testing/v1/health, startup, readiness and liveness" is_probes
 # The evaluator logs every request it serves, /health included (server.go's
-# observe), and a probe writes no log line (decision 18, Ruling 332): its
-# probes are TCP on its port, and none of its probes makes an HTTP request.
+# observe), and a probe writes no log line: its probes are TCP on its port,
+# and none of its probes makes an HTTP request.
 evaluator_tcp_probes() {
   local e p; e="$(is_c ottl-evaluator)"
   for p in readinessProbe livenessProbe; do

@@ -47,14 +47,12 @@ import { TESTING_ERROR_CODES } from "./test-runs.js";
 import { VALIDATION_RULES_ERROR_CODES } from "./validation-rules.js";
 import { VARIABLE_ERROR_CODES } from "./variables.js";
 
-// D22 decisions 5, 7-9, 23, 26-34 and 39; Preflight rulings 16, 30-32.
-
 const HEX = "0a1b2c3d";
 const DOMAIN = "@service-accounts.telflo.invalid";
 
-// A token's shape, built at run time (Preflight ruling 32): never a literal
-// token in a committed file. Assertions below compare booleans only, so a
-// failure never prints it.
+// A token's shape, built at run time: never a literal token in a
+// committed file. Assertions below compare booleans only, so a failure
+// never prints it.
 const TOKEN = `tf_${"aZ09_-".repeat(7)}x`;
 const PREFIX = TOKEN.slice(0, 11);
 
@@ -175,7 +173,7 @@ describe("isServiceAccountEmail", () => {
   });
 });
 
-describe("isReservedEmail (D29 decision 10, Preflight ruling 6)", () => {
+describe("isReservedEmail", () => {
   it("matches both reserved domains, case aside and trimmed, and no subdomain or lookalike; isServiceAccountEmail keeps its meaning", () => {
     expect(DELETED_ACCOUNT_EMAIL_DOMAIN).toBe("deleted-accounts.telflo.invalid");
     const deleted = `deleted-${"ab".repeat(12)}@deleted-accounts.telflo.invalid`;
@@ -385,7 +383,7 @@ describe("the replies", () => {
     expect(WhoAmIResponseSchema.safeParse({ ...whoAmI, organizationId: null }).success).toBe(false);
   });
 
-  it("/whoami for a personal token (D25 decision 30): kind person, the organization X-Telflo-Org named or null", () => {
+  it("/whoami for a personal token: kind person, the organization X-Telflo-Org named or null", () => {
     const person = { ...whoAmI, kind: "person" as const };
     expect(WhoAmIResponseSchema.parse(person)).toEqual(person);
     expect(WhoAmIResponseSchema.parse({ ...person, organizationId: null })).toEqual({ ...person, organizationId: null });
@@ -416,7 +414,7 @@ describe("strictness", () => {
       "ServiceAccountsResponseSchema",
     ]);
     for (const [name, schema] of objects) expect(schema._def.unknownKeys, name).toBe("strict");
-    // /whoami's is a union on kind (D25 decision 30): each of its objects strict.
+    // /whoami's is a union on kind: each of its objects strict.
     expect(WhoAmIResponseSchema.options.map((option) => option._def.unknownKeys)).toEqual(["strict", "strict"]);
 
     // And an extra key is refused, at every level.
@@ -437,7 +435,7 @@ describe("strictness", () => {
 });
 
 describe("SERVICE_ACCOUNT_ERROR_CODES", () => {
-  it("the error codes and messages are the spec's, word for word", () => {
+  it("the error codes and messages are fixed, word for word", () => {
     expect(SERVICE_ACCOUNT_ERROR_CODES).toEqual([
       "service_account_not_found",
       "service_account_name_taken",

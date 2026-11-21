@@ -15,16 +15,16 @@ const MESSAGES: Record<EditorUnavailableProps["reason"], string> = {
 };
 
 /**
- * What the editor shows when it has no configuration to open (D8 decision
- * 12), with "Back to configurations" (`/app`), never a toast alone with the
- * previous configuration left on screen.
+ * What the editor shows when it has no configuration to open, with "Back to
+ * configurations" (`/app`), never a toast alone with the previous
+ * configuration left on screen.
  * - `not_found`: a 404 `configuration_not_found`, or an address whose id
  *   isn't a UUID: "Configuration not found".
  * - `version_not_found`: a 404 `configuration_version_not_found`, or an
- *   address whose version id isn't a UUID (D10 decision 9): "Version not
- *   found", with "Open the latest version", `/editor/{id}`, which opens the
- *   person's selection, else the newest. The previous version's canvas is
- *   never left on screen.
+ *   address whose version id isn't a UUID: "Version not found", with "Open
+ *   the latest version", `/editor/{id}`, which opens the person's
+ *   selection, else the newest. The previous version's canvas is never left
+ *   on screen.
  * - `failed`: a load that failed otherwise, whose toast says the same:
  *   "Failed to load configuration", with "Try again".
  */

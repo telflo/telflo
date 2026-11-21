@@ -25,13 +25,13 @@ import { UNCALLED_OTELCOL_VALIDATOR } from "../../testing/otelcol-validator.js";
 import { UNCALLED_FILE_STORE } from "../../testing/file-store.js";
 import { UNCALLED_TESTING } from "../../testing/otelcol-testing.js";
 
-// The opamp-server every server needs (D11b decision 8): this file's own fake.
+// The opamp-server every server needs: this file's own fake.
 const opamp = useFakeOpampServer();
 
 const csrfHeaders = { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE };
 const PASSWORD = "a-sufficiently-long-password";
 
-/** The spec's words, exactly (D7 decisions 5 and 10; D10 decision 4; D5's and D2a's; the envelope's 413). */
+/** The refusals' words, exactly, the envelope's 413 included. */
 const MESSAGES = {
   configurationNotFound: "Configuration not found",
   versionNotFound: "Version not found",
@@ -61,7 +61,7 @@ interface PageBody {
   nextCursor: string | null;
 }
 
-/** A version as the picker lists it (D10 decision 4). */
+/** A version as the picker lists it. */
 interface VersionSummaryBody {
   id: string;
   versionNumber: number;
@@ -84,7 +84,7 @@ interface VersionBody extends VersionSummaryBody {
   pipelines: unknown[];
 }
 
-/** Both reads' answer (D10 decision 4). */
+/** Both reads' answer. */
 interface WithVersionBody {
   configuration: ConfigurationBody;
   version: VersionBody;
@@ -94,22 +94,21 @@ interface WithVersionBody {
 /** Ids that aren't canonical UUIDs, as a path segment carries them. */
 const MALFORMED_PATH_IDS = ["not-a-uuid", "42", "0192F1A47B3C7D2E8F101A2B3C4D5E6F", "%7B0192f1a4-7b3c-7d2e-8f10-1a2b3c4d5e6f%7D"];
 
-/** Ids that aren't canonical UUIDs, as a body carries them (D10 Preflight ruling 6). */
+/** Ids that aren't canonical UUIDs, as a body carries them. */
 const MALFORMED_BODY_IDS = ["not-a-uuid", "42", "0192F1A47B3C7D2E8F101A2B3C4D5E6F", "{0192f1a4-7b3c-7d2e-8f10-1a2b3c4d5e6f}", ""];
 
-/** A save's graph when the test is about the text (D9a decision 6: the save carries all four). */
+/** A save's graph when the test is about the text (the save carries all four). */
 const EMPTY_GRAPH = { nodes: [], edges: [], pipelines: [] };
 
-/** A graph column's bound: 1 MiB of JSON in UTF-8 bytes (D9a Preflight ruling 3). */
+/** A graph column's bound: 1 MiB of JSON in UTF-8 bytes. */
 const GRAPH_COLUMN_BYTES = GRAPH_COLUMN_MAXIMUM_BYTES;
 
-/** The server's body limit for a save (D9a decision 6), and the gateway's for its path. */
+/** The server's body limit for a save, and the gateway's for its path. */
 const SAVE_BODY_LIMIT = 5_242_880;
 
 /**
- * A small graph, hand-written in the shapes D9a stores
- * (D9a decisions 6 and 7): a pipeline's group, two components in it, an
- * edge between them, and the pipeline.
+ * A small graph, hand-written in the shapes the builder stores: a pipeline's
+ * group, two components in it, an edge between them, and the pipeline.
  */
 const GRAPH = {
   nodes: [
@@ -165,11 +164,10 @@ function graphWithReceiver(change: (receiver: Changeable) => void) {
 }
 
 /**
- * A save at the contract's bounds (D9a Preflight ruling 11): 262,144 ×
- * U+0001 of YAML, each six bytes of JSON, and each column as close to
- * 1 MiB of JSON as its bounds let it be: 5,000 nodes, 10,000 edges and
- * 1,000 pipelines whose names are escaped U+0001s. A create from a flow
- * carries the same content (D12 Preflight ruling 7).
+ * A save at the contract's bounds: 262,144 × U+0001 of YAML, each six bytes
+ * of JSON, and each column as close to 1 MiB of JSON as its bounds let it be:
+ * 5,000 nodes, 10,000 edges and 1,000 pipelines whose names are escaped
+ * U+0001s. A create from a flow carries the same content.
  */
 const maximalSave = () => {
   const nodes: Record<string, unknown>[] = Array.from({ length: 5_000 }, (_, index) => ({
@@ -230,9 +228,8 @@ function expectInvalid(response: LightMyRequestResponse): void {
 }
 
 /**
- * D7 decisions 3 and 5 to 11, and D8 decisions 4 to 7 and 17, against
- * Postgres, through the API as its own role, with row-level security on
- * `configurations` and `configuration_versions`.
+ * The configuration routes against Postgres, through the API as its own role,
+ * with row-level security on `configurations` and `configuration_versions`.
  */
 describe("configuration routes", () => {
   let settings: AppSettings;
@@ -248,11 +245,11 @@ describe("configuration routes", () => {
   /** The server's log lines since the test began, at info and above. */
   let logLines: string[] = [];
 
-  /** The catalogue's default distribution and its default version (D13a), as the tables hold them. */
+  /** The catalog's default distribution and its default version, as the tables hold them. */
   let pin: { distribution: string; version: string };
-  /** Another, non-deprecated version of that distribution in the catalogue. */
+  /** Another, non-deprecated version of that distribution in the catalog. */
   let otherVersion: string;
-  /** A summary's pin fields for a version at the default version: offered, so not deprecated (D13a decision 4). */
+  /** A summary's pin fields for a version at the default version: offered, so not deprecated. */
   let pinned: { collectorVersion: string; collectorVersionDeprecated: false; collectorVersionDeprecatedNote: null };
 
   beforeAll(async () => {
@@ -261,7 +258,7 @@ describe("configuration routes", () => {
     ownerDb = createDb(pool);
     db = createDb(createPool(settings.databaseUrl));
     // Info, so each request's own log line is captured: the search text
-    // must not be in it (Preflight ruling 4), nor a save's YAML (D8).
+    // must not be in it, nor a save's YAML.
     const previousLevel = process.env.LOG_LEVEL;
     process.env.LOG_LEVEL = "info";
     try {
@@ -345,7 +342,7 @@ describe("configuration routes", () => {
       payload: { organizationId },
     });
     expect(response.statusCode).toBe(200);
-    // A no-op when the sign-in already landed there (D36-1 decision 56): no new cookie, the token sent stands.
+    // A no-op when the sign-in already landed there: no new cookie, the token sent stands.
     return response.headers["set-cookie"] === undefined ? access : cookieValue(response, "telflo_access");
   };
 
@@ -446,7 +443,7 @@ describe("configuration routes", () => {
       payload: payload as Record<string, unknown>,
     });
 
-  /** Reads one version with the configuration and the list (D10 decision 4). */
+  /** Reads one version with the configuration and the list. */
   const readVersion = (access: string | undefined, organizationId: string, configurationId: string, versionId: string) =>
     server.inject({
       method: "GET",
@@ -454,7 +451,7 @@ describe("configuration routes", () => {
       ...(access === undefined ? {} : { cookies: { telflo_access: access } }),
     });
 
-  /** Lists a configuration's versions' summaries (D17b-1 decisions 7 and 31); `query` from its `?`. */
+  /** Lists a configuration's versions' summaries; `query` from its `?`. */
   const listVersions = (access: string | undefined, organizationId: string, configurationId: string, query = "") =>
     server.inject({
       method: "GET",
@@ -463,8 +460,8 @@ describe("configuration routes", () => {
     });
 
   /**
-   * Creates a version (D10 decision 5). A string payload is sent as it is,
-   * JSON already, as for a save.
+   * Creates a version. A string payload is sent as it is, JSON already, as
+   * for a save.
    */
   const newVersion = (
     access: string | undefined,
@@ -481,7 +478,7 @@ describe("configuration routes", () => {
       payload: payload as Record<string, unknown>,
     });
 
-  /** Renames a version (D10 decision 6). */
+  /** Renames a version. */
   const renameVersion = (
     access: string | undefined,
     organizationId: string,
@@ -498,7 +495,7 @@ describe("configuration routes", () => {
       payload: payload as Record<string, unknown>,
     });
 
-  /** Records the caller's selected version (D10 decisions 3 and 9). */
+  /** Records the caller's selected version. */
   const selectVersion = (
     access: string | undefined,
     organizationId: string,
@@ -568,8 +565,8 @@ describe("configuration routes", () => {
 
   /**
    * Publishes the configuration's version `versionNumber` (1 unless given),
-   * as the owner, as D11b's publish will record it: the API's role can only
-   * publish through that update (Task 3). Returns the publish time.
+   * as the owner, the way a publish's record writes it: the API's role can
+   * only publish through that update. Returns the publish time.
    */
   const publish = async (configurationId: string, versionNumber = 1, publishedByUserId: string | null = null) => {
     const publishedAt = new Date(clock.getTime() - 500);
@@ -712,7 +709,7 @@ describe("configuration routes", () => {
       expect(names(await page(access, organization.id, "?q=_"))).toEqual(["a_b"]);
     });
 
-    describe("the filter (D11b decision 6) and drafts' privacy (decision 1)", () => {
+    describe("the filter and drafts' privacy", () => {
       /**
        * A (an admin) and B (a contributor) in one group: A's draft, A's
        * published configuration and B's draft, newest first in that order
@@ -760,7 +757,7 @@ describe("configuration routes", () => {
       });
 
       it.each(["all", "mine", "published"] as const)(
-        "walks every configuration of filter=%s exactly once with nextCursor, sending the filter with each page (the cursor is positional: Preflight ruling 15)",
+        "walks every configuration of filter=%s exactly once with nextCursor, sending the filter with each page (the cursor is positional)",
         async (filter) => {
           const a = await memberActiveInGroup("admin");
           const b = await memberActiveInGroup("contributor", a.group.id);
@@ -808,7 +805,7 @@ describe("configuration routes", () => {
     it("keeps a soft-deleted creator's email, and has no creator once the account is hard-deleted", async () => {
       const viewer = await memberActiveInGroup("admin");
       // Group members, so their configurations outlive their personal
-      // organizations (Preflight ruling 6).
+      // organizations.
       const softly = await verifiedUser();
       await addMembership(ownerDb, { userId: softly.user.id, organizationId: viewer.group.id, role: "contributor" });
       const hard = await verifiedUser();
@@ -827,7 +824,7 @@ describe("configuration routes", () => {
         created_at: new Date(clock.getTime() - 1_000),
         updated_at: new Date(clock.getTime() - 1_000),
       });
-      // Published, so the viewer sees them (D11b decision 1).
+      // Published, so the viewer sees them.
       for (const configuration of await configurationRows()) {
         await addConfigurationVersion(ownerDb, {
           configurationId: configuration.id,
@@ -852,7 +849,7 @@ describe("configuration routes", () => {
       ["limit=ten", "?limit=ten"],
       ["filter=drafts", "?filter=drafts"],
       ["filter=Mine", "?filter=Mine"],
-      ["D7's mine=true, which the filter replaced (D11b decision 6)", "?mine=true"],
+      ["mine=true, not a filter", "?mine=true"],
       ["cursor=garbage", "?cursor=garbage"],
       [
         "a cursor with a non-UUID id",
@@ -873,7 +870,7 @@ describe("configuration routes", () => {
       expect((await list(access, organization.id, "?limit=100")).statusCode).toBe(200);
     });
 
-    it("keeps the search text out of the API's log (Preflight ruling 4)", async () => {
+    it("keeps the search text out of the API's log", async () => {
       const { organization, access } = await personalUser();
       const secret = "Quarterly-payroll-pipeline";
 
@@ -904,7 +901,7 @@ describe("configuration routes", () => {
         createdAt: clock.toISOString(),
         updatedAt: clock.toISOString(),
         createdBy: { userId: account.user.id, email: account.user.email },
-        // Its version 1 is empty and unpublished: a draft (D11b decision 1).
+        // Its version 1 is empty and unpublished: a draft.
         published: false,
         collectorDistribution: pin.distribution,
       });
@@ -914,7 +911,7 @@ describe("configuration routes", () => {
         created_at: clock,
         updated_at: clock,
         deleted_at: null,
-        // The catalogue's default distribution, read from its table (D13a decision 3).
+        // The catalog's default distribution, read from its table.
         collector_distribution: pin.distribution,
       });
       expect(await configurationAudits()).toEqual([
@@ -954,7 +951,7 @@ describe("configuration routes", () => {
       expect(names(await page(access, organization.id))).toEqual(["Twin", "Twin"]);
     });
 
-    it("creates exactly one version with it: number 1, '', unnamed (D10 decision 14), created by the caller, both timestamps the clock's (D8 decision 4), the graph '[]' (D9a decision 6), and pinned to the catalogue's default version of its distribution (D13a decision 9)", async () => {
+    it("creates exactly one version with it: number 1, '', unnamed, created by the caller, both timestamps the clock's, the graph '[]', and pinned to the catalog's default version of its distribution", async () => {
       const { account, organization, access } = await personalUser();
 
       const configuration = await created(access, organization.id, "Gateway");
@@ -973,7 +970,7 @@ describe("configuration routes", () => {
           nodes: [],
           edges: [],
           pipelines: [],
-          // A new version is a draft (D11b decision 10).
+          // A new version is a draft.
           published_at: null,
           published_by_user_id: null,
           publication_id: null,
@@ -997,11 +994,11 @@ describe("configuration routes", () => {
     });
   });
 
-  describe("POST …/configurations from a flow (D12 decisions 5 and 12, Preflight rulings 7 and 9)", () => {
+  describe("POST …/configurations from a flow", () => {
     const VERSION_UNKNOWN = ["collector_version_unknown", "That collector version isn't available."] as const;
     const DISTRIBUTION_UNKNOWN = ["collector_distribution_unknown", "That collector distribution isn't available."] as const;
 
-    /** A seeded flow as migration 1700000000026 holds it (D12 Preflight ruling 1). */
+    /** A seeded flow as migration 1700000000026 holds it. */
     const seededFlow = async (slug: string) => {
       const { seededFlows } = await loadFlowsMigration();
       const flow = seededFlows.find((candidate) => candidate.slug === slug);
@@ -1009,7 +1006,7 @@ describe("configuration routes", () => {
       return flow;
     };
 
-    /** A version of the default distribution the catalogue has deprecated (D13a decision 4). */
+    /** A version of the default distribution the catalog has deprecated. */
     const deprecatedVersion = async () =>
       (
         await ownerDb
@@ -1024,7 +1021,7 @@ describe("configuration routes", () => {
     /** A flow's text: a trailing newline and an env reference, as every seeded flow has. */
     const FLOW_YAML = "exporters:\n  otlp:\n    endpoint: ${env:OTLP_ENDPOINT}\n";
 
-    /** What the web sends for a flow (decision 5): the text, the stored graph, the pin and the slug. */
+    /** What the web sends for a flow: the text, the stored graph, the pin and the slug. */
     const fromFlow = (overrides: Record<string, unknown> = {}) => ({
       name: "PII Redaction Gateway",
       yamlContent: FLOW_YAML,
@@ -1115,7 +1112,7 @@ describe("configuration routes", () => {
         collectorVersion: flow.collector_version,
         collectorVersionDeprecated: false,
       });
-      // Nothing about the slug in any answer: the create, the read, a version's read, the list (Preflight ruling 9).
+      // Nothing about the slug in any answer: the create, the read, a version's read, the list.
       const answers = [
         response,
         opened,
@@ -1164,7 +1161,7 @@ describe("configuration routes", () => {
       expect((await create(access, organization.id, { name: "Whole", ...content })).statusCode).toBe(201);
     });
 
-    describe("its collector version (decision 12)", () => {
+    describe("its collector version", () => {
       it("stores a version the distribution offers that isn't its default", async () => {
         const { organization, access } = await personalUser();
         expect(otherVersion).not.toBe(pin.version);
@@ -1179,7 +1176,7 @@ describe("configuration routes", () => {
         });
       });
 
-      it("checks one sent with no distribution against the catalogue's default distribution, and builds for it", async () => {
+      it("checks one sent with no distribution against the catalog's default distribution, and builds for it", async () => {
         const { organization, access } = await personalUser();
         const { collectorDistribution: _left, ...withoutDistribution } = fromFlow();
 
@@ -1232,7 +1229,7 @@ describe("configuration routes", () => {
         expect(await snapshot()).toEqual(before);
       });
 
-      it("refuses a version the catalogue doesn't have: 400 collector_version_unknown, creating and auditing nothing", async () => {
+      it("refuses a version the catalog doesn't have: 400 collector_version_unknown, creating and auditing nothing", async () => {
         const { organization, access } = await personalUser();
         const before = await snapshot();
         expectRefusal(await create(access, organization.id, fromFlow({ collectorVersion: "9.9.9" })), 400, ...VERSION_UNKNOWN);
@@ -1250,7 +1247,7 @@ describe("configuration routes", () => {
         expect(await snapshot()).toEqual(before);
       });
 
-      it("refuses a version that isn't in the catalogue's format: 400 invalid_request", async () => {
+      it("refuses a version that isn't in the catalog's format: 400 invalid_request", async () => {
         const { organization, access } = await personalUser();
         const before = await snapshot();
         expectInvalid(await create(access, organization.id, fromFlow({ collectorVersion: "v0.162.0" })));
@@ -1258,7 +1255,7 @@ describe("configuration routes", () => {
       });
     });
 
-    describe("its slug (decision 12: the format only)", () => {
+    describe("its slug (the format only)", () => {
       it("stores a slug no flow has, and one sent alone, without content", async () => {
         const { organization, access } = await personalUser();
         const unknown = await create(access, organization.id, fromFlow({ sourceFlowSlug: "no-such-flow" }));
@@ -1294,7 +1291,7 @@ describe("configuration routes", () => {
       });
     });
 
-    describe("its content's limits, as the save's (D9a decision 6, Preflight ruling 3)", () => {
+    describe("its content's limits, as the save's", () => {
       /** A config string that makes the nodes column `bytes` long in UTF-8, in `unit`s. */
       const nodesOfBytes = (bytes: number, unit: string) => {
         const empty = Buffer.byteLength(JSON.stringify(graphWithReceiver((node) => (node.data.config = "")).nodes));
@@ -1463,7 +1460,7 @@ describe("configuration routes", () => {
       });
     });
 
-    it("answers a published configuration's flag, and its published version's time and publisher (D11b decisions 1 and 10)", async () => {
+    it("answers a published configuration's flag, and its published version's time and publisher", async () => {
       const { account, organization, access } = await personalUser();
       const configuration = await created(access, organization.id, "Gateway");
       const publishedAt = await publish(configuration.id, 1, account.user.id);
@@ -1483,7 +1480,7 @@ describe("configuration routes", () => {
       });
     });
 
-    it("answers a soft-deleted publisher's email, and no publisher once the account is hard-deleted (D10 Preflight ruling 13's rule)", async () => {
+    it("answers a soft-deleted publisher's email, and no publisher once the account is hard-deleted", async () => {
       const viewer = await memberActiveInGroup("admin");
       const softly = await verifiedUser();
       await addMembership(ownerDb, { userId: softly.user.id, organizationId: viewer.group.id, role: "contributor" });
@@ -1561,7 +1558,7 @@ describe("configuration routes", () => {
       });
     });
 
-    it("lets another member read the creator's published configuration (D11b decision 1)", async () => {
+    it("lets another member read the creator's published configuration", async () => {
       const creator = await memberActiveInGroup("admin");
       const other = await memberActiveInGroup("contributor", creator.group.id);
       const configuration = await created(creator.access, creator.group.id, "Theirs");
@@ -1605,11 +1602,11 @@ describe("configuration routes", () => {
       },
     );
 
-    describe("which version it opens (D10 decision 4)", () => {
+    describe("which version it opens", () => {
       /**
        * A group with two members: A created the configuration (version 1)
-       * and published version 1, so B sees it (D11b decision 1); B created
-       * version 2 with a label, and A version 3.
+       * and published version 1, so B sees it; B created version 2 with a
+       * label, and A version 3.
        */
       const threeVersions = async () => {
         const a = await memberActiveInGroup("admin");
@@ -1737,7 +1734,7 @@ describe("configuration routes", () => {
             version_number: versionNumber,
             created_by_user_id: creator,
             // Version 1 published: an authorless configuration is visible
-            // only once published (D11b decision 1).
+            // only once published.
             ...(versionNumber === 1 ? { publishedAt: clock } : {}),
           });
         }
@@ -1833,7 +1830,7 @@ describe("configuration routes", () => {
       expect(await configurationRow(configuration.id)).toMatchObject({ name: "Gateway", updated_at: clock });
     });
 
-    it("audits the save with versionId and versionNumber, and no YAML or graph anywhere in the row (D8 decision 17)", async () => {
+    it("audits the save with versionId and versionNumber, and no YAML or graph anywhere in the row", async () => {
       const { account, organization, access, configuration, version } = await withVersion();
       const marker = `secret-${randomUUID()}`;
 
@@ -1861,12 +1858,12 @@ describe("configuration routes", () => {
       });
       expect(JSON.stringify(audits)).not.toContain(marker);
       expect(JSON.stringify(audits)).not.toContain("exporters");
-      // Nor the graph, whose nodes hold copies of the YAML (D9a decision 6).
+      // Nor the graph, whose nodes hold copies of the YAML.
       expect(JSON.stringify(audits)).not.toContain("node_0");
       expect(JSON.stringify(audits)).not.toContain("pipeline_0");
     });
 
-    it("lets another member save the creator's published configuration's draft version (D11b decision 2)", async () => {
+    it("lets another member save the creator's published configuration's draft version", async () => {
       const creator = await memberActiveInGroup("admin");
       const other = await memberActiveInGroup("contributor", creator.group.id);
       const configuration = await created(creator.access, creator.group.id, "Theirs");
@@ -1917,7 +1914,7 @@ describe("configuration routes", () => {
       ]);
     });
 
-    it("saves the graph with the text and reads it back equal, key order aside (D9a decision 6)", async () => {
+    it("saves the graph with the text and reads it back equal, key order aside", async () => {
       const { organization, access, configuration, version } = await withVersion();
 
       const response = await save(access, organization.id, configuration.id, version.id, {
@@ -1966,7 +1963,7 @@ describe("configuration routes", () => {
       );
     });
 
-    it("accepts a save at the contract's bounds, about 4.4 MiB of JSON: the route's 5 MiB applies (D9a Preflight ruling 11)", async () => {
+    it("accepts a save at the contract's bounds, about 4.4 MiB of JSON: the route's 5 MiB applies", async () => {
       const { organization, access, configuration, version } = await withVersion();
       const payload = maximalSave();
       for (const column of [payload.nodes, payload.edges, payload.pipelines]) {
@@ -2008,7 +2005,7 @@ describe("configuration routes", () => {
       expect(await versionOf(configuration.id)).toMatchObject({ yaml_content: "at the limit\n", ...GRAPH });
     });
 
-    it("answers 400 invalid_request, not 500, when the table's backstop refuses a graph the contract allowed (D9a Preflight ruling 3)", async () => {
+    it("answers 400 invalid_request, not 500, when the table's backstop refuses a graph the contract allowed", async () => {
       const { organization, access, configuration, version } = await withVersion();
       const marker = `Private-label-${randomUUID()}`;
       // 20,000 × 1e300: about 140 KB of JSON, well within the contract, and
@@ -2138,8 +2135,7 @@ describe("configuration routes", () => {
       ]);
 
       // The refusals' bodies are the envelope alone: neither the YAML, nor a
-      // label, a name or a config, nor a piece of them comes back (D8 and
-      // D9a Global constraints).
+      // label, a name or a config, nor a piece of them comes back.
       for (const response of refusals) {
         expect(response.body).not.toContain(marker);
         expect(response.body).not.toContain("exporters");
@@ -2172,7 +2168,7 @@ describe("configuration routes", () => {
     return { ...user, configuration, first, second };
   };
 
-  describe("GET …/configurations/:configurationId/versions/:versionId (D10 decision 4)", () => {
+  describe("GET …/configurations/:configurationId/versions/:versionId", () => {
     it("answers each version with the configuration and the list, telling every cache to keep no copy", async () => {
       const { account, organization, access, configuration, first, second } = await withTwoVersions();
       const creator = { userId: account.user.id, email: account.user.email };
@@ -2223,7 +2219,7 @@ describe("configuration routes", () => {
           versions: summaries,
         });
       }
-      // A read records no selection: only the editor's PUT does (D10 decision 9).
+      // A read records no selection: only the editor's PUT does.
       expect(await snapshot()).toEqual(before);
     });
 
@@ -2234,7 +2230,7 @@ describe("configuration routes", () => {
       expect(response.json<WithVersionBody>().version.id).toBe(second.id);
     });
 
-    it("lets another member read the creator's published version (D11b decision 1)", async () => {
+    it("lets another member read the creator's published version", async () => {
       const creator = await memberActiveInGroup("admin");
       const other = await memberActiveInGroup("contributor", creator.group.id);
       const configuration = await created(creator.access, creator.group.id, "Theirs");
@@ -2282,7 +2278,7 @@ describe("configuration routes", () => {
       }
     });
 
-    it("answers an unknown configuration's version 404 configuration_not_found (Ruling 38)", async () => {
+    it("answers an unknown configuration's version 404 configuration_not_found", async () => {
       const { organization, access, first } = await withTwoVersions();
       const unknown = randomUUID();
       for (const versionId of [first.id, randomUUID(), "42"]) {
@@ -2309,8 +2305,8 @@ describe("configuration routes", () => {
     );
   });
 
-  describe("GET …/configurations/:configurationId/versions (D17b-1 decisions 7 and 31)", () => {
-    /** A listed version's keys, exactly (the owner's Q17): no content, layout, member, time or collector version. */
+  describe("GET …/configurations/:configurationId/versions", () => {
+    /** A listed version's keys, exactly: no content, layout, member, time or collector version. */
     const LIST_ITEM_KEYS = ["id", "label", "publishedAt", "versionNumber"];
 
     /** A listed version as the versions route answers it. */
@@ -2371,7 +2367,7 @@ describe("configuration routes", () => {
     /** The answer's versions, checked to carry exactly the four keys, no YAML, no email and no cache header. */
     const listedOf = (response: LightMyRequestResponse) => {
       expect(response.statusCode).toBe(200);
-      // Labels, as the configurations list: cacheable (Preflight ruling 2).
+      // Labels, as the configurations list: cacheable.
       expect(response.headers["cache-control"]).toBeUndefined();
       expect(response.body).not.toContain("marker-of-the-yaml");
       expect(response.body).not.toContain("@example.com");
@@ -2508,7 +2504,7 @@ describe("configuration routes", () => {
     });
   });
 
-  describe("POST …/configurations/:configurationId/versions (D10 decisions 4 and 5)", () => {
+  describe("POST …/configurations/:configurationId/versions", () => {
     it("creates the next version: 201, the content and label as sent, the caller as creator, the clock's timestamps, the configuration touched, the source unchanged, and its audit row", async () => {
       const { account, organization, access, configuration, first, second } = await withTwoVersions();
       const yamlContent = "receivers:\r\n  otlp: {} # 🚀 unsaved\n";
@@ -2548,16 +2544,16 @@ describe("configuration routes", () => {
         created_by_user_id: account.user.id,
         created_at: clock,
         updated_at: clock,
-        // A new version is a draft (D11b decision 10).
+        // A new version is a draft.
         published_at: null,
         published_by_user_id: null,
         publication_id: null,
-        // Its source's pin (D13a decision 9).
+        // Its source's pin.
         collector_distribution: first.collector_distribution,
         collector_version: first.collector_version,
       });
       expect(await configurationRow(configuration.id)).toMatchObject({ updated_at: clock });
-      // The source, and every other version, as they were (D10 decision 5).
+      // The source, and every other version, as they were.
       expect(await versionNumbered(configuration.id, 1)).toEqual(first);
       expect(await versionNumbered(configuration.id, 2)).toEqual(second);
       expect((await configurationAudits()).at(-1)).toEqual({
@@ -2569,7 +2565,7 @@ describe("configuration routes", () => {
         organization_id: organization.id,
         subject_type: "configuration",
         subject_id: configuration.id,
-        // The source's suites and validation pipelines copied: none here (D14b Preflight ruling 8, D15a Preflight ruling 24).
+        // The source's suites and validation pipelines copied: none here.
         metadata: {
           versionId: version.id,
           versionNumber: 3,
@@ -2591,9 +2587,9 @@ describe("configuration routes", () => {
       expect(read_.json<WithVersionBody>().versions.map((summary) => summary.versionNumber)).toEqual([3, 2, 1]);
     });
 
-    it("pins the new version to its source's collector version, not the catalogue's default (D13a decision 9)", async () => {
+    it("pins the new version to its source's collector version, not the catalog's default", async () => {
       const { organization, access, configuration, first, second } = await withTwoVersions();
-      // The source, a draft, pinned to another version of the catalogue than the default.
+      // The source, a draft, pinned to another version of the catalog than the default.
       await ownerDb
         .updateTable("configuration_versions")
         .set({ collector_version: otherVersion })
@@ -2658,7 +2654,7 @@ describe("configuration routes", () => {
     it.each([
       ["left out", {}],
       ["''", { label: "" }],
-      ["whitespace only (Preflight ruling 16)", { label: "   " }],
+      ["whitespace only", { label: "   " }],
     ])("makes an unnamed version when the label is %s", async (_label, label) => {
       const { organization, access, configuration, first } = await withTwoVersions();
       const response = await newVersion(access, organization.id, configuration.id, {
@@ -2705,7 +2701,7 @@ describe("configuration routes", () => {
       expect(numbers).toEqual([8, 9]);
     });
 
-    it("lets another member create a version of the creator's published configuration, as its creator, from its published version (D11b decision 2)", async () => {
+    it("lets another member create a version of the creator's published configuration, as its creator, from its published version", async () => {
       const creator = await memberActiveInGroup("admin");
       const other = await memberActiveInGroup("contributor", creator.group.id);
       const configuration = await created(creator.access, creator.group.id, "Theirs");
@@ -2722,7 +2718,7 @@ describe("configuration routes", () => {
       expect(response.statusCode).toBe(201);
       expect(response.json<{ version: VersionBody }>().version).toMatchObject({
         createdBy: { userId: other.account.user.id, email: other.account.user.email },
-        // A new version is a draft, whatever its source (D11b Preflight ruling 15).
+        // A new version is a draft, whatever its source.
         publishedAt: null,
         publishedBy: null,
         ...pinned,
@@ -2733,7 +2729,7 @@ describe("configuration routes", () => {
       });
     });
 
-    it("keeps the YAML, the graph and the label out of the audit row and the API's log (D10 decision 8)", async () => {
+    it("keeps the YAML, the graph and the label out of the audit row and the API's log", async () => {
       const { organization, access, configuration, first } = await withTwoVersions();
       const marker = `secret-${randomUUID()}`;
 
@@ -2844,7 +2840,7 @@ describe("configuration routes", () => {
       });
 
       it.each(MALFORMED_BODY_IDS)(
-        "a malformed source (%j): 404 configuration_version_not_found (Preflight ruling 6)",
+        "a malformed source (%j): 404 configuration_version_not_found",
         async (sourceVersionId) => {
           const { organization, access, configuration } = await withTwoVersions();
           const before = await snapshot();
@@ -2865,7 +2861,7 @@ describe("configuration routes", () => {
       it.each([
         ["an 81-character label", { label: "a".repeat(81) }],
         ["a null label", { label: null }],
-        // Postgres can't store these exactly: 400, never a 500 or a U+FFFD stored (Ruling 37).
+        // Postgres can't store these exactly: 400, never a 500 or a U+FFFD stored.
         ["U+0000 in the label", { label: "Tail\u0000sampling" }],
         ["a lone surrogate in the label", { label: "Tail\ud800sampling" }],
         ["262,145 characters of YAML", { yamlContent: "a".repeat(262_145) }],
@@ -2905,7 +2901,7 @@ describe("configuration routes", () => {
     });
   });
 
-  describe("PUT …/configurations/:configurationId/versions/:versionId/label (D10 decision 6)", () => {
+  describe("PUT …/configurations/:configurationId/versions/:versionId/label", () => {
     it("renames: 200 with the summary, the label trimmed, no updatedAt moved, and its audit row", async () => {
       const { account, organization, access, configuration, first } = await withTwoVersions();
       const configurationBefore = await configurationRow(configuration.id);
@@ -2984,7 +2980,7 @@ describe("configuration routes", () => {
       expect(await snapshot()).toEqual(before);
     });
 
-    it("accepts 80 characters, and lets another member rename the creator's published configuration's draft version (D11b decision 2)", async () => {
+    it("accepts 80 characters, and lets another member rename the creator's published configuration's draft version", async () => {
       const creator = await memberActiveInGroup("admin");
       const other = await memberActiveInGroup("contributor", creator.group.id);
       const configuration = await created(creator.access, creator.group.id, "Theirs");
@@ -3047,7 +3043,7 @@ describe("configuration routes", () => {
         ["a null label", { label: null }],
         ["no label", {}],
         ["an unknown field", { label: "A", versionNumber: 2 }],
-        // Postgres can't store these exactly: 400, never a 500 or a U+FFFD stored (Ruling 37).
+        // Postgres can't store these exactly: 400, never a 500 or a U+FFFD stored.
         ["U+0000 in the label", { label: "Re\u0000named" }],
         ["a lone surrogate in the label", { label: "Re\udc00named" }],
       ])("%s: 400 invalid_request", async (_label, payload) => {
@@ -3059,7 +3055,7 @@ describe("configuration routes", () => {
     });
   });
 
-  describe("PUT …/configurations/:configurationId/selected-version (D10 decisions 3 and 9)", () => {
+  describe("PUT …/configurations/:configurationId/selected-version", () => {
     it("records the caller's selection: 204, the clock's time, no audit row; the read then opens it", async () => {
       const { account, organization, access, configuration, first } = await withTwoVersions();
       const audits = await configurationAudits();
@@ -3105,7 +3101,7 @@ describe("configuration routes", () => {
       const a = await memberActiveInGroup("admin");
       const b = await memberActiveInGroup("contributor", a.group.id);
       const configuration = await created(a.access, a.group.id, "Shared");
-      // Published, so B sees it (D11b decision 1).
+      // Published, so B sees it.
       await publish(configuration.id);
       const first = await versionOf(configuration.id);
       const second = await newVersion(a.access, a.group.id, configuration.id, {
@@ -3155,7 +3151,7 @@ describe("configuration routes", () => {
       });
 
       it.each(MALFORMED_BODY_IDS)(
-        "a malformed selection (%j): 404 configuration_version_not_found (Preflight ruling 6)",
+        "a malformed selection (%j): 404 configuration_version_not_found",
         async (versionId) => {
           const { organization, access, configuration } = await withTwoVersions();
           const before = await snapshot();
@@ -3261,7 +3257,7 @@ describe("configuration routes", () => {
       expect(await snapshot()).toEqual(before);
     });
 
-    it("lets another member rename the creator's published configuration (D11b decision 2)", async () => {
+    it("lets another member rename the creator's published configuration", async () => {
       const creator = await memberActiveInGroup("admin");
       const other = await memberActiveInGroup("contributor", creator.group.id);
       const configuration = await created(creator.access, creator.group.id, "Theirs");
@@ -3331,7 +3327,7 @@ describe("configuration routes", () => {
     });
   });
 
-  describe("who may do what (D11b decision 2, which replaced D7 decision 3 for delete)", () => {
+  describe("who may do what", () => {
     it("lets a contributor create, and rename an admin's published configuration, but not delete it: 403 configuration_delete_forbidden, writing nothing", async () => {
       const admin = await memberActiveInGroup("admin");
       const contributor = await memberActiveInGroup("contributor", admin.group.id);
@@ -3435,7 +3431,7 @@ describe("configuration routes", () => {
     });
   });
 
-  describe("another member's draft is invisible (D11b decision 1)", () => {
+  describe("another member's draft is invisible", () => {
     /**
      * A's draft with versions 1 and 2, and B, A's teammate, an admin: an
      * admin sees no one else's draft either.
@@ -3517,7 +3513,7 @@ describe("configuration routes", () => {
     });
   });
 
-  describe("a published configuration (D11b decisions 2 and 4)", () => {
+  describe("a published configuration", () => {
     /**
      * A's configuration with version 1 published by A and a draft version
      * 2; B, A's teammate, a contributor.
@@ -3575,7 +3571,7 @@ describe("configuration routes", () => {
           { id: first.id, versionNumber: 1, label: null, publishedAt: publishedAt.toISOString() },
         ],
       });
-      // A new version from the published one: a draft (decision 4's "Create a new version from it").
+      // A new version from the published one: a draft.
       const third = await newVersion(b.access, group.id, configuration.id, {
         sourceVersionId: first.id,
         yamlContent: "copied\n",
@@ -4076,8 +4072,8 @@ describe("configuration routes", () => {
       ["a 201-character name", { name: "a".repeat(201) }],
       ["a 501-character description", { name: "A", description: "a".repeat(501) }],
       ["a null description", { name: "A", description: null }],
-      ["telflo-api's yaml", { name: "A", yaml: "receivers: {}" }],
-      // Postgres can't store these exactly: 400, never a 500 or a U+FFFD stored (D10 Ruling 37).
+      ["a yaml field", { name: "A", yaml: "receivers: {}" }],
+      // Postgres can't store these exactly: 400, never a 500 or a U+FFFD stored.
       ["U+0000 in the name", { name: "Gate\u0000way" }],
       ["a lone surrogate in the name", { name: "Gate\ud800way" }],
       ["U+0000 in the description", { name: "A", description: "Edge\u0000" }],
@@ -4101,7 +4097,7 @@ describe("configuration routes", () => {
       ["a null name", { name: null }],
       ["a null description", { description: null }],
       ["a 201-character name", { name: "a".repeat(201) }],
-      ["telflo-api's yaml", { yaml: "receivers: {}" }],
+      ["a yaml field", { yaml: "receivers: {}" }],
       ["U+0000 in the name", { name: "Re\u0000named" }],
       ["a lone surrogate in the name", { name: "Re\ud800named" }],
       ["U+0000 in the description", { description: "Edge\u0000" }],
@@ -4184,14 +4180,14 @@ describe("configuration routes", () => {
         ["a number", { yamlContent: 42, ...EMPTY_GRAPH }],
         ["an unknown field", { yamlContent: "", ...EMPTY_GRAPH, versionNumber: 2 }],
         [
-          "U+0000, which Postgres can't store (Preflight ruling 11)",
+          "U+0000, which Postgres can't store",
           { yamlContent: "receivers:\u0000", ...EMPTY_GRAPH },
         ],
         [
-          "a lone surrogate, which isn't well formed (Preflight ruling 11)",
+          "a lone surrogate, which isn't well formed",
           { yamlContent: "receivers: \ud83d", ...EMPTY_GRAPH },
         ],
-        ["the text alone, D8's save", { yamlContent: "receivers: {}\n" }],
+        ["the text alone, a text-only save", { yamlContent: "receivers: {}\n" }],
         ["a missing nodes", { yamlContent: "", edges: [], pipelines: [] }],
         ["a missing edges", { yamlContent: "", nodes: [], pipelines: [] }],
         ["a missing pipelines", { yamlContent: "", nodes: [], edges: [] }],
@@ -4310,7 +4306,7 @@ describe("configuration routes", () => {
     });
   });
 
-  describe("collector distributions and versions (D13a decisions 5, 8, 9 and 11)", () => {
+  describe("collector distributions and versions", () => {
     const VERSION_UNKNOWN = ["collector_version_unknown", "That collector version isn't available."] as const;
     const DISTRIBUTION_UNKNOWN = ["collector_distribution_unknown", "That collector distribution isn't available."] as const;
 
@@ -4321,8 +4317,8 @@ describe("configuration routes", () => {
       ...extra,
     });
 
-    describe("creating a configuration (Preflight ruling 14)", () => {
-      it("with no distribution: the catalogue's default, which the configuration carries, its version 1 at that distribution's default version", async () => {
+    describe("creating a configuration", () => {
+      it("with no distribution: the catalog's default, which the configuration carries, its version 1 at that distribution's default version", async () => {
         const { organization, access } = await personalUser();
 
         const configuration = await created(access, organization.id, "Gateway");
@@ -4355,7 +4351,7 @@ describe("configuration routes", () => {
         });
       });
 
-      it("refuses a distribution the catalogue doesn't have: 400 collector_distribution_unknown, writing and auditing nothing", async () => {
+      it("refuses a distribution the catalog doesn't have: 400 collector_distribution_unknown, writing and auditing nothing", async () => {
         const { organization, access } = await personalUser();
         const before = await snapshot();
 
@@ -4367,15 +4363,15 @@ describe("configuration routes", () => {
         expect(await snapshot()).toEqual(before);
       });
 
-      it("refuses a distribution that isn't in the catalogue's format: 400 invalid_request", async () => {
+      it("refuses a distribution that isn't in the catalog's format: 400 invalid_request", async () => {
         const { organization, access } = await personalUser();
         expectInvalid(await create(access, organization.id, { name: "Gateway", collectorDistribution: "OpenTelemetry Contrib" }));
         expect(await configurationRows()).toEqual([]);
       });
     });
 
-    describe("saving a version's collector version (Preflight ruling 13)", () => {
-      it("stores a version the distribution offers as an ordinary save: 200 with it, the version's updatedAt moved (Ruling 33), the configuration touched, and the save audited", async () => {
+    describe("saving a version's collector version", () => {
+      it("stores a version the distribution offers as an ordinary save: 200 with it, the version's updatedAt moved, the configuration touched, and the save audited", async () => {
         const { organization, access } = await personalUser();
         const configuration = await created(access, organization.id, "Gateway");
         const version = await versionOf(configuration.id);
@@ -4420,7 +4416,7 @@ describe("configuration routes", () => {
         });
       });
 
-      it("refuses a version the catalogue doesn't have: 400 collector_version_unknown, writing, touching and auditing nothing", async () => {
+      it("refuses a version the catalog doesn't have: 400 collector_version_unknown, writing, touching and auditing nothing", async () => {
         const { organization, access } = await personalUser();
         const configuration = await created(access, organization.id, "Gateway");
         const version = await versionOf(configuration.id);
@@ -4435,7 +4431,7 @@ describe("configuration routes", () => {
         expect(await snapshot()).toEqual(before);
       });
 
-      it("refuses a version that isn't in the catalogue's format: 400 invalid_request", async () => {
+      it("refuses a version that isn't in the catalog's format: 400 invalid_request", async () => {
         const { organization, access } = await personalUser();
         const configuration = await created(access, organization.id, "Gateway");
         const version = await versionOf(configuration.id);
@@ -4465,7 +4461,7 @@ describe("configuration routes", () => {
       });
     });
 
-    describe("creating a version (decision 9, Preflight ruling 16)", () => {
+    describe("creating a version", () => {
       it("from a published version, as the banner's \"Create a new version from it\" does: the new version has its pin", async () => {
         const { organization, access, configuration, first } = await withTwoVersions();
         await ownerDb.updateTable("configuration_versions").set({ collector_version: otherVersion }).where("id", "=", first.id).execute();
@@ -4514,7 +4510,7 @@ describe("configuration routes", () => {
         expect(await versionNumbered(configuration.id, 3)).toMatchObject({ collector_version: first.collector_version });
       });
 
-      it("refuses a collector version the catalogue doesn't have: 400 collector_version_unknown, creating, touching and auditing nothing", async () => {
+      it("refuses a collector version the catalog doesn't have: 400 collector_version_unknown, creating, touching and auditing nothing", async () => {
         const { organization, access, configuration, first } = await withTwoVersions();
         const before = await snapshot();
 
@@ -4531,7 +4527,7 @@ describe("configuration routes", () => {
         expect(await snapshot()).toEqual(before);
       });
 
-      it("refuses a distribution in the body (400 invalid_request): the server stamps the configuration's (Preflight ruling 18)", async () => {
+      it("refuses a distribution in the body (400 invalid_request): the server stamps the configuration's", async () => {
         const { organization, access, configuration, first } = await withTwoVersions();
         const before = await snapshot();
         expectInvalid(
@@ -4547,12 +4543,12 @@ describe("configuration routes", () => {
     });
   });
 
-  describe("under concurrency (decision 9)", () => {
+  describe("under concurrency", () => {
     /**
      * Resolves once `count` backends other than this test's own wait on a
-     * lock (D2a Ruling 6), or once `isSettled()` holds: the requests have
-     * reached the lock the held transaction blocks, or didn't block at all
-     * (which the assertions then catch). Throws after five seconds.
+     * lock, or once `isSettled()` holds: the requests have reached the
+     * lock the held transaction blocks, or didn't block at all (which the
+     * assertions then catch). Throws after five seconds.
      */
     const waitForLockWaits = async (count: number, isSettled: () => boolean = () => false): Promise<void> => {
       const deadline = Date.now() + 5_000;
@@ -4602,7 +4598,7 @@ describe("configuration routes", () => {
      * Holds `lockSql`'s row from a side connection, starts `first` and waits
      * until it is blocked, then `second` and waits again, runs `whileHeld`,
      * then releases: the two go on in that order through the lock both queue
-     * on (D6 Ruling 8).
+     * on.
      */
     const inOrder = async (
       lockSql: string,
@@ -4647,7 +4643,7 @@ describe("configuration routes", () => {
       });
 
     describe("a rename and a delete of one configuration, with its row held", () => {
-      // B is an admin of A's published configuration, so B may delete it (D11b decision 2).
+      // B is an admin of A's published configuration, so B may delete it.
       const both = async () => {
         const a = await memberActiveInGroup("admin");
         const b = await memberActiveInGroup("admin", a.group.id);
@@ -4697,10 +4693,10 @@ describe("configuration routes", () => {
       });
     });
 
-    describe("a save and a delete of one configuration, with its row held (D8 decision 6)", () => {
-      // B is an admin of A's published configuration, so B may delete it
-      // (D11b decision 2); A saves its draft version 2, since the published
-      // version 1 can't be changed (decision 4).
+    describe("a save and a delete of one configuration, with its row held", () => {
+      // B is an admin of A's published configuration, so B may delete it; A
+      // saves its draft version 2, since the published version 1 can't be
+      // changed.
       const both = async () => {
         const a = await memberActiveInGroup("admin");
         const b = await memberActiveInGroup("admin", a.group.id);
@@ -4708,8 +4704,8 @@ describe("configuration routes", () => {
         await publish(configuration.id);
         // Stamped with the frozen clock, not the fixture's real time: a save
         // writes a millisecond past the version's updated_at when the clock
-        // hasn't passed it (D11b Ruling 33), so a real stamp later than the
-        // clock would move the save's off the clock.
+        // hasn't passed it, so a real stamp later than the clock would move
+        // the save's off the clock.
         await addConfigurationVersion(ownerDb, {
           configurationId: configuration.id,
           organizationId: a.group.id,
@@ -4786,12 +4782,12 @@ describe("configuration routes", () => {
       });
     });
 
-    describe("two creates of one configuration, with its row held (D10 decisions 5 and 7)", () => {
+    describe("two creates of one configuration, with its row held", () => {
       it("the second waits for the first, and takes the next number", async () => {
         const a = await memberActiveInGroup("admin");
         const b = await memberActiveInGroup("contributor", a.group.id);
         const configuration = await created(a.access, a.group.id, "Contested");
-        // Published, so B sees it (D11b decision 1).
+        // Published, so B sees it.
         await publish(configuration.id);
         const first = await versionOf(configuration.id);
         tick();
@@ -4857,10 +4853,10 @@ describe("configuration routes", () => {
       });
     });
 
-    describe("a version's create, rename or selection and a delete of its configuration, with its row held (D10 decision 7)", () => {
-      // B is an admin of A's published configuration, so B may delete it
-      // (D11b decision 2); A's writes name its draft version 2, which may be
-      // renamed, unlike the published version 1 (decision 4).
+    describe("a version's create, rename or selection and a delete of its configuration, with its row held", () => {
+      // B is an admin of A's published configuration, so B may delete it;
+      // A's writes name its draft version 2, which may be renamed, unlike the
+      // published version 1.
       const both = async () => {
         const a = await memberActiveInGroup("admin");
         const b = await memberActiveInGroup("admin", a.group.id);
@@ -4975,7 +4971,7 @@ describe("configuration routes", () => {
         const member = await memberActiveInGroup("contributor", admin.group.id);
         const configuration = await created(admin.access, admin.group.id, "Shared");
         // Published, so the member sees it, and its draft version 2 is what
-        // they save (D11b decisions 1 and 4).
+        // they save.
         await publish(configuration.id);
         await addConfigurationVersion(ownerDb, {
           configurationId: configuration.id,
@@ -5058,7 +5054,7 @@ describe("configuration routes", () => {
 
         expect(creation.statusCode).toBe(201);
         expect(removal.statusCode).toBe(204);
-        // The member's draft, which the admin doesn't see (D11b decision 1): read as the owner.
+        // The member's draft, which the admin doesn't see: read as the owner.
         expect((await configurationRows()).map((row) => [row.name, row.created_by_user_id])).toEqual([
           ["Just in time", member.account.user.id],
         ]);

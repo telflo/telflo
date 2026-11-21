@@ -12,15 +12,13 @@ import { GroupDialog } from "./GroupDialog.js";
 import { GroupsTable, type GroupRowAction } from "./GroupsTable.js";
 
 /*
- * A server fleet's Groups tab (D17b-2 decisions 9, 10, 14, 22–25, 32–34;
- * Preflight rulings 8, 10, 11, 14 and 15): its intro, its "New group" button
- * and its table, over `useGroupsTab` (the fleet's groups, polled every 15 s
- * while the tab is visible and no dialog is open). Mounted only while the tab
- * is chosen (Radix Tabs unmounts the others), keyed by the fleet.
- * Per the D17b-2 Parity Notes:
+ * A server fleet's Groups tab: its intro, its "New group" button and its
+ * table, over `useGroupsTab` (the fleet's groups, polled every 15 s while the
+ * tab is visible and no dialog is open). Mounted only while the tab is chosen
+ * (Radix Tabs unmounts the others), keyed by the fleet. Its details:
  *
- * - The intro and "New group" in the spec's words (decision 6); a refresh
- *   button ("Refresh groups", spinning while a person's read is under way).
+ * - The intro and "New group"; a refresh button ("Refresh groups", spinning
+ *   while a person's read is under way).
  * - States: "Loading groups…"; a failed first load ("Failed to load
  *   groups") with "Try again"; never empty (Default always exists).
  * - A row's More opens its details (`GroupDetailsDialog`); "New group", a
@@ -31,20 +29,19 @@ import { GroupsTable, type GroupRowAction } from "./GroupsTable.js";
  * - After a write (or a 404, or an unknown outcome) the tab reads its groups
  *   again and the route its fleet (`onFleetChanged`: the strip and the
  *   Collectors tab's next read follow).
- * - A row's Install opens the route's install dialog (D17c-1 decision 44:
- *   one dialog for the page, `onInstall`), absent on an archived fleet; the
- *   route moves `groupsChanged` after an assignment made outside the tab,
- *   and the tab reads its groups again.
- * - An archived fleet's groups stay editable (Preflight ruling 8: the API
- *   allows it; its collectors are refused anyway until it is unarchived).
+ * - A row's Install opens the route's install dialog (one dialog for the
+ *   page, `onInstall`), absent on an archived fleet; the route moves
+ *   `groupsChanged` after an assignment made outside the tab, and the tab
+ *   reads its groups again.
+ * - An archived fleet's groups stay editable (the API allows it; its
+ *   collectors are refused anyway until it is unarchived).
  *
  * Every dialog's close gives the focus back to the control that opened it
- * (`useReturnFocus`, Preflight ruling 14): the row's More, Assign or Edit, or
- * Delete, or "New group". When that control is gone (its row deleted), the
- * focus goes to the first row's Assign or Edit, else to "Refresh groups". A
- * write's reload that removes the row the focus went back to moves it on
- * the same way; rows from a read begun before the write leave that to the
- * reload.
+ * (`useReturnFocus`): the row's More, Assign or Edit, or Delete, or "New
+ * group". When that control is gone (its row deleted), the focus goes to the
+ * first row's Assign or Edit, else to "Refresh groups". A write's reload that
+ * removes the row the focus went back to moves it on the same way; rows from
+ * a read begun before the write leave that to the reload.
  */
 
 export const GROUPS_INTRO =
@@ -56,7 +53,7 @@ interface GroupsTabProps {
   onFleetGone: () => void;
   /** The route's `useFleet().reload` again: after a group's write, the strip and the Collectors tab follow. */
   onFleetChanged: () => void;
-  /** A row's Install (an active fleet only, D17c-1 decision 44): the route's install dialog for the group. */
+  /** A row's Install (an active fleet only): the route's install dialog for the group. */
   onInstall?: ((group: CollectorGroup, from: HTMLElement) => void) | undefined;
   /** A count the route moves when the groups changed elsewhere (the install dialog's or the checklist's Assign): the tab reads them again. */
   groupsChanged?: number | undefined;
@@ -90,7 +87,7 @@ export function GroupsTab({ fleet, onFleetGone, onFleetChanged, onInstall, group
   }, [groupsChanged, reload]);
   const organizationId = useCurrentUser()?.organization.id ?? null;
 
-  // Focus back to each dialog's opener, else the first row's Assign or Edit, else Refresh (Preflight ruling 14).
+  // Focus back to each dialog's opener, else the first row's Assign or Edit, else Refresh.
   const focus = useReturnFocus();
   const firstAction = useRef<HTMLButtonElement>(null);
   const refreshButton = useRef<HTMLButtonElement>(null);
@@ -105,7 +102,7 @@ export function GroupsTab({ fleet, onFleetGone, onFleetChanged, onInstall, group
   const locked = useLockedAction();
   const openAction = (kind: GroupAction["kind"], group: CollectorGroup | null, from: HTMLElement) => {
     if (organizationId === null) return;
-    // In the playground (D31-1 decisions 24 and 35) a group's details open (a read); its create, edit and delete are locked.
+    // In the playground a group's details open (a read); its create, edit and delete are locked.
     if (locked !== null && kind !== "more") {
       locked(GROUP_LOCKED_WORDS[kind], from);
       return;

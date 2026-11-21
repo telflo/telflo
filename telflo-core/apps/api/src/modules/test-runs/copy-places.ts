@@ -1,28 +1,26 @@
 /*
- * The queue's copies in flight (D14b Ruling 33). A run from a definition
- * isn't counted against the 20 a minute (D14b decision 7), so without a
- * bound a burst of them at a nearly full queue could each copy its input
- * before the re-check refused all but one. Instead, at most
- * TEST_RUN_COPIES_IN_FLIGHT_PER_USER queue requests per person, per
- * organization, hold a place at once, in memory in this API process (as
- * every limit is). A place is taken before the count of
- * waiting runs and kept until the request ends, so a request that waited
- * counts the queue as it is once it has its place, and a full queue refuses
- * it before any copy. Further requests wait for a place, first come first
- * served; beyond TEST_RUN_COPIES_WAITING_PER_USER waiting, a request is
- * refused (`test_run_rate_limited`, with its own words: D14b Ruling 37).
+ * The queue's copies in flight. A run from a definition isn't counted
+ * against the 20 a minute, so without a bound a burst of them at a nearly
+ * full queue could each copy its input before the re-check refused all but
+ * one. Instead, at most TEST_RUN_COPIES_IN_FLIGHT_PER_USER queue requests
+ * per person, per organization, hold a place at once, in memory in this API
+ * process (as every limit is). A place is taken before the count of waiting
+ * runs and kept until the request ends, so a request that waited counts the
+ * queue as it is once it has its place, and a full queue refuses it before
+ * any copy. Further requests wait for a place, first come first served;
+ * beyond TEST_RUN_COPIES_WAITING_PER_USER waiting, a request is refused
+ * (`test_run_rate_limited`, with its own words).
  *
  * The browser is never refused by it in practice: a Play all keeps at most
- * 4 requests in flight (D14b Preflight ruling 14), though two Play alls on
- * different versions or in different tabs can have 8 in flight, and the
- * extras wait (D14b Ruling 49).
+ * 4 requests in flight, though two Play alls on different versions or in
+ * different tabs can have 8 in flight, and the extras wait.
  */
 
 /** Queue requests per person, per organization, between the count of waiting runs and their end. */
 export const TEST_RUN_COPIES_IN_FLIGHT_PER_USER = 4;
 /** Queue requests per person, per organization, waiting for one of those places. */
 export const TEST_RUN_COPIES_WAITING_PER_USER = 100;
-/** The refusal's retry-after: places free as copies end, within seconds (as D13b Ruling 37's in-flight slots). */
+/** The refusal's retry-after: places free as copies end, within seconds. */
 export const TEST_RUN_COPIES_RETRY_AFTER_SECONDS = 1;
 
 /** A place taken, or why not. */

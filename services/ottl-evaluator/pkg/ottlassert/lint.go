@@ -33,13 +33,13 @@ type LintResult struct {
 
 // Lint parse-checks OTTL conditions, statements, and value expressions
 // against the given context using the standard OTTL function set (editors +
-// converters). D15a: no route calls it, and Save never uses it. Because it
+// converters). No route calls it, and Save never uses it. Because it
 // registers the editors, it accepts what a run can't evaluate; a rule is
 // checked at Save and in a run alike by internal/rules' Check, with the
 // converters-only parsers (ParseCondition, ParseValueExpression).
 // Processor-specific custom functions are not registered, so a statement
 // using one will report an unknown-function error — callers that lint e.g.
-// filter processor conditions should treat those with judgement.
+// filter processor conditions should treat those with judgment.
 func Lint(c Context, conditions, statements, valueExpressions []string) (LintResult, error) {
 	set := componenttest.NewNopTelemetrySettings()
 	switch c {

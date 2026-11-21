@@ -4,8 +4,7 @@ info:
   version: 1.0.0
   description: |
     The evaluator checks a test run's validation rules against the collector's
-    output and log (D15a; plan Preflight rulings 5-12). Only the platform's API calls it, on an internal
-    network.
+    output and log. Only the platform's API calls it, on an internal network.
 
     Every request but `GET /health` carries `Authorization: Bearer <secret>`.
     The secret is checked before anything routes or reads the body, so a
@@ -31,7 +30,7 @@ info:
     "OTTL syntax error: ", a regexp's after "Invalid regex: ", and every
     other problem in its own words.
 
-    `POST /ottl/v1/lint` (D25) parse-checks OTTL texts for the platform's
+    `POST /ottl/v1/lint` parse-checks OTTL texts for the platform's
     public API: each text's verdict, never the text.
 servers:
   - url: http://localhost:8003
@@ -121,7 +120,7 @@ paths:
       operationId: lint
       summary: Parse-check OTTL conditions, statements and value expressions against one context.
       description: |
-        For the platform's public API (D25). Each text gets the rule checks'
+        For the platform's public API. Each text gets the rule checks'
         guards first (8,192 bytes at most, OTTL nesting of 12 at most, a
         single-escaped regex sequence such as `\b` refused), then the parse
         with the standard OTTL functions (editors and converters). The

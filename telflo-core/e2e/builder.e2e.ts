@@ -36,17 +36,17 @@ import {
 import { signInThroughApi, skipEditorTour, waitForHydration } from "./support/session.js";
 import { E2E_SAAS_WEB_URL } from "./support/environment.js";
 
-// The visual builder (D9a), in the browser: the canvas, the toolbox, the
+// The visual builder, in the browser: the canvas, the toolbox, the
 // Configuration tab, undo, manual edit mode and the tour, against the text
-// that stays the content (D9a decision 2). Each test works in an
-// organization of its own, so tests and browsers run in parallel.
+// that stays the content. Each test works in an organization of its own,
+// so tests and browsers run in parallel.
 //
-// React Flow in Playwright (D9a Preflight):
+// React Flow in Playwright:
 // - A palette chip is dragged onto the canvas with `locator.dragTo` (HTML5
 //   drag and drop); handles and resizers with mouse steps.
-// - Every drag stays inside the window: Firefox mis-sizes a drag that
-//   leaves it (Preflight ruling 15). The window is 1600 × 1100, so the
-//   starter, fitted on open, sits well inside it.
+// - Every drag stays inside the window: Firefox mis-sizes a drag that leaves
+//   it. The window is 1600 × 1100, so the starter, fitted on open, sits well
+//   inside it.
 // - Where a point on the canvas is wanted, it is named in flow coordinates
 //   and turned into the window's through the viewport's transform
 //   (`flowToScreen`), so no test depends on the zoom the fit chose.
@@ -65,8 +65,7 @@ const UNREADABLE_OVERLAY = "The canvas can't show this YAML until it reads as a 
 
 /**
  * `tour`: whether the editor's tour may start. Off unless a test turns it on
- * (`skipEditorTour`): it would cover the page on a first visit (D9a decision
- * 14).
+ * (`skipEditorTour`): it would cover the page on a first visit.
  */
 const test = base.extend<{ tour: boolean }>({
   tour: [false, { option: true }],
@@ -213,7 +212,7 @@ async function openSeeded(page: Page, yamlContent = STARTER_CONFIGURATION_YAML, 
   return configuration.id;
 }
 
-/** `#rrggbb` as the browser reports a computed colour. */
+/** `#rrggbb` as the browser reports a computed color. */
 function rgb(hex: string): string {
   const value = parseInt(hex.slice(1), 16);
   return `rgb(${(value >> 16) & 255}, ${(value >> 8) & 255}, ${value & 255})`;
@@ -237,7 +236,7 @@ async function selectPipeline(page: Page, badge: string): Promise<void> {
   ).toBeVisible();
 }
 
-/** The group's dashed box, whose border is the pipeline's colour. */
+/** The group's dashed box, whose border is the pipeline's color. */
 function groupBox(page: Page, badge: string): Locator {
   return group(page, badge).locator(".border-dashed");
 }
@@ -258,7 +257,7 @@ const OTLP_2_DECLARATION = [
 
 // ── The tests ──────────────────────────────────────────────────────────────
 
-// The SaaS pair (D36-1 Preflight ruling 16): a Google sign-up behind the Terms dialog.
+// The SaaS pair: a Google sign-up behind the Terms dialog.
 test.describe("on the SaaS pair", () => {
   test.use({ baseURL: E2E_SAAS_WEB_URL });
 
@@ -375,8 +374,8 @@ test("a node can't be dragged out of its pipeline; moving it, resizing a group a
   });
   expect(await editorText(page)).toContain("      exporters: [otlp, debug]\n    metrics:");
 
-  // Towards the metrics pipeline: it stays inside traces (the owner's
-  // ruling, Ruling 41), so the text doesn't change.
+  // Towards the metrics pipeline: it stays inside traces, so the text
+  // doesn't change.
   const textBefore = await editorText(page);
   const metrics = await shownNode(page, (await group(page, "Metrics").getAttribute("data-id")) ?? "");
   const from = await centre(node(page, debug));
@@ -439,7 +438,7 @@ test("a node can't be dragged out of its pipeline; moving it, resizing a group a
   await expect(unsavedBadge(page)).toBeHidden();
 });
 
-test("an OTLP exporter dropped on a version pinned to 0.162.0 is written otlp_grpc/2, and saved, keeps its place after a reload (D13b decision 5, Ruling 60)", async ({
+test("an OTLP exporter dropped on a version pinned to 0.162.0 is written otlp_grpc/2, and saved, keeps its place after a reload", async ({
   page,
 }) => {
   await openSeeded(page, STARTER_CONFIGURATION_YAML, "0.162.0");
@@ -483,9 +482,9 @@ test("Backspace on a selected node asks first: Cancel keeps it, Delete removes i
     yamlContent: STARTER_CONFIGURATION_YAML,
   });
   await signInThroughApi(page, user);
-  // A page to go back to, as WebKit did on Backspace without preventDefault (Preflight ruling 15).
+  // A page to go back to, as WebKit did on Backspace without preventDefault.
   await open(page, "/app");
-  // At the version's address: `/editor/{id}` would replace itself, a navigation the recorder would see (D10 Preflight ruling 7).
+  // At the version's address: `/editor/{id}` would replace itself, a navigation the recorder would see.
   const address = await versionAddress(configuration.id);
   await open(page, address);
   await waitForCanvas(page);
@@ -520,7 +519,7 @@ test("Backspace on a selected node asks first: Cancel keeps it, Delete removes i
   await expect(dialog).toBeHidden();
   await expect(batch).toHaveCount(0);
   await expect(componentNodes(page)).toHaveCount(11);
-  // The traces pipeline's chain closes over the deleted processor: its receiver now feeds its exporter (D9d Ruling 36).
+  // The traces pipeline's chain closes over the deleted processor: its receiver now feeds its exporter.
   await expect(page.locator(".react-flow__edge")).toHaveCount(5);
   // Batch stays declared (the other pipelines use it); only the traces pipeline loses it.
   expect(linesOf(await editorText(page))).toEqual(replaceLine(STARTER_LINES, TRACES_PROCESSORS, "      processors: []"));
@@ -539,7 +538,7 @@ test("Backspace on a selected node asks first: Cancel keeps it, Delete removes i
   expect(navigations).toEqual([]);
 });
 
-test("a pipeline added, recoloured and deleted comes back step by step with Undo", async ({ page }) => {
+test("a pipeline added, recolored and deleted comes back step by step with Undo", async ({ page }) => {
   await openSeeded(page);
   await waitForCanvas(page);
   const undo = page.getByRole("button", { name: "Undo (Ctrl+Z)" });
@@ -602,7 +601,7 @@ test("editing a component in the Configuration tab's YAML box changes its line i
   await waitForCanvas(page);
 
   await node(page, "node_1").click();
-  // Batch has a form: its box is in the collapsed "Advanced: Instance & YAML" (D9b decision 6).
+  // Batch has a form: its box is in the collapsed "Advanced: Instance & YAML".
   await page.getByRole("button", { name: "Advanced: Instance & YAML" }).click();
   const box = page.getByLabel("Raw YAML");
   await expect(box).toHaveValue(/# Flush at least every ten seconds\.\n/);
@@ -655,7 +654,7 @@ test("a sidebar link clicked right after typing an instance name opens Unsaved C
   await waitForCanvas(page);
   // The editor's own replace to the version's address resets the router's
   // blockers when it lands, closing a dialog opened before it: wait for it
-  // first (a pre-existing race in the product, D22 Ruling 112).
+  // first (a pre-existing race in the product).
   await expect(page).toHaveURL(await versionAddress(configurationId));
   await node(page, "node_1").click();
   await page.getByRole("button", { name: "Advanced: Instance & YAML" }).click();
@@ -685,7 +684,7 @@ test("typing in the YAML tab enters manual edit mode: Undo All restores the text
   await expect(tab(page, "Configuration")).toBeDisabled();
   await expect(paletteChip(page, "Receivers", "OTLP")).toHaveCount(0);
   // Polled, not read once: on a slow runner Monaco's model can trail the
-  // keyboard by a frame (D8 Ruling 33's race; D9a Ruling 42).
+  // keyboard by a frame.
   await expect.poll(async () => editorText(page)).toBe(`# typed\n${STARTER_CONFIGURATION_YAML}`);
 
   await page.getByRole("button", { name: "Undo All" }).click();
@@ -709,8 +708,8 @@ test("typing in the YAML tab enters manual edit mode: Undo All restores the text
   await expect(page.getByText(MANUAL_EDIT_OVERLAY)).toBeVisible();
   await expect(componentNodes(page)).toHaveCount(12);
   // Apply waits for the collector validator's answer for the typed text, 2 s
-  // after the typing (D13b decision 2; the fake answers valid), and the
-  // overlay's chip says so.
+  // after the typing (the fake answers valid), and the overlay's chip says
+  // so.
   await expect(page.getByRole("button", { name: "Apply" })).toBeEnabled();
   await expect(page.getByText("Yaml is Valid")).toBeVisible();
 

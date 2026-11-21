@@ -27,7 +27,7 @@ describe("DeleteOrganizationDialog", () => {
     vi.restoreAllMocks();
   });
 
-  it("has the Parity Notes' copy", async () => {
+  it("has its copy", async () => {
     renderDialog();
     const dialog = await screen.findByRole("dialog", { name: "Delete Organization" });
 
@@ -130,7 +130,7 @@ describe("DeleteOrganizationDialog", () => {
     await vi.waitFor(() => expect(error).toHaveBeenCalledWith("Failed to delete organization"));
   });
 
-  it("clears what was typed when cancelled", async () => {
+  it("clears what was typed when canceled", async () => {
     const { user, onOpenChange } = renderDialog();
     const input = await screen.findByRole("textbox", { name: "Organization name" });
 

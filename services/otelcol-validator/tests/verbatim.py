@@ -1,14 +1,12 @@
-"""The scanning functions as 207bc02 held them (D13b Preflight rulings 1
-and 11): the reference the service's linear versions are compared with
-(D13b ruling 37, tests/test_linear_scans.py). Not used by the service: each
-costs the square of its input's length on unbalanced or unterminated
-references.
+"""The scanning versions of the service's functions: the reference its
+linear versions are compared with (tests/test_linear_scans.py). Not used by
+the service: each costs the square of its input's length on unbalanced or
+unterminated references.
 
-`_disallowed_confmap_schemes` is the raw-text scan, as 4a66e26 held it in
-providers.py: the service never scans the raw text (references are found on
-the decoded nodes, and a text PyYAML can't read never reaches the
-neutraliser), so it is kept here for the tests that compare with it (D13b
-ruling 44).
+`_disallowed_confmap_schemes` is a raw-text scan: the service never scans the
+raw text (references are found on the decoded nodes, and a text PyYAML can't
+read never reaches the neutralizer), so it is kept here for the tests that
+compare with it.
 """
 
 from __future__ import annotations
@@ -114,7 +112,7 @@ def live_organization_references(text: str) -> list[str]:
     support.
 
     Case-sensitive on the ``${org:`` prefix: ``${ORG:X}`` is not an
-    organization variable, even though the neutraliser still classifies it as
+    organization variable, even though the neutralizer still classifies it as
     a foreign scheme via ``scheme.lower()`` — that is a separate, correct
     concern (nothing not `env:` reaches the collector).
 

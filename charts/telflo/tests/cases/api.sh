@@ -1,6 +1,5 @@
-# The API (D33-1 decisions 14, 18, 19, 20, 23-25; Preflight rulings 3, 4, 7,
-# 8 and 9; the plan's Appendix), and what holds for the API, the web app and
-# the gateway together: no secret value in any rendered output. Sourced by
+# The API, and what holds for the API, the web app and the gateway
+# together: no secret value in any rendered output. Sourced by
 # tests/render-tests.sh, which defines every helper used here.
 
 API_D="Deployment/telflo-api"
@@ -44,7 +43,7 @@ api_labels() {
   done
   no_path "$1" "$API_D.spec.selector.matchLabels.app.kubernetes.io/version" && no_path "$1" "$API_D.spec.selector.matchLabels.helm.sh/chart"
 }
-each_profile "API: pods labelled app.kubernetes.io/name telflo and app.kubernetes.io/component api, selected by both (no version in a selector)" api_labels
+each_profile "API: pods labeled app.kubernetes.io/name telflo and app.kubernetes.io/component api, selected by both (no version in a selector)" api_labels
 api_management_from() { # every label management.from names is on the API's pods, with its value
   local np="NetworkPolicy/telflo-opamp-server-management.spec.ingress[0].from[0].podSelector.matchLabels" lines
   lines="$(awk -v p="$np." 'index($0, p) == 1 { print substr($0, length(p) + 1) }' "$L")"
@@ -68,9 +67,9 @@ api_image() {
 run_case "API: ghcr.io/telflo/telflo/api at the chart's appVersion by default; api.image's registry, repository, tag and digest (full); the init container runs the same image" api_image
 # The chart's commands are the image's own: the API's start and paths in
 # telflo-core/Dockerfile's api stage (a change there fails this). The image is
-# compiled (D36-1 decision 43): dist/ beside src/ for the API and @telflo/db,
-# db's migrations copied, the telflo-admin shim on PATH, and no line but a
-# comment names tsx or a source file.
+# compiled: dist/ beside src/ for the API and @telflo/db, db's migrations
+# copied, the telflo-admin shim on PATH, and no line but a comment names tsx
+# or a source file.
 api_dockerfile() {
   local stage
   stage="$(awk '/^FROM .* AS api$/ { on = 1; next } /^FROM / { on = 0 } on' "$REPO_DIR/telflo-core/Dockerfile")"
@@ -87,7 +86,7 @@ api_dockerfile() {
     [ -f "$REPO_DIR/telflo-core/apps/api/src/admin/telflo-admin.ts" ] &&
     eq "$L" "$API_C.workingDir" '"/app/apps/api"' && eq "$L" "$API_M.workingDir" '"/app/packages/db"'
 }
-run_case "API: the image's start (node dist/index.js in /app/apps/api, uid 1000, the catalogue at /catalog), dist/migrate.js and the migrations in /app/packages/db and the telflo-admin shim, compiled, no tsx, as telflo-core/Dockerfile's api stage has them" api_dockerfile
+run_case "API: the image's start (node dist/index.js in /app/apps/api, uid 1000, the catalog at /catalog), dist/migrate.js and the migrations in /app/packages/db and the telflo-admin shim, compiled, no tsx, as telflo-core/Dockerfile's api stage has them" api_dockerfile
 
 # The url_safe checks, exactly (as the flattened listing's JSON: toJson writes
 # & and > as their \u escapes).
@@ -178,19 +177,19 @@ run_case "migrate check: refuses an empty owner-password" api_guard_run migrate 
 run_case "migrate check: refuses an owner-password with an @, quoting nothing" api_guard_run migrate refuse "$AH1" 'cnrypw@x'
 run_case "migrate check: refuses an api-password with a space, quoting nothing" api_guard_run migrate refuse 'cnrypw x' "$AH2"
 
-# --- the environment (the plan's Appendix) ------------------------------------------
+# --- the environment ----------------------------------------------------------------
 API_ENV_HEAD="TELFLO_API_PASSWORD TELFLO_DATABASE_URL TELFLO_API_PORT TELFLO_PUBLIC_WEB_URL TELFLO_PUBLIC_API_URL TELFLO_MAIL_TRANSPORT TELFLO_MAIL_FROM"
 API_ENV_SMTP="TELFLO_SMTP_HOST TELFLO_SMTP_PORT TELFLO_SMTP_ALLOW_INSECURE TELFLO_SMTP_TLS"
 API_ENV_MID="TELFLO_VERIFICATION_TOKEN_TTL_HOURS TELFLO_ACCESS_TOKEN_SECRET TELFLO_TRUST_PROXY_HOPS"
 API_ENV_OPAMP="TELFLO_OPAMP_MANAGEMENT_URL TELFLO_OPAMP_MANAGEMENT_SECRET TELFLO_OPAMP_AGENT_PUBLIC_URL TELFLO_OPAMP_ALLOW_INSECURE_CONNECTIONS"
 API_ENV_SERVICES="TELFLO_OTELCOL_VALIDATOR_URL TELFLO_OTELCOL_VALIDATOR_SECRET TELFLO_OTELCOL_TESTING_URL TELFLO_OTELCOL_TESTING_SECRET TELFLO_OTTL_EVALUATOR_URL TELFLO_OTTL_EVALUATOR_SECRET"
-# The site's eleven variables (D36-1 decision 27), on the API and the web app alike, always rendered.
+# The site's eleven variables, on the API and the web app alike, always rendered.
 SITE_ENV="TELFLO_REGISTRATION TELFLO_PLAYGROUND TELFLO_ANONYMOUS_VALIDATE TELFLO_PUBLIC_FLOWS TELFLO_SALES_INQUIRY TELFLO_EMAIL_NOTIFICATIONS TELFLO_DOCS_URL TELFLO_TERMS_VERSION TELFLO_TERMS_URL TELFLO_PRIVACY_URL TELFLO_COOKIE_POLICY_URL"
 API_ENV_KEYS="TELFLO_QUICK_DEPLOY_ENCRYPTION_KEY TELFLO_QUICK_DEPLOY_PREVIOUS_ENCRYPTION_KEYS TELFLO_LIBRARY_LINK_SIGNING_KEY TELFLO_LIBRARY_LINK_SIGNING_KEYS_PREVIOUS"
 api_env_names() { # <listing> <expected, space-separated>
   [ "$(api_words env_names "$1" "$API_C")" = "$2 " ] && no_path "$1" "$API_C.envFrom"
 }
-run_case "API env, default (smtp, the local file store): exactly the Appendix's variables and D36-1's (TELFLO_SMTP_TLS, the site's eleven), in order" api_env_names "$L" \
+run_case "API env, default (smtp, the local file store): exactly the platform's variables, TELFLO_SMTP_TLS and the site's eleven among them, in order" api_env_names "$L" \
   "$API_ENV_HEAD $API_ENV_SMTP $API_ENV_MID $SITE_ENV $API_ENV_OPAMP $API_ENV_SERVICES TELFLO_FILE_STORE TELFLO_FILE_STORE_ROOT $API_ENV_KEYS"
 run_case "API env, oss-defaults (the site written out at its defaults): the default's exactly" api_env_names "$(listing oss-defaults)" \
   "$API_ENV_HEAD $API_ENV_SMTP $API_ENV_MID $SITE_ENV $API_ENV_OPAMP $API_ENV_SERVICES TELFLO_FILE_STORE TELFLO_FILE_STORE_ROOT $API_ENV_KEYS"
@@ -209,7 +208,7 @@ api_env_s3_no_optional() { # an empty prefix and endpoint set nothing
 run_case "API env: an empty api.fileStore.prefix or endpoint sets no variable" api_env_s3_no_optional
 API_UNSET="TELFLO_ACCESS_TOKEN_TTL_MINUTES TELFLO_REFRESH_TOKEN_TTL_DAYS TELFLO_WEB_ORIGIN TELFLO_OIDC_GOOGLE_ISSUER TELFLO_TEST_RUNS_PER_TESTER TELFLO_TESTING_DOWN_FAIL_AFTER_SECONDS TELFLO_COLLECTOR_IMAGE_REPOSITORY TELFLO_HELM_CHART_REFERENCE TELFLO_HELM_CHART_VERSION TELFLO_INSTALL_TEMPLATES_DIR LOG_LEVEL TSX_DISABLE_CACHE TELFLO_MIGRATION_DATABASE_URL TELFLO_OWNER_PASSWORD"
 api_env_unset() { local v; for v in $API_UNSET; do no_path "$1" "$API_C.env[$v]" || return 1; done; }
-each_profile "API env: the Appendix's unset variables (token lifetimes, the web origin, the issuer, the tester's limits, the install defaults, LOG_LEVEL), TSX_DISABLE_CACHE and the owner's URL never set on the API's container" api_env_unset
+each_profile "API env: the variables left unset (token lifetimes, the web origin, the issuer, the tester's limits, the install defaults, LOG_LEVEL), TSX_DISABLE_CACHE and the owner's URL never set on the API's container" api_env_unset
 
 api_env_default_values() {
   eq "$L" "$API_C.env[TELFLO_DATABASE_URL].value" '"postgresql://telflo_platform:$(TELFLO_API_PASSWORD)@telflo-postgres:5432/telflo_platform"' &&
@@ -381,14 +380,14 @@ api_claim() {
     eq "$L" "$API_PVC.metadata.labels.app.kubernetes.io/component" '"api"'
 }
 run_case "API claim: ReadWriteOnce, 8Gi in the default class; api.fileStore.storageClassName and size set it (local-file-store)" api_claim
-# Ruling 331: `helm uninstall` leaves the claim, as it leaves Postgres's (the
+# `helm uninstall` leaves the claim, as it leaves Postgres's (the
 # database names its files): Helm's own resource policy, its only annotation.
 api_claim_kept() {
   api_local "$1" || return 0
   eq "$1" "$API_PVC.metadata.annotations.helm.sh/resource-policy" '"keep"' &&
     [ "$(awk -v p="$API_PVC.metadata.annotations." 'index($0, p) == 1' "$1" | wc -l | tr -d ' ')" = 1 ]
 }
-each_profile "API claim: helm.sh/resource-policy keep, its only annotation, so helm uninstall leaves the local file store's files (Ruling 331)" api_claim_kept
+each_profile "API claim: helm.sh/resource-policy keep, its only annotation, so helm uninstall leaves the local file store's files" api_claim_kept
 api_replicas() {
   eq "$L" "$API_D.spec.replicas" 1 && eq "$L" "$API_D.spec.strategy.type" '"Recreate"' && no_path "$L" "$API_D.spec.strategy.rollingUpdate" &&
     eq "$(listing s3-file-store)" "$API_D.spec.replicas" 2 && eq "$(listing s3-file-store)" "$API_D.spec.strategy.type" '"RollingUpdate"' &&

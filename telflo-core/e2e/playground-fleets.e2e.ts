@@ -1,16 +1,15 @@
 import { expect, type Page } from "@playwright/test";
-// The SaaS pair (D36-1 Preflight ruling 16): open registration, the Terms, the playground and the anonymous reads.
+// The SaaS pair: open registration, the Terms, the playground and the anonymous reads.
 import { test } from "./support/saas.js";
 import { recordPlaygroundRequests } from "./support/playground.js";
 import { waitForHydration } from "./support/session.js";
 
-// The playground's fleet management with NO account (D31-1 decisions 8, 10,
-// 22, 24, 26 and 35; Preflight rulings 8, 9 and 20): the list, a server
+// The playground's fleet management with NO account: the list, a server
 // fleet's page and its tabs, the Kubernetes fleet's page and its tabs, a
 // collector's details, a locked action's sign-up prompt from each tab,
 // the typed paths (server, k8s) redirecting to the one fleet page, an unknown
 // fleet's "Fleet not found", the links inside the reused components landing
-// on the playground's pages, and decision 22's request allowlist: no `/api/`
+// on the playground's pages, and the playground's request allowlist: no `/api/`
 // request at all. The fleets' labels and the collectors' names are the
 // sample's own words. Each test opens a fresh context, signed out.
 

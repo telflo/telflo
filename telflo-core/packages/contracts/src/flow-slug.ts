@@ -1,17 +1,15 @@
 import { z } from "zod";
 
 /*
- * A flow's slug (D12 decisions 2 and 12), on its own so both the flows'
- * contract and the configurations' (a create's `sourceFlowSlug`) can use it:
- * flows.ts imports configurations.ts, so configurations.ts importing
- * flows.ts would be a cycle whose evaluation order leaves one of them
- * reading the other's constants before they exist. flows.ts re-exports
- * everything here.
+ * A flow's slug, on its own so both the flows' contract and the
+ * configurations' (a create's `sourceFlowSlug`) can use it: flows.ts imports
+ * configurations.ts, so configurations.ts importing flows.ts would be a
+ * cycle whose evaluation order leaves one of them reading the other's
+ * constants before they exist. flows.ts re-exports everything here.
  */
 
 /**
- * The slug's limit (D12 Preflight ruling 19): the admin dialog's slugify cuts
- * a name to 80; the
+ * The slug's limit: the admin dialog's slugify cuts a name to 80; the
  * table's ck_flows_slug_length has this.
  */
 export const FLOW_SLUG_MAXIMUM_LENGTH = 80;
@@ -24,7 +22,7 @@ export const FLOW_SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
 /**
  * A flow's slug as a request names it: exactly as sent, not trimmed. The
- * create's `sourceFlowSlug` (D12 decision 12) checks its format with this.
+ * create's `sourceFlowSlug` checks its format with this.
  */
 export const FlowSlugSchema = z
   .string()

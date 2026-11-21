@@ -4,11 +4,10 @@ import { isOrganizationGone, isTermsAcceptanceRequired } from "~/lib/configurati
 import { isFleetGone, isRateLimited, isUnknownOutcome } from "~/lib/fleets.js";
 
 /*
- * Bulk move and bulk delete's loop of single writes (D17b-1 decisions 12
- * and 27; Preflight ruling 13): one request at a time, each under its own
- * hang guard, paced on a 429's `Retry-After`, with progress and a result per
- * item. Nothing here names an item in a message: the caller words each
- * result.
+ * Bulk move and bulk delete's loop of single writes: one request at a time,
+ * each under its own hang guard, paced on a 429's `Retry-After`, with progress
+ * and a result per item. Nothing here names an item in a message: the caller
+ * words each result.
  */
 
 /** What became of one item, in the order the items were given. */
@@ -63,18 +62,17 @@ export interface PacedWrites<Item> {
 const COLLECTOR_NOT_FOUND = "collector_not_found";
 
 /**
- * Whether a refusal means the loop can't go on (Preflight ruling 13): the
- * organization gone, the terms to accept, the session ended, the fleet
- * gone. The rest would be refused the same way.
+ * Whether a refusal means the loop can't go on: the organization gone, the
+ * terms to accept, the session ended, the fleet gone. The rest would be
+ * refused the same way.
  */
 function stopsEveryLoop(error: unknown): boolean {
   return isOrganizationGone(error) || isTermsAcceptanceRequired(error) || isSessionEnded(error) || isFleetGone(error);
 }
 
 /**
- * Writes each of `items` in turn through `write` (D17b-1 decision 12;
- * Preflight ruling 13), one request at a time, each with its own
- * `abortAfter(timeoutMs)` whose signal `write` passes on.
+ * Writes each of `items` in turn through `write`, one request at a time, each
+ * with its own `abortAfter(timeoutMs)` whose signal `write` passes on.
  *
  * - A 429 waits `max(1, retryAfterSeconds ?? 1)` seconds, then tries the
  *   same item again; `stop()` ends the wait, and a 429 answering a request

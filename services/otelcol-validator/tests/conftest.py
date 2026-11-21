@@ -1,4 +1,4 @@
-"""Shared fixtures: settings with a known secret, the test catalogue, and a
+"""Shared fixtures: settings with a known secret, the test catalog, and a
 fake collector (a shell script standing in for `otelcol-contrib`)."""
 
 from __future__ import annotations

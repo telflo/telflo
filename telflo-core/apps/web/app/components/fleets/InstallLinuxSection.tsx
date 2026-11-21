@@ -8,28 +8,26 @@ import { DisplayNameField } from "./InstallContainerSection.js";
 import { EnvVarInputs, type EnvVarInputsProps } from "./EnvVarInputs.js";
 
 /*
- * The install dialog's Linux methods (D17c-1 decisions 39, 41 to 43;
- * Preflight ruling 28; ADR 0018), presentational: the dialog holds the
- * fields and the download.
+ * The install dialog's Linux methods, presentational: the dialog holds
+ * the fields and the download.
  *
  * - "Root path" (default `/etc/otelcol`) and, for a host's own collector,
  *   "Path to otelcol-contrib" (default `/usr/bin/otelcol-contrib`), each with
  *   its problem under it; the display name; the environment variables, whose
  *   ticked values the bundle's start script exports (their help the systemd
- *   service's while its box is ticked: Ruling 55). "Download" and "Quick
- *   Deploy" are the dialog's footer.
- * - D17c-2 (decision 30; Preflight ruling 18): after the variables, the
- *   checkbox "Install as a systemd service (starts on boot)" (ticked at each
- *   opening: the dialog's state), its hint as its description, absent while
- *   the organization's public install links are off (D17d-2 Preflight ruling
- *   33: the service comes only with Quick Deploy). Every field is disabled
+ *   service's while its box is ticked). "Download" and "Quick Deploy" are the
+ *   dialog's footer.
+ * - After the variables, the checkbox "Install as a systemd service (starts
+ *   on boot)" (ticked at each opening: the dialog's state), its hint as its
+ *   description, absent while the organization's public install links are
+ *   off (the service comes only with Quick Deploy). Every field is disabled
  *   while a Quick Deploy link is made (`disabled`): the link holds what was
  *   shown.
  * - The hints: All In One's "unpack, then run"; own-binary's
  *   where the configuration and the supervisor's state go (the root path as
  *   typed). The bundle holds no token: the warning says where the dialog
  *   gives it (after the download, or inside the Quick Deploy command).
- * - Privacy (decision 48): the paths are configuration text, inside
+ * - Privacy: the paths are configuration text, inside
  *   `ph-no-capture` with the hints that repeat them.
  */
 
@@ -37,7 +35,7 @@ export const ALL_IN_ONE_HINT =
   "Unpack the bundle into the root path and run start_supervisor.sh: it downloads the collector and the supervisor into the root path, checks them and starts the supervisor.";
 export const LINUX_WARNING =
   "The bundle holds no token: the dialog gives it to you after the download, or inside the Quick Deploy command. Treat it as a secret.";
-/** The systemd checkbox's words and hint (decision 30). */
+/** The systemd checkbox's words and hint. */
 export const SYSTEMD_LABEL = "Install as a systemd service (starts on boot)";
 export const SYSTEMD_HINT =
   "Installs telflo-supervisor.service with sudo so the collector restarts after a reboot or a crash. Comes with Quick Deploy: untick it to download the bundle and run it yourself.";
@@ -107,7 +105,7 @@ export interface InstallLinuxSectionProps {
   onSystemd: (value: boolean) => void;
   /** While a Quick Deploy link is made: every field. */
   disabled: boolean;
-  /** False while the organization's public install links are off (D17d-2 Preflight ruling 33): no systemd box. */
+  /** False while the organization's public install links are off: no systemd box. */
   systemdOffered?: boolean;
 }
 

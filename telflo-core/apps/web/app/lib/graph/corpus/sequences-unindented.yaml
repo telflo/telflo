@@ -1,4 +1,4 @@
-# Sequences written at their key's column (Preflight ruling 1).
+# Sequences written at their key's column.
 receivers:
   filelog:
     include:

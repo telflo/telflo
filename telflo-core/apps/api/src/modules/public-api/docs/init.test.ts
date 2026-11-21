@@ -3,13 +3,13 @@ import { createContext, runInContext } from "node:vm";
 import { describe, expect, it } from "vitest";
 
 /*
- * The reference page's start, init.js (D25 decision 49, Preflight ruling
- * 20), run as the browser runs it (a classic script) in a context of its
- * own, with Swagger UI's entry point, the DOM and MutationObserver
- * stood in: the options Swagger UI gets, the autocomplete fix (Firefox's
- * form history stored the token without it), the tokenless curl block and
- * the cookie-free requests. The three fixes are also driven in the real
- * bundle, in three browsers, by e2e/api-reference.e2e.ts.
+ * The reference page's start, init.js, run as the browser runs it (a
+ * classic script) in a context of its own, with Swagger UI's entry point,
+ * the DOM and MutationObserver stood in: the options Swagger UI gets, the
+ * autocomplete fix (Firefox's form history stored the token without it),
+ * the tokenless curl block and the cookie-free requests. The three fixes
+ * are also driven in the real bundle, in three browsers, by
+ * e2e/api-reference.e2e.ts.
  */
 
 const INIT = readFileSync(new URL("./init.js", import.meta.url), "utf8");
@@ -60,8 +60,8 @@ function runInit() {
   return { fields, observers, configs, documentElement };
 }
 
-describe("the API reference page's init.js (D25 decision 49)", () => {
-  it("starts Swagger UI once on the public document, with the options Preflight ruling 20 names", () => {
+describe("the API reference page's init.js", () => {
+  it("starts Swagger UI once on the public document, with the page's options", () => {
     const { configs } = runInit();
     expect(configs).toHaveLength(1);
     const config = configs[0]!;
@@ -123,7 +123,7 @@ describe("the API reference page's init.js (D25 decision 49)", () => {
     const typed = `tf_${"Q".repeat(43)}`;
     curl({ request: new FakeImmutable({ url: "/api/public/v1/whoami", headers: new FakeImmutable({ Authorization: `Bearer ${typed}`, Accept: "*/*" }) }) });
     const shown = rendered[0]!.props.request.get("headers") as FakeImmutable;
-    // Booleans only: a failure prints no token-shaped text (brief-rules' D22 rule).
+    // Booleans only: a failure prints no token-shaped text.
     expect(shown.get("Authorization") === "Bearer $TELFLO_TOKEN").toBe(true);
     expect(shown.get("Accept")).toBe("*/*");
     expect(JSON.stringify(rendered).includes(typed)).toBe(false);

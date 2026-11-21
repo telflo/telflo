@@ -1,10 +1,10 @@
 /*
- * The API reference link (D25 decision 49, Preflight ruling 22): Settings ›
- * Service Accounts' intro and Settings › Account's "API tokens" card link
- * the public surface's reference page, Swagger UI served by the API itself.
- * A plain `<a>`, not the router's Link: the page is the API's, not a route
- * of the web app, so the browser navigates to it whole (through the
- * gateway, the same origin). With its slash: `/docs` is the API's 301 to it.
+ * The API reference link: Settings › Service Accounts' intro and Settings ›
+ * Account's "API tokens" card link the public surface's reference page,
+ * Swagger UI served by the API itself. A plain `<a>`, not the router's Link:
+ * the page is the API's, not a route of the web app, so the browser
+ * navigates to it whole (through the gateway, the same origin). With its
+ * slash: `/docs` is the API's 301 to it.
  */
 
 /** The reference page's path, with its slash. */

@@ -23,13 +23,11 @@ import { DELETE_COLLECTOR_FAILED_MESSAGE } from "./DeleteCollectorDialog.js";
 import { BULK_UNINSTALL_WORDS, HelmUninstall } from "./HelmUninstall.js";
 
 /*
- * "Delete collectors" (D17b-1 decisions 12, 14, 27 and 28; Preflight
- * rulings 4 and 13): an AlertDialog as a collector's delete
- * (`DeleteCollectorDialog`), with the count and Preflight ruling 4's lines,
- * worded for any of several ("If a collector keeps polling": the single
- * dialog's "the collector" names one); no import warning (D16c removed
- * importing). Then each collector's `DELETE`, one at a time
- * (`runPacedWrites`), as the bulk move's run:
+ * "Delete collectors": an AlertDialog as a collector's delete
+ * (`DeleteCollectorDialog`), with the count and the consequence lines, worded
+ * for any of several ("If a collector keeps polling": the single dialog's "the
+ * collector" names one); no import warning. Then each collector's `DELETE`,
+ * one at a time (`runPacedWrites`), as the bulk move's run:
  *
  * - "Deleting {i} of {n}…" with Stop; a 429 waits out its `Retry-After`
  *   and tries that collector again; an unknown outcome, the fleet gone, the
@@ -42,22 +40,20 @@ import { BULK_UNINSTALL_WORDS, HelmUninstall } from "./HelmUninstall.js";
  *   attempted", or the refusal's message.
  * - While it runs the dialog can't be closed (Escape does nothing; no
  *   Cancel). Closed after a run, the grid reloads its page and the fleet.
- * "(else Default)" is gone from the body (D17d-1 Preflight ruling 29); a
- * Kubernetes-supervisor fleet's body is its pods' (decision 23), then
- * (D17d-2 decision 25; Preflight ruling 31) one box of `helm uninstall`s,
- * one per distinct group among the selected in the fleet's order (those it
- * can't name left out), snapshotted at the opening.
- * The selected collectors aren't named before the run; names in the
- * results are text only, in the masked shell (decision 32).
+ * The body has no "(else Default)"; a Kubernetes-supervisor fleet's body
+ * is its pods', then one box of `helm uninstall`s, one per distinct group
+ * among the selected in the fleet's order (those it can't name left out),
+ * snapshotted at the opening. The selected collectors aren't named before
+ * the run; names in the results are text only, in the masked shell.
  */
 
 export const DELETE_UNKNOWN_WORDS = "May or may not have been deleted";
 
-/** Preflight ruling 4's consequences, for any of the selected collectors (D17d-1 Preflight ruling 29: no "(else Default)"). */
+/** The consequences, for any of the selected collectors (no "(else Default)"). */
 export const BULK_DELETE_CONSEQUENCES =
   "If a collector keeps polling, it enrolls again as a new collector: in the group it was installed into, unpinned, with no error history, and it is sent that group's published version if it has one. If that group has been deleted, it can't enroll again.";
 
-/** A Kubernetes fleet's consequences (D17d-1 decision 23; Preflight ruling 29). */
+/** A Kubernetes fleet's consequences. */
 export const KUBERNETES_BULK_DELETE_CONSEQUENCES = "Deleting a record just forgets it: a pod still running enrolls again on its next poll.";
 
 /** "You are deleting the records of 3 collectors." */
@@ -94,7 +90,7 @@ export interface BulkDeleteDialogProps {
   groups?: readonly CollectorGroup[] | null | undefined;
   /** Closed after a run: the grid reloads its page and the fleet. */
   onChanged: () => void;
-  /** Where the focus goes once the dialog has closed (Radix's `onCloseAutoFocus`): the host gives it back to the opener (D14b Ruling 46). */
+  /** Where the focus goes once the dialog has closed (Radix's `onCloseAutoFocus`): the host gives it back to the opener. */
   onCloseAutoFocus?: ((event: Event) => void) | undefined;
 }
 

@@ -32,7 +32,7 @@ function gate(): { opened: Promise<void>; open: () => void } {
   return { opened, open };
 }
 
-describe("createInFlightCap (D17c-2 decision 26)", () => {
+describe("createInFlightCap", () => {
   it("is 8 for the public renders", () => {
     expect(PUBLIC_DOWNLOAD_RENDERS_IN_FLIGHT).toBe(8);
   });
@@ -75,7 +75,7 @@ describe("createInFlightCap (D17c-2 decision 26)", () => {
   });
 });
 
-describe("requesterOf (D17c-2 decision 9, Preflight ruling 13)", () => {
+describe("requesterOf", () => {
   const requestFrom = (ip: string, userAgent?: string | string[]) =>
     ({ ip, headers: userAgent === undefined ? {} : { "user-agent": userAgent } }) as unknown as FastifyRequest;
 
@@ -96,9 +96,8 @@ describe("requesterOf (D17c-2 decision 9, Preflight ruling 13)", () => {
 });
 
 /*
- * The machinery on a throwaway route, as the public download will use it
- * (D17c-2 Preflight ruling 10; Task 3 registers the real one): the per-IP
- * hook first, then the route's own checks (an unknown secret 404), the
+ * The machinery on a throwaway route, as the public download uses it: the
+ * per-IP hook first, then the route's own checks (an unknown secret 404), the
  * per-link count, the in-flight cap, the download. Every refusal in plain
  * text, the secret in no log line.
  */
@@ -106,7 +105,7 @@ const KNOWN_SECRET = "tqd_CANARYCANARYCANARYCANARYCANARYCANARYCANARY0";
 const OTHER_SECRET = "tqd_OTHERCANARYOTHERCANARYOTHERCANARYOTHERCAN";
 const ARCHIVE = Buffer.from([0x1f, 0x8b, 0x08, 0x00]);
 
-describe("a public route's hooks (D17c-2 decisions 9, 26 and 27)", () => {
+describe("a public route's hooks", () => {
   let servers: FastifyInstance[] = [];
   let lines: string[] = [];
 
@@ -160,7 +159,7 @@ describe("a public route's hooks (D17c-2 decisions 9, 26 and 27)", () => {
     expect(response.headers["content-type"]).toBe("text/plain; charset=utf-8");
     expect(response.headers["cache-control"]).toBe("no-store");
     expect(response.headers["x-content-type-options"]).toBe("nosniff");
-    // Ruling 31: every refusal, the 429s and the cap's 503 included.
+    // Every refusal, the 429s and the cap's 503 included.
     expect(response.headers["referrer-policy"]).toBe("no-referrer");
     expect(response.body).toBe(`${text}\n`);
   };
@@ -251,7 +250,7 @@ describe("a public route's hooks (D17c-2 decisions 9, 26 and 27)", () => {
     ]);
   });
 
-  it("logs an expected 5xx refusal (an AppError) at warn with its code and the route's ids only, no stack (Ruling 36)", async () => {
+  it("logs an expected 5xx refusal (an AppError) at warn with its code and the route's ids only, no stack", async () => {
     const server = await serve({});
     expectPlainText(await server.inject({ method: "GET", url: "/api/v1/unavailable" }), 503, "Downloads aren't available right now. Try again in a moment.");
     const refused = parsed().filter((line) => line.msg === "public download refused");

@@ -7,10 +7,10 @@ import { fileURLToPath } from "node:url";
 import Ajv2020, { type ErrorObject, type ValidateFunction } from "ajv/dist/2020.js";
 import { parse as parseYaml } from "yaml";
 
-// The collector tester in memory, for tests only (D14a Task 6). Built on
-// node:http, as the fake validator is (fake-otelcol-validator.ts). It never
-// ships: .dockerignore leaves apps/api/src/testing out of the images, and a
-// lint rule keeps production code from importing it.
+// The collector tester in memory, for tests only. Built on node:http, as
+// the fake validator is (fake-otelcol-validator.ts). It never ships:
+// .dockerignore leaves apps/api/src/testing out of the images, and a lint
+// rule keeps production code from importing it.
 //
 // It checks the contract both ways: every request it receives and every
 // reply it sends is validated against services/otelcol-testing/openapi.yaml,
@@ -35,8 +35,8 @@ import { parse as parseYaml } from "yaml";
 //   answered as the rest of its text asks. Each of the three takes a
 //   `contains` that narrows it to the held runs whose text holds it, so a
 //   browser test, sharing the fake with others in parallel, counts and
-//   releases only its own (D14a Ruling 36; the browser tests' control
-//   route, support/fake-otelcol-testing.ts);
+//   releases only its own (the browser tests' control route,
+//   support/fake-otelcol-testing.ts);
 // - `busy`, `starting`, `unavailable`, `version-unavailable`: 503
 //   `tester_busy`, `tester_starting`, `tester_unavailable`,
 //   `version_unavailable`;
@@ -46,7 +46,7 @@ import { parse as parseYaml } from "yaml";
 //   "after", `e2e.removed` removed, written as compact JSON as the real
 //   tester writes it; its decoded input still the input's bytes. An input
 //   that isn't one OTLP/JSON document, or an output past 10 MiB, comes back
-//   unchanged (D15b Preflight ruling 6, for Compare's chips).
+//   unchanged (for Compare's chips).
 //
 // Its health is setHealth()'s: `ready` (200) by default, `starting` or
 // `unavailable` (503, kwok starting or failed). The API's tests push other

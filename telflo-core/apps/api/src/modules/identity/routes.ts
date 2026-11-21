@@ -50,15 +50,14 @@ export function registerIdentityRoutes(
   typed.post(
     "/api/v1/auth/register",
     {
-      // The registration mode's gate first (D36-1 decision 35, Preflight
-      // ruling 4): invite-only and closed answer 403 registration_not_open
-      // before anything else reads the request. Then the per-IP bucket
-      // shared with sign-in (D2a decision 9).
+      // The registration mode's gate first: invite-only and closed answer 403
+      // registration_not_open before anything else reads the request. Then the
+      // per-IP bucket shared with sign-in.
       onRequest: [registrationGate(deps.settings.site.registration, "self"), rateLimiters.identityPerIp],
       schema: {
         body: RegisterRequestSchema,
-        // 403: registration isn't open (D36-1 decision 35). 422: an address
-        // at the service accounts' domain (D22 decision 23).
+        // 403: registration isn't open. 422: an address at the service
+        // accounts' domain.
         response: {
           200: RegisterResponseSchema,
           400: ErrorResponseSchema,
@@ -81,7 +80,7 @@ export function registerIdentityRoutes(
   typed.post(
     "/api/v1/auth/verify-email",
     {
-      // Shares one per-IP bucket with sign-in (D2a decision 9).
+      // Shares one per-IP bucket with sign-in.
       onRequest: rateLimiters.identityPerIp,
       schema: {
         body: VerifyEmailRequestSchema,
@@ -101,10 +100,9 @@ export function registerIdentityRoutes(
   typed.post(
     "/api/v1/auth/verification-emails",
     {
-      // The shared per-IP bucket (D2a decision 9), then the per-address
-      // limit, which needs the validated body. It is the same limiter
-      // instance as the reset-request route's, so the two share one budget
-      // per address (D3 decision 6).
+      // The shared per-IP bucket, then the per-address limit, which needs
+      // the validated body. It is the same limiter instance as the
+      // reset-request route's, so the two share one budget per address.
       onRequest: rateLimiters.identityPerIp,
       preHandler: rateLimiters.emailPerAddress,
       schema: {
@@ -113,9 +111,9 @@ export function registerIdentityRoutes(
       },
     },
     async (request, reply) => {
-      // Nothing the response waits for may depend on the address (D3
-      // decision 2): the lookup, the token and the email all happen after it.
-      // Do not await the work here.
+      // Nothing the response waits for may depend on the address: the lookup,
+      // the token and the email all happen after it. Do not await the work
+      // here.
       const input = {
         email: request.body.email,
         ipAddress: clientIpForAudit(request.ip),

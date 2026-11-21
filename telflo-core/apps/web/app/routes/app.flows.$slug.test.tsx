@@ -27,9 +27,8 @@ vi.mock("~/lib/api-client.server.js", () => ({ fetchFlow: vi.fn() }));
 
 /*
  * `/app/flows/:slug`: the flow's own distribution and version (on Contrib
- * 0.162.0; no ClickStack coercion, D12 decision 14), the JSON-LD, the
- * canonical link, "Before you use this", the paragraphs, the 404, the loaders
- * (D12 Preflight ruling 12).
+ * 0.162.0; no ClickStack coercion), the JSON-LD, the canonical link, "Before
+ * you use this", the paragraphs, the 404, the loaders.
  */
 
 function Landed() {
@@ -88,7 +87,7 @@ function jsonLd(tags: ReturnType<typeof meta>): unknown {
   ];
 }
 
-describe("the flow page's loaders (D12 Preflight rulings 5 and 18)", () => {
+describe("the flow page's loaders", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     vi.mocked(fetchFlow).mockReset();
@@ -272,7 +271,7 @@ describe("the flow page (/app/flows/:slug)", () => {
     );
   });
 
-  it("names the distribution with the catalogue's label once it is read", async () => {
+  it("names the distribution with the catalog's label once it is read", async () => {
     vi.spyOn(apiClient, "getCollectorDistributions").mockResolvedValue({
       distributions: [{ ...CATALOGUE[0]!, label: "The catalogue's own label" }],
     });
@@ -341,7 +340,7 @@ describe("the flow page (/app/flows/:slug)", () => {
     ).toHaveTextContent(/^TENANT_IDnot defined$/);
   });
 
-  // D20 default 28 (Preflight ruling 31): each name marked from the organization's variables' one shared read.
+  // Each name marked from the organization's variables' one shared read.
   it("marks each organization variable defined or not, and says nothing while the names are read or when they can't be", async () => {
     const yaml = "exporters:\n  otlp:\n    endpoint: ${org:OTLP_EP}\n    headers:\n      x-tenant: ${org:TENANT_ID}\n";
     const label = "Define these in your organization's variables — an unset one is delivered to the collector as-is, not as an error";
@@ -391,7 +390,7 @@ describe("the flow page (/app/flows/:slug)", () => {
     expect(screen.queryByText("Before you use this")).toBeNull();
   });
 
-  it("shows the configuration's text inside the replay-blocked container, and the tags (ADR 0024)", async () => {
+  it("shows the configuration's text inside the replay-blocked container, and the tags", async () => {
     renderPage();
 
     const code = (await screen.findByRole("heading", { level: 2, name: "The configuration" }))
@@ -403,7 +402,7 @@ describe("the flow page (/app/flows/:slug)", () => {
     expect(screen.getByText("cost")).toBeInTheDocument();
   });
 
-  it("puts nothing of the flow in any attribute (ADR 0024)", async () => {
+  it("puts nothing of the flow in any attribute", async () => {
     const { user } = renderPage();
     await screen.findByRole("heading", { level: 1, name: TAIL_SAMPLING.name });
     await user.click(screen.getByRole("button", { name: "Use this flow" }));

@@ -14,12 +14,11 @@ import { AppError } from "../../../errors.js";
 import { collectorGroupSettingsUnreadable, fieldDetail } from "../../fleets/errors.js";
 
 /*
- * A collector group on the public surface (D25 decision 35), mapped from
- * and to the platform's: the role is the group's
- * on its fleet (collectorGroupRole, never the stored one), a Kubernetes
- * group's namespace and a gateway's replicas are its annotations'
- * `telflo.kubernetes` (D17d-1 decision 2), read by kubernetesOf and written
- * by annotationsWithKubernetes, which keeps every other key. A group's
+ * A collector group on the public surface, mapped from and to the
+ * platform's: the role is the group's on its fleet (collectorGroupRole,
+ * never the stored one), a Kubernetes group's namespace and a gateway's
+ * replicas are its annotations' `telflo.kubernetes`, read by kubernetesOf
+ * and written by annotationsWithKubernetes, which keeps every other key. A group's
  * name and namespace are configuration text: replies only, never a log
  * line or an error's words.
  */
@@ -65,12 +64,12 @@ export function refuseKubernetesFields(fields: { role?: unknown; namespace?: unk
 }
 
 /**
- * A new Kubernetes group's annotations (decision 35): its role is the
- * name's (`cluster` the Cluster, any other a gateway pool; the Agent is the
- * fleet's Default group, never made), which `role`, when sent, must name;
- * the namespace (the default when left out), a gateway's replicas (none:
- * 1), no volumes. The name's own rule is the service's (a gateway's name a
- * DNS-1035 label: 400 at `name`).
+ * A new Kubernetes group's annotations: its role is the name's (`cluster`
+ * the Cluster, any other a gateway pool; the Agent is the fleet's Default
+ * group, never made), which `role`, when sent, must name; the namespace
+ * (the default when left out), a gateway's replicas (none: 1), no volumes.
+ * The name's own rule is the service's (a gateway's name a DNS-1035 label:
+ * 400 at `name`).
  */
 export function kubernetesAnnotationsForCreate(
   name: string,
@@ -89,11 +88,11 @@ export function kubernetesAnnotationsForCreate(
 
 /**
  * A Kubernetes group's annotations with `namespace` and `replicas` merged
- * into its settings (decision 35's merge): a field left out keeps the
- * group's, null clears it (the default namespace; a gateway's 1 replica),
- * its volumes and every other key kept. Settings that can't be read are
- * 409 `collector_group_settings_unreadable`, as its install's; replicas on
- * a group that isn't a gateway are 400 at `replicas`.
+ * into its settings: a field left out keeps the group's, null clears it
+ * (the default namespace; a gateway's 1 replica), its volumes and every
+ * other key kept. Settings that can't be read are 409
+ * `collector_group_settings_unreadable`, as its install's; replicas on a
+ * group that isn't a gateway are 400 at `replicas`.
  */
 export function kubernetesAnnotationsMerged(
   group: Pick<CollectorGroup, "annotations" | "isDefault" | "name">,

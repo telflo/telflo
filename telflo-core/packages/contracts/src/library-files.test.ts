@@ -19,10 +19,8 @@ import {
 } from "./library-files.js";
 
 /*
- * The library's contracts (D23-2 decisions 5, 10, 42, 43 and 45; Q160,
- * Q162; Preflight ruling 21b). The links here are hand-written and visibly
- * fake (`tll_FAKE…`, decision 59): no key ever signed them, so they may be
- * compared directly.
+ * The library's contracts. The links here are hand-written and visibly fake
+ * (`tll_FAKE…`): no key ever signed them, so they may be compared directly.
  */
 
 /** A visibly fake link: `tll_FAKE` and 67 more characters of the alphabet, 71 after the prefix. */
@@ -31,7 +29,7 @@ const FAKE_PATH = `/api/v1/library-links/${FAKE_LINK}`;
 const FAKE_URL = `http://localhost:50080${FAKE_PATH}`;
 
 describe("the library's limits and names", () => {
-  it("are decision 5's and 42's", () => {
+  it("are 10 MiB and the parts' order", () => {
     expect(LIBRARY_FILE_MAXIMUM_BYTES).toBe(10_485_760);
     expect(LIBRARY_FILE_PART_NAMES).toEqual(["name", "description", "file"]);
     expect(LIBRARY_ERROR_CODES).toEqual(["library_file_not_found", "library_file_too_large"]);
@@ -51,7 +49,7 @@ describe("the library's limits and names", () => {
   });
 });
 
-describe("the upload's fields (decision 43)", () => {
+describe("the upload's fields", () => {
   it("trims the name and description; a 200-character name and a 2,000-character description pass", () => {
     expect(CreateLibraryFileFieldsSchema.parse({ name: "  Guide  ", description: " d " })).toEqual({ name: "Guide", description: "d" });
     expect(CreateLibraryFileFieldsSchema.safeParse({ name: "n".repeat(200), description: "d".repeat(2000) }).success).toBe(true);
@@ -68,7 +66,7 @@ describe("the upload's fields (decision 43)", () => {
   });
 });
 
-describe("the uploaded file's own name (decision 43, Preflight ruling 21b)", () => {
+describe("the uploaded file's own name", () => {
   it.each([
     "guide.pdf",
     "a",
@@ -80,7 +78,7 @@ describe("the uploaded file's own name (decision 43, Preflight ruling 21b)", () 
     "naïve résumé.txt",
     "$(echo EXPANDED)",
     "it's \"quoted\" `x`.txt",
-    // Format characters in names people use (Ruling 153): ZWNJ in Persian, ZWJ in an emoji sequence, a soft hyphen.
+    // Format characters in names people use: ZWNJ in Persian, ZWJ in an emoji sequence, a soft hyphen.
     "\u0645\u06CC\u200C\u062E\u0648\u0627\u0647\u0645.txt",
     "\u{1F469}\u200D\u{1F4BB} notes.txt",
     "re\u00ADsume.pdf",
@@ -130,7 +128,7 @@ describe("the uploaded file's own name (decision 43, Preflight ruling 21b)", () 
   });
 });
 
-describe("a change (decision 42)", () => {
+describe("a change", () => {
   it("takes the name, the description or both, trimmed", () => {
     expect(UpdateLibraryFileRequestSchema.parse({ name: " N " })).toEqual({ name: "N" });
     expect(UpdateLibraryFileRequestSchema.parse({ description: "" })).toEqual({ description: "" });
@@ -166,11 +164,11 @@ describe("a library file", () => {
 });
 
 /*
- * The Copy curl command (decision 10, Q160): both values single-quoted. `run`
- * runs it in a REAL shell (sh, bash and zsh, those present; dash too) whose
- * PATH is a directory holding one fake `curl`, which only records its argv
- * (each word ended by U+001E) into a log, and touches no other file. Every
- * probe is harmless (`$(echo EXPANDED)`, never a command with an effect).
+ * The Copy curl command: both values single-quoted. `run` runs it in a REAL
+ * shell (sh, bash and zsh, those present; dash too) whose PATH is a
+ * directory holding one fake `curl`, which only records its argv (each word
+ * ended by U+001E) into a log, and touches no other file. Every probe is
+ * harmless (`$(echo EXPANDED)`, never a command with an effect).
  */
 const SHELLS = ["sh", "bash", "zsh", "dash"]
   .map((name) => [`/bin/${name}`, `/usr/bin/${name}`].find((path) => existsSync(path)))
@@ -182,7 +180,7 @@ for a in "$@"; do line="$line$a$(printf '\\036')"; done
 printf '%s\\n' "$line" >> "$PROBE_LOG"
 `;
 
-describe("libraryFileCurlCommand (decision 10, Q160)", () => {
+describe("libraryFileCurlCommand", () => {
   let fakes: string;
   let log: string;
   beforeAll(() => {
@@ -219,7 +217,7 @@ describe("libraryFileCurlCommand (decision 10, Q160)", () => {
 
   it.each([
     ["an ordinary name", "guide.pdf"],
-    // A leading dash (the API refuses one, decision 43): still one quoted word, after -o.
+    // A leading dash (the API refuses one): still one quoted word, after -o.
     ["a leading dash", "-x"],
     ["$(echo EXPANDED)", "$(echo EXPANDED).txt"],
     ["a single quote", "it's.txt"],

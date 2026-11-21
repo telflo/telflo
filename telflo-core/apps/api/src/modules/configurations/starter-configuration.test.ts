@@ -7,8 +7,8 @@ import {
 } from "./starter-configuration.js";
 
 /**
- * The spec's block (D8's Parity Notes), line by line, written differently
- * from the constant so that an edit to one isn't copied into the other.
+ * The starter's YAML, line by line, written differently from the constant so
+ * that an edit to one isn't copied into the other.
  */
 const SPEC_LINES = [
   "# OpenTelemetry Collector Configuration",
@@ -63,7 +63,7 @@ describe("the starter configuration", () => {
     expect(STARTER_CONFIGURATION_DESCRIPTION).toBe("Default OTel Collector pipeline created on signup");
   });
 
-  it("holds the spec's YAML exactly, ending in one newline", () => {
+  it("holds the expected YAML exactly, ending in one newline", () => {
     expect(STARTER_CONFIGURATION_YAML).toBe(`${SPEC_LINES.join("\n")}\n`);
     expect(STARTER_CONFIGURATION_YAML.endsWith("]\n")).toBe(true);
     expect(STARTER_CONFIGURATION_YAML).not.toContain("\r");

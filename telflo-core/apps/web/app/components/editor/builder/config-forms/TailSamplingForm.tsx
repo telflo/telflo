@@ -24,57 +24,55 @@ import type { ValueChange, ValuePath } from "~/lib/graph/text-edits.js";
 import type { ValueView } from "~/lib/graph/value-view.js";
 
 /*
- * The tail sampling processor's form (ADR 0018), over the form's fields
- * (D9d decision 2, D9b's contract). Collector claims are contrib
- * v0.162.0's `processor/tailsamplingprocessor`.
+ * The tail sampling processor's form, over the form's fields. Collector
+ * claims are contrib v0.162.0's `processor/tailsamplingprocessor`.
  *
  * - The policies are a sortable list of cards. Dragging a card moves the
  *   policy's own lines, its comments with it (`form.move`); a card's
- *   expanded state follows the card (`useCardKeys`), not
- *   the index. The first card starts expanded, and Add
- *   Policy expands the new one. Each card's fields write their own key
- *   under `policies.<index>` (`FormScope`), so keys the form doesn't show
- *   (`hash_salt`, `burst_capacity`, `enabled_regex_matching`,
- *   `policy_order`, an extension's config) stay. Ids are by card index
- *   (`policy-0-name`, sortable `policy-0`), never a value (decision 13); the
- *   expand button is "Collapse policy" / "Expand policy" (D9c Ruling 52).
+ *   expanded state follows the card (`useCardKeys`), not the index. The
+ *   first card starts expanded, and Add Policy expands the new one. Each
+ *   card's fields write their own key under `policies.<index>`
+ *   (`FormScope`), so keys the form doesn't show (`hash_salt`,
+ *   `burst_capacity`, `enabled_regex_matching`, `policy_order`, an
+ *   extension's config) stay. Ids are by card index (`policy-0-name`,
+ *   sortable `policy-0`), never a value; the expand button is "Collapse
+ *   policy" / "Expand policy".
  * - The card's header shows the policy's name and a summary as
  *   text, read from the text: a missing block or key reads as the Go zero
  *   the collector decodes (`0% sampling`), never a throw. OTTL's count is its
  *   span and span event conditions.
- * - Changed (decision 6): Policy Type offers the collector's 17 types
- *   (`config.go:20-58`): the first 13, then NOT, Drop, Bytes Limiting and
- *   Trace Flags. A type outside them (a sampling-policy extension's,
- *   `processor.go:431-440`) shows as written. Choosing a type is one change:
- *   `type` set, every known type block removed, the new type's seed written;
- *   the item's other lines, comments and keys stay. No toast: the old
- *   block goes silently (the D9b attributes action-type precedent).
- * - Fixed (decision 3): OTTL Condition seeds a condition, `span:
- *   ['span.attributes["http.status_code"] >= 400']` (`span: []` is refused,
- *   `internal/sampling/ottl.go:39-41`); NOT, Drop and Bytes Limiting seed a
- *   policy the collector builds (spec Parity Notes); composite's seed drops
+ * - Policy Type offers the collector's 17 types (`config.go:20-58`): the
+ *   first 13, then NOT, Drop, Bytes Limiting and Trace Flags. A type outside
+ *   them (a sampling-policy extension's, `processor.go:431-440`) shows as
+ *   written. Choosing a type is one change: `type` set, every known type
+ *   block removed, the new type's seed written; the item's other lines,
+ *   comments and keys stay. No toast: the old block goes silently.
+ * - OTTL Condition seeds a condition,
+ *   `span: ['span.attributes["http.status_code"] >= 400']` (`span: []` is
+ *   refused, `internal/sampling/ottl.go:39-41`); NOT, Drop and Bytes
+ *   Limiting seed a policy the collector builds; composite's seed drops
  *   `policy_order` (declared, never read, `config.go:157`). Add Policy names
  *   the first `policy-N` (from the length + 1) no policy has
  *   (`processor.go:248-250` refuses a duplicate).
- * - Fixed (decision 2): Spans Per Second writes its key only (never
- *   rebuilding `rate_limiting`, dropping `burst_capacity`); the "One per line"
- *   textareas take a typed line break (`ListTextField`, newline).
- * - Changed (decision 4): Policy Order is dropped (`config.go:157`; a key in
- *   the text stays). The numeric bounds say 0 is no bound
- *   (`processor.go:387-395`) and, with neither, ask for one
- *   (`internal/sampling/numeric_tag_filter.go:31-34` builds no evaluator).
- *   AND and Drop with no sub-policies say what they do (`and.go`, `drop.go`:
- *   the loop over none samples, or drops, every trace). The Policies alert
- *   says drop policies run first (`processor.go:279-280`). Error Mode adds
- *   `silent` (`pkg/ottl/config.go:16-31`); unset is blank, as the collector
- *   runs it: errors skipped without a log (`pkg/ottl/parser.go:543-560`).
- * - Changed (D9b decision 3): Decision Wait, Traces in Memory, Expected New
- *   Traces and the cache sizes show their defaults as placeholders
- *   (`factory.go:29-37`), never as written values.
- *   Expected Value unset shows false, the Go zero, "Default false".
- * - Sub-policies stay YAML-only (decision 6): NOT, Drop
- *   and Bytes Limiting get "Configure <type> in the YAML
- *   editor"; Trace Flags has nothing to configure (`processor.go:430-431`).
+ * - Spans Per Second writes its key only (never rebuilding `rate_limiting`,
+ *   dropping `burst_capacity`); the "One per line" textareas take a typed
+ *   line break (`ListTextField`, newline).
+ * - Policy Order has no field (`config.go:157`; a key in the text stays). The
+ *   numeric bounds say 0 is no bound (`processor.go:387-395`) and, with
+ *   neither, ask for one (`internal/sampling/numeric_tag_filter.go:31-34`
+ *   builds no evaluator). AND and Drop with no sub-policies say what they do
+ *   (`and.go`, `drop.go`: the loop over none samples, or drops, every
+ *   trace). The Policies alert says drop policies run first
+ *   (`processor.go:279-280`). Error Mode adds `silent`
+ *   (`pkg/ottl/config.go:16-31`); unset is blank, as the collector runs it:
+ *   errors skipped without a log (`pkg/ottl/parser.go:543-560`).
+ * - Decision Wait, Traces in Memory, Expected New Traces and the
+ *   cache sizes show their defaults as placeholders (`factory.go:29-37`),
+ *   never as written values. Expected Value unset shows false, the Go zero,
+ *   "Default false".
+ * - Sub-policies stay YAML-only: NOT, Drop and Bytes Limiting get
+ *   "Configure <type> in the YAML editor"; Trace Flags has nothing to
+ *   configure (`processor.go:430-431`).
  */
 
 /** The collector's policy types (`config.go:20-58`), as Policy Type offers them. */

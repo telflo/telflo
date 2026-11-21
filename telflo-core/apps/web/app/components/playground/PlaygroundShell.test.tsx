@@ -15,8 +15,7 @@ import { SIGNUP_PROMPT_TITLE, signupPromptText } from "./SignupPromptDialog.js";
 import { SAAS_SITE, underSite } from "~/test/site.js";
 
 /*
- * The shell, the sidebar, the banner and the lock (D31-1 decisions 9, 13,
- * 16, 24 and 26; Preflight rulings 9, 12, 13 and 20).
+ * The shell, the sidebar, the banner and the lock.
  */
 
 function Where() {
@@ -53,7 +52,7 @@ describe("the banner", () => {
   it.each([
     ["open, the SaaS's", SAAS_SITE, true],
     ["invitation-only, the open source's default", { ...SAAS_SITE, registration: OPEN_SOURCE_SITE.registration }, false],
-  ] as const)("says its words with Sign in; registration %s: Create free account only while open (D36-1 decision 23, Ruling 352)", async (_registration, site, offersSignUp) => {
+  ] as const)("says its words with Sign in; registration %s: Create free account only while open", async (_registration, site, offersSignUp) => {
     renderShell("/playground", <Where />, site);
     expect(
       await screen.findByText(
@@ -100,7 +99,7 @@ describe("the sidebar", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
-  it("a locked action's prompt, where registration isn't open: its one way on is Sign in, no Create free account (Ruling 352)", async () => {
+  it("a locked action's prompt, where registration isn't open: its one way on is Sign in, no Create free account", async () => {
     const user = userEvent.setup();
     renderShell("/playground", <Where />, { ...SAAS_SITE, registration: "invite-only" });
     await user.click(within(await screen.findByRole("navigation", { name: "Playground" })).getByRole("button", { name: "Settings" }));
@@ -114,13 +113,13 @@ describe("the sidebar", () => {
   it.each([
     ["the default docs", SAAS_SITE, "https://docs.telflo.com/docs"],
     ["another site's", { ...SAAS_SITE, docsUrl: "https://docs.example.org/" }, "https://docs.example.org/docs"],
-  ] as const)("its Docs link follows the site's TELFLO_DOCS_URL: %s (D36-1 decision 34)", async (_case, site, href) => {
+  ] as const)("its Docs link follows the site's TELFLO_DOCS_URL: %s", async (_case, site, href) => {
     renderShell("/playground", <Where />, site);
     expect(await screen.findByRole("navigation", { name: "Playground" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Docs" })).toHaveAttribute("href", href);
   });
 
-  it("has no Docs link with TELFLO_DOCS_URL empty (D36-1 decision 34)", async () => {
+  it("has no Docs link with TELFLO_DOCS_URL empty", async () => {
     renderShell("/playground", <Where />, { ...SAAS_SITE, docsUrl: "" });
     expect(await screen.findByRole("navigation", { name: "Playground" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Docs" })).toBeNull();
@@ -169,7 +168,7 @@ describe("the lock", () => {
     expect(screen.getAllByRole("dialog")).toHaveLength(1);
   });
 
-  it("gives the focus back to the locked control when the prompt closes (Task 7)", async () => {
+  it("gives the focus back to the locked control when the prompt closes", async () => {
     const user = userEvent.setup();
     function Locked() {
       const locked = useLockedAction();
@@ -190,7 +189,7 @@ describe("the lock", () => {
     expect(control).toHaveFocus();
   });
 
-  it("gives the focus back to the opener passed, when a mouse press focused nothing (Safari, Firefox on macOS; Ruling 299)", async () => {
+  it("gives the focus back to the opener passed, when a mouse press focused nothing (Safari, Firefox on macOS)", async () => {
     const user = userEvent.setup();
     function Locked() {
       const locked = useLockedAction();
@@ -239,7 +238,7 @@ describe("the lock", () => {
   });
 });
 
-describe("the provider's backstop (Preflight ruling 12)", () => {
+describe("the provider's backstop", () => {
   it("suspends the session-ended handler while mounted, and releases it after", () => {
     const release = vi.fn();
     const suspend = vi.spyOn(apiClient, "suspendSessionEndedHandler").mockReturnValue(release);
@@ -251,7 +250,7 @@ describe("the provider's backstop (Preflight ruling 12)", () => {
   });
 });
 
-describe("the surface (decision 13, Preflight ruling 13)", () => {
+describe("the surface", () => {
   it("masks the shell's root and <body> like the signed-in shell, and autocapture, releasing all on unmount", () => {
     const release = vi.fn();
     const masked = vi.spyOn(analytics, "setAnalyticsMasked").mockReturnValue(release);
@@ -275,13 +274,13 @@ describe("the surface (decision 13, Preflight ruling 13)", () => {
   });
 });
 
-describe("the link scope (Preflight ruling 20)", () => {
+describe("the link scope", () => {
   it.each([
     ["/fleet-management", "/playground/fleet-management"],
     ["/fleet-management/0199a000-0000-7000-8000-000000000001?tab=tokens", "/playground/fleet-management/0199a000-0000-7000-8000-000000000001?tab=tokens"],
     ["/editor/11111111-0000-4000-8000-000000000001/33333333-0000-4000-8000-000000000003", "/playground/editor/11111111-0000-4000-8000-000000000001"],
     ["/app/flows/log-volume-cost-control", "/playground/flows/log-volume-cost-control"],
-    // The signed-in configurations list: the playground's (Ruling 288).
+    // The signed-in configurations list: the playground's.
     ["/app", "/playground"],
     ["/app/", "/playground"],
   ])("maps %s to %s", (href, mapped) => {

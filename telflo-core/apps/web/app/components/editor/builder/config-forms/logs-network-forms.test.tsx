@@ -19,18 +19,16 @@ import { builderStore, componentNamed, openText } from "~/test/builder-store.js"
 import { formControls } from "~/test/form-controls.js";
 
 /*
- * The network logs receivers' forms (D9c Task 8): the syslog,
- * fluentforward and netflow forms over the form contract. Each field is
- * driven as a person would on the logs corpus (comments, an anchor and a
- * merge, flow lists, `0750`), LF and CRLF, and writes only its key: the text
- * changes in that key's lines only, as one undo entry, and parses to the
- * value (D9c decision 2). The fixes each have a test that fails if
- * the bug returns: syslog's transport read from the text and
- * renamed in place (Preflight rulings 7 and 21), decision 7's removals with
- * their toasts (no inline alert, D9d decision 7), Framing Trailer's None, the Listen Address and Protocol
- * without a default (decision 4); netflow's port kept on a scheme change and
- * its queue warning; fluentforward's `fluent.tag`. Six fluentforward cases
- * close the file.
+ * The network logs receivers' forms: the syslog, fluentforward and netflow
+ * forms over the form contract. Each field is driven as a person would on the
+ * logs corpus (comments, an anchor and a merge, flow lists, `0750`), LF and
+ * CRLF, and writes only its key: the text changes in that key's lines only, as
+ * one undo entry, and parses to the value. The fixes each have a test that
+ * fails if the bug returns: syslog's transport read from the text and renamed
+ * in place, its removals with their toasts (no inline alert), Framing
+ * Trailer's None, the Listen Address and Protocol without a default; netflow's
+ * port kept on a scheme change and its queue warning; fluentforward's
+ * `fluent.tag`. Six fluentforward cases close the file.
  *
  * Collector claims cite contrib v0.162.0.
  */
@@ -51,7 +49,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-/** The info toasts shown so far: decision 7's adjustments toast their messages (Ruling 87). */
+/** The info toasts shown so far: the adjustments toast their messages. */
 const infoToasts = () => vi.mocked(toast.info).mock.calls.map(([message]) => message);
 
 function ComponentForm({ nodeId, children }: { nodeId: string; children: ReactNode }) {
@@ -512,7 +510,7 @@ const CASES: FieldCase[] = [
   },
 ];
 
-describe("every field of each form writes only its key (decision 2)", () => {
+describe("every field of each form writes only its key", () => {
   it.each(CASES.flatMap((c) => [[`${c.name}, LF`, c, false] as const, [`${c.name}, CRLF`, c, true] as const]))(
     "%s",
     async (_name, c, crlf) => {
@@ -535,9 +533,9 @@ describe("every field of each form writes only its key (decision 2)", () => {
   );
 });
 
-// ── syslog's transport (Preflight rulings 7 and 21; decision 7) ──
+// ── syslog's transport ──
 
-describe("syslog's transport: read from the text, renamed in place (Preflight rulings 7 and 21)", () => {
+describe("syslog's transport: read from the text, renamed in place", () => {
   // input/tcp/config.go:66-79 against input/udp/config.go:69-77: UDP takes no tls or
   // max_connections; syslogreceiver/syslog.go:64-76 decodes strictly.
   it("TCP → UDP renames the block in place: encoding and add_attributes kept, tls and max_connections dropped, the trailer removed", async () => {
@@ -562,7 +560,7 @@ describe("syslog's transport: read from the text, renamed in place (Preflight ru
       CORPUS.replace(`${SYSLOG_TCP}    protocol: rfc5424\n    enable_octet_counting: true\n`, "    udp:\n      listen_address: 0.0.0.0:54526 # the syslog port\n    protocol: rfc5424\n"),
     );
     expect(screen.queryByText(REMOVED_FOR_UDP)).toBeNull();
-    // Ruling 88: what went stays gone on a switch back; the toast names Undo, which restores it.
+    // What went stays gone on a switch back; the toast names Undo, which restores it.
     expect(REMOVED_FOR_UDP).toBe("Removed settings UDP can't take. Undo to restore them.");
     expect(infoToasts()).toEqual([REMOVED_FOR_UDP]);
     expect(entries()).toBe(1);
@@ -652,7 +650,7 @@ describe("syslog's transport: read from the text, renamed in place (Preflight ru
   });
 });
 
-describe("syslog: decision 7's framing removals and decision 4's display", () => {
+describe("syslog: the framing removals and the display", () => {
   // parser/syslog/config.go:88-91: the trailer is refused with none and with anything but rfc5424.
   it.each([
     ["RFC 3164 (BSD-syslog)", "rfc3164"],
@@ -689,7 +687,7 @@ describe("syslog: decision 7's framing removals and decision 4's display", () =>
     expect(byId("max_octets")).toBeInTheDocument();
   });
 
-  // parser/syslog/parser.go:169-173, 199-209: octet counting frames every protocol (Ruling 62).
+  // parser/syslog/parser.go:169-173, 199-209: octet counting frames every protocol.
   it("Enable Octet Counting shows for any protocol on TCP, and not on UDP", async () => {
     const user = renderForm(SYSLOG, CORPUS.replace("    protocol: rfc5424\n    enable_octet_counting", "    protocol: rfc3164\n    enable_octet_counting"));
     await openSection(user, "Parsing");
@@ -757,7 +755,7 @@ describe("syslog: decision 7's framing removals and decision 4's display", () =>
     expect(screen.getByText("Switch to TCP to configure TLS.")).toBeInTheDocument();
   });
 
-  // Ruling 74: parser/syslog/config.go:64 lower-cases the protocol.
+  // parser/syslog/config.go:64 lower-cases the protocol.
   it("the protocol matches in any case: RFC3164 shows RFC 3164 checked and Timezone; a choice writes lower case", async () => {
     const base = CORPUS.replace("    protocol: rfc3164\n", "    protocol: RFC3164\n");
     const user = renderForm(UDP, base);
@@ -769,7 +767,7 @@ describe("syslog: decision 7's framing removals and decision 4's display", () =>
     expect(text()).toBe(base.replace("    protocol: RFC3164\n", "    protocol: rfc5424\n"));
   });
 
-  // Ruling 74: input/udp/config.go:112-145 reads async on while the block exists.
+  // input/udp/config.go:112-145 reads async on while the block exists.
   it("clearing the last async key removes the async block, so the collector reads synchronously and the hint shows again", async () => {
     const user = renderForm(UDP);
     await openSection(user, "Advanced");
@@ -787,7 +785,7 @@ describe("syslog: decision 7's framing removals and decision 4's display", () =>
     expect(text()).toBe(base.replace("        readers: 2\n", ""));
   });
 
-  // Ruling 76: a TCP block the form can't show isn't "TCP only".
+  // A TCP block the form can't show isn't "TCP only".
   it("a TCP block that isn't a mapping shows the hint in the TLS section, not TCP only", async () => {
     const user = renderForm(SYSLOG, CORPUS.replace(SYSLOG_TCP, "    tcp: on\n"));
     await openSection(user, "TLS");
@@ -795,7 +793,7 @@ describe("syslog: decision 7's framing removals and decision 4's display", () =>
     expect(screen.getAllByText(UNSHOWABLE_VALUE_MESSAGE).length).toBeGreaterThan(1);
   });
 
-  // Ruling 76: input/syslog/config.go:96-99 refuses either framing key with UDP.
+  // input/syslog/config.go:96-99 refuses either framing key with UDP.
   it("on UDP, octet counting and the framing trailer show while set, so they can be removed", async () => {
     const base = CORPUS.replace("    location: America/New_York\n", "    location: America/New_York\n    enable_octet_counting: true\n    non_transparent_framing_trailer: LF\n");
     const user = renderForm(UDP, base);
@@ -817,7 +815,7 @@ describe("syslog: decision 7's framing removals and decision 4's display", () =>
     expect(byId("framing_trailer")).toBeNull();
   });
 
-  // Ruling 72: the collector decodes ascii as UTF-8 (textutils/encoding.go:23-24), as filelog's.
+  // The collector decodes ascii as UTF-8 (textutils/encoding.go:23-24), as filelog's.
   it('Encoding offers "ASCII (read as UTF-8)"', async () => {
     const user = renderForm(SYSLOG);
     await openSection(user, "Parsing");
@@ -827,7 +825,7 @@ describe("syslog: decision 7's framing removals and decision 4's display", () =>
 
 // ── netflow ──
 
-describe("netflow: the scheme and the queue (decision 4; Preflight ruling 23)", () => {
+describe("netflow: the scheme and the queue", () => {
   // receiver/netflowreceiver/factory.go:29-37: scheme netflow and port 2055 by default.
   it("an unset scheme shows NetFlow checked; Port's default is 2055 for both schemes", () => {
     renderForm(NETFLOW, CORPUS.replace("    scheme: netflow\n    port: 2055\n", ""));
@@ -856,7 +854,7 @@ describe("netflow: the scheme and the queue (decision 4; Preflight ruling 23)", 
   });
 
   // config.go:70-72: only a queue of 0 or less is replaced; 1-999 is kept.
-  // Ruling 74: config.go:70-72 replaces 0 or less with 1000.
+  // config.go:70-72 replaces 0 or less with 1000.
   it.each(["0", "-5"])("a queue of %s isn't warned: the collector uses 1000, which a hint says", (queue) => {
     renderForm(NETFLOW, CORPUS.replace("    queue_size: 1000\n", `    queue_size: ${queue}\n`));
     fireOpen();
@@ -864,7 +862,7 @@ describe("netflow: the scheme and the queue (decision 4; Preflight ruling 23)", 
     expect(screen.getByText(QUEUE_REPLACED)).toBeInTheDocument();
   });
 
-  // Ruling 72 (decision 4): the copy says what the form and the collector do.
+  // The copy says what the form and the collector do.
   it("Flow Protocol's and Queue Size's hints say the port is kept and 1000 is recommended", async () => {
     const user = renderForm(NETFLOW);
     expect(hint(`${SCHEME_HINT} · Default netflow`)).toBeInTheDocument();
@@ -913,8 +911,8 @@ describe("netflow: the scheme and the queue (decision 4; Preflight ruling 23)", 
 
 // ── Opening writes nothing ──
 
-describe("opening writes nothing (D9b decision 2)", () => {
-  // One test per form and text, each with its own time limit (D9c Ruling 54).
+describe("opening writes nothing", () => {
+  // One test per form and text, each with its own time limit.
   const TEXTS = [
     ["the corpus", CORPUS],
     ["the corpus in CRLF", CRLF(CORPUS)],
@@ -935,7 +933,7 @@ describe("opening writes nothing (D9b decision 2)", () => {
       const user = renderForm(key, base);
       await openEverything(user);
       expect(screen.queryByRole("dialog")).toBeNull();
-      // Opened, it shows the form's fields (D9c final review M6).
+      // Opened, it shows the form's fields.
       const { textboxes, all } = formControls();
       expect(textboxes.length).toBeGreaterThanOrEqual(OPENED[key]!.textboxes);
       expect(all).toBeGreaterThanOrEqual(OPENED[key]!.all);
@@ -957,9 +955,9 @@ describe("opening writes nothing (D9b decision 2)", () => {
   );
 });
 
-// ── Privacy (decision 10) ──
+// ── Privacy ──
 
-describe("privacy (decision 10)", () => {
+describe("privacy", () => {
   const MARK = "zq-mark";
   const MARKED = [
     "receivers:",
@@ -1026,7 +1024,7 @@ describe("privacy (decision 10)", () => {
   const shown = () =>
     document.body.textContent + [...document.querySelectorAll("input, textarea")].map((e) => (e as HTMLInputElement).value).join();
 
-  // Its own time limit (D9c Rulings 54 and 80).
+  // Its own time limit.
   it.each([
     ["receivers.syslog", ["tls-min-version-tcp"]],
     ["receivers.syslog/udp", []],

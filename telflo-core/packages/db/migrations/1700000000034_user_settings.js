@@ -1,11 +1,10 @@
 /**
- * A person's own settings (D21 decisions 3, 4 and 18).
+ * A person's own settings.
  *
- *   * user_settings: one row per user, holding the theme (light, dark or
- *     navy) and a jsonb of the editor and email preferences (decision 3:
- *     a theme column and a preferences jsonb that
- *     the API's schema validates, not typed and checked columns). The row
- *     is lazy (decision 4): no row means the defaults, the first save
+ *   * user_settings: one row per user, holding the theme (light, dark or navy)
+ *     and a jsonb of the editor and email preferences (a theme column and a
+ *     preferences jsonb that the API's schema validates, not typed and checked
+ *     columns). The row is lazy: no row means the defaults, the first save
  *     inserts it, and there is no backfill and no change to registration.
  *     Timestamps have no default: the API writes both from its clock, as
  *     configurations' (migration 015). The jsonb check has
@@ -15,7 +14,7 @@
  *     and no row-level security, as users, sessions and user_identities.
  *     A user's delete cascades to it.
  *   * sessions.revoked_reason's comment gains signed_out_elsewhere: one
- *     session signed out from Settings › Account (decision 40). The column
+ *     session signed out from Settings › Account. The column
  *     is text with no check on its values; the comment lists them, as
  *     migrations 008 and 010 did.
  *
@@ -40,7 +39,7 @@ export const up = (pgm) => {
     );
 
     comment on table user_settings is
-      'a person''s own settings (D21): the theme and the editor and email
+      'a person''s own settings: the theme and the editor and email
        preferences. Lazy: no row means the defaults, and the first save
        inserts it. Belongs to the user, not to an organization: no row-level
        security, as users, sessions and user_identities.';
@@ -51,8 +50,7 @@ export const up = (pgm) => {
       'light, dark or navy; dark when there is no row.';
     comment on column user_settings.preferences is
       'only the editor and email keys ever saved; read through the API''s
-       schema, which fills in defaults and reads a bad key as its default
-       (D21 decision 19).';
+       schema, which fills in defaults and reads a bad key as its default.';
     comment on column user_settings.created_at is
       'when the row was first saved, by the API''s clock.';
     comment on column user_settings.updated_at is
@@ -70,11 +68,10 @@ export const up = (pgm) => {
     comment on column sessions.revoked_reason is
       'one of logout, sign_out_everywhere, refresh_token_reused,
        password_reset, account_taken_over (a federated sign-in took over an
-       unverified account, ADR 0021), organization_access_lost (the
-       session''s organization went away and the user had no other, D5
-       decision 9) or signed_out_elsewhere (one session signed out from
-       Settings › Account, D21 decision 40). Text rather than an enum until
-       a third consumer needs to branch on it.';
+       unverified account), organization_access_lost (the session''s
+       organization went away and the user had no other) or
+       signed_out_elsewhere (one session signed out from Settings › Account).
+       Text rather than an enum until a third consumer needs to branch on it.';
   `);
 };
 
@@ -85,9 +82,8 @@ export const down = (pgm) => {
     comment on column sessions.revoked_reason is
       'one of logout, sign_out_everywhere, refresh_token_reused,
        password_reset, account_taken_over (a federated sign-in took over an
-       unverified account, ADR 0021) or organization_access_lost (the
-       session''s organization went away and the user had no other, D5
-       decision 9). Text rather than an enum until a third consumer needs to
-       branch on it.';
+       unverified account) or organization_access_lost (the session''s
+       organization went away and the user had no other). Text rather than
+       an enum until a third consumer needs to branch on it.';
   `);
 };

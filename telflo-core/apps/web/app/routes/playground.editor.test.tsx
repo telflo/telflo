@@ -1,6 +1,5 @@
 /**
- * `/playground/editor/:configurationId?` (D31-1 decisions 25 and 28-31;
- * Preflight rulings 10, 14 and 18): a sample's draft opened under the
+ * `/playground/editor/:configurationId?`: a sample's draft opened under the
  * sample's organization with no API, the playground toolbar (the name as
  * text, the fixed pin, Save staging the edit and opening "Sign in to save",
  * Publish locked), the canvas pill, the blank new configuration, an unknown
@@ -68,7 +67,7 @@ vi.mock("@monaco-editor/react", () => ({
   },
 }));
 vi.mock("~/lib/editor/monaco-setup.js", () => ({ initMonaco: () => Promise.resolve(), setMonacoSchema: () => undefined }));
-// The editor's own tour, watched: the playground editor never starts it (decision 15).
+// The editor's own tour, watched: the playground editor never starts it.
 vi.mock("~/components/editor/builder/tour/start-editor-tour.js", async (importOriginal) => ({
   ...(await importOriginal<Record<string, unknown>>()),
   startEditorTour: vi.fn(() => () => undefined),
@@ -136,7 +135,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  // The anonymous validate is the only request the page makes (decision 22).
+  // The anonymous validate is the only request the page makes.
   for (const spy of spies) if ((spy as unknown) !== validate) expect(spy, spy.getMockName()).not.toHaveBeenCalled();
   useUserStore.getState().clear();
   document.body.className = "";
@@ -155,11 +154,11 @@ describe("a sample configuration", () => {
     expect(screen.queryByRole("button", { name: "Rename configuration" })).toBeNull();
     expect(screen.getByRole("combobox", { name: `Collector version v${sample.version.collectorVersion}` })).toBeInTheDocument();
     expect(screen.getByText(SAMPLE_PILL_TEXT)).toBeInTheDocument();
-    // Sign in, labelled so, under the open source's invitation-only default (D36-1 decision 23, Ruling 352).
+    // Sign in, labeled so, under the open source's invitation-only default.
     expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/login");
     expect(screen.queryByRole("link", { name: "Create a free account" })).toBeNull();
     for (const tab of ["Configuration", "YAML", "Testing"]) expect(screen.getAllByRole("tab", { name: tab }).length).toBeGreaterThan(0);
-    // Masked as the signed-in shell (decision 13).
+    // Masked as the signed-in shell.
     expect(document.body).toHaveClass("tf-app", "ph-mask");
   });
 
@@ -218,7 +217,7 @@ describe("a sample configuration", () => {
     expect(useTestSuitesStore.getState().suites).toEqual([]);
   });
 
-  it("forgets on arrival what the Testing tab's stores held before (a signed-in editor's, Ruling 291)", async () => {
+  it("forgets on arrival what the Testing tab's stores held before (a signed-in editor's)", async () => {
     useTestingStore.setState({
       selectedTemplate: { id: "00000000-0000-4000-8000-0000000000e1", name: "left behind" },
       selectedPipelineName: "logs/left-behind",
@@ -233,7 +232,7 @@ describe("a sample configuration", () => {
   });
 });
 
-describe("a signed-in visitor (Ruling 292)", () => {
+describe("a signed-in visitor", () => {
   it("opens a node's form, its variable-aware fields included, sending nothing for their real organization", async () => {
     useUserStore.getState().setCurrent(signedInMember(GROUP_ID));
     renderEditor(`/playground/editor/${GATEWAY}`);
@@ -272,7 +271,7 @@ describe("an id the sample doesn't hold", () => {
   });
 });
 
-describe("the tour (decision 15, Preflight ruling 16)", () => {
+describe("the tour", () => {
   const tourTitle = () => document.querySelector(".driver-popover-title")?.textContent;
   beforeEach(() => {
     window.sessionStorage.clear();

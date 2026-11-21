@@ -20,19 +20,19 @@ interface PasteSamplePanelProps {
 }
 
 /**
- * Paste a sample instead of uploading a file (D14a decision 16). Saved, the
- * sample is a file in My Files like any upload, so it can be used again.
+ * Paste a sample instead of uploading a file. Saved, the sample is a file
+ * in My Files like any upload, so it can be used again.
  *
- * Differences (the Parity Notes):
- * - no "Generate with AI" (ADR 0007);
+ * In detail:
+ * - no "Generate with AI";
  * - the editor's mode follows the target pipeline's strategy, narrowed to
- *   that pipeline (D14a Preflight ruling 14): JSON for OTLP, plain text for
- *   filelog and syslog, not every pipeline of the signal;
+ *   that pipeline: JSON for OTLP, plain text for filelog and syslog, not
+ *   every pipeline of the signal;
  * - the name's extension is checked before saving, as the size is
  *   (`sampleRefusal`): only the six, with the API's words;
  * - a refusal shows the API's words (`failureMessage`).
  *
- * The sample is private text (ADR 0024): it sits inside SampleEditor's
+ * The sample is private text: it sits inside SampleEditor's
  * `ph-no-capture` block, and neither it nor its name reaches an attribute.
  * Rendered only while the dialog shows it, so it opens empty each time.
  */

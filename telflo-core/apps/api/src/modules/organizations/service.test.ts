@@ -281,7 +281,7 @@ function buildHarness({ registration = "open" }: { registration?: RegistrationMo
   const log = { error: vi.fn(), warn: vi.fn() };
 
   /**
-   * The logos' store (D23-2): every write and removal, with the logo id it
+   * The logos' store: every write and removal, with the logo id it
    * named and how many transactions were open as it ran. Writes and
    * removals fail on demand.
    */
@@ -328,7 +328,7 @@ function buildHarness({ registration = "open" }: { registration?: RegistrationMo
   };
 
   const opampRegistration = { created: vi.fn(), renamed: vi.fn(), deleted: vi.fn() };
-  /** The product admins' switch as the service reads it (D36-1 decision 51): off unless a test turns it on. */
+  /** The product admins' switch as the service reads it: off unless a test turns it on. */
   const creationState: { value: OrganizationCreation } = { value: "everyone" };
   const service = createOrganizationService({
     withTransaction,
@@ -452,7 +452,7 @@ describe("create", () => {
     ]);
   });
 
-  describe("the product admins' switch (D36-1 decision 51)", () => {
+  describe("the product admins' switch", () => {
     it("refuses a person who isn't a product admin with 403 organization_creation_restricted while it is on, before any id, logo byte or transaction", async () => {
       harness.creationState.value = "product-admins";
       const actor = harness.actor();
@@ -621,18 +621,18 @@ describe("delete", () => {
   });
 });
 
-/** A logo as the route hands it on: read whole and typed already (D23-2 decisions 32 to 34). */
+/** A logo as the route hands it on: read whole and typed already. */
 function newLogo(): NewLogo {
   return { logoId: randomUUID(), contentType: "image/png", bytes: Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]) };
 }
 
-/** The organization's logo audit rows' keys: ids only (D23-2 decision 37). */
+/** The organization's logo audit rows' keys: ids only. */
 const logoAudits = () =>
   harness.auditEvents
     .filter((event) => event.action.startsWith("organization.logo_"))
     .map((event) => ({ action: event.action, metadataKeys: Object.keys(event.metadata ?? {}).sort() }));
 
-describe("logos (D23-2 decisions 15, 35 to 38)", () => {
+describe("logos", () => {
   describe("create", () => {
     it("picks both ids before anything, then writes the bytes outside any transaction, then the one transaction with the logo and its audit", async () => {
       const ids = await harness.service.prepareCreate(harness.actor("contributor"));
@@ -1012,7 +1012,7 @@ describe("changeMemberRole", () => {
   });
 
   it(
-    "demoting an admin to contributor cancels the invitations they sent, before the membership's update, and counts them (D6 Ruling 17)",
+    "demoting an admin to contributor cancels the invitations they sent, before the membership's update, and counts them",
     async () => {
       const role = "contributor";
       const actor = harness.actor();
@@ -1089,7 +1089,7 @@ describe("removeMember", () => {
   it("removes the member, reassigns their sessions acting here, then audits the count", async () => {
     const actor = harness.actor();
     const member = harness.member("contributor");
-    // Not an admin's: only an admin's invitations go with them (D6 Ruling 17).
+    // Not an admin's: only an admin's invitations go with them.
     harness.invitation({ invitedByUserId: member.userId });
 
     await harness.service.removeMember(actor, harness.organization.id, member.userId.toUpperCase());
@@ -1116,7 +1116,7 @@ describe("removeMember", () => {
     ]);
   });
 
-  it("removing an admin cancels their pending invitations first, audits each, and counts them (D6 Ruling 17)", async () => {
+  it("removing an admin cancels their pending invitations first, audits each, and counts them", async () => {
     const actor = harness.actor();
     const member = harness.member("admin");
     const theirs = [
@@ -1128,7 +1128,7 @@ describe("removeMember", () => {
 
     await harness.service.removeMember(actor, harness.organization.id, member.userId);
 
-    // After the organization's lock and before the account's: decision 10's order.
+    // After the organization's lock and before the account's: the lock order.
     expect(harness.calls).toEqual([
       "lockActive",
       "members.find",
@@ -1180,7 +1180,7 @@ describe("restoreMember", () => {
 
     await harness.service.restoreMember(actor, harness.organization.id, member.userId);
 
-    // The member's account locked after the organization, before the restore (D29 Ruling 272).
+    // The member's account locked after the organization, before the restore.
     expect(harness.calls).toEqual(["lockActive", "members.find", "members.find", `members.lockRestoredAccount:${member.userId}`, "members.restore"]);
     expect(harness.auditEvents).toEqual([
       {
@@ -1209,7 +1209,7 @@ describe("restoreMember", () => {
     expect(harness.members.restore).not.toHaveBeenCalled();
   });
 
-  it("refuses with 404 member_not_found when the account is deleted under its lock, and restores nothing (D29 Ruling 272)", async () => {
+  it("refuses with 404 member_not_found when the account is deleted under its lock, and restores nothing", async () => {
     const actor = harness.actor();
     const member = harness.member("contributor", { deletedAt: NOW });
     harness.members.lockRestoredAccount.mockResolvedValueOnce(false);
@@ -1220,7 +1220,7 @@ describe("restoreMember", () => {
   });
 });
 
-describe("a service account named by a member change (D22 decision 30)", () => {
+describe("a service account named by a member change", () => {
   it.each([
     ["a role change", (actor: Actor, userId: string) => harness.service.changeMemberRole(actor, harness.organization.id, userId, "admin"), false],
     ["a removal", (actor: Actor, userId: string) => harness.service.removeMember(actor, harness.organization.id, userId), false],
@@ -1328,7 +1328,7 @@ describe("invite", () => {
     expect(harness.contexts).toEqual([]);
   });
 
-  it("refuses an address at the reserved domain with 422 after the role and before the mail limit, opening no transaction (D22 Preflight ruling 13)", async () => {
+  it("refuses an address at the reserved domain with 422 after the role and before the mail limit, opening no transaction", async () => {
     const error = await refusal(
       harness.service.invite(harness.actor(), harness.organization.id, {
         email: "CI-1a2b3c4d@Service-Accounts.Telflo.Invalid",
@@ -1574,9 +1574,9 @@ describe("resendInvitation", () => {
   });
 });
 
-// D36-1 decision 57 (Q268): while registration isn't open, a personal
-// organization sends no invitation; a group organization still does, and
-// revoking and listing stay open so leftover invitations can be cleared.
+// While registration isn't open, a personal organization sends no
+// invitation; a group organization still does, and revoking and listing
+// stay open so leftover invitations can be cleared.
 describe("invitations from a personal organization, by the site's registration mode", () => {
   const PERSONAL_REFUSAL = {
     code: "personal_organization_invitations_disabled",

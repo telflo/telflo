@@ -8,34 +8,31 @@ import { committedSchemaWorker, WARNING, type Diagnostic, type SchemaWorker } fr
 import { checkedVersion, seededFlows, type CatalogueOffer } from "~/test/seeded-flows.js";
 
 /*
- * Every palette default, spelled for each offered pin, every corpus text
- * and every seeded flow on the version a copy of it gets (D12 decisions 4,
- * 15 and 16, Preflight ruling 20, Ruling 37: the flows' fixture, which the
- * db suite checks against the migration's seededFlows; its pin while
- * offered, else the distribution's default), run through monaco-yaml's own worker with that
- * version's committed schema (D13c decision 13, Preflight rulings 9 and 10):
- * what the YAML tab marks. A text the collector accepts must get no schema
- * warning; the texts that aren't collector configurations warn exactly as
- * EXPECTED_WARNINGS lists, line by line, with the reason. No text gets an
- * Error (they all parse).
+ * Every palette default, spelled for each offered pin, every corpus text and
+ * every seeded flow on the version a copy of it gets (the flows' fixture,
+ * which the db suite checks against the migration's seededFlows; its pin while
+ * offered, else the distribution's default), run through monaco-yaml's own
+ * worker with that version's committed schema: what the YAML tab marks. A text
+ * the collector accepts must get no schema warning; the texts that aren't
+ * collector configurations warn exactly as EXPECTED_WARNINGS lists, line by
+ * line, with the reason. No text gets an Error (they all parse).
  *
- * A new warning here is either the schema warning about a text the
- * collector accepts (upstream wrong: the generator's open parts,
- * decision 4) or a text the collector refuses (a new entry below, with its
- * reason). Each was checked against the collector's Go at the pinned
- * commits.
+ * A new warning here is either the schema warning about a text the collector
+ * accepts (upstream wrong: the generator's open parts) or a text the collector
+ * refuses (a new entry below, with its reason). Each was checked against the
+ * collector's Go at the pinned commits.
  */
 
 const DISTRIBUTION = "otelcol-contrib";
 
-/** The catalogue's offered versions of the distribution, oldest first. */
+/** The catalog's offered versions of the distribution, oldest first. */
 const VERSIONS = offeredVersions(CATALOGUE_VERSIONS[DISTRIBUTION] ?? []).map((offer) => offer.version);
 
-/** What a drop of each palette entry writes on each offered version (D13b's builder). */
+/** What a drop of each palette entry writes on each offered version. */
 const PALETTE_CASES = paletteDefaultsFixture().cases.filter((entry) => entry.distribution === DISTRIBUTION);
 
 /**
- * The seeded flows (D12): each is checked on one version only, the one a
+ * The seeded flows: each is checked on one version only, the one a
  * copy of it is created on (`checkedVersion`: its pin while offered, else the
  * default), so retiring a seeded pin moves its check rather than dropping it.
  */
@@ -72,22 +69,21 @@ interface ExpectedWarnings {
   reason: string;
 }
 
-/** The versions before the collector named the awss3 receiver `aws_s3` (the catalogue's rename). */
+/** The versions before the collector named the awss3 receiver `aws_s3` (the catalog's rename). */
 const beforeAwsS3Receiver = (version: string) => spelledType("receiver", "awss3", DISTRIBUTION, version) !== "aws_s3";
 
 const notAllowed = (key: string) => `Property ${key} is not allowed.`;
 
 /**
- * The texts that warn, and why (Preflight ruling 10). No seeded flow may be
- * listed: each passes its pin's collector (test_binary_flows.py), so a
- * warning on one is the schema's error, which goes to the owner (D12
- * decision 4).
+ * The texts that warn, and why. No seeded flow may be listed: each passes
+ * its pin's collector (test_binary_flows.py), so a warning on one is the
+ * schema's error, for the maintainers to fix.
  */
 const EXPECTED_WARNINGS: readonly ExpectedWarnings[] = [
   {
     text: "palette memory-limiter-extension",
     warnings: [[9, notAllowed("memory_limiter")]],
-    reason: "Contrib has no memory_limiter extension (the processor is the component): D13b's accepted refusal.",
+    reason: "Contrib has no memory_limiter extension (the processor is the component).",
   },
   // A top-level key that holds anchors for the rest of the text. The
   // collector decodes the top level strictly (only its six sections), so it
@@ -221,7 +217,7 @@ describe("the expected-warnings table", () => {
     expect(SEEDED_FLOWS).toHaveLength(13);
     const catalogued = (CATALOGUE_VERSIONS[DISTRIBUTION] ?? []).map((entry) => entry.version);
     for (const flow of SEEDED_FLOWS) {
-      // A pin is the catalogue's, offered or deprecated (it never deletes one); the checked version is offered.
+      // A pin is the catalog's, offered or deprecated (it never deletes one); the checked version is offered.
       expect(flow.collectorDistribution, flow.slug).toBe(DISTRIBUTION);
       expect(catalogued, flow.slug).toContain(flow.collectorVersion);
       expect(VERSIONS, flow.slug).toContain(checkedVersion(flow));
@@ -247,7 +243,7 @@ describe("a seeded flow's checked version", () => {
   };
   const flow = (collectorVersion: string) => ({ slug: "a-flow", collectorDistribution: DISTRIBUTION, collectorVersion });
 
-  it("is the pin while the catalogue offers it, default or not", () => {
+  it("is the pin while the catalog offers it, default or not", () => {
     expect(checkedVersion(flow("0.2.0"), catalogue)).toBe("0.2.0");
     expect(checkedVersion(flow("0.3.0"), catalogue)).toBe("0.3.0");
   });
@@ -256,7 +252,7 @@ describe("a seeded flow's checked version", () => {
     expect(checkedVersion(flow("0.1.0"), catalogue)).toBe("0.3.0");
   });
 
-  it("refuses a distribution the catalogue doesn't list", () => {
+  it("refuses a distribution the catalog doesn't list", () => {
     expect(() => checkedVersion({ ...flow("0.2.0"), collectorDistribution: "elsewhere" }, catalogue)).toThrow("isn't in the catalogue");
   });
 });

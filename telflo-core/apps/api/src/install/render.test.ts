@@ -20,15 +20,14 @@ import {
 } from "./render.js";
 import { createInstallTemplateLoader } from "./templates.js";
 
-// D17c-1 decisions 16, 35 and 39, Preflight rulings 10 and 11, Ruling 38's
-// lesson: the repository's templates rendered from validated values only,
-// each value encoded for where it lands; the scripts' shell quoting checked
-// by running bash (/bin/bash: 3.2 on a Mac) with harmless probes only
+// The repository's templates rendered from validated values only, each value
+// encoded for where it lands; the scripts' shell quoting checked by running
+// bash (/bin/bash: 3.2 on a Mac) with harmless probes only
 // (`$(echo EXPANDED)`), never a command with an effect.
 
 const REPOSITORY_TEMPLATES = fileURLToPath(new URL("../../../../../install-templates", import.meta.url));
 const BASH = "/bin/bash";
-/** Ruling 11's archive check: nothing a placeholder could still be. */
+/** The archive check: nothing a placeholder could still be. */
 const LEFTOVER = /\$\{[A-Z_][A-Z0-9_]*\}/;
 
 const GROUP_ID = "0192f1a4-7b3c-7d2e-8f10-1a2b3c4d5e6f";
@@ -105,7 +104,7 @@ describe("the repository's templates", () => {
     for (const name of named) expect(Object.keys(METHOD_PLACEHOLDERS[method])).toContain(name);
   });
 
-  it("no template says deploy or deployment (the spec's words, decision 10)", async () => {
+  it("no template says deploy or deployment", async () => {
     for (const method of ["all-in-one", "own-binary"] as const) {
       for (const file of await createInstallTemplateLoader(REPOSITORY_TEMPLATES).load(method)) {
         expect({ file: file.name, deploy: /deploy/i.test(file.text) }).toEqual({ file: file.name, deploy: false });
@@ -113,7 +112,7 @@ describe("the repository's templates", () => {
     }
   });
 
-  it("no template keeps reports_remote_config (deprecated at 0.161, refused from 0.163: ruling 10 (a))", async () => {
+  it("no template keeps reports_remote_config (deprecated at 0.161, refused from 0.163)", async () => {
     for (const method of ["all-in-one", "own-binary"] as const) {
       for (const file of await createInstallTemplateLoader(REPOSITORY_TEMPLATES).load(method)) expect(file.text).not.toContain("reports_remote_config");
     }
@@ -165,14 +164,14 @@ describe("the repository's templates", () => {
     expect(readme).toContain("`/etc/otelcol`");
   });
 
-  it("the configuration's variables are exported after the downloads, just before the supervisor starts (ruling 10 (c))", async () => {
+  it("the configuration's variables are exported after the downloads, just before the supervisor starts", async () => {
     const script = fileOf(await rendered("all-in-one", { env: [{ name: "NGINX_ENV", value: "prod" }] }), "start_supervisor.sh");
     const exported = script.indexOf("export NGINX_ENV='prod'");
     expect(exported).toBeGreaterThan(script.lastIndexOf("curl -fsSL"));
     expect(exported).toBeLessThan(script.indexOf('exec "$root_path/supervisor"'));
   });
 
-  it.each(["all-in-one", "own-binary"] as const)("%s: both host-address lines end || true (a host without ip doesn't stop the script: ruling 10 (b))", async (method) => {
+  it.each(["all-in-one", "own-binary"] as const)("%s: both host-address lines end || true (a host without ip doesn't stop the script)", async (method) => {
     const script = fileOf(await rendered(method), "start_supervisor.sh");
     expect(script).toMatch(/print \$\(i\+1\); exit \}\}' \|\| true\)"/);
     expect(script).toMatch(/hostname -I 2>\/dev\/null \| awk '\{print \$1\}' \|\| true\)"/);
@@ -272,7 +271,7 @@ describe("own-binary's supervisor table (SUPERVISOR_VERSION_CASES)", () => {
   });
 });
 
-/** The render's refusal's source (Ruling 48: the public download's log level follows it); any other throw fails. */
+/** The render's refusal's source (the public download's log level follows it); any other throw fails. */
 function refusedSource(render: () => unknown): string {
   try {
     render();
@@ -284,7 +283,7 @@ function refusedSource(render: () => unknown): string {
 }
 
 describe("the values, checked before a script holds them", () => {
-  // Each refusal's source (Ruling 48): `choices` for what the install was asked for, `operator` for the rest.
+  // Each refusal's source: `choices` for what the install was asked for, `operator` for the rest.
   it.each([
     ["a relative root path", { rootPath: "etc/otelcol" }, "choices"],
     ["a .. segment", { rootPath: "/etc/../tmp" }, "choices"],
@@ -365,7 +364,7 @@ describe("where a placeholder may stand (templateProblem)", () => {
     expect(templateProblem("all-in-one", name, `first line\n${text}`)).toEqual({ line: 2, reason });
   });
 
-  // Ruling 46 m4: a line a quote, a heredoc or a continuation opened earlier.
+  // A line a quote, a heredoc or a continuation opened earlier.
   const INSIDE = "a placeholder inside a quote, a heredoc or a continued line";
   it.each([
     ["a heredoc", "cat <<EOT > /tmp/x\nx=${ROOT_PATH}\nEOT\n"],
@@ -519,7 +518,7 @@ describe("start_supervisor.sh's ServerName and host.ip, under bash", () => {
   });
 });
 
-describe("start_supervisor.sh and the fleet's token, under bash (Ruling 43: the collector never holds the bearer)", () => {
+describe("start_supervisor.sh and the fleet's token, under bash (the collector never holds the bearer)", () => {
   // A harmless token holding what the YAML and the shell read specially.
   const TOKEN = 'Bearer tok-$(echo EXPANDED)-${env:HOME}-"q"-\\-it\'s';
   const modeOf = async (path: string) => ((await stat(path)).mode & 0o777).toString(8);
@@ -577,7 +576,7 @@ describe("start_supervisor.sh and the fleet's token, under bash (Ruling 43: the 
   });
 });
 
-describe("start_supervisor.sh's own safety, under bash (Ruling 46)", () => {
+describe("start_supervisor.sh's own safety, under bash", () => {
   const TOKEN = "Bearer tok-harmless-46";
 
   it.each(["all-in-one", "own-binary"] as const)("%s installs downloads root-owned 0755, only over https, keeping no archive owner (M1)", async (method) => {
@@ -642,7 +641,7 @@ describe("start_supervisor.sh's own safety, under bash (Ruling 46)", () => {
       const again = await ran(method, { installed: true, fresh: false });
       expect(again.status).toBe(1);
       expect(again.stderr).toMatch(/must be owned by .* and writable by no other user or group\./);
-      // The hint for a bundle unpacked under umask 0002 (Ruling 51).
+      // The hint for a bundle unpacked under umask 0002.
       expect(again.stderr).toContain(`which lets the group write, run: sudo chmod go-w ${first.root}\n`);
       expect(again.stdout).not.toContain("supervisor-args");
     } finally {
@@ -650,11 +649,11 @@ describe("start_supervisor.sh's own safety, under bash (Ruling 46)", () => {
     }
   });
 
-  // Ruling 60: the chmod hint only when the refusal is about another user's
-  // or group's write; a root path owned by another user says that alone.
-  // Only All In One can be shown without root (own-binary checks its own
-  // script's directory, which the test's user owns; its check is the same).
-  it("all-in-one refuses a root path owned by another user with that alone, no chmod hint (Ruling 60)", async () => {
+  // The chmod hint only when the refusal is about another user's or group's
+  // write; a root path owned by another user says that alone. Only All In
+  // One can be shown without root (own-binary checks its own script's
+  // directory, which the test's user owns; its check is the same).
+  it("all-in-one refuses a root path owned by another user with that alone, no chmod hint", async () => {
     const uid = process.getuid?.();
     const candidates = await Promise.all(
       ["/usr/share", "/usr/bin", "/usr", "/bin", "/etc"].map(async (path) => ({ path, stats: await stat(path).catch(() => undefined) })),
@@ -673,10 +672,10 @@ describe("start_supervisor.sh's own safety, under bash (Ruling 46)", () => {
     expect({ status: run.status, stderr: run.stderr }).toEqual({ status: 1, stderr: `ERROR: ${others.path} must be owned by ${user}.\n` });
   });
 
-  // Ruling 51: find -H, so a symlinked root path is judged by its target
-  // (a link's own mode says nothing: 0777 on Linux, refused before), and the
-  // link's own directory must be the user's and private too, or another
-  // user could point the link elsewhere.
+  // find -H, so a symlinked root path is judged by its target (a link's own
+  // mode says nothing: 0777 on Linux, refused before), and the link's own
+  // directory must be the user's and private too, or another user could
+  // point the link elsewhere.
   it.each(["all-in-one", "own-binary"] as const)("%s judges a symlinked root path by its target and the link's own directory", async (method) => {
     const target = join(directory, "target");
     const link = join(directory, "root");
@@ -710,7 +709,7 @@ describe("start_supervisor.sh's own safety, under bash (Ruling 46)", () => {
     expect((await ran(method, { installed: true, fresh: false })).status).toBe(0);
   });
 
-  it.each(["all-in-one", "own-binary"] as const)("%s, with no token, says to pass it through sudo (Ruling 51)", async (method) => {
+  it.each(["all-in-one", "own-binary"] as const)("%s, with no token, says to pass it through sudo", async (method) => {
     const run = await ran(method, { installed: true });
     expect(run.status).toBe(1);
     expect(run.stderr).toContain("ERROR: OPAMP_TOKEN is not set");

@@ -1,12 +1,11 @@
 import { attachMonacoAriaHost } from "./use-aria-container.js";
 
 /**
- * Where the app shell puts the one host for every Monaco's screen-reader
- * live region (D14a Ruling 48; use-aria-container.ts), in the root route,
- * which stays mounted.
+ * Where the app shell puts the one host for every Monaco's screen-reader live
+ * region (use-aria-container.ts), in the root route, which stays mounted.
  *
- * - `ph-no-capture`: replay records a placeholder for it (ADR 0024).
- * - `aria-live="off"` (Ruling 52): a Radix modal dialog hides every other
+ * - `ph-no-capture`: replay records a placeholder for it.
+ * - `aria-live="off"`: a Radix modal dialog hides every other
  *   child of `<body>` from assistive technology (aria-hidden's
  *   `hideOthers`), but keeps any element carrying `aria-live`, and doesn't
  *   look inside it. This wrapper announces nothing itself; the attribute

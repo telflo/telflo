@@ -1,8 +1,7 @@
 /**
- * The Testing tab's store (D14a decisions 7, 16 to 20; Preflight ruling 15):
- * the remembered duration, My Files and the selection, the heads kept for
- * the fixture-shape check, the queue and Run's hold. The API is its client's
- * functions, spied on.
+ * The Testing tab's store: the remembered duration, My Files and the
+ * selection, the heads kept for the fixture-shape check, the queue and Run's
+ * hold. The API is its client's functions, spied on.
  */
 
 import { beforeEach, describe, expect, it, onTestFinished, vi } from "vitest";
@@ -39,7 +38,7 @@ beforeEach(() => {
   window.localStorage.clear();
 });
 
-describe("the remembered duration (decision 20)", () => {
+describe("the remembered duration", () => {
   it("is 5 with nothing stored, and the stored whole number otherwise", () => {
     expect(readRememberedDuration()).toBe(DEFAULT_RUN_DURATION_SECONDS);
     window.localStorage.setItem(LAST_RUN_DURATION_KEY, "17");
@@ -122,7 +121,7 @@ describe("the remembered duration (decision 20)", () => {
   });
 });
 
-describe("My Files (decision 7)", () => {
+describe("My Files", () => {
   it("are read afresh on every load, not once a session", async () => {
     const read = vi
       .spyOn(apiClient, "getTestFiles")
@@ -213,7 +212,7 @@ describe("My Files (decision 7)", () => {
     expect(new TextDecoder().decode(useTestingStore.getState().heads[SECOND.id])).toBe('{"resourceLogs":[]}');
   });
 
-  it("keeps a copy of a long sample's head alone, not a view of the whole encoded sample (D14a Ruling 44)", async () => {
+  it("keeps a copy of a long sample's head alone, not a view of the whole encoded sample", async () => {
     vi.spyOn(apiClient, "saveTestSample").mockResolvedValue({ file: SECOND });
 
     await useTestingStore.getState().saveSample(GROUP_ID, { displayName: "zq-second", text: "x".repeat(1_000_000), format: "text" });
@@ -223,7 +222,7 @@ describe("My Files (decision 7)", () => {
     expect(head.buffer.byteLength).toBe(64 * 1024);
   });
 
-  it.each(["upload", "sample"] as const)("adds nothing when a %s answers after signing out (D14a Ruling 44)", async (kind) => {
+  it.each(["upload", "sample"] as const)("adds nothing when a %s answers after signing out", async (kind) => {
     let answer!: (value: { file: typeof SECOND }) => void;
     const pending = new Promise<{ file: typeof SECOND }>((resolve) => {
       answer = resolve;
@@ -288,7 +287,7 @@ describe("My Files (decision 7)", () => {
   });
 });
 
-describe("a file's head for the fixture-shape check (D14a Ruling 43)", () => {
+describe("a file's head for the fixture-shape check", () => {
   it("is the one kept when this tab uploaded or saved the file, with no read", async () => {
     vi.spyOn(apiClient, "saveTestSample").mockResolvedValue({ file: SECOND });
     const read = vi.spyOn(apiClient, "getTestFileHead");
@@ -340,7 +339,7 @@ describe("a file's head for the fixture-shape check (D14a Ruling 43)", () => {
   });
 });
 
-describe("the queue and Run's hold (Preflight ruling 15)", () => {
+describe("the queue and Run's hold", () => {
   it("queues with the API and puts the run, as the list carries it, at the top of the watched version's runs", async () => {
     const run = testRunFixture();
     const queue = vi.spyOn(apiClient, "queueTestRun").mockResolvedValue({ run });
@@ -402,7 +401,7 @@ describe("the queue and Run's hold (Preflight ruling 15)", () => {
   });
 });
 
-describe("one hold over every Play (D14b Preflight ruling 13)", () => {
+describe("one hold over every Play", () => {
   const OTHER = { ...TARGET, versionId: "0199c000-0000-7000-8000-000000000099" };
   const held = (versionId: string | null = VERSION_ID, userId: string | null = MEMBER_ID) =>
     selectIsPlayHeld(useTestingStore.getState(), userId, versionId);
@@ -449,7 +448,7 @@ describe("one hold over every Play (D14b Preflight ruling 13)", () => {
     expect(held()).toBe(false);
   });
 
-  it("refuses every start while the person's own run on the version waits, as D14a held Run", () => {
+  it("refuses every start while the person's own run on the version waits, as Run is held", () => {
     useTestingStore.setState({ runsVersionId: VERSION_ID, runs: [testRunFixture({ status: "queued" })] });
 
     expect(useTestingStore.getState().beginStart(TARGET, MEMBER_ID)).toBe(false);
@@ -476,7 +475,7 @@ describe("one hold over every Play (D14b Preflight ruling 13)", () => {
   });
 });
 
-describe("a queued run's selection (D14b Preflight ruling 14)", () => {
+describe("a queued run's selection", () => {
   it("is left as it was with {select: false}: the run joins the list, the selection stays", async () => {
     vi.spyOn(apiClient, "getTestRuns").mockResolvedValue({ runs: [] });
     const stopWatching = useTestingStore.getState().watchRuns(TARGET);
@@ -493,7 +492,7 @@ describe("a queued run's selection (D14b Preflight ruling 14)", () => {
   });
 });
 
-describe("the templates (D14b decision 13; Preflight ruling 17)", () => {
+describe("the templates", () => {
   const TEMPLATE = {
     id: "0199f200-0000-7000-8000-000000000001",
     name: "zq-otlp-logs",
@@ -539,7 +538,7 @@ describe("the templates (D14b decision 13; Preflight ruling 17)", () => {
     expect(useTestingStore.getState().templatesLoading).toBe(false);
   });
 
-  it("abort a read that never answers after RUNS_REQUEST_TIMEOUT_MS, which then fails as a read that can't be made (D14b Ruling 50)", async () => {
+  it("abort a read that never answers after RUNS_REQUEST_TIMEOUT_MS, which then fails as a read that can't be made", async () => {
     vi.useFakeTimers();
     onTestFinished(() => {
       vi.useRealTimers();

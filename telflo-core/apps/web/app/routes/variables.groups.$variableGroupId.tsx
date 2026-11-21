@@ -19,17 +19,17 @@ import {
 } from "~/lib/variables.js";
 
 /*
- * `/variables/groups/{id}`, a variable group's page (D20 default 22; Q82;
- * ADR 0018), with D20's overrides-only groups. It lists EVERY organization
- * variable (not only the group's members, a Parity Note) with its value in
- * the group and its source, "Override" or "Organization value" (an
- * override's "changed {when} by {email}" beneath it, decision 15), and per
- * row Override (a dialog) and Reset (an override's only). The header names
- * the group (text in the masked shell), its description, its counts, Edit
- * and Delete; a delete goes back to the list. The values sit inside
- * `ph-no-capture`. The address holds the group's id only; one that isn't a
- * UUID, or a group gone, says "Variable group not found" with no further
- * read. The title is fixed ("Variable group - Telflo"), never the name.
+ * `/variables/groups/{id}`, a variable group's page, with overrides-only
+ * groups. It lists EVERY organization variable (not only the group's
+ * members) with its value in the group and its source, "Override" or
+ * "Organization value" (an override's "changed {when} by {email}" beneath
+ * it), and per row Override (a dialog) and Reset (an override's only). The
+ * header names the group (text in the masked shell), its description, its
+ * counts, Edit and Delete; a delete goes back to the list. The values sit
+ * inside `ph-no-capture`. The address holds the group's id only; one that
+ * isn't a UUID, or a group gone, says "Variable group not found" with no
+ * further read. The title is fixed ("Variable group - Telflo"), never the
+ * name.
  */
 
 export function meta(_args: Route.MetaArgs) {
@@ -40,7 +40,7 @@ const HEAD_CLASS = "h-9 px-3 text-left align-middle text-[11px] font-medium uppe
 const CELL_CLASS = "px-3 py-2.5 align-top";
 const ROW_CLASS = "border-b transition-colors hover:bg-muted/40";
 
-/** An override's "changed {when} by {email}" beneath its source (decision 15, Q94): text in the masked shell, no attribute. */
+/** An override's "changed {when} by {email}" beneath its source: text in the masked shell, no attribute. */
 function OverrideChanged({ override }: { override: NonNullable<VariableGroupRow["override"]> }) {
   const changed = changedLines(override.changedAt, override.changedBy);
   return (

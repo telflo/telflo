@@ -28,7 +28,7 @@ import type {
 import * as apiClient from "~/lib/api-client.js";
 import { answerFor, THEIRS, versionFixture } from "~/test/configurations.js";
 
-/** The fleet screens' fixtures (D17a): ids, a fleet as each reply carries it, and pages of them. */
+/** The fleet screens' fixtures: ids, a fleet as each reply carries it, and pages of them. */
 
 export const FLEET_ID = "0a1b2c3d-4e5f-4061-8728-394a5b6c7d8e";
 export const DEFAULT_TOKEN_ID = "1b2c3d4e-5f60-4172-8839-4a5b6c7d8e9f";
@@ -80,7 +80,7 @@ export function populatedSummary(now: number): FleetSummary {
   };
 }
 
-/** Fails, naming the element and attribute, if any attribute of any element under `root` holds `text` (D17a decision 29). */
+/** Fails, naming the element and attribute, if any attribute of any element under `root` holds `text`. */
 export function expectNoAttributeHolds(text: string, root: Element = document.documentElement): void {
   for (const element of [root, ...root.querySelectorAll("*")]) {
     for (const attribute of element.attributes) {
@@ -90,9 +90,9 @@ export function expectNoAttributeHolds(text: string, root: Element = document.do
 }
 
 /**
- * Each attribute under `root` holding `text`, as "TAG name": for a check
- * that allows only Preflight ruling 15's exception (an open Name input's
- * `value`, which React writes for a controlled input).
+ * Each attribute under `root` holding `text`, as "TAG name": for a check that
+ * allows only one exception (an open Name input's `value`, which React writes
+ * for a controlled input).
  */
 export function attributesHolding(text: string, root: Element = document.documentElement): string[] {
   const holders: string[] = [];
@@ -107,7 +107,7 @@ export function attributesHolding(text: string, root: Element = document.documen
 /**
  * Whether a string is anywhere in a value: its own text, any property's, or
  * any key's or value's of a Map or a Set (a dialog's typed env values are a
- * Map: D17d-2 Ruling 49), however deep (DOM nodes and functions skipped).
+ * Map), however deep (DOM nodes and functions skipped).
  */
 function holds(value: unknown, text: string, seen = new WeakSet<object>()): boolean {
   if (typeof value === "string") return value.includes(text);
@@ -149,17 +149,16 @@ export function anyStateHolds(text: string, root: Element = document.body): bool
 }
 
 /**
- * Fails, naming where, unless `text` is shown only inside `ph-no-capture`
- * (D17b-2 decisions 12 and 34; Preflight ruling 15; Ruling 21): a bearer
- * shown only in `SecretCopyBox`, which session replay records nothing of.
- * The DOM twin of the browser tests' `expectBearersOnlyInNoCapture`
- * (`e2e/fleets.e2e.ts`). It fails when
+ * Fails, naming where, unless `text` is shown only inside `ph-no-capture`:
+ * a bearer shown only in `SecretCopyBox`, which session replay records
+ * nothing of. The DOM twin of the browser tests'
+ * `expectBearersOnlyInNoCapture` (`e2e/fleets.e2e.ts`). It fails when
  * - a text node under `root` (the whole page, dialogs' portals included,
  *   by default) holds `text` outside a `ph-no-capture` element;
- * - `root`'s text with every `ph-no-capture` subtree taken out holds it:
- *   the text split across text nodes outside (Ruling 22), which no single
- *   node holds, while a whole copy sits inside (nothing is outside when
- *   `root` sits inside `ph-no-capture`, its own or an ancestor's);
+ * - `root`'s text with every `ph-no-capture` subtree taken out holds it: the
+ *   text split across text nodes outside, which no single node holds, while a
+ *   whole copy sits inside (nothing is outside when `root` sits inside
+ *   `ph-no-capture`, its own or an ancestor's);
  * - any attribute of `root` or an element under it holds `text`: a bearer
  *   has no attribute exception (unlike an open Name input's `value`), so
  *   an `aria-label`, a `title`, a `data-*` or an input's `value` holding
@@ -195,9 +194,9 @@ export function expectTextOnlyInsideNoCapture(text: string, root: Element = docu
 
 /**
  * Radix's tooltip triggers: focusable elements it marks with `data-state`
- * and no role of their own (D17b-1 Preflight ruling 15). A Radix checkbox
- * (`role="checkbox"`) or a Select's trigger (`role="combobox"`) carries
- * `data-state` too, and opens no tooltip.
+ * and no role of their own. A Radix checkbox (`role="checkbox"`) or a
+ * Select's trigger (`role="combobox"`) carries `data-state` too, and
+ * opens no tooltip.
  */
 export const TOOLTIP_TRIGGERS = "[data-state]:not([role])";
 
@@ -294,7 +293,7 @@ export function listedToken(overrides: Partial<EnrollmentTokenListed> = {}): Enr
   };
 }
 
-/* The tokens' fixtures (D17b-2 Task 2): the fleet's tokens in every state, and its token history's events. */
+/* The tokens' fixtures: the fleet's tokens in every state, and its token history's events. */
 
 export const REPLACED_TOKEN_ID = "c6d7e8f9-0a1b-4c2d-83e4-f5a6b7c8d9e0";
 export const EXPIRED_TOKEN_ID = "d7e8f90a-1b2c-4d3e-94f5-a6b7c8d9e0f1";
@@ -302,8 +301,8 @@ export const REVOKED_TOKEN_ID = "e8f90a1b-2c3d-4e4f-a5a6-b7c8d9e0f1a2";
 export const TOKEN_EVENT_ID = "f90a1b2c-3d4e-4f50-b6b7-c8d9e0f1a2b3";
 
 /**
- * The fleet's tokens at `now`, one in each state the Tokens table shows
- * (D17b-2 decision 26), each `activeCollectors` its own:
+ * The fleet's tokens at `now`, one in each state the Tokens table shows,
+ * each `activeCollectors` its own:
  * - `defaultToken`: the default token, valid (it never expires);
  * - `revokedDefaultToken`: the same token revoked a day ago;
  * - `current`: the current rotate token, made a day ago, expiring in a year;
@@ -364,7 +363,7 @@ export function tokenEventsPage(events: EnrollmentTokenEvent[], nextCursor: stri
   return { events, nextCursor };
 }
 
-/* The collectors' fixtures (D17b-1 Task 3): a collector, a group, an error and a configuration's version. */
+/* The collectors' fixtures: a collector, a group, an error and a configuration's version. */
 
 export const COLLECTOR_ID = "4e5f6071-8293-44a5-bb6c-7d8e9fa0b1c2";
 export const INSTANCE_UID = "5f607182-93a4-45b6-8c7d-8e9fa0b1c2d3";
@@ -477,7 +476,7 @@ export function gatewaysGroup(overrides: Partial<CollectorGroup> = {}): Collecto
   });
 }
 
-/* A Kubernetes-supervisor fleet's groups (D17d-1 decision 6): its Default group is the Agent, `cluster` the Cluster, any other a gateway. */
+/* A Kubernetes-supervisor fleet's groups: its Default group is the Agent, `cluster` the Cluster, any other a gateway. */
 
 export const CLUSTER_GROUP_ID = "7182a3b4-c5d6-47e8-9f0a-1b2c3d4e5f60";
 export const SECOND_GATEWAY_GROUP_ID = "8293b4c5-d6e7-48f9-a01b-2c3d4e5f6071";
@@ -510,9 +509,9 @@ export function kubernetesAnnotations(settings: Partial<KubernetesAnnotations> =
   return { other: { kept: true }, telflo: { kubernetes: kubernetesSettings(settings) } };
 }
 
-/* The install's fixtures (D17c-1 Task 5): a server group's mounts and its install facts. */
+/* The install's fixtures: a server group's mounts and its install facts. */
 
-/** The spec's mount: nginx's logs, read-only, at the same path in the container. */
+/** A read-only mount: nginx's logs, at the same path in the container. */
 export const NGINX_MOUNT: DockerMount = { hostPath: "/var/log/nginx", containerPath: "/var/log/nginx", readOnly: true };
 
 /** A writable mount at another path in the container. */
@@ -520,17 +519,17 @@ export const DATA_MOUNT: DockerMount = { hostPath: "/srv/data", containerPath: "
 
 /**
  * A group's annotations holding `mounts` under the platform's key, beside
- * another client's key (kept by every write: decision 31). The opamp-server
- * answers them with their keys sorted.
+ * another client's key (kept by every write). The opamp-server answers
+ * them with their keys sorted.
  */
 export function mountsAnnotations(mounts: DockerMount[] = [NGINX_MOUNT]): Record<string, unknown> {
   return { other: { kept: true }, telflo: { dockerMounts: mounts } };
 }
 
 /**
- * The install's facts as the facts route answers them (decision 38): the
- * gateways group's, its published version built for otelcol-contrib
- * 0.159.0, one variable its YAML reads and the nginx mount; no bearer.
+ * The install's facts as the facts route answers them: the gateways group's,
+ * its published version built for otelcol-contrib 0.159.0, one variable its
+ * YAML reads and the nginx mount; no bearer.
  */
 export function installFacts(overrides: Partial<InstallFacts> = {}): InstallFacts {
   return {
@@ -547,14 +546,13 @@ export function installFacts(overrides: Partial<InstallFacts> = {}): InstallFact
 }
 
 /**
- * A Kubernetes group's install facts as the facts route answers them
- * (D17d-2 decision 15; Preflight ruling 1): the gateways group's by default
- * (its release its name, no fullnameOverride, telflo-collectors, one
- * replica, no volumes), built for otelcol-contrib 0.159.0, one variable its
- * YAML reads, the platform's chart and image at their defaults (D18: the
- * contracts' DEFAULT_HELM_CHART_REFERENCE and DEFAULT_HELM_CHART_VERSION,
- * ghcr.io/telflo/telflo/collector); no bearer. `helm` overrides the Helm
- * install's fields.
+ * A Kubernetes group's install facts as the facts route answers them: the
+ * gateways group's by default (its release its name, no fullnameOverride,
+ * telflo-collectors, one replica, no volumes), built for otelcol-contrib
+ * 0.159.0, one variable its YAML reads, the platform's chart and image at
+ * their defaults (the contracts' DEFAULT_HELM_CHART_REFERENCE and
+ * DEFAULT_HELM_CHART_VERSION, ghcr.io/telflo/telflo/collector); no bearer.
+ * `helm` overrides the Helm install's fields.
  */
 export function helmInstallFacts(
   overrides: Partial<Omit<HelmInstallFacts, "helm">> = {},
@@ -583,7 +581,7 @@ export function helmInstallFacts(
   };
 }
 
-/** The Agent's Helm facts (the Default group's): release telflo-node, FLEET_ID's fullnameOverride (D18), no replicas. */
+/** The Agent's Helm facts (the Default group's): release telflo-node, FLEET_ID's fullnameOverride, no replicas. */
 export function agentHelmFacts(helm: Partial<HelmInstallFacts["helm"]> = {}): HelmInstallFacts {
   return helmInstallFacts({ groupId: DEFAULT_GROUP_ID }, { release: "telflo-node", fullnameOverride: "0a1b2c3d-default", role: "node", replicas: null, ...helm });
 }
@@ -612,7 +610,7 @@ export function configurationVersionListItem(
   };
 }
 
-/* The quick-deploy links' fixtures (D17c-2 Task 4): a link, a page of them and the create's reply. */
+/* The quick-deploy links' fixtures: a link, a page of them and the create's reply. */
 
 export const QUICK_DEPLOY_LINK_ID = "0192f1a4-7b3c-7d2e-8f10-1a2b3c4d5e70";
 
@@ -654,9 +652,9 @@ export function quickDeployLink(overrides: Partial<QuickDeployLink> = {}): Quick
 }
 
 /**
- * A Helm values link (D17d-2 decisions 21 and 22) as the list answers it:
- * the gateways group's, its release and namespace at the link's making, one
- * variable's value sealed with it; otherwise as `quickDeployLink`.
+ * A Helm values link as the list answers it: the gateways group's, its
+ * release and namespace at the link's making, one variable's value sealed
+ * with it; otherwise as `quickDeployLink`.
  */
 export function helmQuickDeployLink(overrides: Partial<QuickDeployLink> = {}): QuickDeployLink {
   return quickDeployLink({
@@ -679,8 +677,8 @@ export function quickDeployLinkCreated(
 }
 
 /**
- * D20's reads a fleet dialog makes at its opening, answered with none (Task
- * 14): the organization's variable groups (the Variable group choice), the
+ * The variable reads a fleet dialog makes at its opening, answered with
+ * none: the organization's variable groups (the Variable group choice), the
  * chosen version's text ("Variables used": `yamlContent`, none by default)
  * and the organization's variables (the shared names). A test of those
  * parts serves its own instead.

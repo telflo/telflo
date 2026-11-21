@@ -7,13 +7,12 @@ import {
   type OtelcolTestingHealthMonitor,
 } from "./health-monitor.js";
 
-// The tester's health monitor (D14a decision 12, Preflight ruling 7, Ruling
-// 38), with fake timers, a scripted health check and a shared row held in
-// memory, every write recorded: down on the second failed check in a row and
-// not the first, a success clearing the row whenever it says down (up wins),
-// a write only when the row disagrees with the check, a 503
-// version_unavailable no failure. health-monitor.integration.test.ts writes
-// the real row.
+// The tester's health monitor, with fake timers, a scripted health check and a
+// shared row held in memory, every write recorded: down on the second failed
+// check in a row and not the first, a success clearing the row whenever it
+// says down (up wins), a write only when the row disagrees with the check, a
+// 503 version_unavailable no failure. health-monitor.integration.test.ts
+// writes the real row.
 
 const UP: TesterHealthResult = { kind: "up" };
 const DOWN: TesterHealthResult = { kind: "down", reason: "connection_refused" };
@@ -97,7 +96,7 @@ afterEach(() => {
 });
 
 describe("the collector tester's health monitor", () => {
-  it("checks every 5 s, counting the tester down after 2 failed checks (decision 12)", () => {
+  it("checks every 5 s, counting the tester down after 2 failed checks", () => {
     expect(OTELCOL_TESTING_HEALTH_INTERVAL_MS).toBe(5_000);
     expect(OTELCOL_TESTING_DOWN_AFTER_FAILURES).toBe(2);
   });
@@ -164,7 +163,7 @@ describe("the collector tester's health monitor", () => {
     await monitor.stop();
   });
 
-  it("a 503 version_unavailable is not a failed check (Preflight ruling 13): it breaks a run of failures", async () => {
+  it("a 503 version_unavailable is not a failed check: it breaks a run of failures", async () => {
     const { monitor, writes } = harness([DOWN, VERSION_UNAVAILABLE, DOWN, VERSION_UNAVAILABLE, DOWN]);
     monitor.start();
     await tick(5, true);
@@ -175,7 +174,7 @@ describe("the collector tester's health monitor", () => {
     await monitor.stop();
   });
 
-  describe("up wins across processes (Ruling 38)", () => {
+  describe("up wins across processes", () => {
     it("a down left in the row by a process that has died is cleared at this process's first success", async () => {
       const { monitor, writes, row } = harness([UP], { downSince: OTHER_PROCESS_WENT_DOWN });
       monitor.start();
@@ -253,7 +252,7 @@ describe("the collector tester's health monitor", () => {
     });
   });
 
-  it("a shared row that can't be read logs once, then at most once a minute, then one recovery line (Ruling 40)", async () => {
+  it("a shared row that can't be read logs once, then at most once a minute, then one recovery line", async () => {
     vi.useRealTimers();
     vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "Date"] });
     vi.setSystemTime(0);

@@ -1,8 +1,8 @@
 """Reading what `otelcol-contrib validate` prints on stderr.
 
 The collector fails in one of four stages, printed the same way on 0.147.0
-and 0.162.0 (D13b Preflight ruling 6; tests/fixtures/collector-outputs.json
-holds the recorded outputs this parser is tested on):
+and 0.162.0 (tests/fixtures/collector-outputs.json holds the recorded outputs
+this parser is tested on):
 
 - **resolve** — `Error: failed to get config: cannot resolve the
   configuration: <cause>`: one error, no component path.
@@ -37,15 +37,14 @@ to `otlp`, nor stopped at a hyphen).
   each;
 - a log line before the `Error: ` line: the line, one cause.
 
-**Deployment requirements** (D13b ruling 34): an error is a requirement only
-when every one of its causes matches one of `TEMPLATES` whole, each a
-requirement the collector really printed (see the templates' section); any
-other error stays an error, so an error that also says something else is
-never filed as a requirement (D13b spec decision 7; never the whole
-line). Two guards stay on top: the span rule (ruling 25) and the
-submitted text's own words (ruling 29).
+**Deployment requirements**: an error is a requirement only when every one of
+its causes matches one of `TEMPLATES` whole, each a requirement the collector
+really printed (see the templates' section); any other error stays an error,
+so an error that also says something else is never filed as a requirement
+(never the whole line). Two guards stay on top: the span rule and the
+submitted text's own words.
 
-What is bounded, and how (ruling 28): the output is capped at 256 KB by the
+What is bounded, and how: the output is capped at 256 KB by the
 runner. Reading it into stages and lines is linear: each line regex is
 anchored or starts with a literal, and its repetitions are separated by
 characters they can't match (the validate line's path is one lazy group, no
@@ -57,7 +56,7 @@ class followed by a character it excludes, so an attempt is linear in the
 cause. The span rule is one pass over the cause, and whether the submitted
 text holds a cause is one substring search over its words per distinct
 cause. None of it has a time bound of its own: it runs in the check's child
-process, under its deadline, never on the service's event loop (ruling 27).
+process, under its deadline, never on the service's event loop.
 """
 
 from __future__ import annotations
@@ -108,7 +107,7 @@ _BUILD_CREATE_RE = re.compile(
     r'^failed to create "(?P<id>[^"]+)" (?P<kind>receiver|processor|exporter|connector|extension)\b'
 )
 # A build failure's own prefix, as the collector prints it; what follows is
-# the cause (D13b ruling 34).
+# the cause.
 _BUILD_CAUSE_PREFIX_RE = re.compile(
     r'^failed to create "[^"]+" (?:receiver|processor|exporter|connector|extension)'
     r'(?:, in pipeline "[^"]*"| for data type "[^"]*")?: '
@@ -117,7 +116,7 @@ _BUILD_CONNECTOR_RE = re.compile(r'^connector "(?P<id>[^"]+)" used as\b')
 _PANIC_RE = re.compile(r"^(?:panic: |fatal error: )")
 
 # ---------------------------------------------------------------------------
-# Deployment requirements: templates (D13b ruling 34)
+# Deployment requirements: templates
 #
 # Some components check the host at validate time (a directory, an
 # environment variable, the service account's files). In the sandbox those
@@ -134,15 +133,15 @@ _PANIC_RE = re.compile(r"^(?:panic: |fatal error: )")
 # variable part can't hold text the collector echoes in quotes, a joined
 # cause, or a confmap reference. Anything else is an error: phrase
 # patterns matched anywhere in a line would let the configuration's own
-# text pass for a requirement and hide its error (rulings 25, 29 and the
-# review of 207bc02). Requirement patterns with no recorded output don't
-# fire from the output (README, "Requirements"): D13b Task 7 recorded the
-# image's Linux outputs, and only hostmetrics' root_path printed one.
+# text pass for a requirement and hide its error. Requirement patterns with
+# no recorded output don't fire from the output (README, "Requirements"): of
+# the image's recorded Linux outputs, only hostmetrics' root_path printed
+# one.
 #
-# Two guards stay on top (rulings 25 and 29): a cause whose quotes the
-# collector left open, or that holds an invalid-keys list, is an error; and
-# so is a cause the submitted text itself holds (in a key or a scalar value
-# as decoded, or in the raw text).
+# Two guards stay on top: a cause whose quotes the collector left open, or
+# that holds an invalid-keys list, is an error; and so is a cause the
+# submitted text itself holds (in a key or a scalar value as decoded, or in
+# the raw text).
 # ---------------------------------------------------------------------------
 
 _PATH_CHARACTERS = r"[^\s\"'`\\\[\](){}<>$:;,]*"
@@ -189,8 +188,8 @@ TEMPLATES: tuple[Template, ...] = (
     ),
     Template(
         # hostmetrics (validate stage, Linux only: darwin refuses root_path):
-        # `receivers::hostmetrics: <cause>`, recorded in the image (D13b Task
-        # 7), which holds /hostfs, so only another root_path reaches it.
+        # `receivers::hostmetrics: <cause>`, recorded in the image, which
+        # holds /hostfs, so only another root_path reaches it.
         source="req-hostmetrics-root-path",
         pattern=re.compile(rf"invalid root_path: stat (?P<path>{_PATH}): no such file or directory"),
         category="host_filesystem",
@@ -245,8 +244,8 @@ TEMPLATES: tuple[Template, ...] = (
     ),
 )
 
-# Longer causes are errors without any template tried (ruling 28): every
-# recorded requirement is under 200 characters.
+# Longer causes are errors without any template tried: every recorded
+# requirement is under 200 characters.
 MAX_CLASSIFIED_CHARACTERS = 4096
 
 _INVALID_KEYS = "has invalid keys: "
@@ -260,7 +259,7 @@ _DOUBLE_END_RE = re.compile(r'[^"\\]*(?:\\.[^"\\]*)*"', re.DOTALL)
 
 
 def _echoes_closed(text: str) -> bool:
-    """The span rule (ruling 25), for a whole cause: True when every quote
+    """The span rule, for a whole cause: True when every quote
     the collector opened in it (Go's "…", a backtick, mapstructure's '…') is
     closed within it and it holds no invalid-keys list. One left-to-right
     pass: each opening delimiter is found by a search from the last span's
@@ -304,11 +303,11 @@ def _echoes_closed(text: str) -> bool:
 
 
 class Submitted:
-    """The submitted text's own words (D13b ruling 29): every key and every
-    scalar value as decoded, and the raw text. A cause the text holds is an
-    echo of the text, wherever the collector printed it. A cause never holds
-    a line break, so the words are joined by line breaks and one substring
-    search answers for all of them."""
+    """The submitted text's own words: every key and every scalar value as
+    decoded, and the raw text. A cause the text holds is an echo of the text,
+    wherever the collector printed it. A cause never holds a line break, so
+    the words are joined by line breaks and one substring search answers for
+    all of them."""
 
     def __init__(self, text: str) -> None:
         words = [text]
@@ -371,7 +370,7 @@ def classify_cause(
         if submitted is not None and submitted.holds(cause):
             return None  # the submitted text's own words: an error
         if any(_from_a_placeholder(value, private) for value in match.groupdict().values()):
-            return None  # a variable the validator's own placeholder filled (ruling 41)
+            return None  # a variable the validator's own placeholder filled
         return template.requirement(match, component_path)
     return None
 
@@ -379,10 +378,10 @@ def classify_cause(
 def _from_a_placeholder(value: str | None, private: tuple[str, ...] = ()) -> bool:
     """True when a template's captured variable holds the validator's
     placeholder marker, a line break, or one of the `private` paths (the
-    check's own directory, D13b ruling 64): a requirement whose title would
-    name the validator's own substitute or directory, or carry an injected
-    break, is not emitted (D13b ruling 41). The path and name character
-    classes already exclude a line break; this is a second guard."""
+    check's own directory): a requirement whose title would name the
+    validator's own substitute or directory, or carry an injected break, is
+    not emitted. The path and name character classes already exclude a line
+    break; this is a second guard."""
     return value is not None and (
         _PLACEHOLDER_MARKER in value or "\n" in value or "\r" in value or any(path in value for path in private)
     )
@@ -394,12 +393,11 @@ def classify_error(
     """The requirement an error stands for, or None when it is an error.
 
     An error is a requirement only when it has a cause and every one of its
-    causes is a requirement (decision 7's fix: an error that also says
-    something else is never filed as a requirement); its first cause's
-    requirement is the error's. The causes are the parser's, never split out
-    of a joined message (the module's docstring says what a cause is in each
-    stage). `submitted` is the text that was checked (ruling 29); `private`
-    the paths a requirement never names (ruling 64).
+    causes is a requirement (an error that also says something else is never
+    filed as a requirement); its first cause's requirement is the error's.
+    The causes are the parser's, never split out of a joined message (the
+    module's docstring says what a cause is in each stage). `submitted` is
+    the text that was checked; `private` the paths a requirement never names.
     """
     first: dict | None = None
     for cause in causes:
@@ -455,9 +453,9 @@ def parse_stderr(stderr: str, submitted_text: str | None = None, private: tuple[
     count, and the caller reports the exit when there are none.
 
     `submitted_text` is the text that was checked, as sent: a cause it holds
-    is never a requirement (D13b ruling 29), nor is one that names a
-    `private` path (the check's own directory, ruling 64). Linear in the
-    output (ruling 28; the module's docstring says how).
+    is never a requirement, nor is one that names a `private` path (the
+    check's own directory). Linear in the output (the module's docstring says
+    how).
     """
     submitted = Submitted(submitted_text) if submitted_text is not None else None
     lines = _clean_lines(stderr)

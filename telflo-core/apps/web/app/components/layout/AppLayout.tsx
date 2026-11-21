@@ -8,13 +8,12 @@ interface AppLayoutProps {
 }
 
 /**
- * The signed-in shell (ADR 0018). The layout route's loader supplies the
- * user before render, so there is nothing to wait for and no boot spinner
- * (D2a Parity Notes). The org-welcome tour is started by the layout route,
- * which has the loader's data it waits on (D6 decision 13). The Toaster lives
- * in the root route, not here (D2a Ruling 12). While the active organization
- * is being switched, the page gives way to a spinner and the sidebar stays
- * (D5 decision 11).
+ * The signed-in shell. The layout route's loader supplies the user before
+ * render, so there is nothing to wait for and no boot spinner. The
+ * org-welcome tour is started by the layout route, which has the loader's
+ * data it waits on. The Toaster lives in the root route, not here. While the
+ * active organization is being switched, the page gives way to a spinner and
+ * the sidebar stays.
  */
 export function AppLayout({ children }: AppLayoutProps) {
   const isSwitchingOrganization = useUserStore((state) => state.isSwitchingOrganization);
@@ -23,10 +22,10 @@ export function AppLayout({ children }: AppLayoutProps) {
   // on <body> so Radix portals — dialogs, popovers, selects — inherit it)
   // classes to body. ph-mask, on the root and on <body> for the same
   // portals, has session replay mask all the app's text: emails,
-  // organization names, pipelines (D4 Ruling 14). Autocapture doesn't read
-  // it, so it sends no text or attributes while the app is shown (D4
-  // Ruling 16); no attribute in here may carry private data, since replay
-  // records attributes as they are.
+  // organization names, pipelines. Autocapture doesn't read it, so it
+  // sends no text or attributes while the app is shown; no attribute in
+  // here may carry private data, since replay records attributes as they
+  // are.
   useEffect(() => {
     document.body.classList.add("app-layout", "tf-app", "ph-mask");
     const releaseAnalyticsMask = setAnalyticsMasked(true);

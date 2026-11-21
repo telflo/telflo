@@ -1,10 +1,9 @@
 // @vitest-environment node
 
 /**
- * A server render of the YAML tab never imports Monaco (D8's Global
- * constraints; Preflight ruling 14). Here monaco-editor and monaco-yaml
- * can't be imported at all: a static import of either, anywhere below
- * YamlEditor, fails this file as it loads.
+ * A server render of the YAML tab never imports Monaco. Here monaco-editor
+ * and monaco-yaml can't be imported at all: a static import of either,
+ * anywhere below YamlEditor, fails this file as it loads.
  */
 
 import { renderToString } from "react-dom/server";

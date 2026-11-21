@@ -1,10 +1,9 @@
-# A version's validation pipelines (D25 decision 17's routes 13-14;
-# decisions 19, 20 and 32; Preflight ruling 8): the Validation tab's
-# pipelines and rules, which a test run with `useSavedRules` evaluates.
-# Assembled by document.ts. A version's pipelines follow its configuration's
-# visibility: the published ones and the token's user's own drafts. Every
-# reply is no-store. A rule is the platform's (kind, target, pattern or
-# ottl, name, description); a pipeline has no `name` of its own.
+# A version's validation pipelines: the Validation tab's pipelines and rules,
+# which a test run with `useSavedRules` evaluates. Assembled by document.ts. A
+# version's pipelines follow its configuration's visibility: the published
+# ones and the token's user's own drafts. Every reply is no-store. A rule is
+# the platform's (kind, target, pattern or ottl, name, description); a
+# pipeline has no `name` of its own.
 paths:
   /configurations/{configurationId}/versions/{versionNumber}/validation-pipelines:
     parameters:

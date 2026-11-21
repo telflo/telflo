@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 // Fails if any production npm dependency carries a license that does not
 // allow redistribution. telflo is installed by customers, including as an
-// air-gapped bundle, so everything it ships must be redistributable
-// (ADR 0019).
+// air-gapped bundle, so everything it ships must be redistributable.
 //
 // Usage: check-licenses.mjs <package-lock.json> [license-policy.json]
 //
@@ -12,12 +11,12 @@
 // devOptional and optional packages, is checked, erring on the side of
 // counting a package as shipped.
 //
-// It also checks the files vendored into the source instead of installed
-// (the policy's "vendored": Swagger UI for the API reference page, D25
-// decision 49): each folder's licenses must be allowed, and the folder must
-// hold exactly the files listed (no sub-folder), each with its recorded sha256, so a
-// vendored file can't change, or another be added, without its licenses
-// being looked at again (docs/third-party-assets.md records the same).
+// It also checks the files vendored into the source instead of installed (the
+// policy's "vendored": Swagger UI for the API reference page): each folder's
+// licenses must be allowed, and the folder must hold exactly the files listed
+// (no sub-folder), each with its recorded sha256, so a vendored file can't
+// change, or another be added, without its licenses being looked at again
+// (docs/third-party-assets.md records the same).
 import { createHash } from "node:crypto";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -152,7 +151,7 @@ if (violations.length > 0) {
   for (const violation of [...new Set(violations)].sort()) console.error(`  ${violation}`);
   console.error("");
   console.error("telflo ships to customers, so every shipped dependency must allow redistribution.");
-  console.error("Replace the dependency: only a license that allows redistribution may be added to license-policy.json (ADR 0019).");
+  console.error("Replace the dependency: only a license that allows redistribution may be added to license-policy.json.");
   console.error("A vendored file's change: check its licenses, then update license-policy.json and docs/third-party-assets.md.");
   process.exit(1);
 }

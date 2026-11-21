@@ -16,16 +16,15 @@ import { canaryVariableValue, placesOf } from "./support/privacy.js";
 import { signInThroughApi, switchOrganizationThroughApi, waitForHydration } from "./support/session.js";
 import { createVariableGroupThroughApi, createVariableThroughApi, setOverrideThroughApi, uniqueVariableName } from "./support/variables.js";
 
-// A server fleet's Collectors tab (D17b-1 decision 33; Preflight ruling 16),
-// in the browser, against the E2E API and its fake opamp-server. Each test
-// works in an organization of its own (a new user's, or a new group's), so
-// tests and browsers run in parallel. Fleets, groups, pins and publishing
-// go through the API as the page's session; collectors and errors
-// through the fake's control port (support/collectors.ts,
-// support/fake-opamp-server.ts), before the page reads them, but for the
-// collector enrolled while the page polls: that test drives the page's
-// clock (`nextPoll`, support/polling.ts). Nothing else here installs
-// `page.clock`: the bulk move's 429 is waited out in real time.
+// A server fleet's Collectors tab, in the browser, against the E2E API and its
+// fake opamp-server. Each test works in an organization of its own (a new
+// user's, or a new group's), so tests and browsers run in parallel. Fleets,
+// groups, pins and publishing go through the API as the page's session;
+// collectors and errors through the fake's control port
+// (support/collectors.ts, support/fake-opamp-server.ts), before the page reads
+// them, but for the collector enrolled while the page polls: that test drives
+// the page's clock (`nextPoll`, support/polling.ts). Nothing else here
+// installs `page.clock`: the bulk move's 429 is waited out in real time.
 
 const PASSWORD = "correct horse battery staple";
 /** The fleet's collectors' list (its query aside): the tab's reads and polls. */
@@ -34,7 +33,7 @@ const COLLECTORS_PATH = /^\/api\/v1\/organizations\/[^/]+\/fleets\/[^/]+\/collec
 const COLLECTOR_PATH = /^\/api\/v1\/organizations\/[^/]+\/fleets\/[^/]+\/collectors\/[^/]+$/;
 const isCollectorsRead = isGetOf(COLLECTORS_PATH);
 const NAME_TAKEN = "Another of the organization's collectors has this name.";
-/** An empty fleet's Collectors tab before an install in the visit (D17c-1 decision 44). */
+/** An empty fleet's Collectors tab before an install in the visit. */
 const INSTALL_FIRST = "Install your first collector";
 
 /** A suffix no other test uses. */
@@ -229,7 +228,7 @@ test("sorts by name and by last seen, each header alternating ascending and desc
   await expect(lastSeenHeader).toHaveAttribute("aria-sort", "ascending");
   await expect(nameHeader).not.toHaveAttribute("aria-sort");
   await expectNames(page, ["sort-b", "sort-c", "sort-a"]);
-  // Ruling 55: Status follows the liveness: seen 3 minutes ago, Unknown; Last seen the time alone.
+  // Status follows the liveness: seen 3 minutes ago, Unknown; Last seen the time alone.
   await expect(collectorRow(page, "sort-b").locator("td").nth(5)).toHaveText("Unknown (unknown: last seen 2–5 minutes ago)");
   await expect(collectorRow(page, "sort-b").locator("td").nth(8)).toHaveText(/^3 minutes ago \(/);
   await readAfter(page, () => lastSeenHeader.getByRole("button").click());
@@ -251,7 +250,7 @@ test("a collector's details: its rows, attributes and error history, no imported
     name,
     reported: { collectorVersion: "0.162.0", ip: "10.0.0.7", hostIp: "192.168.1.7", attributes: { "host.name": attributeValue } },
   });
-  // Nothing assigned (D16c): it runs its own file, whose apply it reports failing.
+  // Nothing assigned: it runs its own file, whose apply it reports failing.
   await setFakeCollectorState(organizationId, collector.id, {
     effective: { sha256: "a".repeat(64), status: "failed", error: applyError },
   });
@@ -259,7 +258,7 @@ test("a collector's details: its rows, attributes and error history, no imported
   await recordFakeCollectorError(organizationId, collector.id, { message: secondError, reportedAt: new Date(Date.now() - 60_000) });
   await openCollectors(page, fleetId);
 
-  // Ruling 55: Status its liveness (just enrolled: Online), Configuration its sync, Last seen plain text with no dot.
+  // Status its liveness (just enrolled: Online), Configuration its sync, Last seen plain text with no dot.
   const status = collectorRow(page, name).locator("td").nth(5).locator("[tabindex='0']");
   await expect(status).toHaveText("Online (online: seen in the last minute)");
   await status.hover();
@@ -270,7 +269,7 @@ test("a collector's details: its rows, attributes and error history, no imported
   await page.keyboard.press("Escape");
   await expect(page.getByRole("tooltip")).toBeHidden();
 
-  // Nothing sent (D16c Ruling 21): the grid's Version dash says so on hover, a tooltip in fixed words.
+  // Nothing sent: the grid's Version dash says so on hover, a tooltip in fixed words.
   const version = collectorRow(page, name).locator("td").nth(7).locator("[tabindex='0']");
   await expect(version).toHaveText("— (Nothing sent yet: it runs its own file.)");
   await version.hover();
@@ -280,14 +279,14 @@ test("a collector's details: its rows, attributes and error history, no imported
   const details = page.getByRole("dialog", { name });
   await expect(details).toContainText("Collector details");
   await expect(details).toContainText("192.168.1.7");
-  // Ruling 55: the Status row its liveness, the Configuration row its sync.
+  // The Status row its liveness, the Configuration row its sync.
   const detailValue = (label: string) => details.getByText(label, { exact: true }).locator("xpath=following-sibling::div[1]");
   await expect(detailValue("Status")).toHaveText("OnlineSeen in the last minute.");
   await expect(detailValue("Configuration")).toContainText("Nothing assigned");
   await expect(details).toContainText(
     "No pin, and no published version on its group; it keeps running what it has: its own file, or the last published version it was sent.",
   );
-  // Its Effective Version: a dash, its meaning under it (D16c Ruling 21).
+  // Its Effective Version: a dash, its meaning under it.
   await expect(details).toContainText("—Nothing sent yet: it runs its own file.");
   await expect(details).not.toContainText(/import/i);
   await expect(details.getByRole("button", { name: "View YAML" })).toHaveCount(0);
@@ -404,7 +403,7 @@ test("pins the selected collectors to a published version in one request", async
   await expect(page.getByText("2 selected")).toBeVisible();
   await page.getByRole("button", { name: "Pin selected collectors" }).click();
   const dialog = page.getByRole("dialog", { name: "Pin collectors" });
-  // Both choices start at "Leave as is" (D20 Q103): Pin waits until one moves.
+  // Both choices start at "Leave as is": Pin waits until one moves.
   await expect(dialog.getByRole("button", { name: "Pin 2" })).toBeDisabled();
   await choose(page, dialog, "Published version", "A published version");
   await choose(page, dialog, "Configuration", configurationName);
@@ -533,12 +532,12 @@ test("a contributor renames a collector of the group's fleet", async ({ page }) 
   await expect(collectorRow(page, "team-collector-renamed")).toBeVisible();
 });
 
-/** The grid's Variable group cell of the collector named `name` (D20 default 25): the pin's, else its group's, else "Organization values". */
+/** The grid's Variable group cell of the collector named `name`: the pin's, else its group's, else "Organization values". */
 function variableGroupCell(page: Page, name: string): Locator {
   return collectorRow(page, name).locator("td").nth(4);
 }
 
-// D20 default 24 (the Pin's Variable group) and default 25 (the column, the details' rows, the values dialog).
+// The Pin's Variable group, in its dialog, the column, the details' rows and the values dialog.
 test("the Pin's Variable group: Follow group by default; one chosen is sent alone and wins over the group's in the grid, the details and the values; Follow group sends null", async ({
   page,
 }) => {
@@ -630,7 +629,7 @@ test("the Pin's Variable group: Follow group by default; one chosen is sent alon
   expect((await collectorThroughApi(page, organizationId, fleetId, pinned.id)).pinnedVariableGroupId).toBeNull();
 });
 
-// D20 Q103: the bulk pin's two choices, both starting at "Leave as is"; Ruling 50's toasts.
+// The bulk pin's two choices, both starting at "Leave as is"; its toasts.
 test("the bulk pin's Version and Variable group both start at Leave as is: Pin waits; each sends only what moved, a follow as null, its toast naming what changed", async ({
   page,
 }) => {

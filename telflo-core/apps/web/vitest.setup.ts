@@ -3,10 +3,10 @@ import { configure } from "@testing-library/react";
 
 // Every findBy… and waitFor waits on its condition and returns as soon as
 // it holds; the limit is only a hang guard. Testing Library's default, 1 s,
-// was a wall-clock bound that CI's load overran (main after D13b: a page
-// took 1.3 s to show "Version not found"; D13c spec decision 16). A test
-// that passes its own `timeout` keeps it. vitest.config.ts's testTimeout
-// stays well above it, so a failing wait keeps its own message.
+// was a wall-clock bound that CI's load overran (a page took 1.3 s to show
+// "Version not found"). A test that passes its own `timeout` keeps it.
+// vitest.config.ts's testTimeout stays well above it, so a failing wait
+// keeps its own message.
 configure({ asyncUtilTimeout: 5_000 });
 
 // Everything below stubs what jsdom lacks. A test that runs in Node instead

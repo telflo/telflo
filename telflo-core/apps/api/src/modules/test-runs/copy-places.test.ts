@@ -7,7 +7,7 @@ import {
   type CopyPlace,
 } from "./copy-places.js";
 
-/* D14b Ruling 33: the queue's places for requests in flight, per person, per organization. */
+/* The queue's places for requests in flight, per person, per organization. */
 
 const ANA = "ana";
 const ACME = "acme";
@@ -24,7 +24,7 @@ function settled(): Promise<void> {
 }
 
 describe("the queue's copy places", () => {
-  it("are Ruling 33's: 4 in flight, 100 waiting, a second's retry", () => {
+  it("are 4 in flight, 100 waiting, a second's retry", () => {
     expect(TEST_RUN_COPIES_IN_FLIGHT_PER_USER).toBe(4);
     expect(TEST_RUN_COPIES_WAITING_PER_USER).toBe(100);
     expect(TEST_RUN_COPIES_RETRY_AFTER_SECONDS).toBe(1);

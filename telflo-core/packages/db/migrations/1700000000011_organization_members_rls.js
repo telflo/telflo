@@ -1,6 +1,5 @@
 /**
- * Row-level security on organization_members (D5 decision 3, spec §3.7 item
- * 4), for telflo_platform_runtime:
+ * Row-level security on organization_members, for telflo_platform_runtime:
  *
  *   * select: the context's user's own memberships, in every organization
  *     (the switcher needs them), and every membership of the context's

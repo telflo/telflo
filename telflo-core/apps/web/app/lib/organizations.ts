@@ -10,21 +10,21 @@ import {
 import { ApiError, switchOrganization } from "~/lib/api-client.js";
 import { useUserStore } from "~/lib/stores/user-store.js";
 
-/** The toast for a switch that failed (D5 Parity Notes). */
+/** The toast for a switch that failed. */
 export const SWITCH_FAILED_MESSAGE = "Failed to switch organization";
 
 const RATE_LIMITED: SessionErrorCode = "rate_limited";
 
 /**
- * An invite to an address at the service accounts' domain (D22 decision
- * 23). An identity code, since registration answers it too; a code sits in
- * one module's list only (the contracts' clash tests), so it is named here.
+ * An invite to an address at the service accounts' domain. An identity code,
+ * since registration answers it too; a code sits in one module's list only
+ * (the contracts' clash tests), so it is named here.
  */
 const EMAIL_RESERVED: IdentityErrorCode = "email_reserved";
 
 /**
- * The organization error codes, the invitation mail limit's 429 (D6
- * decision 6) and an invite's reserved address (D22 Preflight ruling 23).
+ * The organization error codes, the invitation mail limit's 429 and an
+ * invite's reserved address.
  */
 const REFUSAL_CODES: ReadonlySet<string> = new Set<string>([
   ...ORGANIZATION_ERROR_CODES,
@@ -49,10 +49,10 @@ export function isRefusal(error: unknown): error is ApiError {
 }
 
 /**
- * Switching the active organization (D5 decision 11), shared by the
- * sidebar's popover and the create dialog. While the switch is in flight the
- * store's `isSwitchingOrganization` makes the shell show a spinner in place
- * of the page.
+ * Switching the active organization, shared by the sidebar's popover and the
+ * create dialog. While the switch is in flight the store's
+ * `isSwitchingOrganization` makes the shell show a spinner in place of the
+ * page.
  *
  * The switch completes first, so `/app` loads in the new organization: its navigation
  * (or, when already on `/app`, a revalidation) re-runs the layout's loader,

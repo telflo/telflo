@@ -12,47 +12,45 @@ import { FLEETS_LOAD_FAILED_MESSAGE, useFleetsList } from "~/lib/fleets.js";
 import { useCurrentUser } from "~/lib/use-current-user.js";
 
 /*
- * `/fleet-management`, the fleet list (D17a decision 18; ADR 0018): its
- * header, table and first-run card, in the configurations page's structure
- * (`configurations.tsx`). Its rules are in the D17a Parity Notes:
+ * `/fleet-management`, the fleet list: its header, table and first-run
+ * card, in the configurations page's structure (`configurations.tsx`). Its
+ * rules:
  * - the heading is "Fleets" (the filter shows archived ones too), with the
  *   organization's name beside it as text, in the masked shell;
- * - a filter, "All fleets" (the default, every fleet),
- *   "Active" and "Archived": the API's `status`, kept out of the URL
- *   (decision 7);
+ * - a filter, "All fleets" (the default, every fleet), "Active" and
+ *   "Archived": the API's `status`, kept out of the URL;
  * - the rows are the API's, 50 a page, newest first, with "Load more"
  *   (disabled while a person's read is under way), polled every 15 seconds
- *   while the tab is visible and no dialog is open (`useFleetsList`,
- *   decision 20); no sorting, and no usage strip (D28's);
+ *   while the tab is visible and no dialog is open (`useFleetsList`); no
+ *   sorting, and no usage strip;
  * - a failed first load says so, with "Try again" (never the onboarding
  *   card); "No active fleets." and "No archived fleets." when a
  *   filter matches nothing; the onboarding card only for no fleet at all;
  * - "Loading fleets…" while the first page is read.
- * The title is fixed, never a fleet's label (Preflight ruling 9: posthog-js
- * sends `document.title` with every page view, and replay records `<head>`,
- * outside `ph-mask`). No attribute carries a fleet's label (decision 29).
- * The layout route supplies the shell, and its terms dialog: the list waits
- * for it (lib/fleets.ts).
+ * The title is fixed, never a fleet's label (posthog-js sends
+ * `document.title` with every page view, and replay records `<head>`, outside
+ * `ph-mask`). No attribute carries a fleet's label. The layout route supplies
+ * the shell, and its terms dialog: the list waits for it (lib/fleets.ts).
  *
- * Where D17a's tasks plug in:
- * - "New Fleet" (the header's, and the empty state's) is
- *   `NewFleetButton`, opening the type chooser and the create dialogs
- *   (`NewFleetDialogs`, Task 5), held once here, outside the content: a
- *   read landing mid-create (a filter's, a poll's) may swap the empty state
- *   out, and the dialog, its bearers or its outcome, must outlive it. A
- *   create opens the new fleet's page on Done; a dialog closed after an
- *   unknown outcome reloads the list (`list.reload`), as a fleet may have
- *   been made. Another organization closes them;
+ * Where the dialogs plug in:
+ * - "New Fleet" (the header's, and the empty state's) is `NewFleetButton`,
+ *   opening the type chooser and the create dialogs (`NewFleetDialogs`),
+ *   held once here, outside the content: a read landing mid-create (a
+ *   filter's, a poll's) may swap the empty state out, and the dialog, its
+ *   bearers or its outcome, must outlive it. A create opens the new fleet's
+ *   page on Done; a dialog closed after an unknown outcome reloads the list
+ *   (`list.reload`), as a fleet may have been made. Another organization
+ *   closes them;
  * - a row's Rename, Archive, Unarchive and Delete open that dialog for its
- *   fleet (`FleetActionDialogs`, Task 6), each reloading the list
- *   (`list.reload`) when done, after a 404 for the fleet, or after an answer
- *   that leaves the change unknown (a 503, its hang guard). Another
- *   organization closes them, as the configurations page's.
- * - Every dialog's close gives the focus back to the button that opened it
- *   (D14b Ruling 46's pattern): the row's, a "New Fleet"; else, its row (or
- *   the empty state's New Fleet) gone once the list has been read again
- *   after the dialog's write or unknown outcome, the header's New Fleet. A
- *   poll after a close with no write never moves the focus.
+ *   fleet (`FleetActionDialogs`), each reloading the list (`list.reload`)
+ *   when done, after a 404 for the fleet, or after an answer that leaves the
+ *   change unknown (a 503, its hang guard). Another organization closes
+ *   them, as the configurations page's.
+ * - Every dialog's close gives the focus back to the button that opened it:
+ *   the row's, a "New Fleet"; else, its row (or the empty state's New
+ *   Fleet) gone once the list has been read again after the dialog's write
+ *   or unknown outcome, the header's New Fleet. A poll after a close with
+ *   no write never moves the focus.
  */
 
 export function meta(_args: Route.MetaArgs) {

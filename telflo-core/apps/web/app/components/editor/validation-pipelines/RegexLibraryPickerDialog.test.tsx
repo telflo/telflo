@@ -1,21 +1,18 @@
 /**
- * The regex library picker (D15b Task 4: decisions 1, 2, 10 and 12;
- * Preflight rulings 5, 15 and 17): opened from a card's "Add from regex
- * library"; the dialog and its words; each row's description and regex;
- * the Category filter and the selection kept across it; the picks saved one
- * per request in the library's order, through the store, landing in the
- * card; a refusal the rest would share (429, 503, the 200-rule cap) stopping
- * the run, a pick's own (400) skipping it, each said inline, a pipeline gone
- * (404) stopping it too, toasted as it takes the card and the dialog away
- * (Ruling 32); the dialog's session (an answer, saved or refused, after
- * Escape acts on nothing; nor one, saved or refused, after a version switch
- * unmounted it, Ruling 23 and Ruling 34's m1); the picker gone with its card
- * as an answer comes in (no further pick, nothing said, only an "already
- * gone" stop toasted: Ruling 34's n1); the picker in StrictMode (Ruling
- * 34's n2); the library read on
- * every open, the latest read winning, a failed read with Retry; the
- * keyboard and the focus; the Play all hold; and replay's rule (no entry's
- * text in any attribute).
+ * The regex library picker: opened from a card's "Add from regex library";
+ * the dialog and its words; each row's description and regex; the Category
+ * filter and the selection kept across it; the picks saved one per request
+ * in the library's order, through the store, landing in the card; a refusal
+ * the rest would share (429, 503, the 200-rule cap) stopping the run, a
+ * pick's own (400) skipping it, each said inline, a pipeline gone (404)
+ * stopping it too, toasted as it takes the card and the dialog away; the
+ * dialog's session (an answer, saved or refused, after Escape acts on
+ * nothing; nor one, saved or refused, after a version switch unmounted it);
+ * the picker gone with its card as an answer comes in (no further pick,
+ * nothing said, only an "already gone" stop toasted); the picker in
+ * StrictMode; the library read on every open, the latest read winning, a
+ * failed read with Retry; the keyboard and the focus; the Play all hold; and
+ * replay's rule (no entry's text in any attribute).
  *
  * Rendered in the whole tab, as the Validation subtab's tests are: Monaco is
  * stubbed; the API is its client's functions, spied on, over a little
@@ -82,7 +79,7 @@ const VERSION = versionFixture({ yamlContent: YAML });
 const TARGET = { organizationId: GROUP_ID, configurationId: MINE.id, versionId: VERSION.id };
 const LOGS = validationPipelineFixture();
 
-/** A library entry; `zq` marks its text for the attribute scans (ADR 0024). */
+/** A library entry; `zq` marks its text for the attribute scans. */
 function entryFixture(index: number, overrides: Partial<TestRegex>): TestRegex {
   return {
     id: `0199f500-0000-7000-8000-${String(index).padStart(12, "0")}`,
@@ -289,7 +286,7 @@ const runLines = () =>
  * and the picker unmount after the store has answered and before the
  * picker's own code reads the answer, the picker's session not yet moved
  * (its bump is a microtask after the unmount). What the picker then does
- * rests on its `mounted` checks alone (Ruling 34's n1).
+ * rests on its `mounted` checks alone.
  */
 function dropCardAtAnswer(call: number) {
   let calls = 0;
@@ -312,7 +309,7 @@ function dropCardAtAnswer(call: number) {
   });
 }
 
-describe("the picker's dialog (its words; decision 2)", () => {
+describe("the picker's dialog (its words)", () => {
   it("opens from 'Add from regex library' beside 'Add Validation Rule'; shows each row's name, description, regex and category in the API's order; Match 'Does not Contain', 'All categories', '0 selected'", async () => {
     const { user } = await renderValidation();
     const card = await expandLogs(user);
@@ -392,7 +389,7 @@ describe("the picker's dialog (its words; decision 2)", () => {
   });
 });
 
-describe("saving the picks (decision 1; Preflight rulings 5 and 15)", () => {
+describe("saving the picks", () => {
   it("saves 3 picks in the library's order (one hidden by the filter), one request each, through the store: the rules land in the card in order; 'Added 3 validation rules', closed, the focus on 'Add from regex library'", async () => {
     const { user } = await renderValidation();
     const { card, dialog } = await openPicker(user);
@@ -531,7 +528,7 @@ describe("saving the picks (decision 1; Preflight rulings 5 and 15)", () => {
     ["after 1 of 3", 2, "Added 1 of 3 rules. The other 2 weren't added: That validation pipeline doesn't exist."],
     ["at the first pick", 1, "No rules were added: That validation pipeline doesn't exist."],
   ])(
-    "stops when the pipeline is gone %s (404 validation_pipeline_not_found, a teammate's delete): no further pick sent, the card dropped and the dialog with it, its stop toasted in the inline line's words (blocked), the focus on 'Add validation pipeline' (the panel's fallback; Ruling 32)",
+    "stops when the pipeline is gone %s (404 validation_pipeline_not_found, a teammate's delete): no further pick sent, the card dropped and the dialog with it, its stop toasted in the inline line's words (blocked), the focus on 'Add validation pipeline' (the panel's fallback)",
     async (_label, call, line) => {
       api.refuseFrom = {
         call,
@@ -598,7 +595,7 @@ describe("saving the picks (decision 1; Preflight rulings 5 and 15)", () => {
     expect(toastSuccess).not.toHaveBeenCalled();
   });
 
-  it("skips a pick only on a 400: invalid_request or validation_rule_invalid under any other status (a 429's) stops the run (side A's Nit 3)", async () => {
+  it("skips a pick only on a 400: invalid_request or validation_rule_invalid under any other status (a 429's) stops the run", async () => {
     api.refuseFrom = { call: 2, error: new ApiError("invalid_request", "Slow down.", { status: 429 }) };
     const { user } = await renderValidation();
     const { dialog } = await openPicker(user);
@@ -639,7 +636,7 @@ describe("saving the picks (decision 1; Preflight rulings 5 and 15)", () => {
   });
 });
 
-describe("the dialog's session (D15a Ruling 56)", () => {
+describe("the dialog's session", () => {
   it("an answer after Escape acts on nothing: no further pick, no toast, nothing unticked in the dialog opened since; the store keeps the rule", async () => {
     const gate = deferred<void>();
     api.gate = gate.promise;
@@ -707,7 +704,7 @@ describe("the dialog's session (D15a Ruling 56)", () => {
     ["a 429", RATE_LIMITED],
     ["a 404 (validation_pipeline_not_found)", new ApiError("validation_pipeline_not_found", "That validation pipeline doesn't exist.", { status: 404 })],
   ])(
-    "a version switch mid-run (the picker unmounted with its card), its pick then answered with %s, sends nothing more and says nothing: no toast or alert over the new version (Ruling 23; Ruling 34's m1)",
+    "a version switch mid-run (the picker unmounted with its card), its pick then answered with %s, sends nothing more and says nothing: no toast or alert over the new version",
     async (_label, error) => {
       const gate = deferred<void>();
       api.gate = gate.promise;
@@ -738,7 +735,7 @@ describe("the dialog's session (D15a Ruling 56)", () => {
   );
 });
 
-describe("the picker gone with its card as an answer comes in (Ruling 34's n1)", () => {
+describe("the picker gone with its card as an answer comes in", () => {
   /** Ticks three entries and presses OK; returns once a task's worth of answers is in. */
   async function runThree() {
     const { user } = await renderValidation();
@@ -786,7 +783,7 @@ describe("the picker gone with its card as an answer comes in (Ruling 34's n1)",
   });
 });
 
-describe("the picker in StrictMode (each effect run, cleaned up and run again; Ruling 34's n2)", () => {
+describe("the picker in StrictMode (each effect run, cleaned up and run again)", () => {
   it("still says a stop inline: 'Added 1 of 2 rules. The other one wasn't added: …', no toast, the dialog open", async () => {
     api.refuseFrom = { call: 2, error: RATE_LIMITED };
     const { user } = await renderValidation({ strict: true });
@@ -849,7 +846,7 @@ describe("the picker in StrictMode (each effect run, cleaned up and run again; R
   });
 });
 
-describe("reading the library (Preflight ruling 15)", () => {
+describe("reading the library", () => {
   it("reads it again each time the dialog opens; only the latest read is shown", async () => {
     const first = deferred<TestRegexesResponse>();
     listRegexes.mockReturnValueOnce(first.promise);
@@ -887,7 +884,7 @@ describe("reading the library (Preflight ruling 15)", () => {
   });
 });
 
-describe("the keyboard and the focus (decision 10)", () => {
+describe("the keyboard and the focus", () => {
   it("reaches each checkbox by Tab, named by its entry, described by its description, its state announced and toggled by Space; its focus visible", async () => {
     const { user } = await renderValidation();
     const { dialog } = await openPicker(user);
@@ -925,7 +922,7 @@ describe("the keyboard and the focus (decision 10)", () => {
   });
 });
 
-describe("a Play all under way while the picker shows (D14b Ruling 50's rule)", () => {
+describe("a Play all under way while the picker shows", () => {
   it("keeps the picker and its ticks: no switch to Tests under it, the run still queued", async () => {
     const suite = testSuiteFixture();
     vi.spyOn(apiClient, "getTestSuites").mockResolvedValue({ suites: [suite] });
@@ -953,14 +950,14 @@ describe("a Play all under way while the picker shows (D14b Ruling 50's rule)", 
   });
 });
 
-describe("replay (Preflight ruling 17; ADR 0024)", () => {
+describe("replay", () => {
   it("puts the dialog and its lists in ph-no-capture, no entry's text in any of their attributes, and none outside the block, through a run that stops and skips", async () => {
     api.refusePattern.set(EMAIL.regex, INVALID);
     api.refuseFrom = { call: 4, error: RATE_LIMITED };
     const markers: string[] = [];
     /**
      * Every attribute carrying a marker outside `ph-no-capture`, and any at
-     * all in the picker and its lists (the card's rows behind it keep D15a's
+     * all in the picker and its lists (the card's rows behind it keep their
      * titles, inside the panel's block); an input's value is masked by replay
      * (maskAllInputs).
      */

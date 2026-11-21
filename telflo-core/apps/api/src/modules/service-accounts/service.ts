@@ -33,21 +33,20 @@ import {
 import { mintApiToken, type MintedApiToken } from "./tokens.js";
 
 /*
- * Service accounts (D22 decisions 4 to 6 and 26 to 30): the active
- * organization's admins list, create, read, rename and delete them, reads
- * included (Q132). Every write takes the organization lock first
- * (`lockAsAdmin`, the organizations module's), so the limit's count is exact
- * and a demoted admin is refused under it; creating and deleting are one
- * transaction each, as the membership invariant needs (ADR 0025).
+ * Service accounts: the active organization's admins list, create, read,
+ * rename and delete them, reads included. Every write takes the organization
+ * lock first (`lockAsAdmin`, the organizations module's), so the limit's
+ * count is exact and a demoted admin is refused under it; creating and
+ * deleting are one transaction each, as the membership invariant needs.
  *
- * An account's API tokens (decisions 7 to 9 and 31) are its admins' too:
- * listed by their prefix, created once (the token crosses the API only in
- * the create's reply), limited to 20 live, and revoked, never deleted.
+ * An account's API tokens are its admins' too: listed by their prefix,
+ * created once (the token crosses the API only in the create's reply),
+ * limited to 20 live, and revoked, never deleted.
  *
- * The name and the address are organization content (ADR 0024, decision
- * 49), and a token is a secret like a bearer (decision 48): nothing here
- * logs any of them or a token's name or prefix, the errors are fixed words,
- * and the audit rows hold ids and fixed values only (decision 32).
+ * The name and the address are organization content, and a token is a
+ * secret like a bearer: nothing here logs any of them or a token's name or
+ * prefix, the errors are fixed words, and the audit rows hold ids and fixed
+ * values only.
  */
 
 /** The repositories one unit of work writes through, bound to one transaction in the request's context. */
@@ -73,18 +72,18 @@ export type WithServiceAccountTransaction = <Result>(
 export interface ServiceAccountServiceDependencies {
   withTransaction: WithServiceAccountTransaction;
   now: () => Date;
-  /** Eight lowercase hex digits for a new address (decision 5): `randomBytes(4)` in production, injected in tests. */
+  /** Eight lowercase hex digits for a new address: `randomBytes(4)` in production, injected in tests. */
   randomHex: () => string;
-  /** A new token, its hash and its prefix (decision 7); `mintApiToken` unless a test injects one. */
+  /** A new token, its hash and its prefix; `mintApiToken` unless a test injects one. */
   mintToken?: () => MintedApiToken;
 }
 
-/** A token as its account's page lists it: `isExpired` by the API's clock (decision 31). */
+/** A token as its account's page lists it: `isExpired` by the API's clock. */
 export interface ListedApiToken extends ApiToken {
   isExpired: boolean;
 }
 
-/** What an admin asks for (decision 31): the name, the access and the days to expiry, or null for never. */
+/** What an admin asks for: the name, the access and the days to expiry, or null for never. */
 export interface CreateApiTokenRequest {
   name: string;
   access: ApiTokenAccess;
@@ -113,36 +112,36 @@ export interface IServiceAccountService {
   list(actor: Actor, organizationId: string): Promise<ServiceAccount[]>;
   /** One live account. Admin only; unknown, deleted and another organization's are 404 alike. */
   find(actor: Actor, organizationId: string, serviceAccountId: string): Promise<ServiceAccount>;
-  /** Decision 27: the account, its user and its contributor membership, in one transaction. */
+  /** The account, its user and its contributor membership, in one transaction. */
   create(actor: Actor, organizationId: string, name: string): Promise<ServiceAccount>;
-  /** Decision 29: the address is kept; the same name is a no-op. */
+  /** The address is kept; the same name is a no-op. */
   rename(actor: Actor, organizationId: string, serviceAccountId: string, name: string): Promise<ServiceAccount>;
-  /** Decision 28: every token revoked, the membership and the account soft-deleted, in one transaction. */
+  /** Every token revoked, the membership and the account soft-deleted, in one transaction. */
   delete(actor: Actor, organizationId: string, serviceAccountId: string): Promise<void>;
   /** The live account's tokens not revoked, expired ones included, newest first. Admin only. */
   listTokens(actor: Actor, organizationId: string, serviceAccountId: string): Promise<ListedApiToken[]>;
-  /** Decision 31: a new token on the live account, handed out this once. */
+  /** A new token on the live account, handed out this once. */
   createToken(
     actor: Actor,
     organizationId: string,
     serviceAccountId: string,
     request: CreateApiTokenRequest,
   ): Promise<CreatedApiToken>;
-  /** Decision 31: one conditional update; an unknown, another account's or a revoked token is 404 alike. */
+  /** One conditional update; an unknown, another account's or a revoked token is 404 alike. */
   revokeToken(actor: Actor, organizationId: string, serviceAccountId: string, tokenId: string): Promise<void>;
 }
 
 /**
  * How many times a create is tried in all when its address collides on
- * `uq_users_lower_email` (decision 27): each try rolls back and draws new
- * digits; after the last, the request is a server failure.
+ * `uq_users_lower_email`: each try rolls back and draws new digits; after the
+ * last, the request is a server failure.
  */
 export const SERVICE_ACCOUNT_ADDRESS_ATTEMPTS = 3;
 
 export function createServiceAccountService(deps: ServiceAccountServiceDependencies): IServiceAccountService {
   const { withTransaction, now, randomHex, mintToken = mintApiToken } = deps;
 
-  /** An audit row by the acting admin, in the organization: ids and fixed values only (decision 32). */
+  /** An audit row by the acting admin, in the organization: ids and fixed values only. */
   function auditOf(
     actor: Actor,
     subject: { type: "service_account" | "api_token"; id: string },
@@ -189,7 +188,7 @@ export function createServiceAccountService(deps: ServiceAccountServiceDependenc
     return account;
   }
 
-  /** One try of decision 27, in its order, in one transaction. */
+  /** One try of the create, in `create`'s order, in one transaction. */
   const createOnce = (actor: Actor, name: string): Promise<ServiceAccount> =>
     withTransaction(actor.context, async (transaction) => {
       await lockAsAdmin(transaction, actor);
@@ -225,13 +224,13 @@ export function createServiceAccountService(deps: ServiceAccountServiceDependenc
     },
 
     /**
-     * Decision 27: the lock and the admin's re-check, the limit's count, the
-     * name read under the lock (its unique index behind it, the same 409),
-     * the user and its row, the contributor membership and the audit row,
-     * committed together: the deferred invariant sees the membership. No
-     * personal organization, configuration, settings row, verification
-     * token or email. An address that collides rolls everything back and
-     * is tried again with new digits.
+     * The lock and the admin's re-check, the limit's count, the name read
+     * under the lock (its unique index behind it, the same 409), the user
+     * and its row, the contributor membership and the audit row, committed
+     * together: the deferred invariant sees the membership. No personal
+     * organization, configuration, settings row, verification token or
+     * email. An address that collides rolls everything back and is tried
+     * again with new digits.
      */
     async create(actor, organizationId, name) {
       assertMayManage(actor, organizationId);
@@ -248,9 +247,9 @@ export function createServiceAccountService(deps: ServiceAccountServiceDependenc
     },
 
     /**
-     * Decision 29, under the lock: the account live, the same name a no-op
-     * with no audit row (as a group's rename), a live duplicate the 409,
-     * then the name and its audit row. The address is kept (decision 5).
+     * Under the lock: the account live, the same name a no-op with no audit
+     * row (as a group's rename), a live duplicate the 409, then the name and
+     * its audit row. The address is kept.
      */
     async rename(actor, organizationId, serviceAccountId, name) {
       assertMayManage(actor, organizationId);
@@ -275,12 +274,12 @@ export function createServiceAccountService(deps: ServiceAccountServiceDependenc
     },
 
     /**
-     * Decision 28, in its lock order: the organization, the account's user
-     * (`lockAccounts`, before anything it guards), its tokens (every one
-     * not yet revoked, by this admin), its membership, then its row's and
-     * its user's deleted_at, and the audit row with the count. A deleted
-     * user is never stranded, so the invariant passes at commit. No session
-     * is touched: a service account has none.
+     * In its lock order: the organization, the account's user
+     * (`lockAccounts`, before anything it guards), its tokens (every one not
+     * yet revoked, by this admin), its membership, then its row's and its
+     * user's deleted_at, and the audit row with the count. A deleted user is
+     * never stranded, so the invariant passes at commit. No session is
+     * touched: a service account has none.
      */
     async delete(actor, organizationId, serviceAccountId) {
       assertMayManage(actor, organizationId);
@@ -312,14 +311,14 @@ export function createServiceAccountService(deps: ServiceAccountServiceDependenc
     },
 
     /**
-     * Decision 31, under the organization lock (every write to the
-     * organization's accounts and tokens takes it first, so the count is
-     * exact): the account live, else 404 (a deleted account gets no token);
-     * 20 live tokens already, the owner's 409; a name taken by a token not
-     * yet revoked, expired included, the 409 (its unique index behind it);
-     * then the mint, the row and the audit row, which holds the account's
-     * id, the access and the expiry only. `expiresAt` is the creation plus
-     * that many days of 24 hours.
+     * Under the organization lock (every write to the organization's
+     * accounts and tokens takes it first, so the count is exact): the
+     * account live, else 404 (a deleted account gets no token); 20 live
+     * tokens already, the 409; a name taken by a token not yet revoked,
+     * expired included, the 409 (its unique index behind it); then the
+     * mint, the row and the audit row, which holds the account's id, the
+     * access and the expiry only. `expiresAt` is the creation plus that
+     * many days of 24 hours.
      */
     async createToken(actor, organizationId, serviceAccountId, request) {
       assertMayManage(actor, organizationId);
@@ -363,10 +362,9 @@ export function createServiceAccountService(deps: ServiceAccountServiceDependenc
     },
 
     /**
-     * Decision 31, under the organization lock: one update of the account's
-     * token not yet revoked (an expired one too), by this admin at the
-     * clock's time. Nothing updated, or an id that isn't a canonical uuid,
-     * is the one 404.
+     * Under the organization lock: one update of the account's token not yet
+     * revoked (an expired one too), by this admin at the clock's time.
+     * Nothing updated, or an id that isn't a canonical uuid, is the one 404.
      */
     async revokeToken(actor, organizationId, serviceAccountId, tokenId) {
       assertMayManage(actor, organizationId);

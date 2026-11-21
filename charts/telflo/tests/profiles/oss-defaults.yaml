@@ -1,6 +1,6 @@
 # The default profile with the site block written out at the values'
-# defaults: the open source's (D36-1 decision 27; Q248). It renders exactly
-# as the default profile does.
+# defaults: the open source's. It renders exactly as the default profile
+# does.
 publicUrl: https://telflo.example.com
 site:
   registration: invite-only

@@ -2,7 +2,7 @@ import { PIPELINE_GROUP_HEIGHT, PIPELINE_GROUP_WIDTH } from "./constants.js";
 import type { OTelNode, Pipeline } from "./types.js";
 
 /*
- * The graph's node and pipeline builders, with D9a decision 7's ids: every
+ * The graph's node and pipeline builders, and their ids: every
  * id is a prefix and a number, the lowest the graph doesn't use, and nothing
  * is ever derived from a name (a group's id never holds its pipeline's).
  */
@@ -29,7 +29,7 @@ export const CUSTOM_PIPELINE_COLORS = [
   "#84cc16", // lime-500
 ] as const;
 
-/** The colour a pipeline of each signal starts with (the parser's and the defaults'). */
+/** The color a pipeline of each signal starts with (the parser's and the defaults'). */
 export const SIGNAL_TYPE_COLORS = {
   traces: "#f97316", // orange-500
   metrics: "#3b82f6", // blue-500
@@ -94,7 +94,7 @@ export function nextGroupYPosition(existingGroupNodes: readonly OTelNode[]): num
   return maxBottom + GROUP_Y_SPACING;
 }
 
-/** The three default pipelines (traces, metrics, logs), with decision 7's ids. */
+/** The three default pipelines (traces, metrics, logs), with the builders' ids. */
 export const getDefaultPipelines = (): Pipeline[] => [
   {
     id: "pipeline_0",

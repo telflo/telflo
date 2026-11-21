@@ -16,7 +16,7 @@ import { UNCALLED_OTELCOL_VALIDATOR } from "../../testing/otelcol-validator.js";
 import { UNCALLED_FILE_STORE } from "../../testing/file-store.js";
 import { UNCALLED_TESTING } from "../../testing/otelcol-testing.js";
 
-// The opamp-server every server needs (D11b decision 8): this file's own fake.
+// The opamp-server every server needs: this file's own fake.
 const opamp = useFakeOpampServer();
 
 const csrfHeaders = { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE };
@@ -35,10 +35,10 @@ function accessCookie(response: LightMyRequestResponse): string {
 }
 
 /**
- * D12 decision 3 against Postgres: the product-admin flag is the user row's,
- * read by the session check on every request, and `requireProductAdmin` on
- * test routes registered before `ready()`, since no production route runs it
- * until the flows endpoints do (Task 3).
+ * Against Postgres: the product-admin flag is the user row's, read by the
+ * session check on every request, and `requireProductAdmin` on test routes
+ * registered before `ready()`, since no production route runs it until the
+ * flows endpoints do.
  */
 describe("the product-admin flag", () => {
   let settings: AppSettings;
@@ -63,7 +63,7 @@ describe("the product-admin flag", () => {
     const authenticate = createAuthenticate(
       createDatabaseSessionService({ settings, db, mailer, now, opampServer, otelcolValidator, fileStore, testing }).service,
     );
-    // A product administration endpoint, as Task 3's writes are.
+    // A product administration endpoint, as the flows endpoints' writes are.
     server.get("/test/product-admin", { preHandler: [authenticate, requireProductAdmin] }, async () => ({ ok: true }));
     // A route that forgot `authenticate`.
     server.get("/test/product-admin-only", { preHandler: requireProductAdmin }, async () => ({ ok: true }));
@@ -137,7 +137,7 @@ describe("the product-admin flag", () => {
   });
 
   describe("read live, on every request", () => {
-    it("is false on the very next request once the owner clears it, on the same session, with no new token", async () => {
+    it("is false on the very next request once the operator clears it, on the same session, with no new token", async () => {
       const account = await signedIn(true);
       expect((await get("/api/v1/auth/me", account.access)).json()).toMatchObject({ isProductAdmin: true });
       expect((await get("/test/product-admin", account.access)).statusCode).toBe(200);
@@ -158,7 +158,7 @@ describe("the product-admin flag", () => {
       expect(sessionsBefore).toEqual([{ id: expect.any(String), revoked_at: null }]);
     });
 
-    it("is true on the very next request once the owner sets it, on the same session", async () => {
+    it("is true on the very next request once the operator sets it, on the same session", async () => {
       const account = await signedIn(false);
       expect((await get("/test/product-admin", account.access)).statusCode).toBe(403);
 

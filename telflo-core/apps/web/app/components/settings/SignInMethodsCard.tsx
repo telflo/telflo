@@ -10,29 +10,28 @@ import { linkStartFailureMessage } from "~/lib/account.js";
 import { createIdentityLinkRequest, isSessionEnded } from "~/lib/api-client.js";
 
 /*
- * Settings › Account's "Sign-in methods" (D21 decisions 37-39): "Password",
- * "Set" or "Not set"; then each configured provider, linked ("Linked as
- * {email} on {date}" and "Unlink") or not ("Link Google", the provider's
- * configured name), and any linked identity whose provider is no longer
- * configured, named by its id, which can still be unlinked (Preflight
- * ruling 16). The page hides the card when no provider is configured and
- * the account has no identity.
+ * Settings › Account's "Sign-in methods": "Password", "Set" or "Not set"; then
+ * each configured provider, linked ("Linked as {email} on {date}" and
+ * "Unlink") or not ("Link Google", the provider's configured name), and any
+ * linked identity whose provider is no longer configured, named by its id,
+ * which can still be unlinked. The page hides the card when no provider is
+ * configured and the account has no identity.
  *
  * - Link: with a password, the password prompt first (LinkProviderDialog);
  *   without one, the link starts at once. Either way the browser then goes
  *   to the provider, and comes back to `?link=<code>`.
- * - Unlink needs the current password (UnlinkProviderDialog), whose words
- *   say a sign-in links it again when the identity's `relinksByEmail` says
- *   so (Ruling 92). An account with no password can't unlink its only way
- *   in: Unlink is disabled, and "Set a password first" asks for the reset
- *   link, as Set a Password does.
- * - The identity's email is visible text only (decision 45); the buttons
- *   are named by fixed words and the provider's configured name.
+ * - Unlink needs the current password (UnlinkProviderDialog), whose words say
+ *   a sign-in links it again when the identity's `relinksByEmail` says so. An
+ *   account with no password can't unlink its only way in: Unlink is
+ *   disabled, and "Set a password first" asks for the reset link, as Set a
+ *   Password does.
+ * - The identity's email is visible text only; the buttons are named by fixed
+ *   words and the provider's configured name.
  * - The focus as a dialog closes (the dialogs have no Radix trigger, so
- *   Radix alone would leave it on the body; D14b Ruling 46): back to the
- *   button that opened it, unless the methods are being read again after an
- *   answer (an Unlink, or a refusal that closed it): that button is about to
- *   go, so the card's heading takes it.
+ *   Radix alone would leave it on the body): back to the button that opened
+ *   it, unless the methods are being read again after an answer (an Unlink,
+ *   or a refusal that closed it): that button is about to go, so the card's
+ *   heading takes it.
  */
 
 /** Whether the card shows: a provider is configured, or the account has an identity. */
@@ -63,7 +62,7 @@ export function SignInMethodsCard({ methods, onChanged, setPassword }: SignInMet
   // The button that opened the dialog, and whether its answer reads the methods again.
   const opener = useRef<HTMLElement | null>(null);
   const changed = useRef(false);
-  // Back from the provider (a password-less start): the Link buttons usable again (Ruling 89).
+  // Back from the provider (a password-less start): the Link buttons usable again.
   useBackForwardRestore(useCallback(() => setStartingFor(null), []));
 
   const rows: Row[] = [

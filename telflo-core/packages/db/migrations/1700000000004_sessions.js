@@ -1,10 +1,10 @@
 /**
- * Sessions and their rotating refresh tokens (D2a).
+ * Sessions and their rotating refresh tokens.
  *
  * Every authenticated request looks up its session row, so revoking a session
- * takes effect on the next request (ADR 0010, D2a decision 4). A session
- * slides: each refresh issues a new refresh token that lasts the configured
- * number of days from that rotation, with no absolute cap (D2a decision 3).
+ * takes effect on the next request. A session slides: each refresh issues a
+ * new refresh token that lasts the configured number of days from that
+ * rotation, with no absolute cap.
  */
 export const up = (pgm) => {
   pgm.sql(`
@@ -25,16 +25,15 @@ export const up = (pgm) => {
     comment on table sessions is
       'one signed-in browser. The access token names its session (sid), and a
        request is accepted only while this row exists and is not revoked, so
-       revocation is immediate (ADR 0010). Logout revokes only the current
-       session; signing out everywhere revokes all of a user''s sessions
-       (D2a decision 8).';
+       revocation is immediate. Logout revokes only the current session;
+       signing out everywhere revokes all of a user''s sessions.';
     comment on column sessions.active_organization_id is
       'the organization this session acts as. Sign-in sets it to the user''s
-       personal organization, and D5''s switching changes it. It is
-       authoritative; the access token carries a copy (ADR 0010).';
+       personal organization, and switching organizations changes it. It is
+       authoritative; the access token carries a copy.';
     comment on column sessions.last_refreshed_at is
       'when the refresh token was last rotated. The refresh token''s expiry
-       slides from each rotation (D2a decision 3).';
+       slides from each rotation.';
     comment on column sessions.revoked_at is
       'null while the session is live. Set together with revoked_reason, never
        one without the other (ck_sessions_revoked_reason).';
@@ -42,8 +41,8 @@ export const up = (pgm) => {
       'one of logout, sign_out_everywhere or refresh_token_reused. Text rather
        than an enum until a third consumer needs to branch on it.';
     comment on column sessions.ip_address is
-      'the client address at sign-in, validated as an IP before it is written
-       (D2a decision 10).';
+      'the client address at sign-in, validated as an IP before it is
+       written.';
 
     create index idx_sessions_user_id on sessions (user_id);
 

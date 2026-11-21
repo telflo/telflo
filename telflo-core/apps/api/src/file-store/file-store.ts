@@ -1,26 +1,24 @@
 import type { Readable } from "node:stream";
 
 /**
- * The files the platform keeps (ADR 0012; D14a decisions 2 and 3, Preflight
- * ruling 11). Only ids name a file, never a person's file name or a URL: a
- * key is built from ids the API has already authorized, and the store
- * refuses any id that isn't a canonical lower-case UUID.
+ * The files the platform keeps. Only ids name a file, never a person's file
+ * name or a URL: a key is built from ids the API has already authorized, and
+ * the store refuses any id that isn't a canonical lower-case UUID.
  *
  * - `test-input`: a person's upload or saved sample, in one organization
  *   (`organizations/<org>/users/<user>/test-inputs/<file>`).
  * - `test-run`: one of a run's own files
  *   (`organizations/<org>/test-runs/<run>/<input|output|decoded-input>`).
- * - `test-template`: a product-wide test template (D14b decision 3,
- *   `global/test-templates/<template>`).
+ * - `test-template`: a product-wide test template
+ *   (`global/test-templates/<template>`).
  * - `test-definition-input`: a test definition's own copy of its input,
- *   shared by the definitions that reference it in one organization (D14b
- *   decisions 1 and 4, detail 18:
- *   `organizations/<org>/test-definition-inputs/<input>`).
+ *   shared by the definitions that reference it in one organization
+ *   (`organizations/<org>/test-definition-inputs/<input>`).
  * - `organization-logo`: an organization's logo, one file per logo id, so a
- *   new logo never overwrites the one a cached page still shows (D23-2
- *   decisions 18 and 30: `organizations/<org>/logos/<logo>`).
- * - `library-file`: a file in the product-wide library (D23-2 decisions 18
- *   and 30: `global/library-files/<file>`).
+ *   new logo never overwrites the one a cached page still shows
+ *   (`organizations/<org>/logos/<logo>`).
+ * - `library-file`: a file in the product-wide library
+ *   (`global/library-files/<file>`).
  */
 export type FileKey =
   | { kind: "test-input"; organizationId: string; userId: string; fileId: string }
@@ -63,10 +61,10 @@ export type FileReadResult =
 export type FileCopyResult = ({ found: true } & FileWriteResult) | { found: false };
 
 /**
- * Where the platform's files live: `LocalDiskFileStore` (local-disk-file-store.ts,
- * D14a) or `S3FileStore` (s3-file-store.ts, D23-1), behind the same
- * interface. Callers get one from createFileStore and never name an
- * implementation (ADR 0020).
+ * Where the platform's files live: `LocalDiskFileStore`
+ * (local-disk-file-store.ts) or `S3FileStore` (s3-file-store.ts), behind the
+ * same interface. Callers get one from createFileStore and never name an
+ * implementation.
  *
  * No implementation logs a key, a file's bytes or any name.
  */
@@ -82,11 +80,10 @@ export interface IFileStore {
    * - the local disk: the new file is renamed into place, then its directory
    *   is flushed to disk, and only that flush fails;
    * - S3: the server committed the PUT but its answer was lost (a timeout, a
-   *   dropped connection, or an abort arriving after the server committed;
-   *   D23-1 decision 18).
+   *   dropped connection, or an abort arriving after the server committed).
    * So a caller that must not keep a file after a failed write calls
-   * `remove(key)` on ANY rejection (D14a Ruling 25), as the upload's and the
-   * dispatcher's clean-ups do.
+   * `remove(key)` on ANY rejection, as the upload's and the dispatcher's
+   * clean-ups do.
    */
   write(key: FileKey, content: AsyncIterable<Uint8Array> | Readable, options: FileWriteOptions): Promise<FileWriteResult>;
   /** The key's file as a stream, or `{found: false}` when there is none. */
@@ -101,8 +98,8 @@ export interface IFileStore {
 }
 
 /**
- * Where the file store keeps its files (TELFLO_FILE_STORE, D23-1 decisions 15
- * and 16): one kind per install, chosen by `kind`.
+ * Where the file store keeps its files (TELFLO_FILE_STORE): one kind per
+ * install, chosen by `kind`.
  */
 export type FileStoreSettings = LocalFileStoreSettings | S3FileStoreSettings;
 
@@ -116,7 +113,7 @@ export interface LocalFileStoreSettings {
 /**
  * An S3-protocol bucket (TELFLO_FILE_STORE=s3). No credential: the AWS SDK's
  * default chain finds them (the pod's IAM role on EKS, the standard `AWS_*`
- * variables locally; D23-1 decision 4). None of these is a secret.
+ * variables locally). None of these is a secret.
  */
 export interface S3FileStoreSettings {
   kind: "s3";
@@ -176,11 +173,10 @@ export class UnsafeFilePathError extends Error {
  * where a directory should be) it keeps the call's `code` (`EACCES`,
  * `ENOTDIR`, …) and `syscall` (`open`, `unlink`, …); on S3 a token-shaped
  * code (`AccessDenied`, `SlowDown`, `TimeoutError`, …) and the operation's
- * name (`PutObject`, `GetObject`, `DeleteObject`; D23-1 decision 22). Nothing
- * else: Node's and the SDK's own errors name the path or the bucket and the
- * object key, which hold the key's ids, so neither they nor the original
- * error (no `cause`) are kept (D14a Ruling 25). A caller may store its
- * message.
+ * name (`PutObject`, `GetObject`, `DeleteObject`). Nothing else: Node's and
+ * the SDK's own errors name the path or the bucket and the object key, which
+ * hold the key's ids, so neither they nor the original error (no `cause`)
+ * are kept. A caller may store its message.
  */
 export class FileStoreError extends Error {
   readonly code: string | undefined;

@@ -6,11 +6,10 @@ import { useSignUpPath } from "~/lib/use-site.js";
 import FleetManagementRoute from "./fleet-management.js";
 
 /*
- * `/playground/fleet-management`, the sample workspace's fleet list (D31-1
- * decisions 8, 10 and 35; Preflight rulings 8, 9 and 20): the signed-in
- * list (`fleet-management.tsx`: its header, filter, FleetsTable and "Load
- * more") on the sample's four fleets, inside the playground's shell. No
- * StatsStrip and no usage figures, as the signed-in list (usage is D28's).
+ * `/playground/fleet-management`, the sample workspace's fleet list: the
+ * signed-in list (`fleet-management.tsx`: its header, filter, FleetsTable and
+ * "Load more") on the sample's four fleets, inside the playground's shell. No
+ * StatsStrip and no usage figures, as the signed-in list.
  *
  * - The rows are read through the seam: `useFleetsList` asks `readsFor` for
  *   the sample visitor's organization, so they come from the sample, never
@@ -23,9 +22,8 @@ import FleetManagementRoute from "./fleet-management.js";
  * - A fleet's link (FleetsTable's, TokenCell's) keeps its signed-in path in
  *   the DOM and lands on the playground's page (the shell's link scope).
  * - The playground tour's last stage runs here when the editor's hands it
- *   over (decision 15), on the fleets' table inside the `fleet-table`
- *   wrapper (Preflight ruling 16).
- * The title is fixed and the canonical the page's own (decision 17).
+ *   over, on the fleets' table inside the `fleet-table` wrapper.
+ * The title is fixed and the canonical the page's own.
  */
 
 export const handle = PLAYGROUND_HANDLE;
@@ -35,7 +33,7 @@ export function meta({ matches }: Route.MetaArgs) {
 }
 
 export default function PlaygroundFleets() {
-  // The wrap-up's sign-up link (D36-1 decision 23): a string fixed per process, so the effect runs once.
+  // The wrap-up's sign-up link: a string fixed per process, so the effect runs once.
   const signUp = useSignUpPath();
   useEffect(() => {
     if (consumePlaygroundTourStage("fleet")) startPlaygroundFleetTour(signUp);

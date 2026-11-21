@@ -13,11 +13,11 @@ import * as flowPage from "./playground.flows.$slug.js";
 import * as gallery from "./playground.flows.js";
 
 /*
- * The playground's flows (D31-1 decisions 5, 6 and 33): the gallery and a
- * flow's page on the open flow read, read in the browser only (no loader),
- * through the platform's FlowPicker; "Use this flow" opens the sign-up
- * prompt; a slug the read doesn't answer is "Flow not found."; nothing else
- * of the API client is called.
+ * The playground's flows: the gallery and a flow's page on the open flow
+ * read, read in the browser only (no loader), through the platform's
+ * FlowPicker; "Use this flow" opens the sign-up prompt; a slug the read
+ * doesn't answer is "Flow not found."; nothing else of the API client is
+ * called.
  */
 
 /** A flow as the open read answers it: in full but its id, published, sortOrder and createdAt. */
@@ -75,7 +75,7 @@ afterEach(() => {
   document.body.className = "";
 });
 
-describe("the read (decision 5): in the browser only", () => {
+describe("the read: in the browser only", () => {
   it("neither page has a loader: nothing is read on the server", () => {
     for (const module of [gallery, flowPage] as Record<string, unknown>[]) {
       expect(module.loader).toBeUndefined();
@@ -84,7 +84,7 @@ describe("the read (decision 5): in the browser only", () => {
   });
 });
 
-describe("the gallery (decision 33)", () => {
+describe("the gallery", () => {
   it("lists the open read's flows through the platform's FlowPicker, and calls nothing else of the client", async () => {
     const reads = serveOpenReads();
     renderFlows("/playground/flows");
@@ -149,7 +149,7 @@ describe("the gallery (decision 33)", () => {
   });
 });
 
-describe("a flow's page (decisions 6 and 33)", () => {
+describe("a flow's page", () => {
   it("shows the flow read by its slug: the description, the requirements, the signals, the pin and the YAML read-only inside ph-no-capture", async () => {
     const reads = serveOpenReads();
     renderFlows(`/playground/flows/${TAIL_SAMPLING.slug}`);

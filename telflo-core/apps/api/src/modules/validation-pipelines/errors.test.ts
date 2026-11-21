@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { firstCodePoints, VALIDATION_RULE_PROBLEM_MAXIMUM_LENGTH, validationRuleInvalid } from "./errors.js";
 
-// The evaluator's words as a refusal carries them (D15a Preflight ruling
-// 20, Ruling 33): as it words them, cut to 1,000 code points.
+// The evaluator's words as a refusal carries them: as it words them, cut to
+// 1,000 code points.
 
 describe("validationRuleInvalid", () => {
   it("answers 400 validation_rule_invalid with the first problem's words as they are, and every problem with its field", () => {

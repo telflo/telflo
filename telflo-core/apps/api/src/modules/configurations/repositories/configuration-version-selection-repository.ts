@@ -5,21 +5,21 @@ import { visibleTo } from "./configuration-repository.js";
 
 /*
  * Each person's selected version of each configuration of the context's
- * organization (D10 decision 3): the version they last opened, which
- * `/editor/{id}` opens again. Through the organization scope, with row-level
- * security on configuration_version_selections (migration 1700000000018)
- * behind it: the transaction must carry a database context naming the same
- * organization, or the policies show and admit nothing.
+ * organization: the version they last opened, which `/editor/{id}` opens
+ * again. Through the organization scope, with row-level security on
+ * configuration_version_selections (migration 1700000000018) behind it: the
+ * transaction must carry a database context naming the same organization, or
+ * the policies show and admit nothing.
  *
  * The policies limit a selection to its organization, not to its person:
  * every method here filters by the person's id, and no endpoint reads
  * another person's. A selection is reachable only through a live
  * configuration, as its versions are: a deleted configuration's selections
  * stay in the table, unread, until its row goes and takes them. And only a
- * configuration the person can see counts (D11b decision 1): theirs, or
- * published, the configuration repository's rule (`visibleTo`), which the
- * policies apply too (migration 1700000000021). The person is the viewer:
- * every caller passes the request's user.
+ * configuration the person can see counts: theirs, or published, the
+ * configuration repository's rule (`visibleTo`), which the policies apply
+ * too (migration 1700000000021). The person is the viewer: every caller
+ * passes the request's user.
  *
  * The time comes from the caller, as `at`, never from SQL `now()`.
  */
@@ -35,11 +35,11 @@ export interface IConfigurationVersionSelectionRepository {
   /**
    * Records the version as this person's selection of the configuration,
    * replacing any earlier one, selected `at`. First a read, through the scope,
-   * of that version of the live configuration: when there is none (an
-   * unknown version, another configuration's, a deleted configuration's, or
-   * another organization's), it writes nothing and returns false (D10
-   * Preflight ruling 1). Then an upsert on the person's row, which sets only
-   * the version and the time. The caller holds the configuration's lock.
+   * of that version of the live configuration: when there is none (an unknown
+   * version, another configuration's, a deleted configuration's, or another
+   * organization's), it writes nothing and returns false. Then an upsert on
+   * the person's row, which sets only the version and the time. The caller
+   * holds the configuration's lock.
    */
   record(userId: string, configurationId: string, versionId: string, at: Date): Promise<boolean>;
 }

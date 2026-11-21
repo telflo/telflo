@@ -4,10 +4,10 @@ import { Outlet, type createRoutesStub } from "react-router";
 type StubRoutes = Parameters<typeof createRoutesStub>[0];
 
 /**
- * The SaaS's site values (D36-1 Preflight ruling 16), as the tests' setup
- * pins them for the server: registration open, the playground and the
- * anonymous reads on, Settings › Notifications shown (Q270), the Terms
- * asked with the three `/home/…` URLs, the default docs.
+ * The SaaS's site values, as the tests' setup pins them for the server:
+ * registration open, the playground and the anonymous reads on, Settings ›
+ * Notifications shown, the Terms asked with the three `/home/…` URLs, the
+ * default docs.
  */
 export const SAAS_SITE: SiteSettings = {
   ...OPEN_SOURCE_SITE,

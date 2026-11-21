@@ -8,13 +8,13 @@ import type { ValueView } from "~/lib/graph/value-view.js";
 import { useEditorStore, type ValuesResult } from "~/lib/stores/editor-store.js";
 
 /*
- * Held cards (D9d decision 12; Preflight ruling 22): D9c's held rows
- * (decision 9) for a list of cards. Add holds a card that isn't in the
- * text; its first field typed writes the item, `seed ∪ typed`, appended (or
- * inserted at an index: set at the list's length and moved there, in one
- * write, so one undo entry), and the card becomes the item's in place.
- * An empty item (`{name: ""}`, `{include: ""}`, `[]`) is never written at
- * once: the collector refuses it or reads it as something else (decision 3).
+ * Held cards: `MultiValueField`'s held rows for a list of cards. Add holds
+ * a card that isn't in the text; its first field typed writes the item,
+ * `seed ∪ typed`, appended (or inserted at an index: set at the list's
+ * length and moved there, in one write, so one undo entry), and the card
+ * becomes the item's in place. An empty item (`{name: ""}`,
+ * `{include: ""}`, `[]`) is never written at once: the collector refuses it
+ * or reads it as something else.
  *
  * - `useHeldItem(listPath, { cards })` holds one card at a time. A form
  *   renders the held card at `at` (the list's end unless `hold` named an
@@ -31,39 +31,37 @@ import { useEditorStore, type ValuesResult } from "~/lib/stores/editor-store.js"
  *   the card's changes until the item is `ready` (by default: something
  *   was typed); then it writes the item in one change. A number typed as
  *   written (`plain`) is written plain under the item in that change.
- * - The held card belongs to its list's shape as it was when it was held
- *   (D9d Rulings 33 and 33a, following D9c Preflight ruling 8): it is
- *   dropped when its list's length changes or the list stops being a list
+ * - The held card belongs to its list's shape as it was when it was held: it
+ *   is dropped when its list's length changes or the list stops being a list
  *   (absent is a list of none), by any write (an undo or redo, the YAML box,
  *   another item added or removed), or a configuration loads, and goes with
  *   the form (the Configuration tab is keyed by the load and the node).
- *   Anything else keeps it: an edit inside another item of its list, a
- *   write elsewhere in the component, and their undos (its index is worked
- *   out when it is written, so those can't misplace it). Removing it writes
- *   nothing. A held card stays until its own Remove; a held row
- *   (`DimensionListField`'s) left with nothing in it is dropped, as
- *   MultiValueField's held rows are (`empty`).
+ *   Anything else keeps it: an edit inside another item of its list, a write
+ *   elsewhere in the component, and their undos (its index is worked out when
+ *   it is written, so those can't misplace it). Removing it writes nothing. A
+ *   held card stays until its own Remove; a held row (`DimensionListField`'s)
+ *   left with nothing in it is dropped, as MultiValueField's held rows are
+ *   (`empty`).
  * - Nothing empty is ever written: not `""`, `{}` or `[]`, nor an item
  *   whose fields are all empty.
- * - Decision 7's messages from a write the held card keeps (metricstransform's
- *   Combine and Group) are held with it (D9d Ruling 41): toasted once, with
- *   the write that puts the card in the text, and never if it is dropped.
+ * - The adjustment messages from a write the held card keeps
+ *   (metricstransform's Combine and Group) are held with it: toasted once,
+ *   with the write that puts the card in the text, and never if it is dropped.
  *   `ItemScope` gives the card's fields that scope (`HeldNotices`); a held
- *   card inside another passes them to the outer one when it is written.
- *   A held message that names the paths its cascade adjusted is dropped
- *   when a later change in the card touches one of them (Ruling 41d):
- *   Combine's "Aggregation Type set to sum", then mean chosen, says
- *   nothing of sum when the card is written. A message is held once per
- *   message and adjusted paths (Ruling 45): the same message from another
- *   cascade, adjusting other paths, is held beside it, so a later change
- *   dropping one leaves the other.
+ *   card inside another passes them to the outer one when it is written. A
+ *   held message that names the paths its cascade adjusted is dropped when a
+ *   later change in the card touches one of them: Combine's "Aggregation Type
+ *   set to sum", then mean chosen, says nothing of sum when the card is
+ *   written. A message is held once per message and adjusted paths: the same
+ *   message from another cascade, adjusting other paths, is held beside it, so
+ *   a later change dropping one leaves the other.
  * - Any scoped source inside a held card (a `FormScope`, an `ItemScope`, an
  *   `ExcludingScope`, a form-local one) must re-base its notices' paths
  *   onto the source it is under (`HeldNotices` with its `prefix`), so the
- *   paths a held message names are the card's (Ruling 45).
+ *   paths a held message names are the card's.
  */
 
-/** The same message for the same adjusted paths (Ruling 45). */
+/** The same message for the same adjusted paths. */
 function sameNotice(a: Notice, b: Notice): boolean {
   return a.message === b.message && JSON.stringify(a.adjusted) === JSON.stringify(b.adjusted);
 }
@@ -74,13 +72,13 @@ class PlainChars {
 }
 
 /**
- * Where a held card shows and its item goes: an index, or (D9d Ruling 46) a
- * function of the list's items, worked out each render from the list as it
- * is then and again when the item is written, from the list as it is at the
- * write. A change that keeps the list's length but changes its items (the
- * YAML box, an undo) keeps the card, so a fixed index could be stale:
- * transform's group goes before the first flat statement of the list it is
- * written into.
+ * Where a held card shows and its item goes: an index, or a function of the
+ * list's items, worked out each render from the list as it is then and
+ * again when the item is written, from the list as it is at the write. A
+ * change that keeps the list's length but changes its items (the YAML box,
+ * an undo) keeps the card, so a fixed index could be stale: transform's
+ * group goes before the first flat statement of the list it is written
+ * into.
  */
 export type HeldAt = number | ((items: readonly unknown[]) => number);
 
@@ -100,9 +98,9 @@ interface HeldState {
   /** The load when it was held: another drops it. */
   load: number;
   /**
-   * Decision 7's messages from changes the card kept (Ruling 41), with the
+   * The adjustment messages from changes the card kept, with the
    * paths they adjusted under the item: told when it is written, dropped
-   * with it, or when a later change in the card touches a path (Ruling 41d).
+   * with it, or when a later change in the card touches a path.
    */
   notices: readonly Notice[];
 }
@@ -115,7 +113,7 @@ export interface HeldItem {
   /**
    * Holds a card at `at` (the list's end by default), writing what fields
    * still hold first. A function is worked out from the list's items each
-   * render and when the item is written (Ruling 46).
+   * render and when the item is written.
    */
   hold: (at?: HeldAt) => void;
   /** Drops the held card, writing nothing (its Remove). */
@@ -127,8 +125,8 @@ export interface HeldItem {
   /** The held card's source: reads `seed` with what was typed, and writes the item once it is `ready`. */
   source: (seed?: unknown) => FormSource;
   /**
-   * Decision 7's messages from a write made through the held card's source
-   * (Ruling 41): held with the card while it holds that write, told (as
+   * The adjustment messages from a write made through the held card's
+   * source: held with the card while it holds that write, told (as
    * the enclosing scope tells them: a toast) once the write put it in the text.
    */
   notice: (notices: readonly Notice[]) => void;
@@ -143,8 +141,8 @@ export interface HeldItemCards {
 const ABSENT: ValueView = { kind: "absent", value: undefined };
 
 /**
- * A list's shape, what a held card or row belongs to (D9d Ruling 33a): its
- * length (absent: none), or null when it isn't a list.
+ * A list's shape, what a held card or row belongs to: its length (absent:
+ * none), or null when it isn't a list.
  */
 export function listShape(view: ValueView): number | null {
   return view.kind === "list" ? view.value.length : view.kind === "absent" ? 0 : null;
@@ -163,10 +161,10 @@ export function isEmptyValue(value: unknown): boolean {
 }
 
 /**
- * `seed ∪ typed`: mappings merged key by key, in the seed's key order and
- * then typed's new keys (a seed key whose value is undefined only places a
- * typed key: metricstransform's `{include, match_type, action}`, Preflight
- * ruling 8); anything else is typed's, or the seed's when nothing was typed.
+ * `seed ∪ typed`: mappings merged key by key, in the seed's key order and then
+ * typed's new keys (a seed key whose value is undefined only places a typed
+ * key: metricstransform's `{include, match_type, action}`); anything else is
+ * typed's, or the seed's when nothing was typed.
  */
 export function mergeItem(seed: unknown, typed: unknown): unknown {
   if (isPlainObject(seed) && isPlainObject(typed)) {
@@ -296,12 +294,12 @@ export function useHeldItem(
   /**
    * Writes `item` as the list's item at `at` (its end by default): set at
    * the length, then moved, in one write. `at` is worked out from the list as
-   * it is now (Ruling 46). `held` are the card's messages to tell with it (by
+   * it is now. `held` are the card's messages to tell with it (by
    * default, all it holds).
    */
   const writeAt = (item: unknown, at: HeldAt | undefined, held = stateRef.current?.notices ?? []): ValuesResult => {
     if (isEmptyValue(item)) return "unchanged";
-    // The list as the text holds it now (Ruling 48d): a write since this render (a flushed held edit) counted.
+    // The list as the text holds it now: a write since this render (a flushed held edit) counted.
     const latest = readLatest(form, listPath);
     const end = latest.kind === "list" ? latest.value.length : latest.kind === "absent" ? 0 : null;
     if (end === null) return "refused";
@@ -313,11 +311,11 @@ export function useHeldItem(
     const result = form.apply(changes);
     if (result === "written") {
       writtenAt.current = insert && index !== undefined ? index : end;
-      // In the same event as the write (Preflight ruling 22): the written item's card has the held card's key.
+      // In the same event as the write: the written item's card has the held card's key.
       cards?.add();
       if (insert) cards?.move(end, index);
       update(null);
-      // The card's held messages come with the write that puts it in the text (Ruling 41).
+      // The card's held messages come with the write that puts it in the text.
       if (held.length > 0) notices(underPrefix([...listPath, writtenAt.current], held));
     }
     return result;
@@ -352,7 +350,7 @@ export function useHeldItem(
           const next = applyChanges(seed, all);
           const typed = applyChanges(undefined, all);
           if (next === null || typed === null) return "refused";
-          // A message whose adjusted path these changes touch no longer says what the card holds (Ruling 41d).
+          // A message whose adjusted path these changes touch no longer says what the card holds.
           const kept = held.notices.filter((notice) => !notice.adjusted.some((path) => more.some((change) => touches(change.path, path))));
           if (!isEmptyValue(typed.value) && (ready ? ready(next.value) : true)) return writeAt(next.value, held.at, kept);
           // Not complete yet: the card keeps what was typed.
@@ -369,7 +367,7 @@ export function useHeldItem(
         notices(underPrefix([...listPath, writtenAt.current], messages));
         return;
       }
-      // Kept in the card: told when it is written. A message held already for the same paths isn't held twice (Ruling 45).
+      // Kept in the card: told when it is written. A message held already for the same paths isn't held twice.
       const more = messages.filter((notice) => !held.notices.some((kept) => sameNotice(kept, notice)));
       if (more.length > 0) update({ ...held, notices: [...held.notices, ...more] });
     },

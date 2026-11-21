@@ -15,16 +15,16 @@ import { PERSONAL_ID, signedInMember } from "~/test/configurations.js";
 import { SAMPLE_ORGANIZATION_ID, WORKSPACE_READ_NAMES, readsFor } from "./workspace-reads.js";
 
 /*
- * The seam (D31-1 decision 23, Preflight ruling 8): the playground's reads
- * answer from the sample and never call the API client; every other
- * organization's are the API client's own functions, so signed-in pages
- * read exactly as before. `useCurrentUser()` answers the sample's visitor
- * first inside the playground. The mechanism is shown end to end with a
- * test-only reader, written as a reused screen's reader is: the id from
- * `useCurrentUser()`, the read from `readsFor(id)`.
+ * The seam: the playground's reads answer from the sample and never call
+ * the API client; every other organization's are the API client's own
+ * functions, so signed-in pages read exactly as before.
+ * `useCurrentUser()` answers the sample's visitor first inside the
+ * playground. The mechanism is shown end to end with a test-only reader,
+ * written as a reused screen's reader is: the id from `useCurrentUser()`,
+ * the read from `readsFor(id)`.
  */
 
-/** A reused screen's reader, as Tasks 2 and 3 switch theirs: the fleets of the current user's organization. */
+/** A test-only reader, written as a reused screen's is: the fleets of the current user's organization. */
 function useFleetCount(): number | null {
   const organizationId = useCurrentUser()?.organization.id ?? null;
   const [count, setCount] = useState<number | null>(null);

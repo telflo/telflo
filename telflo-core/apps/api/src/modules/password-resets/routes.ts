@@ -33,7 +33,7 @@ function requestOrigin(request: FastifyRequest): { ipAddress: string | undefined
 }
 
 /**
- * D3 decision 1's reset endpoints. Neither is authenticated.
+ * The password reset endpoints. Neither is authenticated.
  *
  * The validator/serializer compilers are server-wide and set once in
  * buildServer, not here.
@@ -44,8 +44,8 @@ export function registerPasswordResetRoutes(
   rateLimiters: RateLimiters,
 ): void {
   const { settings, db, now, runAfterResponse } = deps;
-  // Every repository bound to one transaction (D3 decision 5). The user
-  // repository is handed out as its one transaction-safe method only: see
+  // Every repository bound to one transaction. The user repository is
+  // handed out as its one transaction-safe method only: see
   // PasswordResetTransaction.
   const withTransaction: WithPasswordResetTransaction = (work) =>
     db.transaction().execute((transaction) =>
@@ -69,8 +69,8 @@ export function registerPasswordResetRoutes(
   typed.post(
     "/api/v1/auth/password-reset-requests",
     {
-      // The shared per-IP bucket (D2a decision 9), then the per-address
-      // limit, which needs the validated body (D3 decision 6).
+      // The shared per-IP bucket, then the per-address limit, which needs the
+      // validated body.
       onRequest: rateLimiters.identityPerIp,
       preHandler: rateLimiters.emailPerAddress,
       schema: {
@@ -79,8 +79,8 @@ export function registerPasswordResetRoutes(
       },
     },
     async (request, reply) => {
-      // Nothing the response waits for may depend on the address (D3
-      // decision 2): the lookup, the token and the email all happen after it.
+      // Nothing the response waits for may depend on the address: the
+      // lookup, the token and the email all happen after it.
       // Do not await the work here.
       const input = { email: request.body.email, ...requestOrigin(request) };
       runAfterResponse(() => service.requestReset(input));
@@ -100,7 +100,7 @@ export function registerPasswordResetRoutes(
     async (request, reply) => {
       const reset = await service.completeReset({ ...request.body, ...requestOrigin(request) });
       // The user signs in again with the new password, so a lockout earned
-      // by guessing the old one must not stand in the way (D3 decision 5).
+      // by guessing the old one must not stand in the way.
       rateLimiters.signInPerEmail.succeeded(reset.email);
       // Every session was revoked; this browser drops its dead pair.
       clearSessionCookies(reply, settings);

@@ -18,9 +18,9 @@ import { held } from "~/test/account.js";
 import { expectNoAttributeHolds } from "~/test/fleets.js";
 
 /*
- * Change Password (D21 decisions 35 and 45): the web's checks before
- * sending, the API's message under Current Password, success's toast, and
- * the passwords only in the fields, emptied after every answer.
+ * Change Password: the web's checks before sending, the API's message
+ * under Current Password, success's toast, and the passwords only in the
+ * fields, emptied after every answer.
  */
 
 const CURRENT = "canary-current-pw-81f2";

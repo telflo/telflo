@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# check-compose-install.sh's self-test (D36-2 decisions 88-90; Preflight
-# ruling 1): the real tree passes, and in a throwaway copy of the files the
-# check reads (deploy/compose, the copies' sources, the chart's Chart.yaml
-# and values.yaml, the PIN, docker-compose.yml and the development secrets'
-# files), each rule broken once fails it, naming the rule:
+# check-compose-install.sh's self-test: the real tree passes, and in a
+# throwaway copy of the files the check reads (deploy/compose, the copies'
+# sources, the chart's Chart.yaml and values.yaml, the PIN, docker-compose.yml
+# and the development secrets' files), each rule broken once fails it, naming
+# the rule:
 #   the four copies (each changed, one missing); compose.yaml's name, a
 #   build:, a Telflo image at another version or by digest, Postgres and
 #   nginx off the chart's digests (and the chart's digest moved), the

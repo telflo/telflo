@@ -13,7 +13,7 @@ import { runMigrationStep } from "./migrations.js";
  * Integration tests `truncateAll` before each test, so running them against
  * the database the dev servers use deletes the developer's accounts. Tests
  * therefore always run against a database whose name ends in `_test`, reached
- * two ways (D5 decision 1): as the API's login role, from
+ * two ways: as the API's login role, from
  * `TELFLO_TEST_DATABASE_URL` when set, otherwise `TELFLO_DATABASE_URL` with
  * `_test` appended to its database name (`telflo_platform` becomes `telflo_platform_test`); and
  * as the tables' owner, the same way from `TELFLO_TEST_MIGRATION_DATABASE_URL`
@@ -28,25 +28,25 @@ import { runMigrationStep } from "./migrations.js";
 const TEST_DATABASE_SUFFIX = "_test";
 
 /**
- * The timeout of every `afterAll` or test that drops a throwaway database
- * (D31-1 Ruling 316). DROP DATABASE forces an immediate checkpoint, which fsyncs
- * every relation file written since the last one, and each `truncateAll`
- * gives every table, index and TOAST table it empties a new file: so a drop
- * pays for every truncate the run made since its last checkpoint, not its
- * own file's alone. Measured 2026-10-28 (Postgres 18 in Docker on macOS,
- * about 0.15 ms a file): validation.integration.test.ts's drop fsynced
- * 20,747 files (3 s) run alone, 234,928 (34 s, past the 30 s it had) 38th
- * in the full run. A checkpoint_timeout (5 minutes) of the run's truncates
- * keeps it well below two minutes.
+ * The timeout of every `afterAll` or test that drops a throwaway database.
+ * DROP DATABASE forces an immediate checkpoint, which fsyncs every relation
+ * file written since the last one, and each `truncateAll` gives every table,
+ * index and TOAST table it empties a new file: so a drop pays for every
+ * truncate the run made since its last checkpoint, not its own file's alone.
+ * Measured 2026-10-28 (Postgres 18 in Docker on macOS, about 0.15 ms a file):
+ * validation.integration.test.ts's drop fsynced 20,747 files (3 s) run alone,
+ * 234,928 (34 s, past the 30 s it had) 38th in the full run. A
+ * checkpoint_timeout (5 minutes) of the run's truncates keeps it well below
+ * two minutes.
  */
 export const THROWAWAY_DATABASE_DROP_TIMEOUT = 120_000;
 
 /**
- * The mark of a catalogue row a test adds for itself (D25 Ruling 179): a
+ * The mark of a catalog row a test adds for itself: a
  * fixture distribution or version carries it as its `description`, and is
  * removed by its test. TEST ONLY: never a description of the committed
- * catalogue's. A run cut short (killed mid-file) leaves its fixtures behind,
- * and the catalogue's sync refuses a row the files don't list
+ * catalog's. A run cut short (killed mid-file) leaves its fixtures behind,
+ * and the catalog's sync refuses a row the files don't list
  * (CollectorCatalogueRemovalError), so prepareTestDatabase, which the
  * global setup runs, removes every marked row first: only on a `_test`
  * database, and never an unmarked row, which the sync still refuses.
@@ -55,10 +55,10 @@ export const THROWAWAY_DATABASE_DROP_TIMEOUT = 120_000;
 export const TEST_CATALOGUE_FIXTURE_NOTE = "A test's own catalogue fixture: removed before every test run's catalogue sync.";
 
 /**
- * Removes the catalogue rows a test marked as its own fixtures
+ * Removes the catalog rows a test marked as its own fixtures
  * (TEST_CATALOGUE_FIXTURE_NOTE), versions before distributions (a version
  * names its distribution), and every version of a marked distribution. A
- * database whose catalogue tables don't exist yet (a new one) has none.
+ * database whose catalog tables don't exist yet (a new one) has none.
  */
 async function removeTestCatalogueFixtures(ownerUrl: string): Promise<void> {
   const client = new pg.Client({ connectionString: ownerUrl, options: PLATFORM_CONNECTION_OPTIONS });
@@ -154,19 +154,18 @@ function redact(url: URL): string {
 }
 
 /**
- * Validates the collector catalogue, then creates the test database named
+ * Validates the collector catalog, then creates the test database named
  * by `ownerUrl` if it does not exist and runs the migration step on it
  * (runMigrationStep): migrates it to the latest migration as the owner,
- * removes the catalogue rows tests marked as their own fixtures
- * (TEST_CATALOGUE_FIXTURE_NOTE, D25 Ruling 179: a killed run's leftovers),
- * syncs the catalogue into it (D13a Preflight ruling 9), then provisions the
- * login role `applicationUrl` names (D5 Preflight ruling 4). Both must name
- * the same database. An invalid catalogue fails before any database is
- * created or migrated (D13a Ruling 38). Safe to call when it already exists
+ * removes the catalog rows tests marked as their own fixtures
+ * (TEST_CATALOGUE_FIXTURE_NOTE: a killed run's leftovers), syncs the
+ * catalog into it, then provisions the login role `applicationUrl` names.
+ * Both must name the same database. An invalid catalog fails before any
+ * database is created or migrated. Safe to call when it already exists
  * and is current; safe against another run creating it, syncing or
  * provisioning at the same moment.
  *
- * `catalogue` is the committed catalogue's files unless a test passes its
+ * `catalogue` is the committed catalog's files unless a test passes its
  * own.
  */
 export async function prepareTestDatabase(

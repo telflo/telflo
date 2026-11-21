@@ -5,9 +5,8 @@ import { isUnknownOutcome } from "~/lib/fleets.js";
 import { VARIABLES_UNAVAILABLE_MESSAGE, hasVariableCode, isVariableRefusal } from "~/lib/variables.js";
 
 /*
- * How the variables dialogs take a write's failure in (D20 decision 39; the
- * fleet dialogs' rules, D17a decision 28 and Preflight ruling 13), before
- * each dialog's own refusals:
+ * How the variables dialogs take a write's failure in (the fleet dialogs'
+ * rules), before each dialog's own refusals:
  * - the organization's or the terms' refusal closes the dialog and
  *   revalidates the layout; a session ended is silent (the handler has the
  *   page);
@@ -16,8 +15,8 @@ import { VARIABLES_UNAVAILABLE_MESSAGE, hasVariableCode, isVariableRefusal } fro
  * - an unknown outcome (a 5xx, the 503 `variables_unavailable` among them,
  *   no connection, the hang guard, a reply that doesn't parse) shows the
  *   503's words (neutral: they claim neither that a change was made nor
- *   that it wasn't; Ruling 78), keeps the dialog open for a retry (a
- *   create's id makes it safe), and reloads the list behind it.
+ *   that it wasn't), keeps the dialog open for a retry (a create's id
+ *   makes it safe), and reloads the list behind it.
  * Every word is fixed: never a name, a value or a description.
  */
 

@@ -7,14 +7,13 @@ const BUTTON_CLASS =
   "h-7 border-white/30 bg-transparent text-[13px] text-white hover:bg-white/10 hover:text-white";
 
 /*
- * The playground's banner (ADR 0018; D31-1 decision 26), across the top of
- * the shell: its words, Take the tour (desktop only, when the tour is given:
- * D31-1's Task 6), Create free account (`/register`) and Sign in (`/login`).
- * Create free account only while registration is open (D36-1 decision 23,
- * Ruling 352): otherwise its target is sign-in, so Sign in alone stands for
- * both. A signed-in visitor sees the same buttons (decision 27).
- * `bg-blue-600` is the constant signal blue inside `tf-app` (it doesn't flip
- * with the theme), so the white text stays readable.
+ * The playground's banner, across the top of the shell: its words, Take the
+ * tour (desktop only, when the tour is given), Create free account
+ * (`/register`) and Sign in (`/login`). Create free account only while
+ * registration is open: otherwise its target is sign-in, so Sign in alone
+ * stands for both. A signed-in visitor sees the same buttons. `bg-blue-600`
+ * is the constant signal blue inside `tf-app` (it doesn't flip with the
+ * theme), so the white text stays readable.
  */
 export function PlaygroundBanner({ onTakeTour }: { onTakeTour?: (() => void) | undefined }) {
   const signUp = useSignUpPath();

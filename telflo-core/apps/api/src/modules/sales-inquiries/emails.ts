@@ -1,7 +1,7 @@
 import { escapeHtml } from "../identity/emails.js";
 
 /**
- * A contact form inquiry, sent to the team's inbox (D4 decision 4).
+ * A contact form inquiry, sent to the team's inbox.
  * An HTML part and a text part. Every value is the submitter's free text,
  * so each is escaped in the HTML part. The subject replaces runs of CR and
  * LF in the name with a space, so the name can't break the header onto

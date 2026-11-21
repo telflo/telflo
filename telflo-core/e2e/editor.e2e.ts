@@ -31,16 +31,15 @@ import { E2E_SAAS_WEB_URL, E2E_WEB_URL } from "./support/environment.js";
 import { clickGoogle, signInAtProvider } from "./support/oidc.js";
 import { signInThroughApi, switchOrganizationThroughApi, skipEditorTour, waitForHydration } from "./support/session.js";
 
-// The configuration editor at /editor/{id} (D8), in the browser. The
+// The configuration editor at /editor/{id}, in the browser. The
 // configurations it opens are seeded by SQL (support/database.ts's
 // seedConfiguration, with their version 1), except the starter, which only
-// createAccount makes (Preflight ruling 12), and the one the create dialog
-// makes. Each test works in organizations of its own, so tests and browsers
-// run in parallel. A second person is a second browser context.
+// createAccount makes, and the one the create dialog makes. Each test works
+// in organizations of its own, so tests and browsers run in parallel. A
+// second person is a second browser context.
 //
-// Monaco in Playwright (Preflight ruling 13; the helpers are
-// support/editor-page.ts's, shared with the other browser tests, D9d Ruling
-// 57):
+// Monaco in Playwright (the helpers are support/editor-page.ts's, shared
+// with the other browser tests):
 // - Monaco closes quotes and brackets and indents after `:` as it is typed,
 //   so the tests type a comment line, `# edited <uuid>`, at the top, and
 //   expect exactly it and a newline before the original text.
@@ -53,11 +52,10 @@ import { signInThroughApi, switchOrganizationThroughApi, skipEditorTour, waitFor
 // - Monaco draws only the lines in view, so what it shows is read from its
 //   drawn lines (`shownLines`), and the whole text from the database or the
 //   download.
-// - The panel opens on Configuration since D9a, and Monaco mounts only when
-//   the YAML tab opens (Radix doesn't mount a tab's content until it is
-//   shown), so the tests open the YAML tab after each full page load
-//   (D9a Preflight ruling 7). Typing enters manual edit mode, which locks the
-//   canvas; saving saves the typed text (D9a decision 2).
+// - The panel opens on Configuration, and Monaco mounts only when the YAML
+//   tab opens (Radix doesn't mount a tab's content until it is shown), so the
+//   tests open the YAML tab after each full page load. Typing enters manual
+//   edit mode, which locks the canvas; saving saves the typed text.
 
 const PASSWORD = "correct horse battery staple";
 const ORIGINAL_YAML = "receivers:\n  otlp:\n    protocols:\n      grpc: {}\n";
@@ -67,7 +65,7 @@ const NOT_FOUND_MESSAGE = "Configuration not found";
  * `secondContext`: a second browser, for a second person, with its own
  * cookie jar. Closed when the test ends. In both browsers the editor's tour
  * is marked done (`skipEditorTour`): these tests aren't about it, and it
- * would cover the page on a first visit (D9a decision 14).
+ * would cover the page on a first visit.
  */
 const test = base.extend<{ secondContext: BrowserContext }>({
   context: async ({ context }, use) => {
@@ -159,7 +157,7 @@ function savesPrevented(page: Page): Promise<boolean[]> {
 }
 
 test.describe("with a window tall enough for Monaco to draw the whole starter", () => {
-  // On the SaaS pair (D36-1 Preflight ruling 16): a Google sign-up behind the Terms dialog.
+  // On the SaaS pair: a Google sign-up behind the Terms dialog.
   test.use({ viewport: { width: 1280, height: 1400 }, baseURL: E2E_SAAS_WEB_URL });
 
   test("a new account lists its Initial Configuration, and opening it shows the starter YAML in Monaco", async ({ page }) => {
@@ -188,7 +186,7 @@ test.describe("with a window tall enough for Monaco to draw the whole starter", 
     const [configuration] = await findConfigurations(membership?.organization_id ?? "");
     await expect(page).toHaveURL(await versionAddress(configuration?.id ?? ""));
     await expect(nameHeading(page, STARTER_CONFIGURATION_NAME)).toBeVisible();
-    // The panel's three tabs: Testing since D14a (decision 21).
+    // The panel's three tabs.
     await expect(page.getByRole("tab")).toHaveText(["Configuration", "YAML", "Testing"]);
     await expect(page.getByRole("tab", { name: "Configuration" })).toHaveAttribute("aria-selected", "true");
     await openYamlTab(page);
@@ -284,7 +282,7 @@ test("a YAML syntax error shows Monaco's error marker and the validation alert, 
 
 /**
  * The attributes, anywhere in the document (shadow roots included), whose
- * value holds `text`: replay records attributes unmasked (ADR 0024).
+ * value holds `text`: replay records attributes unmasked.
  */
 function attributesHolding(page: Page, text: string): Promise<string[]> {
   return page.evaluate<string[]>(`(() => {
@@ -310,7 +308,7 @@ function monacoPartsBlocked(page: Page): Promise<{ part: string; blocked: boolea
       .map((element) => ({ part, blocked: element.closest(".ph-no-capture") !== null })))`);
 }
 
-test("Monaco's suggestions never put the configuration's words in an attribute, and the editor is blocked from replay (ADR 0024)", async ({
+test("Monaco's suggestions never put the configuration's words in an attribute, and the editor is blocked from replay", async ({
   page,
 }) => {
   // A word only the configuration holds. Monaco's word-based suggestions
@@ -410,13 +408,13 @@ test("creating a configuration from the list lands on /editor/{id}/{versionId} w
   const name = `Created ${randomUUID()}`;
 
   await page.locator("#createNewConfigurationButton").click();
-  // The start step first (D12 Preflight ruling 8): a blank configuration.
+  // The start step first: a blank configuration.
   await page.getByRole("dialog", { name: "New configuration" }).getByRole("button", { name: /Blank configuration/ }).click();
   const dialog = page.getByRole("dialog", { name: "Name Your Configuration" });
   await dialog.getByLabel("Configuration Name").fill(name);
   await dialog.getByRole("button", { name: "Create", exact: true }).click();
 
-  // `/editor/{id}` replaces itself with its version's address (D10 decision 9).
+  // `/editor/{id}` replaces itself with its version's address.
   await expect(page).toHaveURL(/\/editor\/[0-9a-f-]{36}\/[0-9a-f-]{36}$/);
   const [created] = await findConfigurations(user.organizationId);
   expect(page.url()).toBe(`${E2E_WEB_URL}${await versionAddress(created?.id ?? "")}`);
@@ -443,7 +441,7 @@ test("the toolbox, the canvas and the panel sit side by side, in that order", as
   await expect(page.locator('[data-tour-step="canvas"] .react-flow')).toBeVisible();
 });
 
-test("the panel collapses to its rail, expands from the rail's button and from its YAML icon, and its handle drags it within 320 px and the centre's room", async ({
+test("the panel collapses to its rail, expands from the rail's button and from its YAML icon, and its handle drags it within 320 px and the center's room", async ({
   page,
 }) => {
   const { configurationId } = await seedSignedInWithConfiguration(page);
@@ -486,14 +484,14 @@ test("the panel collapses to its rail, expands from the rail's button and from i
     await page.mouse.up();
   };
 
-  // Within the room the toolbox leaves the centre at 1280 px.
+  // Within the room the toolbox leaves the center at 1280 px.
   await dragHandleTo(viewport.width - 450);
   await expect.poll(() => panelWidth(page)).toBe(450);
 
   await dragHandleTo(viewport.width - 100);
   await expect.poll(() => panelWidth(page)).toBe(320);
 
-  // Dragged all the way left: 800 px at most, and the centre keeps 320 px.
+  // Dragged all the way left: 800 px at most, and the center keeps 320 px.
   await dragHandleTo(0);
   await expect.poll(() => panelWidth(page)).toBe(Math.min(800, viewport.width - centreLeft - 320));
 });
@@ -611,9 +609,8 @@ test("a second member opens the first's published configuration and saves its dr
   const member = await seedUser({ password: PASSWORD });
   const group = await addMember({ userId: admin.userId, role: "admin" });
   await addMember({ userId: member.userId, organizationId: group.organizationId, role: "contributor" });
-  // Published, so the member sees it (D11b decision 1); its version 1 can't
-  // be changed (decision 4), so both open, and the member saves, the draft
-  // version 2, the newest.
+  // Published, so the member sees it; its version 1 can't be changed, so both
+  // open, and the member saves, the draft version 2, the newest.
   const configuration = await seedConfiguration({
     organizationId: group.organizationId,
     createdByUserId: admin.userId,

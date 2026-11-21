@@ -14,10 +14,9 @@
  * router) is an edge, because it exists in YAML only as the source pipeline's
  * exporters entry.
  *
- * Generation is the model the graph describes (`deriveModel`; D9a Parity
- * Notes), and the round trips read the corpus's YAML, generated for these
- * graphs. The
- * validation tests wait for D13; the store's test is a pure one here.
+ * Generation is the model the graph describes (`deriveModel`), and the round
+ * trips read the corpus's YAML, generated for these graphs. The store's test
+ * is a pure one here.
  */
 import { describe, expect, it } from "vitest";
 
@@ -353,7 +352,7 @@ describe("Routing connector — target pipeline layout", () => {
   });
 });
 
-describe("Routing connector — reading a config the text holds (D9a)", () => {
+describe("Routing connector — reading a config the text holds", () => {
   it("reads no targets from a config that isn't routing's shape", () => {
     expect(summarizeRoutingTargets(null)).toEqual([]);
     expect(summarizeRoutingTargets({ table: "no", default_pipelines: 5 })).toEqual([]);
@@ -362,7 +361,7 @@ describe("Routing connector — reading a config the text holds (D9a)", () => {
     ]);
   });
 
-  it("recognises config-targeted connectors by name and by node", () => {
+  it("recognizes config-targeted connectors by name and by node", () => {
     expect(isConfigTargetedConnectorName("routing/tenants")).toBe(true);
     expect(isConfigTargetedConnectorName("failover")).toBe(true);
     expect(isConfigTargetedConnectorName("forward")).toBe(false);
@@ -371,13 +370,12 @@ describe("Routing connector — reading a config the text holds (D9a)", () => {
 });
 
 /*
- * D9d decision 8 (Preflight rulings 1, 13): with the text's order, as every
- * change in the store passes it, the routing connector's receiver
- * membership is the text's own, while the connector is a node; the config
- * no longer rewrites it. The D9a cases above pass no order: the config's
- * derivation, kept for them.
+ * With the text's order, as every change in the store passes it, the
+ * routing connector's receiver membership is the text's own, while the
+ * connector is a node; the config doesn't rewrite it. The cases above pass
+ * no order: the config's derivation, kept for them.
  */
-describe("Routing connector — membership with the text's order (D9d decision 8)", () => {
+describe("Routing connector — membership with the text's order", () => {
   const TEXT = [
     "receivers:",
     "  otlp:",
@@ -437,7 +435,7 @@ describe("Routing connector — membership with the text's order (D9d decision 8
     expect(model.pipelines.get("traces/out")?.receivers).toEqual(["routing"]);
     expect(model.pipelines).toEqual(order.pipelines);
 
-    // D9a's derivation, without an order, reads the config instead.
+    // The derivation without an order reads the config instead.
     const fromConfig = deriveModel(graph);
     expect(fromConfig.pipelines.get("traces/listed")?.receivers).toEqual([]);
     expect(fromConfig.pipelines.get("traces/named")?.receivers).toEqual(["otlp", "routing"]);
@@ -454,7 +452,7 @@ describe("Routing connector — membership with the text's order (D9d decision 8
     expect(model.pipelines.get("traces/listed")?.processors).toEqual(["memory_limiter", "batch"]);
   });
 
-  it("doesn't wire a duplicated connector, nor an added pipeline the config names (Preflight ruling 13)", () => {
+  it("doesn't wire a duplicated connector, nor an added pipeline the config names", () => {
     const { graph, order } = read(TEXT);
     const routing = graph.nodes.find((n) => n.data.componentSubType === "routing")!;
     const duplicate: typeof routing = {
@@ -500,7 +498,7 @@ describe("Routing connector — membership with the text's order (D9d decision 8
   });
 });
 
-describe("Routing connector — the targets a choice wires (D9d Task 3)", () => {
+describe("Routing connector — the targets a choice wires", () => {
   const lists = (receivers: string[]) => ({ receivers, processors: [], exporters: ["debug"] });
   const model = {
     components: new Map<string, unknown>(),

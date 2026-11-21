@@ -11,7 +11,7 @@ const OPEN_DIALOG = '[role="dialog"][data-state="open"], [role="alertdialog"][da
 
 /**
  * Calls `callback` every `intervalMs` while the component is mounted and the
- * tab is visible (D17a decision 8, Preflight ruling 10).
+ * tab is visible.
  *
  * - **The callback must return its work's promise** (its request's, or the
  *   async function's own), never fire it and return at once: the in-flight

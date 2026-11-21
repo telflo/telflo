@@ -7,9 +7,9 @@ import {
   startE2eFakeOtelcolValidator,
 } from "./support/fake-otelcol-validator.js";
 
-// The browser tests' collector validator (D13b decision 17, Ruling 54): the
-// web server start-fake-otelcol-validator.ts runs is up where the E2E API's
-// settings point, and its start helper and the teardown's check do what
+// The browser tests' collector validator: the web server
+// start-fake-otelcol-validator.ts runs is up where the E2E API's settings
+// point, and its start helper and the teardown's check do what
 // global-setup.ts relies on: a violation is written down as it is seen, and
 // fails the run. No page: these need no browser.
 

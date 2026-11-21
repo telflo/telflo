@@ -5,14 +5,14 @@ import { useCreateVersion } from "~/lib/editor/use-create-version.js";
 import { selectIsVersionPublished, useEditorStore } from "~/lib/stores/editor-store.js";
 
 /*
- * Above the canvas while the open version is published (D11b decision 4):
- * "Version {N} is published and can't be changed.", and one button, "Create
- * a new version from it", which is D10's create from the open version
+ * Above the canvas while the open version is published: "Version {N} is
+ * published and can't be changed.", and one button, "Create a new version
+ * from it", which is the version picker's create from the open version
  * (`useCreateVersion`): unnamed, no dialog, carrying the text on screen (a
- * stale tab's unsaved text included; Preflight ruling 12), and opening the
- * new version; its failures are D10's. The button is disabled while a save,
- * a create or a publish is under way. Nothing here is a label or a name:
- * the version is named by its number (ADR 0024; decision 14).
+ * stale tab's unsaved text included), and opening the new version; its
+ * failures are the create's. The button is disabled while a save, a create
+ * or a publish is under way. Nothing here is a label or a name: the version
+ * is named by its number.
  */
 export function PublishedVersionBanner() {
   const isPublished = useEditorStore(selectIsVersionPublished);

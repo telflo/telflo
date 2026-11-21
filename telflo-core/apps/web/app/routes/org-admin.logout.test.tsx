@@ -9,14 +9,13 @@ import type { AppLayoutData } from "./app-layout.js";
 
 /*
  * Logout from the Permissions page with its members' read in flight, on a
- * real router (D12 Ruling 40; the FW2 follow-up review's MAJOR). The root is
- * the real one, its App (the one Toaster) and its ErrorBoundary, the only
- * boundary there is; under it the real signed-in layout (the sidebar, whose
- * Logout is the real useLogout) and the real org-admin route. The client is
- * the real one, with axios answering through a fake API, as
- * lib/use-logout.stray-read.test.tsx does. Logout navigates to `/login`,
- * whose data is held, so the Permissions page is still mounted when the
- * read's stray 401 arrives, as in a browser where the 401 beats
+ * real router. The root is the real one, its App (the one Toaster) and its
+ * ErrorBoundary, the only boundary there is; under it the real signed-in
+ * layout (the sidebar, whose Logout is the real useLogout) and the real
+ * org-admin route. The client is the real one, with axios answering through
+ * a fake API, as lib/use-logout.stray-read.test.tsx does. Logout navigates
+ * to `/login`, whose data is held, so the Permissions page is still mounted
+ * when the read's stray 401 arrives, as in a browser where the 401 beats
  * `/login.data`. The list must not throw it: root's ErrorBoundary would
  * replace the whole app, the sidebar and "Logged out successfully" with it,
  * with "Oops!" until `/login` loads.
@@ -115,7 +114,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe("Logout from the Permissions page with a list's read in flight (D12 Ruling 40)", () => {
+describe("Logout from the Permissions page with a list's read in flight", () => {
   it("the read's stray 401, arriving before /login's data, leaves the app up: no 'Oops!', the sidebar stays, only 'Logged out successfully'", async () => {
     const membersRead = held();
     routes[MEMBERS] = membersRead.route;

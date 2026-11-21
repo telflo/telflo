@@ -32,12 +32,12 @@ import { createValidationRuleRepository, type ValidationRule } from "./repositor
 import { createValidationPipelineService } from "./service.js";
 import type { WithValidationPipelinesTransaction } from "./transaction.js";
 
-/** What the validation pipelines service is built from, once, in buildServer (D25 decision 15, Preflight ruling 4). */
+/** What the validation pipelines service is built from, once, in buildServer. */
 export interface ValidationPipelineServicesDependencies extends ServerDependencies {
   now: () => Date;
 }
 
-/** The validation pipelines service, one instance shared by the browser routes here and the public routes (D25 decision 15). */
+/** The validation pipelines service, one instance shared by the browser routes here and the public routes. */
 export interface ValidationPipelineServices {
   service: ReturnType<typeof createValidationPipelineService>;
 }
@@ -74,7 +74,7 @@ const ruleSaveErrorResponses = {
   503: ErrorResponseSchema,
 };
 
-/** Any string for every id: one naming nothing the caller can see is the same 404, never a 400 (D5 decision 7). */
+/** Any string for every id: one naming nothing the caller can see is the same 404, never a 400. */
 const VersionParamsSchema = z.object({ organizationId: z.string(), configurationId: z.string(), versionId: z.string() });
 const PipelineParamsSchema = VersionParamsSchema.extend({ validationPipelineId: z.string() });
 const RuleParamsSchema = PipelineParamsSchema.extend({ ruleId: z.string() });
@@ -83,7 +83,7 @@ const PIPELINES_ROUTE =
   "/api/v1/organizations/:organizationId/configurations/:configurationId/versions/:versionId/validation-pipelines";
 const RULES_ROUTE = `${PIPELINES_ROUTE}/:validationPipelineId/rules`;
 
-/** A pipeline's name goes only into a response body (ADR 0024). */
+/** A pipeline's name goes only into a response body. */
 function toPipelineResponseBody(pipeline: ValidationPipeline): ValidationPipelineResponseBody {
   return {
     id: pipeline.id,
@@ -96,7 +96,7 @@ function toPipelineResponseBody(pipeline: ValidationPipeline): ValidationPipelin
   };
 }
 
-/** A rule's text goes only into a response body (ADR 0024). */
+/** A rule's text goes only into a response body. */
 function toRuleResponseBody(rule: ValidationRule): ValidationRuleResponseBody {
   return {
     id: rule.id,
@@ -115,9 +115,9 @@ function toRuleResponseBody(rule: ValidationRule): ValidationRuleResponseBody {
 }
 
 /**
- * The validation pipelines service (D25 Preflight ruling 4), moved verbatim
- * from the routes: built once in buildServer and shared by the browser and
- * the public routes, so its rule checks are counted once per person.
+ * The validation pipelines service, moved verbatim from the routes: built
+ * once in buildServer and shared by the browser and the public routes, so
+ * its rule checks are counted once per person.
  */
 export function createValidationPipelineServices(
   deps: ValidationPipelineServicesDependencies,
@@ -152,18 +152,17 @@ export function createValidationPipelineServices(
 }
 
 /**
- * The validation pipelines and rules endpoints (D15a details 24 and 25;
- * Preflight rulings 16, 19 and 20). Each needs a session and the current
- * terms; each re-reads the caller's membership under the organization's
- * lock, and each write then locks the configuration (service.ts); each
- * answers 404 for anything the caller can't see, as the suites do. Each
- * transaction carries the request's `AuthContext`, so row-level security
- * on the pipelines and rules admits the same rows the repositories do.
+ * The validation pipelines and rules endpoints. Each needs a session and the
+ * current terms; each re-reads the caller's membership under the
+ * organization's lock, and each write then locks the configuration
+ * (service.ts); each answers 404 for anything the caller can't see, as the
+ * suites do. Each transaction carries the request's `AuthContext`, so
+ * row-level security on the pipelines and rules admits the same rows the
+ * repositories do.
  *
  * A rule's POST and PATCH have the OTTL evaluator check a regex or OTTL rule
- * first (decision 6), outside any transaction, counted against the
- * person's checked saves in the organization (RATE_LIMITS'
- * validationRuleChecksPerUser, decision 16; D14b decision 23).
+ * first, outside any transaction, counted against the person's checked saves
+ * in the organization (RATE_LIMITS' validationRuleChecksPerUser).
  *
  * Pipeline names, rules' text and the evaluator's words travel only in the
  * JSON bodies: never in a URL, a log line or an audit row.

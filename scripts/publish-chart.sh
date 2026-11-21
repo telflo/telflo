@@ -1,14 +1,12 @@
 #!/usr/bin/env bash
 # Packages and publishes one of the platform's Helm charts to its OCI
-# registry: charts/supervisor-collector (the default; D18 spec decisions
-# 9–11 and 26, Preflight rulings 7 and 21) or charts/telflo (D33-1 decision
-# 31, Preflight ruling 18), the package made once and that same file pushed
-# (D36-2 decisions 79 and 80; Preflight ruling 6).
+# registry: charts/supervisor-collector (the default) or charts/telflo, the
+# package made once and that same file pushed.
 #
 #   scripts/publish-chart.sh --dry-run [--registry <r>]   check everything, print the push, push nothing
 #   scripts/publish-chart.sh --package <dir>               every check but the registry's, then the package into <dir>
 #   scripts/publish-chart.sh --push-package <tgz> [--registry <r>]
-#                                                          push that package (the owner's, or the release's publish job)
+#                                                          push that package (a maintainer's, or the release's publish job)
 #   each with --chart <name>: supervisor-collector (the default) or telflo
 #
 # --package writes <dir>/<name>-<version>.tgz (refused if it exists) and
@@ -29,8 +27,7 @@
 # no --push (it packaged and pushed in one step): it is refused, naming
 # --package and --push-package.
 #
-# Without --chart, the checks are D18's (supervisor-collector's); D36-2
-# replaced its registry read and its --push.
+# Without --chart, the checks are supervisor-collector's.
 #
 # Refused before anything runs (exit 2): no mode or more than one; --push; an
 # unknown argument or chart, or --chart given twice; --registry with
@@ -47,11 +44,10 @@
 # `._:/-`, whose last segment isn't the chart's name, or that is under
 # the older registry path oci://ghcr.io/telflo/charts/. With --registry, or
 # --push-package, the reference is oci://<registry>/telflo/telflo/charts/
-# <name>. TELFLO_HELM_CHART_REFERENCE (the platform's own setting, which D18's
-# dry run followed) is refused in every mode: nothing here reads or writes
-# a reference the caller names.
+# <name>. TELFLO_HELM_CHART_REFERENCE (the platform's own setting) is refused
+# in every mode: nothing here reads or writes a reference the caller names.
 #
-# Refused next (exit 1, --dry-run too; Ruling 31: what is published is exactly
+# Refused next (exit 1, --dry-run too: what is published is exactly
 # what is committed): a tree that isn't a git checkout, or uncommitted changes
 # in the chart's inputs (supervisor-collector: charts/supervisor-collector,
 # the contracts' helm.ts, this script; telflo: charts/telflo,
@@ -62,12 +58,12 @@
 #
 # The chart is then taken from the commit itself: HEAD's raw blobs under
 # charts/<name> (`git ls-tree`, `git cat-file blob`), written into a fresh
-# temporary directory (Ruling 32: no ignored or untracked file of the working
-# tree is packaged; Ruling 36: no local attribute, filter or line-ending
-# setting alters them; a symlink or submodule is refused).
-# For telflo, before anything lints it (exit 1; D33-1 decision 21,
-# Preflight ruling 5), on HEAD's extraction and with no sibling opamp-server
-# checkout: `git rev-parse HEAD:charts/telflo/charts/opamp-server`
+# temporary directory (no ignored or untracked file of the working tree is
+# packaged; no local attribute, filter or line-ending setting alters them; a
+# symlink or submodule is refused).
+# For telflo, before anything lints it (exit 1), on HEAD's extraction and
+# with no sibling opamp-server checkout:
+# `git rev-parse HEAD:charts/telflo/charts/opamp-server`
 # and the tree id of the extracted vendored chart must both be HEAD's
 # vendor/opamp-server/PIN's chart-tree; Chart.yaml must declare exactly one
 # opamp-server dependency, at oci://ghcr.io/telflo/charts, whose version, the
@@ -81,8 +77,7 @@
 # telflo: once per tests/profiles/*.yaml, without
 # --with-subcharts); `helm package` (the chart's .helmignore drops tests/);
 # --package stops there. A dry run then asks the registry whether the version
-# exists (`crane manifest <reference without oci://>:<version>`; Preflight
-# ruling 6):
+# exists (`crane manifest <reference without oci://>:<version>`):
 #   - a manifest: published already: refused (a published version is never
 #     overwritten; a fix is a new version);
 #   - MANIFEST_UNKNOWN or NAME_UNKNOWN: absent, go on;
@@ -97,9 +92,9 @@
 # holding the caller's login); when either is unset, a temporary one holding
 # no login is used, so no credential helper is ever consulted. A file the
 # caller named (HELM_REGISTRY_CONFIG; DOCKER_CONFIG/config.json) is refused
-# (exit 1, its content never printed; Ruling 34) when it is missing or can't
-# be read, isn't JSON, has no "auths" object or an empty one (Docker would
-# then consult the keychain's helper: it must name the registry's login), has
+# (exit 1, its content never printed) when it is missing or can't be read,
+# isn't JSON, has no "auths" object or an empty one (Docker would then
+# consult the keychain's helper: it must name the registry's login), has
 # a "credsStore" or "credHelpers" key in any spelling (Go's encoding/json
 # matches keys case-insensitively), or has a key that folds to "auths" but
 # isn't "auths". Every other
@@ -112,9 +107,9 @@ set -euo pipefail
 ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." >/dev/null && pwd)"
 
 # No inherited GIT_* setting (GIT_DIR, GIT_INDEX_FILE, GIT_CONFIG_*…) may
-# change which repository, index or configuration git reads (Ruling 36).
+# change which repository, index or configuration git reads.
 for v in $(env | sed -n 's/^\(GIT_[A-Za-z0-9_]*\)=.*/\1/p'); do unset "$v"; done
-# Local `git replace` objects never stand in for HEAD's (Ruling 37).
+# Local `git replace` objects never stand in for HEAD's.
 export GIT_NO_REPLACE_OBJECTS=1
 CONTRACTS="$ROOT/telflo-core/packages/contracts/src/helm.ts"
 # The contracts' HELM_CHART_REFERENCE_PATTERN.
@@ -124,9 +119,8 @@ NAME_RE='^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'
 # An older registry path that isn't this repository's: never pushed to.
 OLD_CHARTS="oci://ghcr.io/telflo/charts/"
 NO_LOGIN='{"auths":{"telflo-publish.invalid":{}}}'
-# telflo's row (D33-1 decision 31, Preflight ruling 18): its fixed
-# reference; the PIN and the vendored opamp-server chart (decision 21), with
-# the repository its dependency is declared at.
+# telflo's row: its fixed reference; the PIN and the vendored opamp-server
+# chart, with the repository its dependency is declared at.
 PLATFORM_REFERENCE="oci://ghcr.io/telflo/telflo/charts/telflo"
 PIN_PATH=vendor/opamp-server/PIN
 SUBCHART_PATH=charts/telflo/charts/opamp-server
@@ -135,7 +129,7 @@ SUBCHART_REPOSITORY=oci://ghcr.io/telflo/charts
 CHARTS_PATH="telflo/telflo/charts"
 CHART_LAYER_TYPE="application/vnd.cncf.helm.chart.content.v1.tar+gzip"
 
-# The release helpers: the registry and crane (D36-2).
+# The release helpers: the registry and crane.
 # shellcheck source=scripts/release/oci.sh
 . "$ROOT/scripts/release/oci.sh"
 
@@ -157,11 +151,11 @@ note() { echo "publish-chart: $1" >&2; }
 # under the path, written below the destination at their repository paths
 # (`git ls-tree` then `git cat-file blob`): no attribute, filter or
 # line-ending conversion of the local git setup applies, as `git archive`'s
-# would (Ruling 36). A symlink or a submodule is refused, naming its path; the
-# executable mode (100755) is kept. Each file written must hash to its tree
-# entry (Ruling 37). The listing is written to a file first and git's status
-# checked (Ruling 334): a git error midway (an unreadable or corrupt tree
-# object) is refused, never a truncated chart extracted.
+# would. A symlink or a submodule is refused, naming its path; the executable
+# mode (100755) is kept. Each file written must hash to its tree entry. The
+# listing is written to a file first and git's status checked: a git error
+# midway (an unreadable or corrupt tree object) is refused, never a truncated
+# chart extracted.
 extract_head_dir() {
   local entry meta path mode rest sha count=0 tab=$'\t'
   git -C "$ROOT" ls-tree -r -z --full-tree HEAD -- "$1" >"$tmp/ls-tree.list" \
@@ -177,7 +171,7 @@ extract_head_dir() {
     esac
     mkdir -p "$2/$(dirname -- "$path")"
     git -C "$ROOT" cat-file blob "$sha" >"$2/$path" || fail "can't read HEAD's $path"
-    # What was written must hash to HEAD's tree entry (Ruling 37): any local
+    # What was written must hash to HEAD's tree entry: any local
     # substitution (a replace ref, a tampered object store) is refused.
     [ "$(git -C "$ROOT" hash-object --no-filters -t blob -- "$2/$path")" = "$sha" ] \
       || fail "HEAD's $path doesn't hash to its tree entry: refused (a local substitution of git objects)"
@@ -192,7 +186,7 @@ extract_head_dir() {
 # a non-empty "auths" object and has no key naming a credential store or
 # helper in any spelling (Docker and oras read keys case-insensitively, as
 # Go's encoding/json does, and auto-detect the keychain's helper when "auths"
-# is empty). Its content is never printed (Rulings 32 and 34).
+# is empty). Its content is never printed.
 check_caller_credentials() {
   command -v python3 >/dev/null 2>&1 || fail "python3 is required to check $1's file"
   [ -f "$2" ] || fail "$1: its file ($2) is missing"
@@ -242,7 +236,7 @@ PY
 # would hash them (a regular file's bytes and its executable bit), nothing
 # written; fails on anything but a regular file or a folder. For the
 # extraction, so that what is packaged is itself the tree the PIN names (a
-# tampered tree object can't stand in; Ruling 37).
+# tampered tree object can't stand in).
 tree_id() {
   python3 -I - "$1" <<'PY_TREE'
 import hashlib, os, stat, sys
@@ -269,9 +263,9 @@ print(tree_id(sys.argv[1]).hex())
 PY_TREE
 }
 
-# check_vendored_chart: telflo's vendored opamp-server chart (D33-1
-# decision 21, Preflight ruling 5), on HEAD's extraction, before anything
-# lints it. Offline: no sibling opamp-server checkout, no registry.
+# check_vendored_chart: telflo's vendored opamp-server chart, on HEAD's
+# extraction, before anything lints it. Offline: no sibling opamp-server
+# checkout, no registry.
 check_vendored_chart() {
   local pin pin_version pin_tree head_tree extracted_tree declared declared_version declared_repository vendored_version
   command -v python3 >/dev/null 2>&1 || fail "python3 is required to hash the vendored opamp-server chart"
@@ -463,7 +457,7 @@ case "$reference" in
 esac
 destination="${reference%/*}"
 
-# What is published is exactly what is committed (Ruling 31).
+# What is published is exactly what is committed.
 # The checkout must be this repository's own (not a copy inside another).
 toplevel="$(git -C "$ROOT" rev-parse --show-toplevel 2>/dev/null || true)"
 [ -n "$toplevel" ] && [ "$toplevel" = "$(CDPATH= cd -- "$ROOT" >/dev/null && pwd -P)" ] \
@@ -625,7 +619,7 @@ if [ "$chart" = supervisor-collector ]; then
   done
 else
   # helm lint --strict once per render-test profile (HEAD's), the parent
-  # chart only (not --with-subcharts: Preflight ruling 5).
+  # chart only (not --with-subcharts).
   profiles=("$CHART_DIR"/tests/profiles/*.yaml)
   [ -f "${profiles[0]}" ] || fail "HEAD's $CHART_PATH/tests/profiles has no profile"
   for profile in "${profiles[@]}"; do

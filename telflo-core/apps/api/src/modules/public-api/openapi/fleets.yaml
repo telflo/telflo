@@ -1,7 +1,7 @@
-# Fleets, their collector groups and install (D25 decision 17's routes 17-23;
-# decisions 15, 19 and 35-38). Assembled by document.ts. Fleet types are the
-# platform's (`server`, `kubernetes-supervisor`); a fleet's collectors are in
-# collector groups; install's env is a list of {name, value}.
+# Fleets, their collector groups and install. Assembled by document.ts.
+# Fleet types are the platform's (`server`, `kubernetes-supervisor`); a
+# fleet's collectors are in collector groups; install's env is a list of
+# {name, value}.
 paths:
   /fleets:
     get:

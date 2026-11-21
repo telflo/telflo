@@ -14,15 +14,14 @@ import {
 import { recordedRequests } from "./support/posthog-stub.js";
 import { waitForHydration } from "./support/session.js";
 
-// Product analytics with a key (D4 decision 8), against the analytics web
-// server, whose PostHog host is the local stub (support/posthog-stub.ts).
-// What posthog-js really does, and so what these assert (Preflight ruling
-// 3): before the visitor chooses, it loads only its flags and remote
-// configuration, captures nothing, starts no replay and stores nothing;
-// accepting starts capture. Replay never starts on localhost (unit tests
-// prove it starts elsewhere), so it is asserted absent only before consent.
-// And after accepting, an emailed link's token never reaches PostHog
-// (Ruling 14).
+// Product analytics with a key, against the analytics web server, whose
+// PostHog host is the local stub (support/posthog-stub.ts). What posthog-js
+// really does, and so what these assert: before the visitor chooses, it loads
+// only its flags and remote configuration, captures nothing, starts no replay
+// and stores nothing; accepting starts capture. Replay never starts on
+// localhost (unit tests prove it starts elsewhere), so it is asserted absent
+// only before consent. And after accepting, an emailed link's token never
+// reaches PostHog.
 
 /** posthog-js sends its queued events every 3 s (its DEFAULT_FLUSH_INTERVAL_MS). */
 const POSTHOG_FLUSH_INTERVAL_MS = 3_000;

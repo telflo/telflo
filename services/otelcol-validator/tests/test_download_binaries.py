@@ -1,4 +1,4 @@
-"""The image's download script (`scripts/download-binaries.py`, D13b Task 2):
+"""The image's download script (`scripts/download-binaries.py`):
 which versions `OTELCOL_VERSIONS` picks, that a file whose sha256 isn't the
 pinned one is refused at once and never left behind, and that a failed
 transfer is retried up to the limit. The image build runs it for
@@ -185,8 +185,8 @@ def test_a_tarball_without_the_collector_stops_the_build(tmp_path: Path) -> None
 
 
 # ---------------------------------------------------------------------------
-# Retrying (D13b ruling 50): a transfer that fails is retried up to ATTEMPTS
-# downloads in all; a sha256 mismatch is attempted once.
+# Retrying: a transfer that fails is retried up to ATTEMPTS downloads in all;
+# a sha256 mismatch is attempted once.
 # ---------------------------------------------------------------------------
 
 

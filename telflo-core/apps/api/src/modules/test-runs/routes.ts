@@ -50,12 +50,12 @@ import { createTestRunService, type TestRunWithPlace } from "./test-run-service.
 import type { WithTestRunsTransaction } from "./transaction.js";
 import { discardUnreadUpload, readUploadParts, uploadPartLimits } from "./upload-parts.js";
 
-/** What the test files and runs services are built from, once, in buildServer (D25 decision 15, Preflight ruling 4). */
+/** What the test files and runs services are built from, once, in buildServer. */
 export interface TestRunsServicesDependencies extends ServerDependencies {
   now: () => Date;
 }
 
-/** The test files and runs services, one instance each, shared by the browser routes here and the public routes (D25 decision 15). */
+/** The test files and runs services, one instance each, shared by the browser routes here and the public routes. */
 export interface TestRunsServices {
   files: ReturnType<typeof createTestFileService>;
   runs: ReturnType<typeof createTestRunService>;
@@ -67,16 +67,16 @@ export interface TestRunsRoutesDependencies extends TestRunsServicesDependencies
 }
 
 /**
- * A queue request's body (decision 28): the text, 262,144 characters, up to
- * 1.5 MiB once JSON escapes them, as a validation's, with nothing else of
- * size. The gateway allows the same on its path.
+ * A queue request's body: the text, 262,144 characters, up to 1.5 MiB once
+ * JSON escapes them, as a validation's, with nothing else of size. The
+ * gateway allows the same on its path.
  */
 const QUEUE_BODY_LIMIT = 2 * 1024 * 1024;
 
-// The queue checks the session in `onRequest`, before Fastify reads the
-// body (D36-1 decision 42, Preflight ruling 9): a request without a valid
-// session is 401 whatever its body, never 413 (only the server-wide CSRF
-// guard runs before it). The Terms check stays in `preHandler`.
+// The queue checks the session in `onRequest`, before Fastify reads the body:
+// a request without a valid session is 401 whatever its body, never 413 (only
+// the server-wide CSRF guard runs before it). The Terms check stays in
+// `preHandler`.
 
 /**
  * Every answer here carries private text (a file's names, a run's text, its
@@ -100,7 +100,7 @@ const uploadErrorResponses = { ...errorResponses, 413: ErrorResponseSchema, 415:
 /** A queue's refusals: a read's, 429 for the person's limits, 503 while the tester (or, for a run with rules, the OTTL evaluator) is down. */
 const queueErrorResponses = { ...errorResponses, 429: ErrorResponseSchema, 503: ErrorResponseSchema };
 
-/** Any string for every id: one naming nothing the caller can see is the same 404, never a 400 (D5 decision 7). */
+/** Any string for every id: one naming nothing the caller can see is the same 404, never a 400. */
 const OrganizationParamsSchema = z.object({ organizationId: z.string() });
 const TestFileParamsSchema = z.object({ organizationId: z.string(), fileId: z.string() });
 const VersionParamsSchema = z.object({ organizationId: z.string(), configurationId: z.string(), versionId: z.string() });
@@ -110,7 +110,7 @@ const RunFileParamsSchema = RunParamsSchema.extend({ file: z.string() });
 const TEST_FILES_ROUTE = "/api/v1/organizations/:organizationId/test-files";
 const TEST_RUNS_ROUTE = "/api/v1/organizations/:organizationId/configurations/:configurationId/versions/:versionId/test-runs";
 
-/** A file's names and description go only into a response body (ADR 0024). */
+/** A file's names and description go only into a response body. */
 function toTestFileResponseBody(file: TestInputFile): TestFileResponseBody {
   return {
     id: file.id,
@@ -124,7 +124,7 @@ function toTestFileResponseBody(file: TestInputFile): TestFileResponseBody {
   };
 }
 
-/** A run as the list shows it (Preflight ruling 15). */
+/** A run as the list shows it. */
 function toSummaryResponseBody({ run, ahead }: TestRunWithPlace<TestRunSummary>): TestRunSummaryResponseBody {
   return {
     id: run.id,
@@ -140,7 +140,7 @@ function toSummaryResponseBody({ run, ahead }: TestRunWithPlace<TestRunSummary>)
     queuedByUserId: run.queuedByUserId,
     inputName: run.inputName,
     errorCode: run.errorCode,
-    // The breadcrumb (D14b Preflight ruling 20): configuration text, in the body only.
+    // The breadcrumb: configuration text, in the body only.
     suiteId: run.suiteId,
     suiteName: run.suiteName,
     definitionId: run.definitionId,
@@ -150,7 +150,7 @@ function toSummaryResponseBody({ run, ahead }: TestRunWithPlace<TestRunSummary>)
 
 /**
  * A run in full. The results are copied as the dispatcher stored them,
- * within the contract's bounds (Task 8 cuts them to it); the response's
+ * within the contract's bounds (the dispatcher cuts them to it); the response's
  * schema checks them on the way out.
  */
 function toDetailResponseBody(placed: TestRunWithPlace<TestRun>): TestRunDetail {
@@ -163,7 +163,7 @@ function toDetailResponseBody(placed: TestRunWithPlace<TestRun>): TestRunDetail 
     yaml: run.yaml,
     collectorDistribution: run.collectorDistribution,
     inputSizeBytes: run.inputSizeBytes,
-    // From the input's name, as the file's type was (Preflight ruling 10).
+    // From the input's name, as the file's type was.
     inputContentType: testFileContentTypeOf(run.inputName) ?? "application/octet-stream",
     strategy: run.strategy as TestRunDetail["strategy"],
     kwokEnabled: run.kwokEnabled,
@@ -177,19 +177,19 @@ function toDetailResponseBody(placed: TestRunWithPlace<TestRun>): TestRunDetail 
     outputTruncated: run.outputTruncated,
     decodedInputSizeBytes: run.decodedInputSizeBytes,
     decodedInputTruncated: run.decodedInputTruncated,
-    // The rules' snapshot and results (D15a Preflight ruling 25), as the
-    // queue and the dispatcher stored them; the response's schema checks
-    // them on the way out. Configuration text, in the body only.
+    // The rules' snapshot and results, as the queue and the dispatcher stored
+    // them; the response's schema checks them on the way out. Configuration
+    // text, in the body only.
     validationRules: run.validationRules as TestRunDetail["validationRules"],
     validationResults: run.validationResults as TestRunDetail["validationResults"],
   };
 }
 
 /**
- * The test files and runs services (D25 Preflight ruling 4), moved verbatim
- * from the routes: built once in buildServer and shared by the browser and
- * the public routes, so the copy places (resolved once here) and the run
- * limiter are never doubled.
+ * The test files and runs services, moved verbatim from the routes: built
+ * once in buildServer and shared by the browser and the public routes, so
+ * the copy places (resolved once here) and the run limiter are never
+ * doubled.
  */
 export function createTestRunsServices(
   deps: TestRunsServicesDependencies,
@@ -232,14 +232,13 @@ export function createTestRunsServices(
 }
 
 /**
- * The test files and runs endpoints (D14a decision 28; Preflight rulings
- * 10, 13 and 15). Each needs a session and the current terms; each
- * re-reads the caller's membership under the organization's lock, as the
- * configurations' writes do; each answers 404 for anything the caller
- * can't see: another organization, another person's file, another
- * member's draft's runs, a deleted configuration's runs. Each transaction
- * carries the request's `AuthContext`, so row-level security on
- * test_input_files and test_runs admits the same rows the repositories do.
+ * The test files and runs endpoints. Each needs a session and the current
+ * terms; each re-reads the caller's membership under the organization's lock,
+ * as the configurations' writes do; each answers 404 for anything the caller
+ * can't see: another organization, another person's file, another member's
+ * draft's runs, a deleted configuration's runs. Each transaction carries the
+ * request's `AuthContext`, so row-level security on test_input_files and
+ * test_runs admits the same rows the repositories do.
  *
  * Uploads and samples (multipart) are in their own encapsulated plugin,
  * the only one with @fastify/multipart registered: its parser reads
@@ -355,10 +354,9 @@ export function registerTestRunsRoutes(
       (request, reply) => saveUpload(request, reply, request.params.organizationId, "sample"),
     );
 
-    // The first 64 KiB of the caller's own file (Ruling 43), for a preview:
-    // bytes, never sniffed, under no file name, never cached. Counted with
-    // the uploads, the person's one budget for test files in the
-    // organization (D14b Preflight ruling 22).
+    // The first 64 KiB of the caller's own file, for a preview: bytes, never
+    // sniffed, under no file name, never cached. Counted with the uploads,
+    // the person's one budget for test files in the organization.
     typed.get(
       `${TEST_FILES_ROUTE}/:fileId/head`,
       // No response schema: the answer is a stream, and a refusal the envelope.
@@ -439,9 +437,9 @@ export function registerTestRunsRoutes(
     },
   );
 
-  // A run's file, streamed as bytes (Preflight ruling 10): never sniffed,
-  // always a download under a generic name (the input's own name is
-  // private text, and travels only in the run's JSON), never cached.
+  // A run's file, streamed as bytes: never sniffed, always a download under a
+  // generic name (the input's own name is private text, and travels only in
+  // the run's JSON), never cached.
   typed.get(
     `${TEST_RUNS_ROUTE}/:runId/files/:file`,
     // No response schema: the answer is a stream, and a refusal the envelope.
@@ -479,9 +477,9 @@ export function registerTestRunsRoutes(
     },
   );
 
-  // The first 64 KiB of a run's input (D14a Ruling 46), for the fixture-shape
-  // check before a re-run, as a test file's head is (Ruling 43): bytes, never
-  // sniffed, under no file name, never cached, counted with the uploads.
+  // The first 64 KiB of a run's input, for the fixture-shape check before a
+  // re-run, as a test file's head is: bytes, never sniffed, under no file
+  // name, never cached, counted with the uploads.
   typed.get(
     `${TEST_RUNS_ROUTE}/:runId/files/input/head`,
     // No response schema: the answer is a stream, and a refusal the envelope.

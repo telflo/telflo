@@ -8,10 +8,9 @@ import { CREATOR, DEFAULT_TOKEN_ID, expectNoAttributeHolds, REVOKED_TOKEN_ID, RO
 import { eventTokenWords, TOKEN_EVENT_WORDS, TOKEN_NOT_LISTED, TokenHistory } from "./TokenHistory.js";
 
 /*
- * The token history (D17b-2 decisions 2, 27 and 34): its rows, words, empty
- * state, failure and "Load more". The hook's paging (`useTokensTab`) is
- * `lib/tokens.test.ts`'s; the tab's own flows (a poll, "Load more" over the
- * API) are `TokensTab.test.tsx`'s.
+ * The token history: its rows, words, empty state, failure and "Load more".
+ * The hook's paging (`useTokensTab`) is `lib/tokens.test.ts`'s; the tab's
+ * own flows (a poll, "Load more" over the API) are `TokensTab.test.tsx`'s.
  */
 
 const NOW = Date.parse("2026-10-14T12:00:00.000Z");
@@ -37,7 +36,7 @@ const EVENTS: EnrollmentTokenEvent[] = [
   tokenEvent({ id: "c0ffee00-0000-4000-8000-000000000e00", tokenId: UNLISTED_ID, event: "issued", occurredAt: "2026-10-13T08:00:00.000Z" }),
 ];
 
-describe("TokenHistory (decision 27)", () => {
+describe("TokenHistory", () => {
   it("lists each event newest first: When, Event, Token by kind and creation, By as plain text", () => {
     renderHistory(history({ events: EVENTS }));
     expect(screen.getByRole("heading", { name: "History" })).toBeInTheDocument();
@@ -55,7 +54,7 @@ describe("TokenHistory (decision 27)", () => {
     expect(screen.queryByRole("link")).toBeNull();
   });
 
-  it("names each event in the spec's words: viewed reads Revealed", () => {
+  it("names each event in its fixed words: viewed reads Revealed", () => {
     expect(TOKEN_EVENT_WORDS).toEqual({ issued: "Issued", viewed: "Revealed", rotated: "Rotated", revoked: "Revoked" });
   });
 
@@ -66,7 +65,7 @@ describe("TokenHistory (decision 27)", () => {
     expect(screen.getAllByText(TOKEN_NOT_LISTED)).toHaveLength(2);
   });
 
-  // D17c-1 decision 45: a revoked default token followed by a new one.
+  // A revoked default token followed by a new one.
   it("names a default token by its creation when the fleet holds more than one", () => {
     const newDefault = { ...tokens.defaultToken, id: "c0ffee00-0000-4000-8000-0000000000d4", createdAt: "2026-10-14T09:30:00.000Z" };
     const list = [newDefault, tokens.current, tokens.revokedDefaultToken];
@@ -119,7 +118,7 @@ describe("TokenHistory (decision 27)", () => {
     expect(screen.queryByRole("button", { name: /Load more|Loading…/ })).toBeNull();
   });
 
-  it("holds no email in an attribute (decision 34)", () => {
+  it("holds no email in an attribute", () => {
     const email = "canary-history-9c1d@example.com";
     renderHistory(history({ events: [tokenEvent({ actor: { ...CREATOR, email } })] }));
     expect(screen.getByRole("table")).toHaveTextContent(email);

@@ -21,21 +21,18 @@ interface SuiteEditorDialogProps {
 }
 
 /**
- * Creating, renaming and describing a suite (D14b decision 8):
- * its words and fields. On any version, published or not (decision
- * 5).
+ * Creating, renaming and describing a suite: its words and fields. On any
+ * version, published or not.
  *
- * Differences (the Parity Notes):
- * - the fields' ids come from `useId` (never fixed), and they
- *   take no more than the API keeps (`maxLength`, D14b Ruling 38);
- * - closing gives the focus back to the button that opened it (D14b Ruling
- *   38);
- * - a description left empty is `''`, as the API keeps it, not null;
+ * - the fields' ids come from `useId`, and they take no more
+ *   than the API keeps (`maxLength`);
+ * - closing gives the focus back to the button that opened it;
+ * - a description left empty is `''`, as the API keeps it;
  * - a refusal toasts the API's words (a version's 101st suite: "A version
- *   can have at most 100 test suites.", decision 25), else fixed words;
- *   a session that ended toasts nothing;
+ *   can have at most 100 test suites."), else fixed words; a session that
+ *   ended toasts nothing;
  * - the name and description are input values, masked by replay's
- *   `maskAllInputs` (Preflight ruling 19).
+ *   `maskAllInputs`.
  */
 export function SuiteEditorDialog({ open, onOpenChange, target, suite, onCloseAutoFocus }: SuiteEditorDialogProps) {
   const [name, setName] = useState("");

@@ -24,67 +24,67 @@ import { useHeldText } from "~/lib/editor/held-text.js";
 import type { ValueChange, ValuePath } from "~/lib/graph/text-edits.js";
 
 /*
- * The Datadog receiver's form (ADR 0018), over the form's fields
- * (D9d decision 2, D9b's contract): each field writes its own key. Collector
- * claims are contrib v0.162.0's `receiver/datadogreceiver` and core
- * v0.162.0's `config/confighttp` (`ServerConfig`, squashed, `config.go:25`).
+ * The Datadog receiver's form, over the form's fields: each field writes its
+ * own key. Collector claims are contrib v0.162.0's `receiver/datadogreceiver`
+ * and core v0.162.0's `config/confighttp` (`ServerConfig`, squashed,
+ * `config.go:25`).
  *
- * - Changed (decision 4): Read Timeout unset is "Default 0 (none)": the
- *   receiver's own `read_timeout` field (60s, `factory.go:42`) is never
- *   read; the server is built from `ServerConfig` (`receiver.go:244`), whose
- *   `ReadTimeout` (`server.go:525-527`) has no default
- *   (`server.go:143-167`). A typed value sets both fields (the same key).
- * - Changed: Endpoint isn't marked required: unset is `localhost:8126`
+ * - Read Timeout unset is "Default 0 (none)": the receiver's own
+ *   `read_timeout` field (60s, `factory.go:42`) is never read; the server is
+ *   built from `ServerConfig` (`receiver.go:244`), whose `ReadTimeout`
+ *   (`server.go:525-527`) has no default (`server.go:143-167`). A typed
+ *   value sets both fields (the same key).
+ * - Endpoint isn't marked required: unset is `localhost:8126`
  *   (`factory.go:35`).
- * - Fixed (decision 4): Enable HTTP Keep-Alives wrote `keep_alives_enabled:
- *   false`, which v0.162.0 ignores (the `PrioritizeNewKeepalive` gate is
- *   beta, `server.go:197-241`): keep-alives stay on. Unticking writes
+ * - Enable HTTP Keep-Alives never writes `keep_alives_enabled: false`,
+ *   which v0.162.0 ignores (the `PrioritizeNewKeepalive` gate is beta,
+ *   `server.go:197-241`): keep-alives would stay on. Unticking writes
  *   `keepalive.enabled: false` (configoptional's `enabled: false` turns the
  *   section off); ticking removes it. Idle Timeout edits the flat
  *   `idle_timeout` while the text uses it and has no `keepalive` section,
  *   else `keepalive.idle_timeout`; it shows a flat `idle_timeout` whenever
  *   the text has one, which overrides `keepalive.idle_timeout` (even a zero
- *   one; the beta gate's `server.go:235-239`; final ruling F5). The box
- *   shows what the collector does: a flat `keep_alives_enabled: false`
- *   alone shows ticked, with `IGNORED_FLAT_HINT` (Ruling 47).
- * - Changed (decision 7): a write to either while a flat deprecated key
- *   (`keep_alives_enabled`, `idle_timeout`) is in the text moves it into
- *   `keepalive` in the same change (the collector refuses the old key
- *   beside a `keepalive` section, `server.go:225-227`), with `movedToast`;
- *   a flat `false` moved by another control's write ends with
- *   `NOW_OFF_TOAST` (Ruling 47). The control's own key is removed rather
- *   than moved (its change wins), with `removedToast` (final ruling F5).
- *   The last key removed from `keepalive` takes the block, also when the
- *   flat keys go with it (its default is the same, `server.go:148-154`;
- *   never `keepalive: {}`, final ruling F5).
- * - Changed (decisions 5, 6): Compression Algorithms offers the collector's
- *   set (`compression.go:28-29`): "none (uncompressed)" (`""`) and
+ *   one; the beta gate's `server.go:235-239`). The box shows what the
+ *   collector does: a flat `keep_alives_enabled: false` alone shows ticked,
+ *   with `IGNORED_FLAT_HINT`.
+ * - A write to either while a flat deprecated key (`keep_alives_enabled`,
+ *   `idle_timeout`) is in the text moves it into `keepalive` in the same
+ *   change (the collector refuses the old key beside a `keepalive`
+ *   section, `server.go:225-227`), with `movedToast`; a flat `false` moved
+ *   by another control's write ends with `NOW_OFF_TOAST`. The control's
+ *   own key is removed rather than moved (its change wins), with
+ *   `removedToast`. The last key removed from `keepalive` takes the block,
+ *   also when the flat keys go with it (its default is the same,
+ *   `server.go:148-154`; never `keepalive: {}`).
+ * - Compression Algorithms offers the collector's set
+ *   (`compression.go:28-29`): "none (uncompressed)" (`""`) and
  *   `x-snappy-framed` beside the other six; unset shows none ticked, with
  *   `COMPRESSION_HINT`; the first tick writes that item alone (ticking any
  *   accepts only those ticked).
- * - Kept: clearing the Authenticator Extension removes the whole `auth`
+ * - Clearing the Authenticator Extension removes the whole `auth`
  *   block ("blank disables auth"); what is typed is trimmed.
- * - Security and the response headers: D9b's server TLS (HTTP), CORS and
- *   headers sections.
+ * - Security and the response headers: the shared server TLS (HTTP), CORS
+ *   and headers sections (`TLSConfigSection`, `CORSConfigSection`,
+ *   `HeadersConfigSection`).
  *
- * Ids are fixed; no value reaches an attribute (decision 13).
+ * Ids are fixed; no value reaches an attribute.
  */
 
-/** Compression Algorithms' hint (decision 5). */
+/** Compression Algorithms' hint. */
 export const COMPRESSION_HINT = "Default: all, uncompressed included. Ticking any accepts only those ticked.";
 
-/** The move's toast (Preflight ruling 16). */
+/** The move's toast. */
 export const movedToast = (key: string) => `Moved ${key} into keepalive: the collector refuses the old key beside a keepalive block.`;
 
 /**
  * The move's toast for a flat key the collector doesn't refuse beside
  * `keepalive` (`keep_alives_enabled: true`, a zero `idle_timeout`;
- * `server.go:217-227`; D9d Ruling 48c). Not a no-op for `idle_timeout`: a
- * zero flat one overrides `keepalive.idle_timeout` (`server.go:235-239`).
+ * `server.go:217-227`). Not a no-op for `idle_timeout`: a zero flat one
+ * overrides `keepalive.idle_timeout` (`server.go:235-239`).
  */
 export const movedNoOpToast = (key: string) => `Moved ${key} into keepalive.`;
 
-/** A flat key the control's own change replaces, removed rather than moved (final ruling F5). */
+/** A flat key the control's own change replaces, removed rather than moved. */
 export const removedToast = (key: string) => `Removed ${key}: the collector refuses it beside a keepalive block.`;
 
 /** `removedToast` for a flat key the collector doesn't refuse beside `keepalive` (as `movedNoOpToast`). */
@@ -92,13 +92,13 @@ export const removedNoOpToast = (key: string) => `Removed ${key}.`;
 
 /**
  * Under Keep-Alives while a flat `keep_alives_enabled: false` is the only
- * keep-alive setting (D9d Ruling 47): the collector ignores it at v0.162.0
- * (the beta gate `pkg.confighttp.PrioritizeNewKeepalive`,
- * `server.go:197-244`), so the box shows ticked.
+ * keep-alive setting: the collector ignores it at v0.162.0 (the beta gate
+ * `pkg.confighttp.PrioritizeNewKeepalive`, `server.go:197-244`), so the
+ * box shows ticked.
  */
 export const IGNORED_FLAT_HINT = "keep_alives_enabled: false is ignored by the collector; untick to turn keep-alives off.";
 
-/** Appended to `movedToast("keep_alives_enabled")` when another control's write moves a flat `false` into `keepalive` (Ruling 47). */
+/** Appended to `movedToast("keep_alives_enabled")` when another control's write moves a flat `false` into `keepalive`. */
 export const NOW_OFF_TOAST = " Keep-alives are now off, as keep_alives_enabled said.";
 
 /** The collector's set (`compression.go:28-29`), `""` first as an uncompressed body. */
@@ -141,15 +141,15 @@ function setAs(form: FormSource, from: ValuePath, to: ValuePath): ValueChange {
 
 /**
  * The fields under `prefix` (by default `keepalive`: Keep-Alives and, there,
- * Idle Timeout): a write under `keepalive` also moves each flat deprecated
- * key in the text into it, in the same change, with its toast (the
- * control's own key is removed instead); a change leaving `keepalive` with
- * no key removes it, flat keys removed with it or not. With the prefix `[]`
- * (Idle Timeout at the flat key) the fields write their keys as they are.
- * With `readFlat`, the fields read the flat keys (Idle Timeout's flat
- * `idle_timeout`, the one the collector uses) and write as the prefix says. One
- * element either way (D9d Ruling 48b), so a field whose key moves between
- * the two (a flat `idle_timeout` cleared) keeps its input, focus and caret.
+ * Idle Timeout): a write under `keepalive` also moves each flat deprecated key
+ * in the text into it, in the same change, with its toast (the control's own
+ * key is removed instead); a change leaving `keepalive` with no key removes
+ * it, flat keys removed with it or not. With the prefix `[]` (Idle Timeout at
+ * the flat key) the fields write their keys as they are. With `readFlat`, the
+ * fields read the flat keys (Idle Timeout's flat `idle_timeout`, the one the
+ * collector uses) and write as the prefix says. One element either way, so a
+ * field whose key moves between the two (a flat `idle_timeout` cleared) keeps
+ * its input, focus and caret.
  */
 function KeepaliveScope({ prefix = KEEPALIVE, readFlat = false, children }: { prefix?: ValuePath; readFlat?: boolean; children: ReactNode }) {
   const form = useForm();
@@ -171,16 +171,16 @@ function KeepaliveScope({ prefix = KEEPALIVE, readFlat = false, children }: { pr
         // The control's own change to the key wins (the flat key is removed); otherwise the flat value moves.
         const controlled = changes.some((change) => change.path[0] === key);
         if (!controlled) moves.push(setAs(form, [flat], [...KEEPALIVE, key]));
-        // A flat `false` the collector ignored takes effect once it is in `keepalive` (Ruling 47).
+        // A flat `false` the collector ignored takes effect once it is in `keepalive`.
         const nowOff = !controlled && key === "enabled" && form.read([flat]).value === false && form.read([...KEEPALIVE, key]).value !== false;
-        // A key the collector doesn't refuse beside `keepalive` goes without the reason (Ruling 48c).
+        // A key the collector doesn't refuse beside `keepalive` goes without the reason.
         const accepted = isAcceptedBeside(flat, form.read([flat]).value);
         const message = controlled
           ? (accepted ? removedNoOpToast : removedToast)(flat)
           : (accepted ? movedNoOpToast : movedToast)(flat);
         moved.push(nowOff ? `${message}${NOW_OFF_TOAST}` : message);
       }
-      // Only flat keys removed, none moved in: a change emptying the block takes it (never `keepalive: {}`, final ruling F5).
+      // Only flat keys removed, none moved in: a change emptying the block takes it (never `keepalive: {}`).
       const movesIn = moves.some((change) => !("remove" in change));
       const pruned = !movesIn && emptiesBlock(block, changes);
       const result = form.apply(pruned ? [{ path: KEEPALIVE, remove: true }, ...moves] : [...own, ...moves]);
@@ -197,7 +197,7 @@ function KeepaliveScope({ prefix = KEEPALIVE, readFlat = false, children }: { pr
  * there and `keepalive` isn't. Beside a `keepalive` section it writes
  * `keepalive.idle_timeout` (removing the flat key), and shows the flat key
  * while there is one: it overrides `keepalive.idle_timeout`, a zero one too
- * (`server.go:235-239`; final ruling F5).
+ * (`server.go:235-239`).
  */
 function IdleTimeout() {
   const form = useForm();
@@ -214,7 +214,7 @@ function IdleTimeout() {
  * Keep-Alives at `keepalive.enabled`, as the collector reads it: a flat
  * `keep_alives_enabled: false` with no `keepalive` section is ignored
  * (`server.go:197-244`), so the box shows ticked, with `IGNORED_FLAT_HINT`;
- * unticking writes `keepalive.enabled: false` with the move (Ruling 47).
+ * unticking writes `keepalive.enabled: false` with the move.
  */
 function KeepAlivesBox() {
   const form = useForm();

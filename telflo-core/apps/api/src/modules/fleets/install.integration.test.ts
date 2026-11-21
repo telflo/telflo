@@ -33,8 +33,8 @@ import type * as CatalogueRepository from "../collector-catalogue/repositories/c
 import type * as PublishedVersionRepository from "../configurations/repositories/published-version-repository.js";
 
 /**
- * A test's changes to what the repositories answer (Ruling 47's cases the
- * catalogue the tests share can't hold: another distribution's version, a
+ * A test's changes to what the repositories answer (the cases the
+ * catalog the tests share can't hold: another distribution's version, a
  * version without an arch's binaries), cleared before each test.
  */
 const overrides = vi.hoisted(() => ({
@@ -79,12 +79,12 @@ vi.mock("../collector-catalogue/repositories/collector-catalogue-repository.js",
   };
 });
 
-// The opamp-server every server needs (D11b decision 8): this file's own fake.
+// The opamp-server every server needs: this file's own fake.
 const opamp = useFakeOpampServer();
 
 const csrfHeaders = { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE };
 const PASSWORD = "a-sufficiently-long-password";
-/** Ruling 11's archive check: nothing a placeholder could still be. */
+/** The archive check: nothing a placeholder could still be. */
 const LEFTOVER = /\$\{[A-Z_][A-Z0-9_]*\}/;
 
 /**
@@ -109,10 +109,9 @@ const YAML = [
 ].join("\n");
 
 /**
- * A Kubernetes group's version (D17d-2 Preflight ruling 4): YAML's
- * variables, the four the chart sets itself, and a YAML 1.1 word (`ON`),
- * which the facts offer like any other (the platform's chart quotes the
- * keys: D18 decision 23).
+ * A Kubernetes group's version: YAML's variables, the four the chart sets
+ * itself, and a YAML 1.1 word (`ON`), which the facts offer like any other
+ * (the platform's chart quotes the keys).
  */
 const KUBERNETES_YAML = [
   YAML.trimEnd(),
@@ -132,8 +131,7 @@ interface Call {
 }
 
 /**
- * D17c-1 decisions 34 to 39 and 47, Preflight rulings 11, 12 and 14: an
- * install's facts and a Linux bundle, against Postgres through the API as
+ * An install's facts and a Linux bundle, against Postgres through the API as
  * its own role, with the OpenAPI-checked fake as the opamp-server and the
  * repository's templates (vitest.setup.ts's TELFLO_INSTALL_TEMPLATES_DIR).
  */
@@ -259,7 +257,7 @@ describe("the install routes", () => {
       payload: { organizationId: organization.id },
     });
     expect(switched.statusCode).toBe(200);
-    // A no-op when the sign-in already landed there (D36-1 decision 56): no new cookie, the token sent stands.
+    // A no-op when the sign-in already landed there: no new cookie, the token sent stands.
     return { organizationId: organization.id, person: { userId: account.user.id, email: account.user.email, access: (switched.headers["set-cookie"] === undefined ? cookieValue(signIn, "telflo_access") : cookieValue(switched, "telflo_access")) } };
   };
 
@@ -288,7 +286,7 @@ describe("the install routes", () => {
     return { fleetId: body.fleet.id, defaultGroupId: body.defaultGroup.id, label, bearers: [body.tokens.default.bearer, body.tokens.rotate.bearer] };
   };
 
-  /** A configuration's version published as D11b leaves one (the platform's rows and the opamp-server's copy). */
+  /** A configuration's version published as a publish leaves one (the platform's rows and the opamp-server's copy). */
   const publishedVersion = async (organizationId: string, creatorUserId: string, collectorVersion = "0.162.0", yaml = YAML) => {
     const configuration = await addConfiguration(ownerDb, { organizationId, created_by_user_id: creatorUserId, name: `nginx-logs-${randomUUID()}` });
     const version = await addConfigurationVersion(ownerDb, {
@@ -354,12 +352,12 @@ describe("the install routes", () => {
   });
 
   /**
-   * D17d-2's world: an admin with a Kubernetes-supervisor fleet whose Agent
-   * (the Default group, never saved: no settings), Cluster (namespace
-   * observability) and gateway traces-sampling (namespace tracing, 3
-   * replicas, two volumes) are assigned a published version of v0.162.0
-   * reading KUBERNETES_YAML, and a gateway logs-pool, unassigned, with no
-   * replicas stored.
+   * The Kubernetes world: an admin with a Kubernetes-supervisor fleet whose
+   * Agent (the Default group, never saved: no settings), Cluster (namespace
+   * observability) and gateway traces-sampling (namespace tracing, 3 replicas,
+   * two volumes) are assigned a published version of v0.162.0 reading
+   * KUBERNETES_YAML, and a gateway logs-pool, unassigned, with no replicas
+   * stored.
    */
   const aKubernetesWorld = async () => {
     const { organizationId, person: admin } = await member("admin");
@@ -419,7 +417,7 @@ describe("the install routes", () => {
 
   // -------------------------------------------------------------------------
 
-  describe("the install's facts (decision 38)", () => {
+  describe("the install's facts", () => {
     it.each(["admin", "contributor"] as const)("answers a %s the image, endpoint, collector, variables and mounts, no-store and no bearer", async (role) => {
       const world = await aWorld();
       const response = await send(world[role], "GET", factsPath(world.organizationId, world.fleetId, world.defaultGroupId));
@@ -455,7 +453,7 @@ describe("the install routes", () => {
       });
     });
 
-    it("says when the group's mounts can't be read (Ruling 62): another client's \"telflo\" shape is no mounts, and mountsReadable false", async () => {
+    it("says when the group's mounts can't be read: another client's \"telflo\" shape is no mounts, and mountsReadable false", async () => {
       const world = await aWorld();
       // Written to the opamp-server directly: the platform's own write refuses a "telflo" it can't read.
       const written = await opamp.client.updateCollectorGroup(world.organizationId, world.fleetId, world.defaultGroupId, {
@@ -467,8 +465,8 @@ describe("the install routes", () => {
       expect(response.json()).toMatchObject({ mounts: [], mountsReadable: false, groupId: world.defaultGroupId });
     });
 
-    // A Kubernetes-supervisor fleet's group answers its Helm facts (D17d-2 Preflight ruling 5): below.
-    it("refuses, in ruling 14's order: an unknown fleet, an archived one", async () => {
+    // A Kubernetes-supervisor fleet's group answers its Helm facts: below.
+    it("refuses, in order: an unknown fleet, an archived one", async () => {
       const world = await aWorld();
       expectRefusal(await send(world.admin, "GET", factsPath(world.organizationId, randomUUID(), world.defaultGroupId)), 404, "fleet_not_found");
       calls = [];
@@ -544,8 +542,8 @@ describe("the install routes", () => {
 
   // -------------------------------------------------------------------------
 
-  describe("a Kubernetes group's Helm facts (D17d-2 decision 15; Preflight rulings 1 to 5)", () => {
-    // D18 decisions 9 and 10: the platform's own chart and image, the settings' defaults.
+  describe("a Kubernetes group's Helm facts", () => {
+    // The platform's own chart and image, the settings' defaults.
     const CHART = { chartReference: "oci://ghcr.io/telflo/telflo/charts/supervisor-collector", chartVersion: "0.1.0", imageRepository: "ghcr.io/telflo/telflo/collector" };
     const SERVER_FACTS = {
       imageTag: "ghcr.io/telflo/telflo/collector:0.162.0",
@@ -555,7 +553,7 @@ describe("the install routes", () => {
       envVarNames: ["BACKEND_ENDPOINT", "NGINX_ENV", "BACKEND_API_KEY", "ON"],
     };
 
-    it("answers a Kubernetes group's Helm facts: the Agent before its first save (telflo-collectors, no volumes), the Cluster, a gateway with replicas and volumes, the chart settings, the fleet's fullnameOverride (D18), no-store, no bearer", async () => {
+    it("answers a Kubernetes group's Helm facts: the Agent before its first save (telflo-collectors, no volumes), the Cluster, a gateway with replicas and volumes, the chart settings, the fleet's fullnameOverride, no-store, no bearer", async () => {
       const world = await aKubernetesWorld();
       const facts = async (groupId: string, on = server) => {
         const response = await on.inject({
@@ -574,7 +572,7 @@ describe("the install routes", () => {
       expect(await facts(world.agentId)).toEqual({
         ...SERVER_FACTS,
         groupId: world.agentId,
-        // D18 Preflight ruling 10: the override checked against THIS fleet's id (the facts carry none).
+        // The override checked against THIS fleet's id (the facts carry none).
         helm: { ...CHART, release: "telflo-node", fullnameOverride: `${world.fleetId.slice(0, 8)}-default`, role: "node", namespace: "telflo-collectors", replicas: null, volumes: [] },
       });
       expect(operations()).toEqual(["getFleet", "getCollectorGroup"]);
@@ -624,7 +622,7 @@ describe("the install routes", () => {
       expectRefusal(await send(world.admin, "GET", factsPath(world.organizationId, world.fleetId, world.agentId)), 409, "fleet_archived");
     });
 
-    // D18 decision 21; Preflight rulings 10 to 12: two fleets' Agents and Clusters share a cluster under their own names.
+    // Two fleets' Agents and Clusters share a cluster under their own names.
     it("names each fleet's Agent and Cluster by that fleet's id, never another's (fullnameOverride), and no gateway", async () => {
       const overrides = async (world: Awaited<ReturnType<typeof aKubernetesWorld>>) => {
         const of = async (groupId: string) => {
@@ -677,8 +675,8 @@ describe("the install routes", () => {
       const world = await aKubernetesWorld();
       const response = await send(world.admin, "GET", factsPath(world.organizationId, world.fleetId, world.gatewayId));
       expect(response.statusCode).toBe(200);
-      // POD_NAMESPACE, POD_NAME, NODE_NAME and HOST_IP are the chart's own (its env beats envFrom); a YAML word is
-      // offered like any other (D18 decision 23); the reserved and the defaulted as a server group's.
+      // POD_NAMESPACE, POD_NAME, NODE_NAME and HOST_IP are the chart's own (its env beats envFrom); a
+      // YAML word is offered like any other; the reserved and the defaulted as a server group's.
       expect(response.json<{ envVarNames: string[] }>().envVarNames).toEqual(["BACKEND_ENDPOINT", "NGINX_ENV", "BACKEND_API_KEY", "ON"]);
       // A server group of the same version offers them all (the chart's names are only a Helm install's).
       const serverWorld = await aWorld();
@@ -709,7 +707,7 @@ describe("the install routes", () => {
     });
   });
 
-  describe("the Linux bundle (decision 39)", () => {
+  describe("the Linux bundle", () => {
     it("All In One: a gzipped tar named by the method and arch, no-store, nosniff; its files and modes; no bearer, label or placeholder left", async () => {
       const world = await aWorld();
       const response = await send(world.contributor, "POST", bundlePath(world.organizationId, world.fleetId, world.defaultGroupId), allInOne());
@@ -998,7 +996,7 @@ describe("the install routes", () => {
       expect(await auditRows(world.organizationId)).toEqual([]);
     });
 
-    it("refuses another distribution's version (the image and the bundles are otelcol-contrib's), facts and bundle alike: Ruling 47", async () => {
+    it("refuses another distribution's version (the image and the bundles are otelcol-contrib's), facts and bundle alike", async () => {
       const world = await aWorld();
       overrides.distribution = "probe-distribution";
       const message = "Collector distribution probe-distribution can't be installed here. Publish a version built for otelcol-contrib, then assign it.";
@@ -1012,7 +1010,7 @@ describe("the install routes", () => {
       expect(await auditRows(world.organizationId)).toEqual([]);
     });
 
-    it("refuses an arch the catalogue has no binaries of, before rendering, and takes the other: Ruling 47", async () => {
+    it("refuses an arch the catalog has no binaries of, before rendering, and takes the other", async () => {
       const world = await aWorld();
       overrides.withoutPlatform = "linux_arm64";
       const path = bundlePath(world.organizationId, world.fleetId, world.defaultGroupId);
@@ -1030,7 +1028,7 @@ describe("the install routes", () => {
       expect((await send(world.admin, "GET", factsPath(world.organizationId, world.fleetId, world.defaultGroupId))).statusCode).toBe(200);
     });
 
-    it("spends a read on the facts and a write on the bundle (Preflight ruling 14)", async () => {
+    it("spends a read on the facts and a write on the bundle", async () => {
       const world = await aWorld();
       const go = (on: FastifyInstance, method: "GET" | "POST", url: string, payload?: unknown) =>
         on.inject({ method, url, headers: csrfHeaders, cookies: { telflo_access: world.admin.access }, ...(payload === undefined ? {} : { payload: payload as Record<string, unknown> }) });

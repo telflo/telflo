@@ -5,7 +5,7 @@ import { COMPARE_PREFILLS_FIXTURE_PATH, comparePrefillsFixture, serializedCompar
 // `npm run fixture:compare-prefills --workspace @telflo/web`: writes the
 // fixture of the OTTL Compare's "Create an OTTL rule" writes
 // (compare-prefills-fixture.ts says what it holds) from diff-rule-detection.ts
-// as it is today. Run by tsx (Ruling 24).
+// as it is today. Run by tsx.
 const fixture = comparePrefillsFixture();
 const text = serializedComparePrefillsFixture(fixture);
 writeFileSync(COMPARE_PREFILLS_FIXTURE_PATH, text);

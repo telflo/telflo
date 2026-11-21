@@ -14,11 +14,11 @@ import { useEditorStore } from "~/lib/stores/editor-store.js";
 import { builderStore, componentNamed, openText } from "~/test/builder-store.js";
 
 /*
- * PipelineListField (D9d Task 3; decision 8; Preflight ruling 12):
- * a pipeline multi-select over a list path. Rows show the text's
- * names (an ineligible one as written, one not on the canvas "(not found)"),
- * choosing writes the item (and the store wires the receiver), Add holds a
- * row until a pipeline is chosen, and no pipeline name reaches an attribute.
+ * PipelineListField: a pipeline multi-select over a list path. Rows show the
+ * text's names (an ineligible one as written, one not on the canvas "(not
+ * found)"), choosing writes the item (and the store wires the receiver), Add
+ * holds a row until a pipeline is chosen, and no pipeline name reaches an
+ * attribute.
  */
 
 const TEXT = `receivers:
@@ -104,7 +104,7 @@ async function choose(user: UserEvent, row: HTMLElement, name: string) {
   await user.click(screen.getByRole("option", { name }));
 }
 
-/** No attribute anywhere on the page holds a pipeline name (decision 13). */
+/** No attribute anywhere on the page holds a pipeline name. */
 function expectNoNameInAttributes() {
   for (const element of document.body.querySelectorAll("*")) {
     for (const attribute of element.attributes) {
@@ -113,7 +113,7 @@ function expectNoNameInAttributes() {
   }
 }
 
-describe("PipelineListField (D9d Task 3)", () => {
+describe("PipelineListField", () => {
   it("shows each row as written: an ineligible pipeline as it is, one not on the canvas as (not found)", async () => {
     const user = userEvent.setup();
     renderField(<Field path={["default_pipelines"]} />);
@@ -130,7 +130,7 @@ describe("PipelineListField (D9d Task 3)", () => {
     expect(screen.getByText("Default Pipelines")).toBeInTheDocument();
   });
 
-  it("puts no pipeline name in any attribute or option value, for an ineligible and a stale value too (Preflight ruling 12)", async () => {
+  it("puts no pipeline name in any attribute or option value, for an ineligible and a stale value too", async () => {
     const user = userEvent.setup();
     renderField(<Field path={["default_pipelines"]} />);
     expectNoNameInAttributes();
@@ -182,7 +182,7 @@ describe("PipelineListField (D9d Task 3)", () => {
     expect(text()).toContain("    default_pipelines: [traces/out, logs/other, traces/b] # defaults\n");
     expect(receiversOf("traces/b")).toEqual(["otlp", "routing"]);
     expect(builderStore().history.past).toHaveLength(before + 1);
-    // Inside ph-no-capture: it names a pipeline (Ruling 301).
+    // Inside ph-no-capture: it names a pipeline.
     expect(toast.info).toHaveBeenCalledWith("Added routing to the receivers of traces/b.", { className: "ph-no-capture" });
     expect(rows().map((row) => row.textContent)).toEqual(["traces/out", "logs/other", "traces/b"]);
   });
@@ -214,10 +214,8 @@ describe("PipelineListField (D9d Task 3)", () => {
   });
 
   /*
-   * D9d Ruling 33a: the held row belongs to its list's length. This test
-   * replaces 7be9be6's "a held row stays through a write elsewhere in the
-   * form, and goes when its own list changes, its length kept", whose last
-   * case (another row chosen anew) now keeps it.
+   * The held row belongs to its list's length: another row chosen anew
+   * keeps it.
    */
   it("a held row stays through another row chosen anew, a write elsewhere and their undo; it goes when its list's length changes (a Remove, an undo, the YAML box)", async () => {
     const user = userEvent.setup();
@@ -324,7 +322,7 @@ describe("PipelineListField (D9d Task 3)", () => {
     ).toBeInTheDocument();
   });
 
-  it("a list it can't show is read-only with D9b's hint", () => {
+  it("a list it can't show is read-only with the unshowable-value hint", () => {
     renderField(<Field path={["table", 1, "pipelines"]} label="Target Pipelines" />);
     expect(screen.queryAllByRole("combobox")).toHaveLength(0);
     expect(screen.getByText(UNSHOWABLE_VALUE_MESSAGE)).toBeInTheDocument();

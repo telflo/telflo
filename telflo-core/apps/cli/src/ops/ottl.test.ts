@@ -7,7 +7,7 @@ import {
 } from "@telflo/contracts";
 import { buildLintBody, MAXIMUM_EXPRESSION_LENGTH, MAXIMUM_EXPRESSIONS, OTTL_CONTEXTS, OTTL_KINDS, renderLint, splitExpressions } from "./ottl.js";
 
-/* OTTL lint's body and rendering (D27 decision 26); the copied constants against the contract (Preflight ruling 23). */
+/* OTTL lint's body and rendering; the copied constants against the contract. */
 
 describe("the copied constants (drift)", () => {
   it("are the contract's contexts and limit; every reply kind but condition and statement is a --kind", () => {
@@ -41,7 +41,7 @@ describe("splitExpressions", () => {
 });
 
 describe("renderLint", () => {
-  it("strips control characters from every reply string (Ruling 237)", () => {
+  it("strips control characters from every reply string", () => {
     const e = "\u001b]8;;x\u0007";
     const text = renderLint({
       valid: false,

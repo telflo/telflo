@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { decodeFileText, parseJsonText, prettyPrint, prettyPrintParsed, splitTopLevelJsonDocs, toCanonicalFormat } from "./json-format.js";
 
-/* The JSON formatting for Task 10's viewers: how it reads, and puts back, a file's JSON. */
+/* The JSON formatting for the test file viewers: how it reads, and puts back, a file's JSON. */
 
 describe("prettyPrint", () => {
   it("indents one document by two", () => {
@@ -19,7 +19,7 @@ describe("prettyPrint", () => {
   });
 });
 
-describe("parseJsonText and prettyPrintParsed (Compare's one parse, D15b Preflight ruling 8)", () => {
+describe("parseJsonText and prettyPrintParsed (Compare's one parse)", () => {
   it("reads one document, NDJSON's documents (blank lines skipped), or neither", () => {
     expect(parseJsonText(' [1,{"b":2}] ')).toEqual({ format: "single", document: [1, { b: 2 }] });
     expect(parseJsonText('{"a":1}\r\n\n{"b":2}\n')).toEqual({ format: "ndjson", documents: [{ a: 1 }, { b: 2 }] });

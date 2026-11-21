@@ -3,10 +3,10 @@ import { describe, expect, it } from "vitest";
 import { API_TOKEN_PATTERN, API_TOKEN_PREFIX_PATTERN } from "@telflo/contracts";
 import { apiTokenHash, mintApiToken } from "./tokens.js";
 
-// A token is a secret (D22 decision 48): these tests compare it as
-// booleans and lengths, so a failure never prints one.
+// A token is a secret: these tests compare it as booleans and lengths, so a
+// failure never prints one.
 
-describe("an API token (decision 7)", () => {
+describe("an API token", () => {
   it("mints tf_ and 43 base64url characters from 32 random bytes, its hash the SHA-256 hex of the whole token, its prefix the first 11 characters", () => {
     const { token, tokenHash, tokenPrefix } = mintApiToken();
 

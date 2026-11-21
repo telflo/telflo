@@ -9,22 +9,21 @@ import type { FleetRowAction } from "./FleetRowActions.js";
 import { FLEET_TYPE_LABELS } from "./FleetsTable.js";
 
 /*
- * A fleet's page's header (D17a decision 19; ADR 0018): the back link
- * "Fleets", the label as the heading, the "Active"/"Archived" badge and the
- * "Created {date}" line. In the D17a Parity Notes:
+ * A fleet's page's header: the back link "Fleets", the label as the
+ * heading, the "Active"/"Archived" badge and the "Created {date}" line. Its
+ * details:
  * - the fleet's type beside the badge ("Supervisor", "K8s Supervisor", the
- *   list's words), as the one route serves every type (decision 7);
- * - the actions are the list's (decision 3): Rename, Archive or Unarchive,
- *   and Delete, shown for an archived fleet too (Unarchive and Delete). They
- *   read as words, so their names hold no label;
- * - an active server fleet's "Install collector" (D17c-1 decisions 13 and
- *   44; Preflight rulings 19, 21 and 22: outline, TerminalSquare, before
- *   Rename), opening the install dialog for the Default group; and, once
- *   the fleet has collectors, "Setup guide" (ghost, ListChecks, a toggle
- *   with `aria-pressed`, no `title`), which shows and hides the setup
+ *   list's words), as the one route serves every type;
+ * - the actions are the list's: Rename, Archive or Unarchive, and Delete,
+ *   shown for an archived fleet too (Unarchive and Delete). They read as
+ *   words, so their names hold no label;
+ * - an active server fleet's "Install collector" (outline, TerminalSquare,
+ *   before Rename), opening the install dialog for the Default group; and,
+ *   once the fleet has collectors, "Setup guide" (ghost, ListChecks, a
+ *   toggle with `aria-pressed`, no `title`), which shows and hides the setup
  *   checklist. The route passes them only for an active fleet: a
- *   Kubernetes-supervisor fleet's reads "Install with Helm" (D17d-2
- *   decision 23), opening the Helm install dialog;
+ *   Kubernetes-supervisor fleet's reads "Install with Helm", opening the
+ *   Helm install dialog;
  * - the date by `formatDateTime` (en-US, the same in every browser), never
  *   the browser's `toLocaleString()`;
  * - "Fleet not found" says "It may have been deleted, or you may not have

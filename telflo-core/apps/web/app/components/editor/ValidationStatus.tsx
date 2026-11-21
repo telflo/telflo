@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { componentPositions, type EditorPosition } from "~/lib/editor/component-position.js";
 import { selectCollectorValidation, useEditorStore } from "~/lib/stores/editor-store.js";
 
-/** The bar's texts (D13b decisions 4 and 14). */
+/** The bar's texts. */
 export const VALIDATING_TEXT = "validating config…";
 export const UNAVAILABLE_TEXT = "validation unavailable · config not checked";
 
@@ -21,7 +21,7 @@ export function retiredText(collectorVersion: string): string {
   return `not checked · v${collectorVersion} is retired — pick an offered version to check this config`;
 }
 
-/** The playground's 429 (D31-1 decision 3): the seconds left until it checks again, counting down. */
+/** The playground's 429: the seconds left until it checks again, counting down. */
 export function checkingPausedText(seconds: number): string {
   return `Checking paused — try again in ${seconds} s`;
 }
@@ -50,15 +50,13 @@ const ROW_CLASS = "flex w-full items-center gap-2 px-3 py-2 font-mono text-[11px
 const TOGGLE_CLASS = `${ROW_CLASS} text-left transition-colors hover:bg-accent/60`;
 
 /**
- * The collector validator's status bar, under the YAML editor (D13b
- * decisions 3, 4, 7 and 14), for the text
+ * The collector validator's status bar, under the YAML editor, for the text
  * on screen (`selectCollectorValidation`). Nothing while idle; then
  * `validating config…` with a spinner, `config valid · v0.162.0`,
  * `{n} error(s) · v0.162.0` with a chevron and its list collapsed until
  * clicked, amber `validation unavailable · config not checked` with the
  * reason beneath (the playground's 429: "Checking paused — try again in N
- * s", counting down; D31-1 decision 3), or amber `not checked · v… is
- * retired — …`. The
+ * s", counting down), or amber `not checked · v… is retired — …`. The
  * requirements row, collapsible, shows with a valid answer and an invalid
  * one alike; requirements are never errors.
  *
@@ -68,9 +66,9 @@ const TOGGLE_CLASS = `${ROW_CLASS} text-left transition-colors hover:bg-accent/6
  *
  * It sits inside the YAML tab's replay-blocked container (`ph-no-capture`).
  * The messages echo the configuration's values, so no attribute here holds
- * a message, a path or any text of the configuration (ADR 0024: replay
- * can't mask attributes): they are text, and every button's name is its
- * text. The unavailable reason is never in a `title`.
+ * a message, a path or any text of the configuration (replay can't mask
+ * attributes): they are text, and every button's name is its text. The
+ * unavailable reason is never in a `title`.
  */
 export function ValidationStatus({ onJump }: { onJump: (position: EditorPosition) => void }) {
   const validation = useEditorStore(selectCollectorValidation);

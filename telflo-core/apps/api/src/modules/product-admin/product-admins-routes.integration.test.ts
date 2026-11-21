@@ -29,14 +29,13 @@ import { UNCALLED_OTELCOL_VALIDATOR } from "../../testing/otelcol-validator.js";
 import { hashPassword } from "../identity/password.js";
 
 /*
- * The Product admins routes (D29 decisions 5, 27, 28 and 44's grant
- * bullet; Preflight ruling 7; Rulings 257 and 258) through the real server
- * and database: every answer of decision 28 (the list; a grant 201, 200 when
- * already one, 404 for no live, verified human — a service account, an
- * unverified person, a deleted one, nobody — 400 for a malformed address;
- * a removal 204, 404 when not one or the id isn't canonical, 409 for the
- * last admin; 429 past the writes' limit), each `cache-control: no-store`,
- * and the audit rows each writes (ids and fixed words only).
+ * The Product admins routes through the real server and database: every
+ * answer of the routes (the list; a grant 201, 200 when already one, 404
+ * for no live, verified human — a service account, an unverified person, a
+ * deleted one, nobody — 400 for a malformed address; a removal 204, 404
+ * when not one or the id isn't canonical, 409 for the last admin; 429 past
+ * the writes' limit), each `cache-control: no-store`, and the audit rows
+ * each writes (ids and fixed words only).
  *
  * The races go through the routes too, a connection of the tables' owner
  * holding the rows' locks while the requests queue behind it:
@@ -52,7 +51,7 @@ import { hashPassword } from "../identity/password.js";
  * tenancy/product-admin-functions.integration.test.ts's.
  *
  * Seeded addresses are made-up @example.com fixtures; emails are compared
- * as booleans and never printed (ADR 0024, decision 41).
+ * as booleans and never printed.
  */
 
 const opamp = useFakeOpampServer();
@@ -266,7 +265,7 @@ describe("the Product admins routes", () => {
       }
     });
 
-    it("finds a person whose stored email is mixed-case by its lower-cased address (the function's lower(email)): 201, the flag set (Ruling 263)", async () => {
+    it("finds a person whose stored email is mixed-case by its lower-cased address (the function's lower(email)): 201, the flag set", async () => {
       const ana = await signedInAdmin();
       const created = await createUserWithOrganization(databases.ownerDb, {
         user: { email: `Mixed.Case-${randomUUID()}@Example.test`, password_hash: passwordHash },
@@ -326,7 +325,7 @@ describe("the Product admins routes", () => {
       ]);
     });
 
-    it("refuses the last product admin's removal of themselves 409 last_product_admin, in decision 5's words; allows it while another remains (204, audited self), after which the next request is 403", async () => {
+    it("refuses the last product admin's removal of themselves 409 last_product_admin, in the contracts' words; allows it while another remains (204, audited self), after which the next request is 403", async () => {
       const ana = await signedInAdmin();
       expect(errorOf(await send("DELETE", `${ROUTE}/${ana.userId}`, ana.access))).toEqual({
         status: 409,
@@ -354,7 +353,7 @@ describe("the Product admins routes", () => {
   });
 
   describe("the races, through the routes", () => {
-    /** Resolves once `count` connections wait on a lock: the requests are queued behind the owner's. */
+    /** Resolves once `count` connections wait on a lock: the requests are queued behind the tables' owner's. */
     const waitingOnLocks = async (count: number) => {
       // A hang guard (about 2 s), inside the test's own timeout: a queued request shows up within milliseconds.
       for (let attempt = 0; attempt < 200; attempt += 1) {
@@ -419,7 +418,7 @@ describe("the Product admins routes", () => {
       ]);
     });
 
-    it("answers a grant 404 product_admin_target_not_found when the target is deleted while it waits on the caller's and the target's locks: the flag not set, audited refused not_found (Ruling 263)", async () => {
+    it("answers a grant 404 product_admin_target_not_found when the target is deleted while it waits on the caller's and the target's locks: the flag not set, audited refused not_found", async () => {
       const ana = await signedInAdmin();
       const cara = await person();
       const response = await behindTheOwner(
@@ -481,7 +480,7 @@ describe("the Product admins routes", () => {
       const ben = await person({ isProductAdmin: true });
       const cara = await person();
       expect((await send("POST", ROUTE, ana.access, { email: "not-an-address" }, limitedServer)).statusCode).toBe(400);
-      // Refused by canonicalIdOf before the limiter counts it (Ruling 263).
+      // Refused by canonicalIdOf before the limiter counts it.
       expect(errorOf(await send("DELETE", `${ROUTE}/not-a-uuid`, ana.access, undefined, limitedServer))).toEqual({
         status: 404,
         code: "product_admin_not_found",

@@ -35,10 +35,10 @@ Thumbs.db
 *.log
 npm-debug.log*
 
-# Subagent-driven-development scratch (ledger, briefs, review packages)
+# Development scratch files
 .superpowers/
 
-# The release pipeline's private tools (scripts/release/tools.sh, D36-2)
+# The release pipeline's private tools (scripts/release/tools.sh)
 .tools/
-# The Compose install's generated secrets (deploy/compose/setup.sh, D36-2)
+# The Compose install's generated secrets (deploy/compose/setup.sh)
 deploy/compose/secrets/

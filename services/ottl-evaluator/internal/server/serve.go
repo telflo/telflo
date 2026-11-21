@@ -1,7 +1,5 @@
-// New in D15a Task 2 (plan Preflight rulings 10, 12 and 13), after
-// the opamp-server's serve: the serve and healthcheck subcommands. The
-// follow-up to Task 2's review (the controller's Ruling 33) turned off the
-// HTTP server's general OPTIONS handler (newHTTPServer).
+// After the opamp-server's serve: the serve and healthcheck subcommands.
+// The HTTP server's general OPTIONS handler is off (newHTTPServer).
 
 package server
 
@@ -81,10 +79,10 @@ func Serve(ctx context.Context, getenv func(string) string, environ []string, lo
 }
 
 // newHTTPServer is serve's HTTP server around handler. Its general OPTIONS
-// handler is off (the controller's Ruling 33): Go's own answers `OPTIONS *`
-// with 200 before any handler runs, so it would pass by the secret's check
-// (and by the request's log line); with it off, `OPTIONS *` reaches the
-// handler and is refused like any other request.
+// handler is off: Go's own answers `OPTIONS *` with 200 before any handler
+// runs, so it would pass by the secret's check (and by the request's log
+// line); with it off, `OPTIONS *` reaches the handler and is refused like
+// any other request.
 func newHTTPServer(handler http.Handler) *http.Server {
 	return &http.Server{
 		Handler:                      handler,

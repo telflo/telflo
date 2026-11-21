@@ -1,7 +1,6 @@
-"""The validate route's body, limits and failures (D13b spec decisions 10 and
-11): a body that isn't a JSON object is 400 (a list too,
-never a 500), the 2 MiB limit is enforced while the body is read, the wait for a
-slot is bounded."""
+"""The validate route's body, limits and failures: a body that isn't a JSON
+object is 400 (a list too, never a 500), the 2 MiB limit is enforced while the
+body is read, the wait for a slot is bounded."""
 
 from __future__ import annotations
 
@@ -58,15 +57,15 @@ def test_a_body_without_exactly_a_non_empty_yaml_string_is_400(client: TestClien
 @pytest.mark.parametrize(
     "body",
     [
-        b'{"yaml":' + b"[" * 100_000 + b"]" * 100_000 + b"}",  # the reviewer's probe
+        b'{"yaml":' + b"[" * 100_000 + b"]" * 100_000 + b"}",  # too deep to decode
         b"[" * 100_000,
         b'{"a":' * 50_000 + b"1" + b"}" * 50_000,
     ],
     ids=["deep-list-in-yaml", "deep-unclosed-list", "deep-objects"],
 )
 def test_a_body_nested_deeper_than_the_decoder_recurses_is_400(binary_dir: Path, body: bytes) -> None:
-    """D13b ruling 26: `json.loads` raises RecursionError, not ValueError,
-    and the answer was a plain-text 500 outside the Error envelope."""
+    """`json.loads` raises RecursionError, not ValueError, which would
+    otherwise answer a plain-text 500 outside the Error envelope."""
     write_collector(binary_dir, "0.162.0", PASSING_COLLECTOR)
     with TestClient(create_app(make_settings(binary_dir)), raise_server_exceptions=False) as client:
         resp = client.post(VALIDATE_URL, content=body, headers={**auth_headers(), "Content-Type": "application/json"})
@@ -78,8 +77,8 @@ def test_a_body_nested_deeper_than_the_decoder_recurses_is_400(binary_dir: Path,
 
 @pytest.mark.parametrize("escaped", [b"\\ud800", b"x\\udfff", b"\\udc80\\ud800y"])
 def test_a_yaml_holding_a_lone_surrogate_is_400(binary_dir: Path, tmp_path: Path, escaped: bytes) -> None:
-    """D13b ruling 38: JSON can spell a lone surrogate, which no file can
-    hold; 207bc02 answered 500 (the child couldn't write the text)."""
+    """JSON can spell a lone surrogate, which no file can hold; unchecked,
+    it would answer 500 (the child couldn't write the text)."""
     marker = tmp_path / "collector-ran"
     write_collector(binary_dir, "0.162.0", f"touch {marker}\nexit 0\n")
     with TestClient(create_app(make_settings(binary_dir)), raise_server_exceptions=False) as client:
@@ -102,7 +101,7 @@ def test_a_400_never_quotes_the_body(client: TestClient) -> None:
 
 
 # ---------------------------------------------------------------------------
-# 2 MiB, while the body is read (D20 Preflight ruling 30, re-derived on Q104)
+# 2 MiB, while the body is read
 # ---------------------------------------------------------------------------
 
 
@@ -273,7 +272,7 @@ def test_an_unexpected_failure_is_500_without_details(binary_dir: Path, monkeypa
 
 
 def test_the_answer_is_camel_case_without_raw(binary_dir: Path) -> None:
-    """Decision 11's shape: `componentPath`, and no `raw`."""
+    """The answer's shape: `componentPath`, and no `raw`."""
     write_collector(
         binary_dir,
         "0.162.0",

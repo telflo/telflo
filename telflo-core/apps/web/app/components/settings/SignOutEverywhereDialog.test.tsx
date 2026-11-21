@@ -18,10 +18,10 @@ import * as variableGroupDisplay from "~/lib/variable-group-display.js";
 import { ACCOUNT_EMAIL, held, renderUnderLayout, sessions, where } from "~/test/account.js";
 
 /*
- * "Sign out everywhere" (D21 decision 40, Preflight ruling 38): decision
- * 40's confirm, the existing DELETE, then Logout's clean-up (the handler
- * suspended until the requests in flight settle, every store cleared,
- * PostHog reset; the remembered theme kept), its toast and /login.
+ * "Sign out everywhere": its confirm, the existing DELETE, then Logout's
+ * clean-up (the handler suspended until the requests in flight settle, every
+ * store cleared, PostHog reset; the remembered theme kept), its toast and
+ * /login.
  */
 
 // PostHog's reset, watched at the analytics module's boundary.
@@ -32,7 +32,7 @@ vi.mock("~/lib/analytics.js", async (importOriginal) => ({
 }));
 
 async function openConfirm() {
-  // A staged playground edit in this browser (D31-1 decision 36): signing out removes it (Q211).
+  // A staged playground edit in this browser: signing out removes it.
   window.localStorage.setItem("telflo-playground-staged-edit", JSON.stringify({ version: 1 }));
   vi.spyOn(apiClient, "listSessions").mockResolvedValue({ items: sessions(), total: 2 });
   const user = renderUnderLayout(SessionsCard);
@@ -49,7 +49,7 @@ describe("SignOutEverywhereDialog", () => {
     useUserStore.getState().clear();
   });
 
-  it("confirms with decision 40's words, and Cancel does nothing", async () => {
+  it("confirms with its words, and Cancel does nothing", async () => {
     const deleteAllSessions = vi.spyOn(apiClient, "deleteAllSessions");
     const { user, dialog } = await openConfirm();
     expect(within(dialog).getByText("This signs you out of Telflo in every browser, this one included.")).toBeInTheDocument();
@@ -89,7 +89,7 @@ describe("SignOutEverywhereDialog", () => {
       expect(reset).toHaveBeenCalledTimes(1);
     }
     expect(analytics.signedOutLocally).toHaveBeenCalledTimes(1);
-    // The staged playground edit went with the session (Q211, Ruling 317).
+    // The staged playground edit went with the session.
     expect(window.localStorage.getItem("telflo-playground-staged-edit") !== null).toBe(false);
     expect(success).toHaveBeenCalledWith(SIGNED_OUT_EVERYWHERE_MESSAGE);
     expect(SIGNED_OUT_EVERYWHERE_MESSAGE).toBe("Signed out everywhere");

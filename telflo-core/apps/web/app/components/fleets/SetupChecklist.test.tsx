@@ -24,11 +24,10 @@ import {
 import { SetupChecklist } from "./SetupChecklist.js";
 
 /*
- * The setup checklist (D17c-1 decisions 13 and 44; Preflight rulings 20 to
- * 22): its three steps and actions, the assign step done, the waiting
- * indicator, the reopened card with "Hide setup guide", the checklist's own
- * groups read and its Assign through the group dialog (Q28: the step is
- * required, no "skip").
+ * The setup checklist: its three steps and actions, the assign step done,
+ * the waiting indicator, the reopened card with "Hide setup guide", the
+ * checklist's own groups read and its Assign through the group dialog (the
+ * step is required, no "skip").
  */
 
 const CHECKOUT: Configuration = { ...THEIRS, id: CONFIGURATION_ID, name: "checkout-otel" };
@@ -140,7 +139,7 @@ describe("SetupChecklist", () => {
     expect(screen.getByRole("button", { name: "Install" })).toBeInTheDocument();
   });
 
-  // Ruling 61 (the final review's F3): every Install here opens the Default group, which an install refuses without one.
+  // Every Install here opens the Default group, which an install refuses without one.
   it("leaves the assign step to do, with Assign, while only another group has a published version", async () => {
     groups = [collectorGroup(), gatewaysGroup()];
     serve();
@@ -184,7 +183,7 @@ describe("SetupChecklist", () => {
   });
 });
 
-describe("SetupChecklist's groups read failing (Ruling 61)", () => {
+describe("SetupChecklist's groups read failing", () => {
   it('shows "Failed to load groups" under the assign step with Try again, which reads them again', async () => {
     const { getCollectorGroups } = serve();
     getCollectorGroups.mockRejectedValueOnce(new ApiError("fleets_unavailable", "Fleets are unavailable.", { status: 503 }));
@@ -217,7 +216,7 @@ describe("SetupChecklist's groups read failing (Ruling 61)", () => {
   });
 });
 
-describe("SetupChecklist's Assign (Q28; Preflight ruling 20)", () => {
+describe("SetupChecklist's Assign", () => {
   it("opens the group dialog for the Default group, and its save reloads the checklist's groups, the Groups tab's and the fleet; the focus goes to Install", async () => {
     const { getCollectorGroups, updateCollectorGroup } = serve();
     const user = renderChecklist();
@@ -262,7 +261,7 @@ describe("SetupChecklist's Assign (Q28; Preflight ruling 20)", () => {
   });
 });
 
-// D17d-2 decision 24; Preflight ruling 29: a Kubernetes-supervisor fleet's checklist.
+// A Kubernetes-supervisor fleet's checklist.
 describe("SetupChecklist on a Kubernetes-supervisor fleet", () => {
   const kubernetesFleet = (collectors = 0) => fleetDetail({ type: "kubernetes-supervisor", summary: { ...EMPTY_SUMMARY, collectors } });
 

@@ -71,10 +71,9 @@ import { REVEAL_FAILED_MESSAGE } from "./RevealTokenDialog.js";
 import { SecretCopyBox } from "~/components/secrets/SecretCopyBox.js";
 
 /*
- * The install dialog (D17c-1 decisions 12 to 15, 40 to 43, 48, 50 and 51;
- * Preflight rulings 19 and 23 to 29; ADR 0018), one Dialog scoped to a group
- * (the fleet's Default group from the header, the empty Collectors tab and
- * the setup checklist; a group's own from its row), keyed per opening.
+ * The install dialog, one Dialog scoped to a group (the fleet's Default
+ * group from the header, the empty Collectors tab and the setup checklist; a
+ * group's own from its row), keyed per opening.
  *
  * - **Its reads** (a person's, at the opening, each under the 10 s hang
  *   guard: `useOpeningReads`; no polling): the fleet's groups first (the
@@ -85,42 +84,40 @@ import { SecretCopyBox } from "~/components/secrets/SecretCopyBox.js";
  * - **Their refusals**: `collector_group_unassigned`,
  *   `collector_group_assignment_deleted` and `collector_version_not_offered`
  *   show their words and "Assign", which opens the group dialog for the
- *   group; its save reads everything again (Q28: an install needs the
- *   group's published version). `fleet_archived` and
- *   `fleet_type_not_installable` show their words; the 503
- *   (`install_unavailable`, `fleets_unavailable`), no connection, the hang
- *   guard and a 429 show theirs with "Try again". A group gone toasts "Group
- *   not found" and closes; the fleet gone closes and the route reads it
- *   again ("Fleet not found"); the organization's or the terms' refusal
- *   closes and revalidates the layout; a session ended is silent.
+ *   group; its save reads everything again (an install needs the group's
+ *   published version). `fleet_archived` and `fleet_type_not_installable`
+ *   show their words; the 503 (`install_unavailable`, `fleets_unavailable`),
+ *   no connection, the hang guard and a 429 show theirs with "Try again". A
+ *   group gone toasts "Group not found" and closes; the fleet gone closes
+ *   and the route reads it again ("Fleet not found"); the organization's or
+ *   the terms' refusal closes and revalidates the layout; a session ended is
+ *   silent.
  * - **Method** (a Select outside the facts' body, its item values fixed
  *   ids): the container image (the default) and the four Linux bundles,
  *   each with its description.
- * - **The reveal** (Preflight ruling 24): "Reveal & copy command" checks
- *   the fields at once (their messages, nothing sent), then hands one chain
- *   to `copyTextFromPromise` within the click (Safari's rule): the tokens
- *   and the install's facts read again together (Ruling 61: the fleet
- *   archived since shows its words and the route reads the fleet again; the
- *   group deleted since toasts "Group not found" and closes; a facts change,
- *   a mount saved meanwhile, is in the command, built from the fresh facts),
- *   the valid default token, its reveal (a bearer reply, audited `viewed`),
- *   the command. The Method select is disabled meanwhile. The chain throws
- *   once the dialog has closed or the organization changed before the text
- *   is built, so a late reveal never reaches the clipboard. A read finding
- *   no valid default token, or another one than the bearer's (revoked and
- *   replaced), takes a bearer revealed earlier out of the box.
- *   One bearer per opening, shared by the
- *   container and the Linux token screen. "Copied run command"; a copy the
- *   browser refuses after the reveal: "Command revealed, but copying
- *   failed: copy it from the box above." No valid default token (all
+ * - **The reveal**: "Reveal & copy command" checks the fields at once (their
+ *   messages, nothing sent), then hands one chain to `copyTextFromPromise`
+ *   within the click (Safari's rule): the tokens and the install's facts
+ *   read again together (the fleet archived since shows its words and the
+ *   route reads the fleet again; the group deleted since toasts "Group not
+ *   found" and closes; a facts change, a mount saved meanwhile, is in the
+ *   command, built from the fresh facts), the valid default token, its
+ *   reveal (a bearer reply, audited `viewed`), the command. The Method
+ *   select is disabled meanwhile. The chain throws once the dialog has
+ *   closed or the organization changed before the text is built, so a late
+ *   reveal never reaches the clipboard. A read finding no valid default
+ *   token, or another one than the bearer's (revoked and replaced), takes a
+ *   bearer revealed earlier out of the box. One bearer per opening, shared
+ *   by the container and the Linux token screen. "Copied run command"; a
+ *   copy the browser refuses after the reveal: "Command revealed, but
+ *   copying failed: copy it from the box above." No valid default token (all
  *   revoked, at the opening or at the reveal): `NoDefaultToken`.
  * - **The download**: the fields checked as the reveal's, then one `POST
  *   …/install-bundle` ("Building…"), saved as the contracts' file name
  *   (`downloadBlob`, its anchor never in the document), "Download
  *   started", then the screen "Set the token, then run" with its own Reveal
  *   and the four lines. A 400's details show under their fields.
- * - **Quick Deploy** (D17c-2 decisions 15, 18, 30 and 32; Preflight rulings
- *   17 to 19), the Linux methods only: "Install as a systemd service"
+ * - **Quick Deploy**, the Linux methods only: "Install as a systemd service"
  *   (ticked at each opening) disables Download, its reason shown and named
  *   by `aria-describedby`; the footer is Cancel | Download | Quick Deploy.
  *   Two clicks. **"Quick Deploy"** ("Making link…") checks the fields as the
@@ -139,16 +136,16 @@ import { SecretCopyBox } from "~/components/secrets/SecretCopyBox.js";
  *   inline); `enrollment_token_default_missing` shows `NoDefaultToken`. The
  *   reveal's token refusal reads the tokens again: another valid default
  *   token (the link's revoked and replaced since it was made), or a read
- *   that fails, shows "This link's token was revoked: make a new link."
- *   (the focus on "Done"); none shows `NoDefaultToken`. With no valid default token at the
- *   opening, Quick Deploy is disabled with the words (Download kept once
- *   unticked).
- * - The organization's "Public install links" (D17d-2 decision 20;
- *   Preflight ruling 33), read with the facts and the tokens (a failed read
- *   counts as on): while off, no Quick Deploy (its place "Public install
- *   links are turned off for this organization.") and no systemd box (the
- *   service comes only with Quick Deploy), so Download is offered unticked;
- *   a create answered `public_install_links_disabled` turns it off at once.
+ *   that fails, shows "This link's token was revoked: make a new link." (the
+ *   focus on "Done"); none shows `NoDefaultToken`. With no valid default
+ *   token at the opening, Quick Deploy is disabled with the words (Download
+ *   kept once unticked).
+ * - The organization's "Public install links", read with the facts and the
+ *   tokens (a failed read counts as on): while off, no Quick Deploy (its
+ *   place "Public install links are turned off for this organization.") and
+ *   no systemd box (the service comes only with Quick Deploy), so Download
+ *   is offered unticked; a create answered `public_install_links_disabled`
+ *   turns it off at once.
  * - "Install started" (`onInstallStarted`) on a reveal's, a download's or a
  *   Quick Deploy link's success, never on opening.
  * - Focus: after a reveal, on the box's copy button (the button pressed is
@@ -160,20 +157,20 @@ import { SecretCopyBox } from "~/components/secrets/SecretCopyBox.js";
  *   answer; the bearer, the link's `url` and the command leave the state as
  *   the dialog closes (before Radix's exit animation ends), the Quick Deploy
  *   screen's title, words and masked preview kept through the animation.
- * - Privacy (decision 48; D17c-2 decision 32): the bearer and the Quick
- *   Deploy command only in a `SecretCopyBox` (`ph-no-capture`) and the
- *   clipboard; the masked previews hold neither secret; the
- *   display name, the paths, the variables' names and values and the
- *   mounts' paths inside `ph-no-capture`, never in an attribute but an
- *   input's own `value`; the group's and the configuration's names visible
- *   text only. No toast, URL or log holds any of them.
+ * - Privacy: the bearer and the Quick Deploy command only in a
+ *   `SecretCopyBox` (`ph-no-capture`) and the clipboard; the masked
+ *   previews hold neither secret; the display name, the paths, the
+ *   variables' names and values and the mounts' paths inside
+ *   `ph-no-capture`, never in an attribute but an input's own `value`; the
+ *   group's and the configuration's names visible text only. No toast, URL
+ *   or log holds any of them.
  */
 
 /** The Method select's item values (fixed ids). */
 export const INSTALL_METHOD_CHOICES = ["container", "all-in-one-amd64", "all-in-one-arm64", "own-binary-amd64", "own-binary-arm64"] as const;
 export type InstallMethodChoice = (typeof INSTALL_METHOD_CHOICES)[number];
 
-/** Each method's words in the select (decision 42; Preflight ruling 35: each with its description). */
+/** Each method's words in the select (each with its description). */
 export const INSTALL_METHOD_LABELS: Record<InstallMethodChoice, { label: string; description: string }> = {
   container: {
     label: "Container image — pull and run",
@@ -222,7 +219,7 @@ export const DOWNLOAD_FAILED_MESSAGE = "Failed to download the bundle";
 export const COPIED_MESSAGE = "Copied run command";
 export const COPY_FAILED_MESSAGE = "Command revealed, but copying failed: copy it from the box above.";
 export const DOWNLOAD_STARTED_MESSAGE = "Download started";
-/** Quick Deploy's (Preflight rulings 18 and 19). */
+/** Quick Deploy's. */
 export const QUICK_DEPLOY_FAILED_MESSAGE = "Failed to make the install link";
 export const QUICK_DEPLOY_COPIED_MESSAGE = "Copied install command";
 export const QUICK_DEPLOY_COPY_FAILED_MESSAGE = "Link made, but copying failed: copy it from the box above.";
@@ -248,10 +245,10 @@ interface TokenScreen {
 }
 
 /**
- * The Quick Deploy screen (Preflight ruling 18): the snapshot taken as the link's create was sent (the checked fields,
- * the display name trimmed) with the create's answer, its masked preview, and the command once revealed. The `url` and
- * the command are secrets: they leave the state as the dialog closes (null from then on), the rest kept so the screen
- * stays as it was through Radix's exit animation.
+ * The Quick Deploy screen: the snapshot taken as the link's create was sent (the checked fields, the display name
+ * trimmed) with the create's answer, its masked preview, and the command once revealed. The `url` and the command are
+ * secrets: they leave the state as the dialog closes (null from then on), the rest kept so the screen stays as it was
+ * through Radix's exit animation.
  */
 interface QuickDeployShot {
   method: InstallMethod;
@@ -337,7 +334,7 @@ function InstallSession({
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [tokenScreen, setTokenScreen] = useState<TokenScreen | null>(null);
 
-  // Quick Deploy (Preflight rulings 17 and 18): ticked at each opening (the session is keyed per opening).
+  // Quick Deploy: ticked at each opening (the session is keyed per opening).
   const [systemd, setSystemd] = useState(true);
   // The organization's public install links (on until a read says off).
   const [linksOn, setLinksOn] = useState(true);
@@ -363,8 +360,8 @@ function InstallSession({
 
   /**
    * What a tokens read found valid: with none, the no-default-token words show. A bearer revealed earlier in this
-   * opening leaves the box unless its token is still the valid one (Rulings 61 and 64: revoked since, or revoked and
-   * replaced, it no longer enrolls anything).
+   * opening leaves the box unless its token is still the valid one (revoked since, or revoked and replaced, it no
+   * longer enrolls anything).
    */
   const validTokenFound = (valid: EnrollmentTokenListed | undefined) => {
     setNoDefaultToken(valid === undefined);
@@ -516,13 +513,13 @@ function InstallSession({
     edited();
   };
 
-  /* The reveal (Preflight ruling 24). */
+  /* The reveal. */
 
   /**
    * The opening's bearer: the tokens read, the valid default token, its reveal. Throws CLOSED once the opening is
-   * over. With `factsOf` (the container's, Ruling 61), the install's facts are read again with the tokens: the fleet
-   * archived or the group deleted since the opening refuses (FactsRefused), and the facts read are the ones the
-   * command is built from (a mount saved meanwhile is in it).
+   * over. With `factsOf` (the container's), the install's facts are read again with the tokens: the fleet archived
+   * or the group deleted since the opening refuses (FactsRefused), and the facts read are the ones the command is
+   * built from (a mount saved meanwhile is in it).
    */
   const revealBearer = (sentIn: string, factsOf?: string): Promise<{ bearer: string; tokenId: string; facts: InstallFacts | null }> =>
     revealDefaultBearer<InstallFacts>(
@@ -584,8 +581,8 @@ function InstallSession({
     const text = revealBearer(sentIn, group.id).then((revealed) => {
       // Closed, or another organization, before the text is built: nothing reaches the clipboard.
       if (!live(sentIn)) throw CLOSED;
-      // The facts read with the tokens (Ruling 61): the command is built from them, and the dialog shows them. A
-      // variable the fresh facts no longer offer is left out, as the box (built from the same facts) leaves it.
+      // The facts read with the tokens: the command is built from them, and the dialog shows them. A variable
+      // the fresh facts no longer offer is left out, as the box (built from the same facts) leaves it.
       const fresh = revealed.facts ?? facts;
       const offered = new Set(fresh.envVarNames);
       setFactsState({ kind: "read", facts: fresh });
@@ -647,7 +644,7 @@ function InstallSession({
 
   /* The download. */
 
-  /** A download's or a Quick Deploy link's refusal (Preflight ruling 18: one mapper), the opening still on. */
+  /** A download's or a Quick Deploy link's refusal (one mapper), the opening still on. */
   const bundleRequestFailed = (failure: unknown, request: InstallBundleRequestInput, fallback: string) => {
     if (handledEverywhere(failure)) return;
     if (
@@ -706,7 +703,7 @@ function InstallSession({
     }
   };
 
-  /* Quick Deploy (Preflight rulings 17 to 19). */
+  /* Quick Deploy. */
 
   /**
    * "Quick Deploy": the fields checked as the download's (their messages, nothing sent), then the link's create only.
@@ -1090,7 +1087,7 @@ function InstallSession({
           </div>
         </DialogContent>
       </Dialog>
-      {/* Assign (Q28): the group dialog for the group; its save reads everything again. */}
+      {/* Assign: the group dialog for the group; its save reads everything again. */}
       <GroupDialog
         open={open && assignOpen}
         onOpenChange={setAssignOpen}
@@ -1107,16 +1104,16 @@ function InstallSession({
   );
 }
 
-/** The words under the Linux lines (decision 42): where the token is kept, the root path as typed. */
+/** The words under the Linux lines: where the token is kept, the root path as typed. */
 export function tokenKeptWords(rootPath: string): string {
   return `The supervisor keeps the token in ${withoutTrailingSlash(rootPath)}/opamp.env (only root can read it), so later runs need no export. It runs in the foreground; a service that starts on boot comes with Quick Deploy.`;
 }
 
 /**
- * "Set the token, then run" (decision 42): after a download, the four
- * lines (`linuxRunCommands`) to run on the host. Before the reveal they
- * show the token masked; "Reveal" (the opening's one reveal) puts the
- * bearer in, in a `SecretCopyBox`.
+ * "Set the token, then run": after a download, the four lines
+ * (`linuxRunCommands`) to run on the host. Before the reveal they show
+ * the token masked; "Reveal" (the opening's one reveal) puts the bearer
+ * in, in a `SecretCopyBox`.
  */
 function LinuxTokenScreen({
   screen,

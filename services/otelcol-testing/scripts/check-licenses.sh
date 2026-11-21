@@ -2,8 +2,7 @@
 # Fails if any Python package the tester ships carries a license that does
 # not allow redistribution. telflo ships the tester's image too, so its
 # Python dependencies follow the same rule as the npm and Go ones.
-# Only licenses on the policy's allowed list pass (ADR 0019; D13b Preflight
-# ruling 12, D14a Preflight ruling 19). A copy of the
+# Only licenses on the policy's allowed list pass. A copy of the
 # validator's check (services/otelcol-validator/scripts/check-licenses.sh),
 # changed only in its comments.
 #
@@ -30,8 +29,8 @@
 # name npm packages and are not read here.
 #
 # The image's base (python:3.12-slim), tini, the collectors and kwok's
-# binaries it bakes are not Python packages and aren't scanned here: ADR 0019 lists them as reviewed
-# components, pinned by digest and sha256.
+# binaries it bakes are not Python packages and aren't scanned here: they are
+# reviewed components, pinned by digest and sha256.
 #
 # Exits 0 when every license is allowed, 1 when one isn't, 2 when the check
 # itself can't run.

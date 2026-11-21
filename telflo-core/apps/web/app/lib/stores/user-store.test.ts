@@ -29,14 +29,14 @@ describe("useUserStore", () => {
     expect(useUserStore.getState().current).toEqual(stored);
   });
 
-  it("keeps the product-admin flag, which the layout re-seeds when it changes (D12 decision 3)", () => {
+  it("keeps the product-admin flag, which the layout re-seeds when it changes", () => {
     useUserStore.getState().setCurrent({ ...currentUser, isProductAdmin: true });
     expect(useUserStore.getState().current?.isProductAdmin).toBe(true);
     useUserStore.getState().setCurrent(currentUser);
     expect(useUserStore.getState().current?.isProductAdmin).toBe(false);
   });
 
-  it("keeps the preferences from /me (D21 decision 20)", () => {
+  it("keeps the preferences from /me", () => {
     const preferences = {
       theme: "navy",
       editor: { tabSize: 4, fontSize: 16, lineNumbers: false, minimap: true },
@@ -70,7 +70,7 @@ describe("useUserStore", () => {
     expect(useUserStore.getState().current?.organization).toEqual(currentUser.organization);
   });
 
-  it("updates an organization's name and logo in the list and as the active one (D23-2 decision 52)", () => {
+  it("updates an organization's name and logo in the list and as the active one", () => {
     const logoId = "0193a1b2-c3d4-7e5f-8a6b-7c8d9e0f1a2b";
     const other = { id: "7e6d5c4b-3a2f-4e1d-8c0b-9a8f7e6d5c4b", name: "Group", type: "group", logoId: null, role: "admin" } as const;
     useUserStore.getState().setCurrent({ ...currentUser, organizations: [...currentUser.organizations, other] });
@@ -118,7 +118,7 @@ describe("the seven keys", () => {
   });
 });
 
-describe("per-key saves (D21 decision 33, Preflight ruling 35)", () => {
+describe("per-key saves", () => {
   beforeEach(() => {
     useUserStore.getState().setCurrent(currentUser);
   });
@@ -140,7 +140,7 @@ describe("per-key saves (D21 decision 33, Preflight ruling 35)", () => {
     expect(useUserStore.getState().pendingPreferences).toEqual({});
   });
 
-  it("an earlier choice's answer never overwrites a later choice of the same key, but confirms what the server holds (Ruling 86)", () => {
+  it("an earlier choice's answer never overwrites a later choice of the same key, but confirms what the server holds", () => {
     const first = useUserStore.getState().setPreference("editor.tabSize", 4)!;
     const second = useUserStore.getState().setPreference("editor.tabSize", 2)!;
     expect(useUserStore.getState().takePreferenceAnswer("editor.tabSize", first, withPreference(DEFAULT_USER_PREFERENCES, "editor.tabSize", 4))).toBe(false);
@@ -151,7 +151,7 @@ describe("per-key saves (D21 decision 33, Preflight ruling 35)", () => {
     expect(useUserStore.getState().pendingPreferences).toEqual({ "editor.tabSize": second });
   });
 
-  it("a failure restores the confirmed value, not the one shown before the choice (Ruling 86)", () => {
+  it("a failure restores the confirmed value, not the one shown before the choice", () => {
     // Confirmed moves to 16 (another tab's change, through /me) while 14 is being saved.
     const sequence = useUserStore.getState().setPreference("editor.fontSize", 14)!;
     useUserStore.getState().reseedPreferences(currentUser.user.id, withPreference(DEFAULT_USER_PREFERENCES, "editor.fontSize", 16));
@@ -169,7 +169,7 @@ describe("per-key saves (D21 decision 33, Preflight ruling 35)", () => {
     expect(useUserStore.getState().confirmedPreferences?.editor.fontSize).toBe(16);
   });
 
-  it("a /me read sent before a save's answer never overwrites it; one sent after does (Ruling 86's item 4)", () => {
+  it("a /me read sent before a save's answer never overwrites it; one sent after does", () => {
     const readBefore = numberPreferenceRead();
     const sequence = useUserStore.getState().setPreference("theme", "light")!;
     useUserStore.getState().takePreferenceAnswer("theme", sequence, { ...DEFAULT_USER_PREFERENCES, theme: "light" });
@@ -179,7 +179,7 @@ describe("per-key saves (D21 decision 33, Preflight ruling 35)", () => {
     expect(preferences()).toEqual(OTHER);
   });
 
-  it("an older /me answer that comes after a newer one never overwrites it (the Ruling 86 review's Nit 2)", () => {
+  it("an older /me answer that comes after a newer one never overwrites it", () => {
     const older = numberPreferenceRead();
     const newer = numberPreferenceRead();
     useUserStore.getState().reseedPreferences(currentUser.user.id, OTHER, newer);

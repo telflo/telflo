@@ -3,27 +3,24 @@ import { enabledOf, SectionHint, SectionToggle, UnshowableSectionHint, type Abse
 import type { ValuePath } from "~/lib/graph/text-edits.js";
 
 /*
- * The retry section (ADR 0018), over the form's fields (D9b decisions 2 to
- * 4). Bound to the `retry_on_failure` block's path.
+ * The retry section, over the form's fields. Bound to the `retry_on_failure`
+ * block's path.
  *
- * Kept (the owner's ruling): ticking the box writes
- * `enabled: true` with `5s`, `30s`, `300s` and `1.5` as the block;
- * unticking writes `enabled: false` in place of the block. Each is one
- * change.
+ * Ticking the box writes `enabled: true` with `5s`, `30s`, `300s` and `1.5`
+ * as the block; unticking writes `enabled: false` in place of the block. Each
+ * is one change.
  *
- * Fixed (decision 4): the box shows on while `enabled` is unset (the key or
- * the whole block), as the collector has it.
- * The fields show unset as unset, the default as the placeholder and the
- * "Default" hint, rather than as a value (decision 3); a field's edit
+ * The box shows on while `enabled` is unset (the key or the whole block), as
+ * the collector has it. The fields show unset as unset, the default as the
+ * placeholder and the "Default" hint, rather than as a value; a field's edit
  * writes only its key.
  *
- * D9d (decision 12; Preflight ruling 4): `idPrefix` sets the ids apart
- * where a form shows the section twice (load balancing's `"lb-"`); D9b's
- * ids are unprefixed. `absentMeans` gives an off variant (`AbsentMeans`):
- * ticking still writes the block, and unticking removes the key,
- * as absent is off. `initialIntervalDefault` is the collector's default for
- * the exporter, shown as the placeholder and the hint (remote write's 50ms,
- * `factory.go:91-92`); ticking still writes 5s.
+ * `idPrefix` sets the ids apart where a form shows the section twice (load
+ * balancing's `"lb-"`); without it the ids are unprefixed. `absentMeans` gives
+ * an off variant (`AbsentMeans`): ticking still writes the block, and
+ * unticking removes the key, as absent is off. `initialIntervalDefault` is the
+ * collector's default for the exporter, shown as the placeholder and the hint
+ * (remote write's 50ms, `factory.go:91-92`); ticking still writes 5s.
  */
 
 export function RetryConfigSection({

@@ -1,21 +1,20 @@
 import { expect, type Page } from "@playwright/test";
-// The SaaS pair (D36-1 Preflight ruling 16): open registration, the Terms, the playground and the anonymous reads.
+// The SaaS pair: open registration, the Terms, the playground and the anonymous reads.
 import { test } from "./support/saas.js";
 import { openYamlTab, platformKeys, typeLineAtTop } from "./support/editor-page.js";
 import { recordPlaygroundRequests, sampled } from "./support/playground.js";
 import { storageHolding } from "./support/privacy.js";
 import { waitForHydration } from "./support/session.js";
 
-// The blank public editor with NO account (D31-1 decisions 3, 7, 15, 16, 18,
-// 22, 29 and 38; Q210; Preflight rulings 5 and 18): the Welcome dialog shows
-// until a choice is made (its flag, read on the next visit), Start from
-// Scratch and Use a Template (its example on Contrib 0.162.0), the
-// editor tour from it, D27's anonymous validate marking an error and
-// clearing it, Save staging the edit and opening "Sign in to save", and the
-// phone page. Each test records its requests: none falls outside decision
-// 22's invariant. The words are the spec's, written out here: the browser
-// tests don't import the web app's modules. Every text asserted is the page's
-// own, the example's or the test's own marker.
+// The blank public editor with NO account: the Welcome dialog shows until a
+// choice is made (its flag, read on the next visit), Start from Scratch and
+// Use a Template (its example on Contrib 0.162.0), the editor tour from it,
+// the anonymous validate marking an error and clearing it, Save staging the
+// edit and opening "Sign in to save", and the phone page. Each test records
+// its requests: none falls outside the playground's request invariant. The
+// words are written out here: the browser tests don't import the web app's
+// modules. Every text asserted is the page's own, the example's or the test's
+// own marker.
 
 const PIN = "0.162.0";
 const WELCOME = "Welcome to Telflo";
@@ -45,12 +44,11 @@ async function start(page: Page, choice: "Start from Scratch" | "Use a Template"
 // Text goes into Monaco as the signed-in specs type it, one line at the top
 // (support/editor-page.ts's typeLineAtTop): Playwright's insertText of text
 // holding a newline lands twice in Firefox, in every editor, signed in too,
-// while typing and a real paste land once (Ruling 306).
+// while typing and a real paste land once.
 
 /**
- * The keys a visit may leave in browser storage (decision 18, Ruling 301):
- * the Welcome dialog's flag, the theme word and the tour flags. Never the
- * text shown or typed.
+ * The keys a visit may leave in browser storage: the Welcome dialog's
+ * flag, the theme word and the tour flags. Never the text shown or typed.
  */
 const NAMED_STORAGE_KEYS = new Set([
   `localStorage ${WELCOME_KEY}`,
@@ -78,8 +76,8 @@ test("the Welcome dialog shows until a choice is made, and not on the next visit
   await openPublicEditor(page);
   await expect(page).toHaveTitle("Public Editor - Telflo");
   await expect(welcome(page)).toContainText("Build OpenTelemetry Collector configurations visually. How would you like to start?");
-  // Escape doesn't dismiss it, said once it has had about a second to close (Ruling 304); a reload shows it again:
-  // nothing chosen yet.
+  // Escape doesn't dismiss it, said once it has had about a second to close; a reload shows it again: nothing chosen
+  // yet.
   await page.keyboard.press("Escape");
   const states = await sampled(() => welcome(page).getAttribute("data-state"), 10);
   expect(states.every((state) => state === "open")).toBe(true);
@@ -90,7 +88,7 @@ test("the Welcome dialog shows until a choice is made, and not on the next visit
 
   await start(page, "Start from Scratch");
   await expect(page.getByRole("heading", { level: 1, name: "Untitled configuration" })).toBeVisible();
-  // No canvas pill on the public editor (Q209 parity, Ruling 304).
+  // No canvas pill on the public editor.
   await expect(page.getByText("Build and validate freely — Save to keep your work.")).toHaveCount(0);
   // No Testing tab, no playground shell.
   await expect(page.getByRole("tab", { name: "YAML", exact: true })).toBeVisible();
@@ -127,7 +125,7 @@ test("Use a Template opens its example on Contrib 0.162.0; the anonymous validat
   await page.keyboard.press("Backspace");
   await expect(page.getByText(validText(PIN), { exact: true })).toBeVisible();
 
-  // A pick of another version is locked (Q210).
+  // A pick of another version is locked.
   await page.getByRole("combobox", { name: `Collector version v${PIN}` }).click();
   await page.getByRole("option", { name: /v0\.161\.0/ }).click();
   const prompt = page.getByRole("dialog", { name: "This is a sample workspace" });
@@ -139,7 +137,7 @@ test("Use a Template opens its example on Contrib 0.162.0; the anonymous validat
   expect(new Set(recorder.apiRequests())).toEqual(new Set(["POST /api/public/v1/validate/anonymous"]));
 });
 
-test("after the Example and typing, browser storage holds only the named keys, none holding the Example's or the typed text (Ruling 301)", async ({
+test("after the Example and typing, browser storage holds only the named keys, none holding the Example's or the typed text", async ({
   page,
   context,
 }) => {
@@ -153,7 +151,7 @@ test("after the Example and typing, browser storage holds only the named keys, n
   const before = checks();
   const canary = `zqstored${Date.now().toString(36)}`;
   await typeLineAtTop(page, `# ${canary}`);
-  // A fresh check of the typed text (so the editor has taken it in) before storage is read (Ruling 304).
+  // A fresh check of the typed text (so the editor has taken it in) before storage is read.
   await expect.poll(checks).toBeGreaterThan(before);
   await expect(page.getByText(validText(PIN), { exact: true })).toBeVisible();
   const keys = await storageKeys(page);
@@ -172,9 +170,9 @@ test("the Welcome dialog's tour: the editor tour starts, with no version-history
   await start(page, "Use a Template", { tour: true });
   const popover = page.locator(".driver-popover");
   await expect(popover.getByText("Component Toolbox", { exact: true })).toBeVisible();
-  // To the end: its last step is the toolbar's actions (no version picker here). Each step: its title read once
-  // it shows, Next pressed, then the next step's title waited for before anything else is read (Ruling 313: a
-  // look between steps found neither Next nor Get Started). At most 12 steps.
+  // To the end: its last step is the toolbar's actions (no version picker here). Each step: its title read once it
+  // shows, Next pressed, then the next step's title waited for before anything else is read (a look between steps
+  // found neither Next nor Get Started). At most 12 steps.
   const title = popover.locator(".driver-popover-title");
   let reachedEnd = false;
   for (let step = 0; step < 12; step += 1) {
@@ -221,7 +219,7 @@ test("a phone gets the phone page: no editor, no Welcome dialog, nothing checked
   await expect(page.getByRole("link", { name: "Go to sign in" })).toHaveAttribute("href", "/login");
   await expect(page.locator(".monaco-editor")).toHaveCount(0);
   await expect(welcome(page)).toHaveCount(0);
-  // Nothing checked, past the 1.5 s pause after which an opened text would be (Ruling 304).
+  // Nothing checked, past the 1.5 s pause after which an opened text would be.
   const checked = await sampled(() => recorder.apiRequests().length > 0, 20);
   expect(checked.some(Boolean)).toBe(false);
   expect(recorder.outside()).toEqual([]);

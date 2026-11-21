@@ -1,10 +1,9 @@
 /**
- * Retires the viewer role (D7 decision 2): an organization has admins and
- * contributors.
+ * Retires the viewer role: an organization has admins and contributors.
  *
  *   * Every viewer membership and invitation becomes contributor. No audit
  *     rows are written: a viewer could only have been made through the API
- *     directly, since the web never offered the role (D5 decision 8).
+ *     directly, since the web never offered the role.
  *   * Postgres can't drop a value from an enum, so organization_role is
  *     recreated without viewer: the old type is renamed aside, the new one
  *     created under the name, both role columns moved to it, and the old type
@@ -29,7 +28,7 @@
 
 /** Migration 013's function, over whichever organization_role exists when it runs. */
 const invitationByTokenHash = `
-    -- The invitee's only way past the policies (D6 decision 9): the
+    -- The invitee's only way past the policies: the
     -- invitation whose hash matches, in any state, with its organization's
     -- name and whether that organization is live. It reads nothing else.
     -- The caller decides what each state means and, once the token has found
@@ -61,11 +60,10 @@ const invitationByTokenHash = `
 
     comment on function organization_invitation_by_token_hash(text) is
       'the invitation a token''s hash names, past row-level security: an
-       invitee holds the token before they belong to the organization (D6
-       decision 9). Keyed by a secret of 256 random bits rather than by the
-       database context, the one definer function that is (ADR 0023). Only
-       telflo_platform_runtime may run it, and the API calls it from one place,
-       findInvitationByTokenHash.';
+       invitee holds the token before they belong to the organization. Keyed
+       by a secret of 256 random bits rather than by the database context,
+       the one definer function that is. Only telflo_platform_runtime may run
+       it, and the API calls it from one place, findInvitationByTokenHash.';
 
     -- Functions are executable by public by default; this one reads past the
     -- policies, so only the API's role may run it.
@@ -90,8 +88,8 @@ export const up = (pgm) => {
     drop type organization_role_with_viewer;
 
     comment on type organization_role is
-      'a member''s role in an organization, and the role an invitation gives
-       (D7 decision 2). An admin administers the organization: its name, its
+      'a member''s role in an organization, and the role an invitation gives.
+       An admin administers the organization: its name, its
        deletion, its members and invitations. Every member may change its
        content. There is no viewer role (migration 014).';
 

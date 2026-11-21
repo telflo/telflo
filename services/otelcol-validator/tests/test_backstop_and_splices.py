@@ -1,19 +1,18 @@
 """The backstop checks what the collector reads, splices land where the
-scalar is, and neither run sets a name it shouldn't (D13b rulings 44 to 46).
+scalar is, and neither run sets a name it shouldn't.
 
-The code-reading review of 4a66e26 found that the fail-closed re-check ran
-only when the neutraliser had changed something, and on the neutraliser's
-output, not on the text the collector then read (after the Datadog insert)
-nor on the rerun's text (after the file_storage directory splice); that no
-test spliced after a non-ASCII character, on CRLF text or inside a flow
-collection; and the controller read that the rerun set any variable a
-requirement's title named, a name a text shapes through `${env:NAME}`.
+The fail-closed re-check runs whether or not the neutralizer changed
+something, on the text the collector reads (after the Datadog insert) and on
+the rerun's text (after the file_storage directory splice); splices are
+tested after a non-ASCII character, on CRLF text and inside a flow
+collection; and the rerun doesn't set every variable a requirement's title
+names (a text shapes those names through `${env:NAME}`).
 
-Writing the splice tests found one more: libyaml leaves a leading byte-order
-mark out of its marks' indexes, so on a text that starts with one every
-splice landed one character early (the backstop refused the neutraliser's
-output; the rerun's directory splice, unchecked, reached the collector
-corrupted). `bounded_yaml.mark_offset` corrects it.
+libyaml leaves a leading byte-order mark out of its marks' indexes, so on a
+text that starts with one every splice would land one character early (the
+backstop would refuse the neutralizer's output; the rerun's directory
+splice would reach the collector corrupted). `bounded_yaml.mark_offset`
+corrects it.
 """
 
 from __future__ import annotations
@@ -134,7 +133,7 @@ def test_a_splice_of_a_scalar_holding_non_ascii_before_its_reference() -> None:
 @pytest.mark.parametrize("line_break", ["\n", "\r\n"], ids=["lf", "crlf"])
 def test_a_leading_byte_order_mark_does_not_shift_the_splice(line_break: str) -> None:
     """libyaml leaves the leading U+FEFF out of its indexes; uncorrected, the
-    splice landed one character early (4a66e26 refused this text)."""
+    splice would land one character early."""
     text = f"\ufeffa: é{line_break}v: \"{CANARY}\"{line_break}w: on{line_break}"
     _assert_spliced(text, [(f'"{CANARY}"', CANARY, PH)])
 
@@ -236,7 +235,7 @@ _DIRECTORY_STDERR = (
     "no such file or directory. You can enable the create_directory option to automatically create it\n"
 )
 
-# No provider reference (so 4a66e26 never ran its backstop), a Datadog
+# No provider reference (so nothing is neutralized), a Datadog
 # exporter that gets the hostname insert, and a file_storage directory the
 # rerun repoints.
 _RERUN_CONFIG = """\
@@ -301,7 +300,7 @@ async def test_the_backstop_checks_exactly_what_each_run_reads(
 async def test_an_insert_the_backstop_refuses_never_reaches_the_collector(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """A text with nothing to neutralise whose last rewrite (the Datadog
+    """A text with nothing to neutralize whose last rewrite (the Datadog
     insert, here made to misbehave) leaves a live reference: refused."""
     collector = _Collector()
     monkeypatch.setattr(runner, "run_collector", collector)
@@ -335,7 +334,7 @@ async def test_a_rerun_text_the_backstop_refuses_never_reaches_the_collector(
     assert len(collector.texts) == 1  # the first run only
     assert result.valid is False
     assert result.outcome == "refused"
-    # The organization variable was neutralised on the first pass, and the
+    # The organization variable was neutralized on the first pass, and the
     # file reference survived the splice: both named, as today's refusal does.
     assert result.errors == [
         {"message": runner.REFUSED_PROVIDERS_MESSAGE.format(schemes="file:, org:"), "componentPath": None}
@@ -443,7 +442,7 @@ async def test_an_ordinary_name_still_gets_its_rerun(monkeypatch: pytest.MonkeyP
 
 
 # ---------------------------------------------------------------------------
-# Ruling 45: the first run's `${env:NAME}` placeholders skip protected names
+# The first run's `${env:NAME}` placeholders skip protected names
 # too; the reference is still a requirement.
 # ---------------------------------------------------------------------------
 
@@ -483,7 +482,7 @@ async def test_the_collector_never_gets_a_placeholder_for_a_protected_name(
 
 
 # ---------------------------------------------------------------------------
-# Ruling 46.
+# Go's runtime names are protected; `GOOGLE_*` are ordinary.
 # ---------------------------------------------------------------------------
 
 GO_RUNTIME_NAMES = [
@@ -535,7 +534,7 @@ def _recording_backstop(monkeypatch: pytest.MonkeyPatch) -> list[str]:
 @pytest.mark.parametrize(
     ("text", "checked"),
     [
-        ("receivers:\n  otlp: {}\n", False),  # nothing neutralised, nothing inserted
+        ("receivers:\n  otlp: {}\n", False),  # nothing neutralized, nothing inserted
         (f'exporters:\n  otlp:\n    value: "{CANARY}"\n', True),  # a splice
         ("exporters:\n  datadog:\n    api:\n      key: abc\n", True),  # the insert
     ],
@@ -615,9 +614,9 @@ async def test_the_rerun_never_sets_an_allowlisted_name_the_service_lacks(
 ) -> None:
     """`TZ` allowlisted but unset in the service: the collector's environment
     doesn't hold it, yet the parent allowlist may pass it at any time, so the
-    rerun must not set it either (D13b ruling 47). Only `_fixed_env_names()`
-    covers it: the allowlist whether or not the variable is set, where the
-    built environment holds only the variables that are."""
+    rerun must not set it either. Only `_fixed_env_names()` covers it: the
+    allowlist whether or not the variable is set, where the built environment
+    holds only the variables that are."""
     assert not _PROTECTED_ENV_NAME_RE.fullmatch("TZ")
     monkeypatch.setattr(runner, "_ALLOWED_PARENT_ENV", runner._ALLOWED_PARENT_ENV | {"TZ"})
     monkeypatch.delenv("TZ", raising=False)

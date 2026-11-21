@@ -16,8 +16,7 @@ import { ACCOUNT_ID, ORGANIZATION_ID, renderInRouter, serviceAccount, where } fr
 import { ServiceAccountDeleteDialog } from "./ServiceAccountDeleteDialog.js";
 
 /*
- * Deleting a service account (D22 decisions 44, 46 and 49), in decision
- * 46's words.
+ * Deleting a service account, in its fixed words.
  */
 
 function renderDialog(target: ServiceAccount = serviceAccount()) {
@@ -75,7 +74,7 @@ describe("ServiceAccountDeleteDialog", () => {
     expect(confirm).toBeDisabled();
   });
 
-  it("says decision 46's sentences for none, one and several tokens, and no list of deleted things", async () => {
+  it("says its sentences for none, one and several tokens, and no list of deleted things", async () => {
     expect(serviceAccountDeleteTokenWords(0)).toBe("It will be removed from this organization.");
     expect(serviceAccountDeleteTokenWords(1)).toBe("Its token will stop working immediately, and it will be removed from this organization.");
     expect(serviceAccountDeleteTokenWords(2)).toBe("Its 2 tokens will stop working immediately, and it will be removed from this organization.");

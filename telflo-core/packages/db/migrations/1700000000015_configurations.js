@@ -1,20 +1,19 @@
 /**
- * Configurations (D7 decisions 4, 6 and 8): an organization's collector
- * configurations, as the list shows them. D8 adds what the editor needs.
+ * Configurations: an organization's collector configurations, as the list
+ * shows them.
  *
  *   * created_at and updated_at have no default. The API writes both from its
  *     injected clock, never now(): a JavaScript Date holds milliseconds and
  *     Postgres microseconds, so a now() timestamp read back into the list's
  *     cursor wouldn't equal itself. A write that forgets the clock fails
- *     (23502) instead of quietly taking the database's time (Preflight
- *     ruling 6).
- *   * Delete is soft (decision 8): deleted_at is set, and the repository
+ *     (23502) instead of quietly taking the database's time.
+ *   * Delete is soft: deleted_at is set, and the repository
  *     ignores the row from then on. The policies don't hide deleted rows;
  *     they are the backstop for the organization, not for deletion.
  *   * Names are not unique: two configurations may share a name.
  *   * Row-level security has migration 013's shape: every operation, for
  *     telflo_platform_runtime, is limited to the organization the database
- *     context names (ADR 0022). No `force`, so the owner (migrations,
+ *     context names. No `force`, so the owner (migrations,
  *     fixtures) stays exempt.
  *
  * Migration 009's default privileges already give telflo_platform_runtime select,
@@ -44,9 +43,9 @@ export const up = (pgm) => {
     );
 
     comment on table configurations is
-      'an organization''s collector configurations (D7 decision 4). Every
-       member sees and changes every one of them (decision 3). Deleted softly
-       (decision 8): the API never removes a row.';
+      'an organization''s collector configurations. Every member sees and
+       changes every one of them. Deleted softly: the API never removes a
+       row.';
     comment on column configurations.organization_id is
       'the owning organization. Cascades: a hard-deleted organization takes its
        configurations with it. A soft-deleted one keeps them, unreachable,
@@ -62,7 +61,7 @@ export const up = (pgm) => {
     comment on column configurations.created_by_user_id is
       'the member who created it, or null once their account is hard-deleted
        (normally users are soft-deleted, and keep their email in the list).
-       The "Mine" filter matches it (decision 6).';
+       The "Mine" filter matches it.';
     comment on column configurations.created_at is
       'written by the API from its clock, never now(), so that it holds whole
        milliseconds as a JavaScript Date does. No default, so a write that
@@ -73,15 +72,14 @@ export const up = (pgm) => {
        must read back equal to the cursor''s JavaScript Date: whole
        milliseconds. No default, so a write that forgets the clock fails.';
     comment on column configurations.deleted_at is
-      'set when a member deletes the configuration (decision 8). The row stays;
+      'set when a member deletes the configuration. The row stays;
        every read and write through the repository ignores it from then on.
        Nothing restores one yet.';
 
     comment on constraint uq_configurations_id_organization_id on configurations is
-      'the composite foreign-key target (spec §3.8) that D8''s and D10''s child
-       tables reference with their own organization_id, so a child row can
-       never name a configuration in another organization. id alone is
-       already unique.';
+      'the composite foreign-key target that child tables reference with
+       their own organization_id, so a child row can never name a
+       configuration in another organization. id alone is already unique.';
 
     create index idx_configurations_organization_id_updated_at
       on configurations (organization_id, updated_at desc, id desc)
@@ -90,7 +88,7 @@ export const up = (pgm) => {
       on configurations (created_by_user_id);
 
     comment on index idx_configurations_organization_id_updated_at is
-      'the list (decision 6): an organization''s live configurations, newest
+      'the list: an organization''s live configurations, newest
        change first, id breaking ties, so a page continues after its cursor''s
        (updated_at, id) pair with a row comparison. Deleted rows fall out of
        it: nothing lists them.';

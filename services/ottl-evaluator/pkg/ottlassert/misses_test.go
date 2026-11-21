@@ -1,5 +1,4 @@
-// New in D15a Task 3's follow-up (the controller's Ruling 34): which
-// quantifiers list their misses. A failing all or any lists its first
+// Which quantifiers list their misses. A failing all or any lists its first
 // maxMisses records that evaluated to false, none its first maxMisses
 // matches, and count none at all; the rest are only counted.
 

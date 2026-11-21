@@ -5,20 +5,19 @@ import { TOKEN_HISTORY_FAILED_MESSAGE, type TokenHistoryRead } from "~/lib/token
 import { defaultTokenCount } from "./TokensTable.js";
 
 /*
- * A server fleet's token history (D17b-2 decisions 2, 27 and 34): the fleet's
- * token events, newest first, 50 a page with "Load more" (`useTokensTab`'s
- * `history`), for every member. Each row: When (`formatDateTime`), Event,
- * Token (the event's token from the tokens list, by kind and creation: events
- * carry no kind; a default token by its creation too when the fleet holds
- * more than one, D17c-1 decision 45) and By (the member's email as plain
- * text, never a link, "—" for none). The emails are text in the masked shell
- * only: no attribute holds one (decision 34). States: "Loading the token
+ * A server fleet's token history: the fleet's token events, newest first, 50
+ * a page with "Load more" (`useTokensTab`'s `history`), for every member.
+ * Each row: When (`formatDateTime`), Event, Token (the event's token from the
+ * tokens list, by kind and creation: events carry no kind; a default token by
+ * its creation too when the fleet holds more than one) and By (the member's
+ * email as plain text, never a link, "—" for none). The emails are text in
+ * the masked shell only: no attribute holds one. States: "Loading the token
  * history…"; "No token events yet."; "Failed to load the token history" with
  * "Try again" (the tab's reload, which reads the tokens too); a failed "Load
  * more" toasts that and keeps the rows (the hook's).
  */
 
-/** Each event's words (decision 27): `viewed` reads "Revealed". */
+/** Each event's words: `viewed` reads "Revealed". */
 export const TOKEN_EVENT_WORDS: Record<EnrollmentTokenEventKind, string> = {
   issued: "Issued",
   viewed: "Revealed",

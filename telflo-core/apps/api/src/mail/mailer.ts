@@ -6,8 +6,8 @@
 export interface EmailMessage {
   to: string;
   /**
-   * Where a reply goes, when not to the sender: a sales inquiry's submitter
-   * (D4 decision 4). SMTP and SendGrid both carry it.
+   * Where a reply goes, when not to the sender: a sales inquiry's submitter.
+   * SMTP and SendGrid both carry it.
    */
   replyTo?: string | undefined;
   subject: string;
@@ -19,7 +19,7 @@ export interface EmailMessage {
  * Outbound email. Mailpit in development, a provider in the SaaS, the
  * customer's own relay on-prem, and nothing at all in tests — so callers
  * depend on this interface and never on a transport. Which implementation
- * runs is decided once, from configuration, by createMailer (ADR 0016).
+ * runs is decided once, from configuration, by createMailer.
  */
 export interface IMailer {
   send(message: EmailMessage): Promise<void>;

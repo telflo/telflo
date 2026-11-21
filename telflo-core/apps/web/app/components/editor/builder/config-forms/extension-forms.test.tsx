@@ -17,19 +17,18 @@ import { CANT_EDIT_ON_CANVAS_MESSAGE, selectUndoDescription, useEditorStore } fr
 import { builderStore, componentNamed, openText } from "~/test/builder-store.js";
 
 /*
- * The extension forms (D9b Task 8): file_storage, OpAMP, bearertokenauth
- * and OIDC, their forms over key paths. Each field is driven as a
- * person would (typing, clicking, picking) and writes only its key: the
- * text changes in that key's lines only, on a text with comments, an
- * anchor and a merge, `0750`, and CRLF line endings (decision 2). OpAMP's
- * transport switch renames the block in place, keeping `tls`, headers,
- * auth and comments, and removes `polling_interval` only going to ws
- * (decision 4). The OpAMP (4) and auth extension (8) cases close the
+ * The extension forms: file_storage, OpAMP, bearertokenauth and OIDC, their
+ * forms over key paths. Each field is driven as a person would (typing,
+ * clicking, picking) and writes only its key: the text changes in that key's
+ * lines only, on a text with comments, an anchor and a merge, `0750`, and
+ * CRLF line endings. OpAMP's transport switch renames the block in place,
+ * keeping `tls`, headers, auth and comments, and removes `polling_interval`
+ * only going to ws. The OpAMP (4) and auth extension (8) cases close the
  * file.
  */
 
 const EXTENSIONS = [
-  "# The extension forms (D9b Task 8).",
+  "# The extension forms.",
   "receivers:",
   "  otlp:",
   "    protocols:",
@@ -678,7 +677,7 @@ const CASES: FieldCase[] = [
   },
 ];
 
-describe("every field of each form writes only its key (decision 2)", () => {
+describe("every field of each form writes only its key", () => {
   it.each(CASES.flatMap((c) => [[`${c.name}, LF`, c, false] as const, [`${c.name}, CRLF`, c, true] as const]))(
     "%s",
     async (_name, c, crlf) => {
@@ -744,7 +743,7 @@ describe("every field of each form writes only its key (decision 2)", () => {
   });
 });
 
-describe("OpAMP's transport switch moves the block's keys across (decision 4)", () => {
+describe("OpAMP's transport switch moves the block's keys across", () => {
   it("ws -> http keeps tls, headers, auth, the endpoint and their comments; the fields then write under http", async () => {
     const user = renderForm(OPAMP, opamp);
     expect(screen.queryByText("Polling Interval")).toBeNull();
@@ -801,7 +800,7 @@ describe("OpAMP's transport switch moves the block's keys across (decision 4)", 
     expect(valueOf(text(), "extensions.opamp/empty")).toEqual({ server: { http: { endpoint: "https://opamp:4320/v1/opamp" } } });
   });
 
-  it("a text holding both transports shows http; switching to ws is refused (the names clash), with D9a's toast", async () => {
+  it("a text holding both transports shows http; switching to ws is refused (the names clash), with the can't-edit toast", async () => {
     const both = EXTENSIONS.replace("  opamp/polling:\n    server:\n", "  opamp/polling:\n    server:\n      ws: {endpoint: wss://x}\n");
     const user = renderForm(POLLING, opamp, both);
     expect(screen.getByRole("combobox", { name: "Transport" })).toHaveTextContent("HTTP (polling)");
@@ -821,7 +820,7 @@ describe("OpAMP's transport switch moves the block's keys across (decision 4)", 
   });
 });
 
-describe("what the forms show (decision 3)", () => {
+describe("what the forms show", () => {
   it("file_storage: Create Directory shows off when unset (the collector's default); the defaults as placeholders and hints", async () => {
     const unset = "extensions:\n  file_storage: {}\nservice:\n  extensions: [file_storage]\n";
     const user = renderForm(FILE_STORAGE, fileStorage, unset);
@@ -913,7 +912,7 @@ describe("what the forms show (decision 3)", () => {
   });
 });
 
-describe("values the forms can't show (decision 3)", () => {
+describe("values the forms can't show", () => {
   it("opamp: a server that isn't a mapping, and capabilities that aren't, show the hint; the rest works", async () => {
     const odd = EXTENSIONS.replace(
       "  opamp/polling:\n    server:\n      http:\n",
@@ -1111,7 +1110,7 @@ describe("auth extension form cases", () => {
   });
 });
 
-describe("privacy (decision 10)", () => {
+describe("privacy", () => {
   it("puts no config value in any attribute: sections and cards open, the transport menu open, bearer tokens listed", async () => {
     const MARK = "zq-mark";
     const marked = [

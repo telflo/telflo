@@ -3,7 +3,7 @@
 # answers come from a crane wrapper first on PATH (STANDIN_CRANE: absent,
 # denied) or the real crane against a throwaway registry:2 on 127.0.0.1
 # (tools.lock's image, local by digest) holding collector images made offline
-# (test-registry.sh's fixture) for every version the catalogue offers and the
+# (test-registry.sh's fixture) for every version the catalog offers and the
 # supervisor-collector chart packaged from charts/supervisor-collector; SKIP
 # lines when crane, docker or that image is missing. Refusing
 # credential-helper stand-ins come first on PATH: none may be called.
@@ -63,7 +63,7 @@ for bad in docker.io ghcr.io/telflo/platform ghcr.io/telflo/collector 10.0.0.1:5
   STANDIN_CRANE=absent run "$tmp/stub" --registry "$bad"
   check "--registry '$bad' refused (exit 2)" "[ $rc -eq 2 ] && has '--registry must be ghcr.io or a loopback registry'"
 done
-check "the catalogue offers versions (this test's premise)" "[ -n '$offered' ] && [ -n '$chart_version' ]"
+check "the catalog offers versions (this test's premise)" "[ -n '$offered' ] && [ -n '$chart_version' ]"
 STANDIN_CRANE=absent run "$tmp/stub"
 all_named=true
 for v in $offered; do printf '%s\n' "$out" | grep -qF "ghcr.io/telflo/telflo/collector:$v is missing: run the collector workflow for $v" || all_named=false; done

@@ -8,13 +8,12 @@ import { organizationCreationOf, storedOrganizationCreationOf } from "../../site
 import type { PagePosition } from "../cursor.js";
 
 /*
- * The SystemRepository (ADR 0008, spec §3.7; D29 decisions 17 to 20): the
- * platform's one cross-organization path. The only caller of
- * withProductAdminContext and of migration 1700000000041's product-admin
- * functions (a test scans the source), one method per operation, each
- * writing its audit row in the same transaction: in no organization, the
+ * The SystemRepository: the platform's one cross-organization path. The only
+ * caller of withProductAdminContext and of migration 1700000000041's
+ * product-admin functions (a test scans the source), one method per operation,
+ * each writing its audit row in the same transaction: in no organization, the
  * actor's columns as usual, `metadata` holding ids, counts and fixed values
- * only, never an email, a search term or a feedback's text (decision 20).
+ * only, never an email, a search term or a feedback's text.
  *
  *   | Call                 | action                                 | subject   | metadata             |
  *   | Users list or search | product_admin.users_listed             | —         | { count, searched }  |
@@ -31,20 +30,18 @@ import type { PagePosition } from "../cursor.js";
  *   | Delete               | user.deleted                           | the user  | { deletedOrganizations, deletedServiceAccounts, revokedSessions } |
  *   |   and per organization | organization.deleted (in it)         | the org.  | { reason: "account_deleted", deletedServiceAccounts } |
  *
- * The organization-creation switch (D36-1 decision 51) is migration 044's
- * product_admin_set_organization_creation; its from and to are fixed
- * values in the contract's spelling (`everyone`, `product-admins`).
+ * The organization-creation switch is migration 044's
+ * product_admin_set_organization_creation; its from and to are fixed values
+ * in the contract's spelling (`everyone`, `product-admins`).
  *
- * The delete's method (decision 29) is Task 2's, on migration 042. The
- * pending count (decision 37) is a number and no personal data: it isn't
- * audited (decision 20's named exception).
+ * The delete's method is on migration 042. The pending count is a number
+ * and no personal data: it isn't audited.
  *
- * A refusal by the database's gate (42501 with its own hint, Ruling 260:
- * the caller stopped being a product admin between the route's check and
- * the call; any other 42501 stays a server failure) rolls the
- * transaction back, audit row and all, and is answered 403
- * `product_admin_required`; so is a write's `forbidden` (the caller
- * re-read under its lock, Rulings 257 and 258), which is audited.
+ * A refusal by the database's gate (42501 with its own hint: the caller
+ * stopped being a product admin between the route's check and the call; any
+ * other 42501 stays a server failure) rolls the transaction back, audit row
+ * and all, and is answered 403 `product_admin_required`; so is a write's
+ * `forbidden` (the caller re-read under its lock), which is audited.
  */
 
 /** Who acts: the product admin, for the audit row. Never their organization: a product admin administers the product. */
@@ -55,7 +52,7 @@ export interface ProductAdminActor {
   userAgent?: string | undefined;
 }
 
-/** One live person as the Users page lists them, with the block of decision 30 (null: deletable). */
+/** One live person as the Users page lists them, with what blocks their delete (null: deletable). */
 export interface AdminUserRow {
   id: string;
   email: string;
@@ -79,10 +76,9 @@ export interface ListUsersOptions {
 }
 
 /**
- * A page of a list (Ruling 264): at most the page size's rows, and whether
- * another page follows (the look-ahead row read and dropped). The audit
- * row counts the rows returned, never the look-ahead (decision 12: "how
- * many rows came back").
+ * A page of a list: at most the page size's rows, and whether another page
+ * follows (the look-ahead row read and dropped). The audit row counts the
+ * rows returned, never the look-ahead.
  */
 export interface ListPage<Row> {
   rows: Row[];
@@ -100,7 +96,7 @@ export type GrantResult =
 
 export type RevokeOutcome = "revoked" | "not_found" | "last_admin" | "forbidden";
 
-/** The switch's change (D36-1 decision 51): what it held before, or `forbidden` (the caller lost the flag while it waited). */
+/** The switch's change: what it held before, or `forbidden` (the caller lost the flag while it waited). */
 export type SetOrganizationCreationResult =
   | { outcome: "changed" | "unchanged"; previous: OrganizationCreation }
   | { outcome: "forbidden" };
@@ -125,7 +121,7 @@ export type HandleFeedbackResult =
   | { outcome: "handled"; sender: { userId: string; email: string } }
   | { outcome: "not_found" | "forbidden" | "author_deleted" };
 
-/** An organization a person's delete removed with them: what the service does after the commit (decision 29). */
+/** An organization a person's delete removed with them: what the service does after the commit. */
 export interface DeletedOrganization {
   id: string;
   logoId: string | null;
@@ -133,10 +129,10 @@ export interface DeletedOrganization {
 }
 
 /**
- * A person's delete (decision 29): `deleted` with what went; or a refusal:
- * `blocked` with the block's kind (never a name), `not_found`, `self`,
- * `forbidden` (the caller lost the flag while it waited), `busy` (the
- * person's memberships kept changing under the locks: three attempts).
+ * A person's delete: `deleted` with what went; or a refusal: `blocked` with
+ * the block's kind (never a name), `not_found`, `self`, `forbidden` (the
+ * caller lost the flag while it waited), `busy` (the person's memberships
+ * kept changing under the locks: three attempts).
  */
 export type DeleteUserResult =
   | { outcome: "deleted"; organizations: DeletedOrganization[]; deletedServiceAccounts: number; revokedSessions: number }
@@ -155,7 +151,7 @@ export interface ISystemRepository {
   setOrganizationCreation(actor: ProductAdminActor, value: OrganizationCreation): Promise<SetOrganizationCreationResult>;
 }
 
-/** The operation a refusal names (decision 20's `{ operation, outcome }`): fixed words. */
+/** The operation a refusal names (its audit row's `{ operation, outcome }`): fixed words. */
 type RefusedOperation = "grant" | "revoke" | "acknowledge" | "dismiss" | "delete" | "organization_creation";
 
 interface UserListRow {
@@ -183,9 +179,8 @@ function blockOf(row: UserListRow): AdminUserRow["block"] {
 
 /**
  * The HINT the database's gate raises its 42501 with (migration
- * 1700000000041, Ruling 260): only that refusal is the caller's lost flag.
- * Any other 42501 (a missing grant, a policy) is a server failure, and
- * stays one.
+ * 1700000000041): only that refusal is the caller's lost flag. Any other
+ * 42501 (a missing grant, a policy) is a server failure, and stays one.
  */
 const GATE_HINT = "telflo_product_admin_gate";
 
@@ -224,7 +219,7 @@ export function createSystemRepository(db: Kysely<Database>): ISystemRepository 
     }
   }
 
-  /** A write's refusal (decision 20): fixed words, the subject when its id is known, never an email. */
+  /** A write's refusal: fixed words, the subject when its id is known, never an email. */
   const refused = (operation: RefusedOperation, outcome: string, subject?: { type: string; id: string }) => ({
     action: "product_admin.refused",
     ...(subject ? { subjectType: subject.type, subjectId: subject.id } : {}),
@@ -324,7 +319,7 @@ export function createSystemRepository(db: Kysely<Database>): ISystemRepository 
     },
 
     countPendingFeedback(actor) {
-      // Decision 20's named exception: a number, no personal data, not audited.
+      // Not audited: a number, no personal data.
       return inContext(actor, async (transaction) => {
         const { rows } = await sql<{ count: number }>`select product_admin_count_pending_feedback() as count`.execute(transaction);
         return rows[0]!.count;
@@ -371,7 +366,7 @@ export function createSystemRepository(db: Kysely<Database>): ISystemRepository 
           const organizations = (row.organizations ?? []).map(({ id, logoId, deletedServiceAccounts }) => ({ id, logoId, deletedServiceAccounts }));
           const deletedServiceAccounts = row.deleted_service_accounts ?? 0;
           const revokedSessions = row.revoked_sessions ?? 0;
-          // In each organization deleted, as an organization's own delete writes one (decision 20): ids and counts only.
+          // In each organization deleted, as an organization's own delete writes one: ids and counts only.
           const audits = createAuditRepository(transaction);
           for (const organization of organizations) {
             await audits.record({

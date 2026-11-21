@@ -6,15 +6,14 @@ import { isSessionEnded, updatePreferences } from "~/lib/api-client.js";
 import { useUserStore, type PreferenceKey, type PreferenceValues } from "~/lib/stores/user-store.js";
 
 /*
- * Saving a preference from Settings (D21 decision 33; Preflight rulings 35
- * and 36): one key per PATCH, optimistic in the user store, so the shell's
- * theme and every open Monaco follow at once. A refusal or a network failure
- * restores that key and toasts fixed words; a success says nothing. An
- * answer, or a `/me` re-seed, never overwrites a newer choice of the same key
- * (the store's pending markers).
+ * Saving a preference from Settings: one key per PATCH, optimistic in the user
+ * store, so the shell's theme and every open Monaco follow at once. A refusal
+ * or a network failure restores that key and toasts fixed words; a success
+ * says nothing. An answer, or a `/me` re-seed, never overwrites a newer choice
+ * of the same key (the store's pending markers).
  */
 
-/** Appearance's and Editor's failure (decision 33). */
+/** Appearance's and Editor's failure. */
 export const PREFERENCES_FAILED_MESSAGE = "Failed to update preferences";
 /** Notifications' failure. */
 export const EMAIL_PREFERENCES_FAILED_MESSAGE = "Failed to update email preferences";

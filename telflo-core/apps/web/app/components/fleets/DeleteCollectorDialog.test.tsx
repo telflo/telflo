@@ -30,8 +30,7 @@ import {
 } from "./DeleteCollectorDialog.js";
 
 /*
- * "Delete collector record" (D17b-1 decisions 14 and 28; Preflight rulings 4
- * and 14). D17a's `DeleteFleetDialog.test.tsx` is the pattern.
+ * "Delete collector record". `DeleteFleetDialog.test.tsx` is the pattern.
  */
 
 const refusal = (code: string, message: string, status: number) => new ApiError(code, message, { status });
@@ -121,24 +120,24 @@ describe("DeleteCollectorDialog", () => {
     vi.useRealTimers();
   });
 
-  it("has its title and buttons, and Preflight ruling 4's body in place of \"not affected\"", async () => {
+  it("has its title and buttons, and the consequences body in place of \"not affected\"", async () => {
     await renderDialog();
     const dialog = screen.getByRole("alertdialog");
     expect(dialog).toHaveTextContent(`You are deleting the record of web-01. ${COLLECTOR_DELETE_CONSEQUENCES}`);
     expect(dialog).toHaveTextContent(
       "If the collector keeps polling, it enrolls again as a new collector: in the group it was installed into, unpinned, with no error history, and it is sent that group's published version if it has one. If that group has been deleted, it can't enroll again.",
     );
-    // D17d-1 Preflight ruling 29: a collector naming no group is refused (decision 5), so none enrolls into Default.
+    // A collector naming no group is refused, so none enrolls into Default.
     expect(dialog).not.toHaveTextContent(/Default/);
     expect(dialog).not.toHaveTextContent(/pod/);
     expect(dialog).not.toHaveTextContent("not affected");
-    // D16c: no import warning, the consequences alone.
+    // No import warning, the consequences alone.
     expect(dialog).not.toHaveTextContent(/import/i);
     expect(screen.getByRole("button", { name: "Delete" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Cancel" })).toBeEnabled();
   });
 
-  it("on a Kubernetes-supervisor fleet, says deleting the record just forgets the collector and a running pod enrolls again (D17d-1 decision 23)", async () => {
+  it("on a Kubernetes-supervisor fleet, says deleting the record just forgets the collector and a running pod enrolls again", async () => {
     const name = "canary-pod-7f3a";
     await renderDialog(collector({ name }), "kubernetes-supervisor");
     const dialog = screen.getByRole("alertdialog", { name: "Delete collector record" });
@@ -343,7 +342,7 @@ describe("DeleteCollectorDialog", () => {
     expect(await screen.findByRole("button", { name: "Delete" })).toBeEnabled();
   });
 
-  it("holds no collector name in an attribute (decision 32)", async () => {
+  it("holds no collector name in an attribute", async () => {
     const canary = "canary-collector-7f3a";
     await renderDialog(collector({ name: canary }));
     expect(screen.getByRole("alertdialog")).toHaveTextContent(canary);
@@ -351,7 +350,7 @@ describe("DeleteCollectorDialog", () => {
   });
 });
 
-// D17d-2 decision 25; Preflight rulings 20 and 31: how to stop a Kubernetes collector's pods.
+// How to stop a Kubernetes collector's pods.
 describe("DeleteCollectorDialog's helm uninstall line", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
@@ -391,7 +390,7 @@ describe("DeleteCollectorDialog's helm uninstall line", () => {
     expect(screen.getByRole("alertdialog")).not.toHaveTextContent(COLLECTOR_UNINSTALL_WORDS);
   });
 
-  it("keeps the opening's uninstall line when the tab's groups change under it (a poll: D17c-1 Ruling 66)", async () => {
+  it("keeps the opening's uninstall line when the tab's groups change under it (a poll)", async () => {
     const opened = [collectorGroup(), gatewaysGroup({ annotations: kubernetesAnnotations({ namespace: "edge" }) })];
     const later = [collectorGroup(), gatewaysGroup({ annotations: kubernetesAnnotations({ namespace: "moved-namespace" }) })];
     await renderDialog(collector({ groupId: GATEWAYS_GROUP_ID }), "kubernetes-supervisor", opened, later);

@@ -107,9 +107,9 @@ export function VerifyEmailPanel({ token }: VerifyEmailPanelProps) {
 }
 
 /**
- * Asks for another confirmation email for the typed address (D3). The API
- * answers the same whether or not the address has an unconfirmed account
- * (decision 2), so the success text says so.
+ * Asks for another confirmation email for the typed address. The API
+ * answers the same whether or not the address has an unconfirmed account,
+ * so the success text says so.
  */
 function ResendConfirmationForm() {
   const [email, setEmail] = useState("");

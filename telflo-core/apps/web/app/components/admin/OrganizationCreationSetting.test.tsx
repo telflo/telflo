@@ -16,10 +16,9 @@ import {
 } from "./OrganizationCreationSetting.js";
 
 /*
- * The product admins' switch, "Only product admins can create
- * organizations" (D36-1 decision 51; Q252, Ruling 359; on by default,
- * Q259): read from the API, changed through the PATCH, not optimistically,
- * with fixed-word toasts.
+ * The product admins' switch, "Only product admins can create organizations"
+ * (on by default): read from the API, changed through the PATCH, not
+ * optimistically, with fixed-word toasts.
  */
 
 /** A promise answered by hand. */

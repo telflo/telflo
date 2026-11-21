@@ -32,9 +32,8 @@ import { LIVENESS_LABELS, LIVENESS_WINDOWS } from "./CollectorStatusCell.js";
 import { CollectorsTable, VERSION_MEANINGS, type CollectorsTableProps } from "./CollectorsTable.js";
 import { DRIFT_MEANINGS } from "./ConfigurationSyncCell.js";
 
-// A server fleet's collectors grid (D17b-1 decisions 21–23 and 32,
-// Preflight rulings 10 and 17). The server's `liveness` decides Status and
-// its `drift` the Configuration column, never the browser (D17d-2 Ruling 55).
+// A server fleet's collectors grid. The server's `liveness` decides Status and
+// its `drift` the Configuration column, never the browser.
 
 const NOW = Date.parse("2026-10-14T10:00:00.000Z");
 const GROUPS: CollectorGroup[] = [collectorGroup(), gatewaysGroup()];
@@ -108,7 +107,7 @@ function cellOf(name: string, header: string): HTMLElement {
 }
 
 describe("CollectorsTable's columns", () => {
-  it("has its columns in order, a selection column first, Group and Version, Variable group after Group (D20), Configuration after Status", () => {
+  it("has its columns in order, a selection column first, Group and Version, Variable group after Group, Configuration after Status", () => {
     renderTable([collector()]);
     expect(screen.getAllByRole("columnheader").map((each) => each.textContent)).toEqual([
       "",
@@ -133,7 +132,7 @@ describe("CollectorsTable's columns", () => {
     ]);
   });
 
-  // The Name button opens the details (Task 5).
+  // The Name button opens the details.
   it("shows the name as a button titled View collector details, calling onOpen when wired", async () => {
     const onOpen = vi.fn();
     const { user } = renderTable([collector()], { onOpen });
@@ -167,7 +166,7 @@ describe("CollectorsTable's columns", () => {
     expect(cellOf("web-01", "Group")).toHaveTextContent(/^—$/);
   });
 
-  describe("Status, from the server's liveness (decisions 11 and 23; Ruling 55)", () => {
+  describe("Status, from the server's liveness", () => {
     it.each([
       ["online", "Online", "bg-ok"],
       ["warning", "Warning", "bg-warn"],
@@ -201,7 +200,7 @@ describe("CollectorsTable's columns", () => {
       expect(cellOf("web-01", "Configuration")).toHaveTextContent(/^In sync \(/);
     });
 
-    it("says D17a's windows, and its words", () => {
+    it("says the liveness windows, and its words", () => {
       expect(LIVENESS_WINDOWS).toEqual({
         online: "online: seen in the last minute",
         warning: "warning: last seen 1–2 minutes ago",
@@ -212,7 +211,7 @@ describe("CollectorsTable's columns", () => {
     });
   });
 
-  describe("Configuration, from the server's drift (decisions 11 and 22; Ruling 55)", () => {
+  describe("Configuration, from the server's drift", () => {
     it.each([
       ["inSync", "In sync", "bg-ok"],
       ["pending", "Pending pickup", "bg-warn"],
@@ -238,7 +237,7 @@ describe("CollectorsTable's columns", () => {
       expect(await screen.findByRole("tooltip")).toHaveTextContent(meaning);
     });
 
-    it("says D17a's meanings, and Preflight ruling 4's for Nothing assigned", () => {
+    it("says the drift meanings, and its own for Nothing assigned", () => {
       expect(collectorConfigurationMeaning("inSync")).toBe(`in sync: ${DRIFT_MEANINGS.inSync}`);
       expect(collectorConfigurationMeaning("pending")).toBe(`pending pickup: ${DRIFT_MEANINGS.pending}`);
       expect(collectorConfigurationMeaning("failed")).toBe(`apply failed: ${DRIFT_MEANINGS.failed}`);
@@ -252,7 +251,7 @@ describe("CollectorsTable's columns", () => {
   });
 
   describe("Version: what was served", () => {
-    it("centres the column, its header and its cells", () => {
+    it("centers the column, its header and its cells", () => {
       renderTable([collector(), collector({ id: "c6d7e8f9-0a1b-4c2d-b3e4-f5a6b7c8d9e0", name: "web-02", served: null })]);
       const header = screen.getAllByRole("columnheader").find((each) => each.textContent === "Version")!;
       expect(header).toHaveClass("text-center");
@@ -262,8 +261,7 @@ describe("CollectorsTable's columns", () => {
       }
     });
 
-    // D17c-1 decisions 7 and 46: "{configurationName} @v{n}", as the Groups
-    // tab's, with no title.
+    // "{configurationName} @v{n}", as the Groups tab's, with no title.
     it("links a published version served to the editor, '{configurationName} @v{n}', with no title", () => {
       renderTable([collector()]);
       const link = within(cellOf("web-01", "Version")).getByRole("link", { name: "checkout-otel @v4" });
@@ -324,7 +322,7 @@ describe("CollectorsTable's columns", () => {
       expect(within(cell).getByText(words)).toHaveClass("text-muted-foreground");
     });
 
-    // D16c Ruling 21: what each form means, the collector's running state, as Configuration's meaning is shown.
+    // What each form means, the collector's running state, as Configuration's meaning is shown.
     it.each(FORMS)(
       "says what the Version for %s means as tooltip text, on hover and on keyboard focus, and as screen-reader text",
       async (_why, served, words, form) => {
@@ -362,7 +360,7 @@ describe("CollectorsTable's columns", () => {
       },
     );
 
-    it("says D16c Ruling 21's words", () => {
+    it("says the Version meanings' words", () => {
       expect(VERSION_MEANINGS).toEqual({
         version: "Running: the last published version it was sent.",
         nothing: "Nothing sent yet: it runs its own file.",
@@ -384,7 +382,7 @@ describe("CollectorsTable's columns", () => {
     });
   });
 
-  describe("Last seen: how long ago, as plain text (decisions 11 and 23; Ruling 55)", () => {
+  describe("Last seen: how long ago, as plain text", () => {
     it.each(["online", "warning", "unknown", "offline"] as const)(
       "shows a %s collector's how long ago with no dot, the full time as tooltip and screen-reader text",
       async (liveness) => {
@@ -421,7 +419,7 @@ describe("CollectorsTable's columns", () => {
     });
   });
 
-  describe("sorting (decision 21)", () => {
+  describe("sorting", () => {
     it("sorts by Name and Last seen through header buttons; no other header sorts, and none shows sorted by default", async () => {
       const { user, onSort } = renderTable([collector()]);
       const headers = screen.getAllByRole("columnheader");
@@ -459,7 +457,7 @@ describe("CollectorsTable's columns", () => {
     });
   });
 
-  describe("the row's actions and selection (decision 27, Preflight rulings 10 and 17)", () => {
+  describe("the row's actions and selection", () => {
     it("names Edit, Delete and the checkbox for the row by hidden text, with fixed titles", () => {
       renderTable([collector()]);
       expect(screen.getByRole("button", { name: "Edit web-01" })).toHaveAttribute("title", "Edit collector");
@@ -518,9 +516,9 @@ describe("CollectorsTable's columns", () => {
     });
   });
 
-  // ADR 0024, decisions 13 and 32: names, addresses and group names are text in the masked shell, never an attribute;
-  // D16c Ruling 21: the Version tooltips (each form's) hold fixed words only, but for the version's own full text
-  // (D17c-1 decision 46), which is the tooltip's text, never an attribute.
+  // Names, addresses and group names are text in the masked shell, never an attribute; the Version tooltips (each
+  // form's) hold fixed words only, but for the version's own full text, which is the tooltip's text, never an
+  // attribute.
   it("holds no collector, group or configuration name and no address in any attribute, its tooltips open", async () => {
     const name = "canary-collector-7c1e";
     const groupName = "canary-group-2f9a";
@@ -574,13 +572,13 @@ describe("CollectorsTable's columns", () => {
   });
 });
 
-// D17d-1 decision 23; Preflight ruling 25: a Kubernetes-supervisor fleet's grid.
+// A Kubernetes-supervisor fleet's grid.
 describe("CollectorsTable on a Kubernetes-supervisor fleet", () => {
   const agentPod = collector({ id: "00000000-0000-4000-9000-0000000000a1", name: "agent-pod" });
   const clusterPod = collector({ id: "00000000-0000-4000-9000-0000000000a2", name: "cluster-pod", groupId: CLUSTER_GROUP_ID });
   const gatewayPod = collector({ id: "00000000-0000-4000-9000-0000000000a3", name: "gateway-pod", groupId: GATEWAYS_GROUP_ID });
 
-  // Ruling 66 (the owner's Q49): one Group column, where a server fleet's is, as the Groups tab's.
+  // One Group column, where a server fleet's is, as the Groups tab's.
   it("shows one Group column: the role's badge (Agent for the Default group's, Cluster for cluster's, Gateway for any other), then a gateway's name", () => {
     renderTable([agentPod, clusterPod, gatewayPod], { groups: kubernetesGroups(), fleetType: "kubernetes-supervisor" });
     expect(screen.getAllByRole("columnheader").map((each) => each.textContent)).toEqual([
@@ -625,7 +623,7 @@ describe("CollectorsTable on a Kubernetes-supervisor fleet", () => {
   });
 });
 
-describe("CollectorsTable's Variable group column (D20 default 25; Q84)", () => {
+describe("CollectorsTable's Variable group column", () => {
   const EU_ID = "7b000000-0000-4000-8000-0000000000e1";
   const CANARY_ID = "7b000000-0000-4000-8000-0000000000c1";
   const EU = variableGroup({ id: EU_ID, name: "eu-edge" });
@@ -684,7 +682,7 @@ describe("CollectorsTable's Variable group column (D20 default 25; Q84)", () => 
     expect(within(cellOf("web-01", "Variable group")).getByRole("button", { name: UNNAMED_VARIABLE_GROUP })).toBeInTheDocument();
   });
 
-  it("holds no variable group's name in any attribute (Q88)", async () => {
+  it("holds no variable group's name in any attribute", async () => {
     signIn();
     renderTable([collector({ pinnedVariableGroupId: CANARY_ID })]);
     await within(cellOf("web-01", "Variable group")).findByRole("button", { name: "canary-vg" });

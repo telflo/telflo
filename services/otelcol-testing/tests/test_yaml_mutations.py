@@ -1,5 +1,5 @@
 """The sandbox's mutations (R-105 is tested in `tests/test_security_fixes.py`,
-against the validator's neutraliser)."""
+against the validator's neutralizer)."""
 
 from __future__ import annotations
 

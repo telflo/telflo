@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-# pull-back.sh: what the registry serves is what was tested (D36-2 decision
-# 81; Preflight ruling 6), after --push-oci and --push-package and before the
-# GitHub Release.
+# pull-back.sh: what the registry serves is what was tested, after --push-oci
+# and --push-package and before the GitHub Release.
 #
 #   scripts/release/pull-back.sh --oci <dir> --version <v> (--chart <tgz> | --no-chart)
 #                                [--image <name>]... [--registry <r>] [--no-attest]

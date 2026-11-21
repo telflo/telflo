@@ -1,4 +1,4 @@
-# Decision 3: a declared extension service.extensions doesn't list stays
+# A declared extension service.extensions doesn't list stays
 # disabled; the list keeps its own order.
 receivers:
   otlp: {}

@@ -20,14 +20,14 @@ export interface CreateRefreshTokenInput {
  * The outcome of presenting a refresh token. `consumed` does not mean the
  * token was unexpired: the caller compares `expiresAt` with its own clock.
  * Both carry the session's user, so the caller can set the database context
- * before it reads the session's membership (D5 decision 2).
+ * before it reads the session's membership.
  * `already_consumed` carries the session so the caller can revoke it as a
  * reuse (see the refresh_tokens table comment, migration 1700000000004), and
  * when the token was consumed, so the caller can tell a concurrent
- * presentation within the grace window from a reuse (D2b decision 3). Its
- * `expiresAt` lets the caller refuse an expired token there too: an expired
- * token is consumed by its first presentation and then refused, and must not
- * earn an access token by being presented again.
+ * presentation within the grace window from a reuse. Its `expiresAt` lets
+ * the caller refuse an expired token there too: an expired token is consumed
+ * by its first presentation and then refused, and must not earn an access
+ * token by being presented again.
  */
 export type ConsumeResult =
   | { status: "consumed"; sessionId: string; userId: string; expiresAt: Date }
@@ -69,7 +69,7 @@ export function createRefreshTokenRepository(
 
     /**
      * One atomic statement: `consumed_at is null` is a predicate of the
-     * UPDATE itself (Ruling 21), never a prior select, so of two concurrent
+     * UPDATE itself, never a prior select, so of two concurrent
      * presentations of one token exactly one sees `consumed`. The other
      * updates nothing, and the lookup that follows reports it as
      * `already_consumed`, with the time the winner consumed it.

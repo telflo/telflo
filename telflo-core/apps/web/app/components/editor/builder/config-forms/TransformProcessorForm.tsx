@@ -21,16 +21,14 @@ import { ottlString } from "~/lib/ottl.js";
 import { findPattern } from "~/lib/regex-library.js";
 
 /*
- * The transform processor's form (ADR 0018), over the form's fields
- * (D9d decision 2, D9b's contract).
- * Collector claims are contrib v0.162.0's `processor/transformprocessor`
- * and `pkg/ottl`.
+ * The transform processor's form, over the form's fields. Collector claims
+ * are contrib v0.162.0's `processor/transformprocessor` and `pkg/ottl`.
  *
- * The statement lists (spec decision 10). The collector reads every flat
- * statement (a string item) of a list as one group, inferred together and
- * run after the list's groups, and refuses a group (a mapping item) after a
- * flat statement (`config.go:110-123`: "configuring multiple configuration
- * styles is not supported"). So:
+ * The statement lists. The collector reads every flat statement (a string
+ * item) of a list as one group, inferred together and run after the list's
+ * groups, and refuses a group (a mapping item) after a flat statement
+ * (`config.go:110-123`: "configuring multiple configuration styles is not
+ * supported"). So:
  * - A section shows its list as two runs: the groups, then the flat
  *   statements, each its own sortable list. Dragging moves an item's own
  *   lines (`form.move`) within its run only, so a group never lands after a
@@ -40,41 +38,40 @@ import { findPattern } from "~/lib/regex-library.js";
  *   `transform-trace-statement-2`, sortable `trace-group-0`), never a value.
  * - A text whose order is already refused (a group after a flat statement)
  *   shows its items as written, with dragging off and `REFUSED_ORDER_HINT`.
- * - Fixed (decision 3): Add Statement holds a row that isn't in the text
- *   (never `""`, which doesn't parse, `config.go:145-205`); its
- *   first typing appends the statement at the list's end. A flat row
- *   emptied and left removes its item. Add Statement Group holds a card
- *   (never `{statements: [""], conditions: []}`); its first
- *   statement typed writes the group, with what was typed into it before,
- *   inserted before the list's first flat statement (`useHeldItem`'s index:
- *   set at the length and moved, one change), worked out from the list as
- *   it is when the group is written (Ruling 46: a change keeping the list's
- *   length, from the YAML box or an undo, keeps the held card). A group's Add Condition and
- *   Add Statement hold their rows (`holdEmpty`); its only statement can't be
- *   removed (`keepLast`; never `statements: [""]`), Remove
- *   statement group removes the group. Removing a group's last condition
- *   removes `conditions`.
- * - Changed (decision 10): a template's Add writes its statements as a group
- *   of their own, `- statements: [...]`, inserted before the list's first
- *   flat statement in one change (one undo entry), so its context is
- *   inferred alone and templates combine (appended as flat
- *   statements, T7 beside T5, T6 or T8 would make a group the collector
- *   can't infer, `pkg/ottl/context_inferrer.go`), with a toast.
- *   T2's patterns come from the regex library through `ottlString`; T10's
- *   copy says what it does; T11 matches with `IsMatch` (OTTL has no
- *   `contains`, `pkg/ottl/grammar.go:593`), case-sensitive, a
- *   literal match (Preflight ruling 15).
- * - Changed (decision 4): Error Mode unset shows the collector's default,
- *   ignore (`factory.go:174`), as filter's.
- *   A group's Error Mode Inherited removes its key.
- * - Changed: the placeholders are each signal's own (a span or
- *   metric path is refused by the other signals).
- * - Strings are written as typed (decision 2): statements, conditions and
- *   contexts never go through `EscapedTextField`.
- * - A group the form can't show (not a mapping) is a card with D9b's hint;
- *   a group without `statements` shows none, never a throw.
+ * - Add Statement holds a row that isn't in the text (never `""`, which
+ *   doesn't parse, `config.go:145-205`); its first typing appends the
+ *   statement at the list's end. A flat row emptied and left removes its item.
+ *   Add Statement Group holds a card (never
+ *   `{statements: [""], conditions: []}`); its first statement typed writes
+ *   the group, with what was typed into it before, inserted before the list's
+ *   first flat statement (`useHeldItem`'s index: set at the length and moved,
+ *   one change), worked out from the list as it is when the group is written
+ *   (a change keeping the list's length, from the YAML box or an undo, keeps
+ *   the held card). A group's Add Condition and Add Statement hold their rows
+ *   (`holdEmpty`); its only statement can't be removed (`keepLast`; never
+ *   `statements: [""]`), Remove statement group removes the group. Removing a
+ *   group's last condition removes `conditions`.
+ * - A template's Add writes its statements as a group of their own,
+ *   `- statements: [...]`, inserted before the list's first flat statement in
+ *   one change (one undo entry), so its context is inferred alone and
+ *   templates combine (appended as flat statements, T7 beside T5, T6 or T8
+ *   would make a group the collector can't infer,
+ *   `pkg/ottl/context_inferrer.go`), with a toast. T2's patterns come from
+ *   the regex library through `ottlString`; T10's copy says what it does; T11
+ *   matches with `IsMatch` (OTTL has no `contains`,
+ *   `pkg/ottl/grammar.go:593`), case-sensitive, a literal match.
+ * - Error Mode unset shows the collector's default, ignore
+ *   (`factory.go:174`), as filter's. A group's Error Mode Inherited removes
+ *   its key.
+ * - The placeholders are each signal's own (a span or metric path is refused
+ *   by the other signals).
+ * - Strings are written as typed: statements, conditions and contexts never
+ *   go through `EscapedTextField`.
+ * - A group the form can't show (not a mapping) is a card with
+ *   `UNSHOWABLE_VALUE_MESSAGE`; a group without `statements` shows none, never
+ *   a throw.
  *
- * No statement, condition or context reaches an attribute (decision 13).
+ * No statement, condition or context reaches an attribute.
  */
 
 type Signal = "trace" | "metric" | "log";
@@ -85,7 +82,7 @@ interface SignalSection {
   title: string;
   /** The toast's name for it: "Added to Trace statements". */
   label: string;
-  /** Placeholders (the Parity Notes' per-signal row). */
+  /** Placeholders, per signal. */
   statement: string;
   groupStatement: string;
   condition: string;
@@ -121,7 +118,7 @@ export const SECTIONS: readonly SignalSection[] = [
   },
 ];
 
-/** Shown over a list whose order the collector refuses (spec decision 10). */
+/** Shown over a list whose order the collector refuses. */
 export const REFUSED_ORDER_HINT = "The collector refuses a statement group after a flat statement. Reorder them in the YAML below.";
 
 export const NO_CONDITIONS = "No conditions (statements always run)";
@@ -366,11 +363,11 @@ export function TransformProcessorForm() {
     });
   };
 
-  // Apply example pattern: its own group, before the flat statements (spec decision 10).
+  // Apply example pattern: its own group, before the flat statements.
   const applyExample = (example: ExamplePattern, targetSignal?: Signal) => {
     const signal = targetSignal ?? (example.signalType === "all" ? "trace" : example.signalType);
     const section = SECTIONS.find((s) => s.signal === signal)!;
-    // A row's typing lands on its own item before the list shifts; the list is read as that left it (Ruling 46).
+    // A row's typing lands on its own item before the list shifts; the list is read as that left it.
     flushHeldEdits();
     const view = readLatest(form, [section.key]);
     if (view.kind !== "list" && view.kind !== "absent") return;
@@ -516,7 +513,7 @@ interface Entry {
   held: boolean;
 }
 
-/** One signal's list: the groups' run, then the flat statements' run (spec decision 10). */
+/** One signal's list: the groups' run, then the flat statements' run. */
 function StatementsSection({ section }: { section: SignalSection }) {
   const form = useForm();
   const { signal } = section;
@@ -530,7 +527,7 @@ function StatementsSection({ section }: { section: SignalSection }) {
   // A group (anything but a string, to the collector) after a flat statement: refused (config.go:110-123).
   const refused = items.some((item, index) => index > firstFlat && typeof item !== "string");
   const [collapsed, setCollapsed] = useState<ReadonlySet<number>>(() => new Set());
-  // The held flat row belongs to the list's length when it was held: a change of length drops it (Ruling 33a).
+  // The held flat row belongs to the list's length when it was held: a change of length drops it.
   const [flatHeldAt, setFlatHeldAt] = useState<number | null>(null);
   const [seenLength, setSeenLength] = useState(items.length);
   if (seenLength !== items.length) {
@@ -704,7 +701,7 @@ function StatementsSection({ section }: { section: SignalSection }) {
           variant="outline"
           size="sm"
           className="flex-1"
-          // Where it goes is worked out from the list it is written into (Ruling 46).
+          // Where it goes is worked out from the list it is written into.
           onClick={() => heldGroup.hold(firstFlatIndex)}
           disabled={form.disabled || anyHeld}
         >

@@ -20,16 +20,15 @@ import { createFeedbackAdminService } from "./feedback-admin-service.js";
 import { createSystemRepository, type ISystemRepository } from "./repositories/system-repository.js";
 
 /*
- * User Feedback for product admins (D29 decisions 33, 34 and 37; decision
- * 44's feedback bullet): the pending list, 25 a page by an opaque cursor,
- * with each sender's current email and `authorDeleted`; the pending count;
- * acknowledge (204, marked, then the reply emailed to the sender after the
- * response and never stored), dismiss (204, no email); every refusal:
- * 404 `feedback_not_found` (missing, handled, a non-canonical id), 409
+ * User Feedback for product admins: the pending list, 25 a page by an opaque
+ * cursor, with each sender's current email and `authorDeleted`; the pending
+ * count; acknowledge (204, marked, then the reply emailed to the sender after
+ * the response and never stored), dismiss (204, no email); every refusal: 404
+ * `feedback_not_found` (missing, handled, a non-canonical id), 409
  * `feedback_author_deleted` (the item left pending), 403
- * `product_admin_required` when the caller lost the flag meanwhile, 429
- * past the writes' limit; a failed send logged with the item's id and fixed
- * words only.
+ * `product_admin_required` when the caller lost the flag meanwhile, 429 past
+ * the writes' limit; a failed send logged with the item's id and fixed words
+ * only.
  *
  * Another person's email, the feedback's text and the reply are personal
  * data: every check on them is a boolean, never a printed value.
@@ -210,7 +209,7 @@ describe("the product admins' User Feedback routes", () => {
     ).toBe(true);
     expect(all.at(-1)!.text === marker).toBe(true);
     expect(all.every((each) => each.createdAt.endsWith("Z"))).toBe(true);
-    // The list's audit rows hold counts only: the rows returned, the full page 25, never the look-ahead's 26 (Ruling 264).
+    // The list's audit rows hold counts only: the rows returned, the full page 25, never the look-ahead's 26.
     expect((await auditRows()).filter((row) => row.action === "product_admin.feedback_listed").map((row) => row.metadata)).toEqual([
       { count: USER_FEEDBACK_PAGE_SIZE },
       { count: 2 },
@@ -430,7 +429,7 @@ describe("the product admins' User Feedback routes", () => {
     expect((await item(feedback.id)).outcome).toBe("acknowledged");
   });
 
-  describe("a caller who lost the flag while a write waited (decision 34: 403 product_admin_required)", () => {
+  describe("a caller who lost the flag while a write waited (403 product_admin_required)", () => {
     const at = NOW;
     const service = (system: ISystemRepository) =>
       createFeedbackAdminService({

@@ -22,19 +22,18 @@ import { themeClassName, usePageTheme } from "~/lib/theme.js";
 import { themeFromRequest } from "~/lib/theme.server.js";
 import "./app.css";
 
-// The root layout (ADR 0018): no `links` export (app.css bundles the fonts,
-// so nothing is fetched from a CDN), no og:image tags, and no ChatKit script
-// (ADR 0007). PostHog and its cookie-consent banner are switched on by a
-// setting (D4 decision 8).
+// The root layout: no `links` export (app.css bundles the fonts, so nothing
+// is fetched from a CDN), no og:image tags, and no ChatKit script. PostHog
+// and its cookie-consent banner are switched on by a setting.
 
-// The server's settings the pages need: the public URL (D4 decision 5), which
-// pages' meta functions read from root's match (lib/seo.ts) and the Layout
-// from useRouteLoaderData, and PostHog's settings (D4 decision 8). null, not
-// undefined, when unset. And the theme the request's `telflo_theme` cookie
-// names (D21 decisions 5 and 23), Dark when it names none of the three: the
-// auth screens render it on a full load. Only the word goes out, never the
-// cookie itself. And the site's switches and links (D36-1 decision 28;
-// lib/site.server.ts), which useSite() reads: nothing secret.
+// The server's settings the pages need: the public URL, which pages' meta
+// functions read from root's match (lib/seo.ts) and the Layout from
+// useRouteLoaderData, and PostHog's settings. null, not undefined, when
+// unset. And the theme the request's `telflo_theme` cookie names, Dark
+// when it names none of the three: the auth screens render it on a full
+// load. Only the word goes out, never the cookie itself. And the site's
+// switches and links (lib/site.server.ts), which useSite() reads: nothing
+// secret.
 export function loader({ request }: Route.LoaderArgs) {
   return {
     publicWebUrl: publicWebUrl() ?? null,
@@ -54,19 +53,18 @@ export const meta: Route.MetaFunction = () => [
   { property: "og:type", content: "website" },
 ];
 
-// <html>'s class is the page's theme (D21 decision 22; lib/theme.ts's
-// usePageTheme), in the server's HTML, with no script: a signed-in page
-// renders the stored theme from the layout's `/me`; the seven auth screens
-// the theme this browser was last told (the remembered value after a
-// client-side navigation, else the `telflo_theme` cookie); everything else,
-// a 404 and a failed layout loader included, `dark`. The server and the
-// hydrating client read the same inputs, so the class matches (the
-// marketing pages' own theme script left with them: D36-1 decision 20).
+// <html>'s class is the page's theme (lib/theme.ts's usePageTheme), in the
+// server's HTML, with no script: a signed-in page renders the stored theme
+// from the layout's `/me`; the seven auth screens the theme this browser
+// was last told (the remembered value after a client-side navigation, else
+// the `telflo_theme` cookie); everything else, a 404 and a failed layout
+// loader included, `dark`. The server and the hydrating client read the
+// same inputs, so the class matches.
 //
 // The Organization JSON-LD's url and logo follow TELFLO_PUBLIC_WEB_URL. Root's
 // loader data can be undefined here (the Layout also wraps the error
 // boundary), and the JSON-LD then leaves them out, as without the setting.
-// Its `<`s are escaped, so no setting can end the script early (D4 Ruling 16).
+// Its `<`s are escaped, so no setting can end the script early.
 export function Layout({ children }: { children: React.ReactNode }) {
   const rootData = useRouteLoaderData<typeof loader>("root");
   const theme = usePageTheme();
@@ -93,26 +91,25 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-// The one Toaster, here rather than in AppLayout
-// (D2a Ruling 12): the root route stays mounted across every navigation, so a
-// toast raised just before one (logout's, on its way to /login) is shown at
-// once instead of waiting for the next Toaster to mount. It renders nothing
-// until there is a toast, so the server and client markup match. It follows
-// the page's theme, as <html>'s class does (D21 decision 26).
+// The one Toaster, here rather than in AppLayout: the root route stays mounted
+// across every navigation, so a toast raised just before one (logout's, on its
+// way to /login) is shown at once instead of waiting for the next Toaster to
+// mount. It renders nothing until there is a toast, so the server and client
+// markup match. It follows the page's theme, as <html>'s class does.
 //
 // PostHog starts, and the consent banner shows, only when the server has a
-// key (D4 decision 8). The banner renders nothing until it has read the
-// stored choice in an effect, so the markup matches here too.
+// key. The banner renders nothing until it has read the stored choice in
+// an effect, so the markup matches here too.
 //
-// The one host for every Monaco's screen-reader live region (D14a Ruling 48;
-// lib/editor/use-aria-container.ts) goes here for the same reason: the root
+// The one host for every Monaco's screen-reader live region
+// (lib/editor/use-aria-container.ts) goes here for the same reason: the root
 // route stays mounted, so the host outlives every editor and viewer. Its
-// wrapper (MonacoAriaHostSlot) is an empty `ph-no-capture` div, kept
-// audible under modal dialogs by `aria-live="off"` (Ruling 52), on the server
-// and the client alike; the host is put in it after hydration.
+// wrapper (MonacoAriaHostSlot) is an empty `ph-no-capture` div, kept audible
+// under modal dialogs by `aria-live="off"`, on the server and the client
+// alike; the host is put in it after hydration.
 export default function App() {
   const analytics = useRouteLoaderData<typeof loader>("root")?.analytics ?? null;
-  // The banner's policy link, the site's (D36-1 decision 33): "" names none.
+  // The banner's policy link, the site's: "" names none.
   const cookiePolicyUrl = useSite().terms.cookiePolicyUrl;
   useAnalytics(analytics);
   const theme = usePageTheme();
@@ -121,7 +118,7 @@ export default function App() {
       <Outlet />
       {analytics && <CookieConsentBanner cookiePolicyUrl={cookiePolicyUrl} />}
       <Toaster theme={theme} />
-      {/* Every Monaco's screen-reader live region: one host, replay-blocked, never removed, audible under dialogs (D14a Rulings 48, 52). */}
+      {/* Every Monaco's screen-reader live region: one host, replay-blocked, never removed, audible under dialogs. */}
       <MonacoAriaHostSlot />
     </>
   );

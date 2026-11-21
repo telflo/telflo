@@ -1,6 +1,6 @@
 """Helpers shared across executor strategies.
 
-The rules (D14a Task 4; Preflight rulings 2 and 5):
+The rules:
 
 1. **Readiness** (``_wait_for_ready``): a TCP probe with a 10 s limit. It
    never drains or reads the collector's pipes (they are drained as the
@@ -16,7 +16,7 @@ The rules (D14a Task 4; Preflight rulings 2 and 5):
    another run (or any outgoing connection) could take the port in. Each
    run leases a port from a range below
    the kernels' ephemeral ranges (so no outgoing connection is ever given
-   one) with a lock file that every run's child honours, held until the run
+   one) with a lock file that every run's child honors, held until the run
    ends; the probe socket that proves the port free is released just before
    the collector starts.
 3. **The informer wait verifies the cluster** (``_wait_for_pod_listable``):
@@ -28,7 +28,7 @@ The rules (D14a Task 4; Preflight rulings 2 and 5):
    collector in a ``finally``, reaps it while its pipes drain, and reads the
    output in the answer's form (`app/output_reader.py`).
 5. The OTLP replay's client is ``httpx2`` (``httpx`` brings ``certifi``,
-   MPL-2.0; Preflight ruling 19), imported as ``httpx``.
+   MPL-2.0), imported as ``httpx``.
 
 ``build_kwok_env``: ``KUBECONFIG`` only when the pipeline
 uses a Kubernetes processor and the cluster is there.
@@ -235,7 +235,7 @@ async def _wait_for_ready_marker(
 # a k8sattributes / k8sobjects / k8s_cluster processor: those processors
 # create a Kubernetes informer that does an initial list+watch sync against
 # the apiserver; records fed before that sync silently miss the k8s.*
-# attributes. Ruling 2's 5.2 s is these two together.
+# attributes. The run's 5.2 s informer phase is these two together.
 K8S_INFORMER_SYNC_TIMEOUT_SECONDS = 5.0
 K8S_INFORMER_POST_LIST_BUFFER_SECONDS = 0.2
 

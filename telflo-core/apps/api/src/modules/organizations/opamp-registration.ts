@@ -9,20 +9,19 @@ import {
 
 /*
  * The opamp-server's registry of organizations, kept in step with the
- * platform's (D11a decision 20). The platform registers an organization
- * after its own commit, best effort: each change is scheduled with
- * runAfterResponse, so a request is never slower for it and never fails
- * because the opamp-server is down. A miss is a logged warning; D11b's
- * publish and D16b's fleet create "ensure" the organization first
- * (`ensureOrganization`, below), which heals it.
+ * platform's. The platform registers an organization after its own commit,
+ * best effort: each change is scheduled with runAfterResponse, so a request is
+ * never slower for it and never fails because the opamp-server is down. A miss
+ * is a logged warning; a configuration's publish and a fleet's create "ensure"
+ * the organization first (`ensureOrganization`, below), which heals it.
  *
  * - created: createAccount's personal organization (password, Google and
  *   invitation sign-up) and "New organization"'s group one, POSTed with the
  *   platform's own id, so a retry is safe;
  * - renamed: PATCH, when a rename changed the name;
  * - deleted: DELETE, which takes the organization's publications, fleets,
- *   collectors and tokens with it, retried until it lands (D16b decision
- *   20, Preflight ruling 14; nothing else would heal a missed delete).
+ *   collectors and tokens with it, retried until it lands (nothing else
+ *   would heal a missed delete).
  *
  * The create and the rename aren't retried: a retried rename could land
  * after a later one, and a fleet's create and a publish ensure both.
@@ -76,14 +75,14 @@ export const unrefTimer: SetTimer = (callback, delayMs) => {
 };
 
 /**
- * Preflight ruling 14: an organization's delete is attempted at once (the
- * after-response task), then 5 s, 30 s, 2 min and 10 min after each
- * failure before it (five attempts, about 12.6 minutes in all).
+ * An organization's delete is attempted at once (the after-response task),
+ * then 5 s, 30 s, 2 min and 10 min after each failure before it (five
+ * attempts, about 12.6 minutes in all).
  */
 export const DELETE_RETRY_DELAYS_MS: readonly number[] = Object.freeze([5_000, 30_000, 120_000, 600_000]);
 
 export interface OpampRegistrationDependencies {
-  /** Required (D11b decision 8): every server has one, and tests a fake's. */
+  /** Required: every server has one, and tests a fake's. */
   opampServer: OpampServerClient;
   runAfterResponse: RunAfterResponse;
   log: Pick<FastifyBaseLogger, "warn" | "error">;
@@ -135,15 +134,14 @@ export type EnsureOrganizationResult =
     };
 
 /**
- * D11a decision 20, as D11b's publish ensures it before its snapshot (and
- * D16b's fleet create before its fleet, decision 15): the organization
- * registered under its current name. A create with the platform's id; on a
- * conflict (registered under another name, by an earlier rename the
- * best-effort hooks missed), a rename. A rename that finds it gone (deleted
- * since the conflict) fails, as an outage would: a retry registers it
- * again. A misconfiguration (the client's OpampServerMisconfigurationError)
- * is thrown, as the client throws it. Logs nothing: the caller logs its
- * ids and the result's kind.
+ * The organization registered under its current name, as a configuration's
+ * publish ensures it before its snapshot (and a fleet's create before its
+ * fleet). A create with the platform's id; on a conflict (registered under
+ * another name, by an earlier rename the best-effort hooks missed), a
+ * rename. A rename that finds it gone (deleted since the conflict) fails,
+ * as an outage would: a retry registers it again. A misconfiguration (the
+ * client's OpampServerMisconfigurationError) is thrown, as the client
+ * throws it. Logs nothing: the caller logs its ids and the result's kind.
  */
 export async function ensureOrganization(
   opampServer: Pick<OpampServerClient, "createOrganization" | "renameOrganization">,
@@ -175,7 +173,7 @@ export function createOpampRegistration(deps: OpampRegistrationDependencies): Op
   const retryDelaysMs = deps.deleteRetryDelaysMs ?? DELETE_RETRY_DELAYS_MS;
   const setTimer = deps.setTimer ?? unrefTimer;
   const attempts = retryDelaysMs.length + 1;
-  /** Each organization whose delete is pending, with how many deletes of it are (a fleet's create can ask again: Preflight ruling 13). */
+  /** Each organization whose delete is pending, with how many deletes of it are (a fleet's create can ask again). */
   const pending = new Map<string, number>();
   /** The cancels of the timers waiting to hand a later attempt to the runner. */
   const timers = new Set<() => void>();
@@ -222,14 +220,14 @@ export function createOpampRegistration(deps: OpampRegistrationDependencies): Op
   }
 
   /**
-   * Preflight ruling 14: attempt `attempt` of the organization's delete,
-   * handed to the runner (so the tests' and the browser tests' runners see
-   * every attempt). Done: deleted, or not found (the DELETE is idempotent).
-   * Retried, after the next delay: unavailable (a timeout, the network, a
-   * 5xx, an oversized reply). Stopped at once, at error: invalid, a
-   * misconfiguration, any other throw (its name only). Each failed attempt
-   * is a warning with the ids, the attempt and the wait; the last an error
-   * saying to reconcile by hand. Never a name, an email or a message.
+   * Attempt `attempt` of the organization's delete, handed to the runner
+   * (so the tests' and the browser tests' runners see every attempt). Done:
+   * deleted, or not found (the DELETE is idempotent). Retried, after the
+   * next delay: unavailable (a timeout, the network, a 5xx, an oversized
+   * reply). Stopped at once, at error: invalid, a misconfiguration, any
+   * other throw (its name only). Each failed attempt is a warning with the
+   * ids, the attempt and the wait; the last an error saying to reconcile by
+   * hand. Never a name, an email or a message.
    */
   function attemptDelete(organizationId: string, attempt: number): void {
     runAfterResponse(async () => {

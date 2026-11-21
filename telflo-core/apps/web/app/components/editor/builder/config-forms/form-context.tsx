@@ -28,27 +28,26 @@ import {
 } from "~/lib/stores/editor-store.js";
 
 /*
- * The form hook and the fields (D9b decisions 2 and 3; plan Task 3).
+ * The form hook and the fields.
  *
- * A form never holds the config. It reads each value from the text's
- * document through a `FormSource` (`read(path)`, Task 1's `readValue`
- * under the source's base) and sends key-path changes (`apply`, and its
- * shorthands). Two sources:
+ * A form never holds the config. It reads each value from the text's document
+ * through a `FormSource` (`read(path)`, `readValue` under the source's base)
+ * and sends key-path changes (`apply`, and its shorthands). Two sources:
  * - `useComponentForm(nodeId)`: the component's value in the text; writes
  *   go through the store's `setComponentValues` (one entry per run of
  *   changes within 800 ms, "Update <label>"). Disabled while the canvas is
  *   locked (manual edit mode, a text the canvas can't show), on a published
- *   version (D11b decision 4), and for an undeclared component.
- * - `useTelemetryDraft(open)`: the Self-monitoring dialog's draft
- *   (decision 7), taken from the text when the dialog opens. It is a copy
- *   of the text with the dialog's changes written into it by the same text
- *   edits, so its fields show what the text writes (`0750`, `${env:X}`) and
- *   its changes are kept in order: Apply sends them to the store's
- *   `setTelemetryValues`, which writes them into the text as the draft did
- *   (a draft reading as the text again writes nothing).
+ *   version, and for an undeclared component.
+ * - `useTelemetryDraft(open)`: the Self-monitoring dialog's draft, taken
+ *   from the text when the dialog opens. It is a copy of the text with the
+ *   dialog's changes written into it by the same text edits, so its fields
+ *   show what the text writes (`0750`, `${env:X}`) and its changes are kept
+ *   in order: Apply sends them to the store's `setTelemetryValues`, which
+ *   writes them into the text as the draft did (a draft reading as the text
+ *   again writes nothing).
  *
  * Fields take a path under the source (`FormScope` prefixes one, for a
- * shared section bound to `protocols.grpc`), and follow decision 3:
+ * shared section bound to `protocols.grpc`), and follow these rules:
  * - a plain scalar that isn't a string shows its characters as written, a
  *   string its value; an explicit null shows as unset;
  * - unset shows empty, with the collector's default as the placeholder and
@@ -70,10 +69,9 @@ import {
  * writing it).
  *
  * Every field's `id` is fixed by the form; no value, label or path reaches
- * an attribute (decision 10). No field sits inside a `<form>` element
- * (Preflight ruling 16).
+ * an attribute. No field sits inside a `<form>` element.
  *
- * D9c's fields (its decisions 5 and 9; Preflight rulings 1, 8-12):
+ * More fields and options:
  * - `TextField`'s `datalist` (journald's priorities), fixed options under a
  *   fixed id; `EscapedTextField` (recombine's Combine With) shows a newline
  *   as `\n`, a carriage return as `\r`, a tab as `\t` and a backslash as `\\`;
@@ -91,39 +89,38 @@ import {
  * - `useCheckboxSet`, `CheckboxSetField`'s reading and writing for a form
  *   that lays its boxes out itself (resourcedetection's detector groups),
  *   and `BareSelectField`, a select with no label of its own (k8sattributes'
- *   rule sources and label cards) (Task 3);
+ *   rule sources and label cards);
  * - `CheckboxField`'s `describedClassName`, described box rows (hostmetrics'
- *   Include Virtual Filesystems and Divide by CPU Count) (Task 4);
- * - `TextField`'s and `CheckboxField`'s `excludes`, decision 7's pairs the
- *   collector refuses together (csv's Header and Header Attribute, Lazy and
- *   Ignore quotes; Task 6): typing in one removes the other, ticking one
- *   unticks the other, in the same change, with no alert (Preflight ruling
- *   15, as filelog's multiline patterns);
- * - the logs receivers' options (Task 8): `MultiValueField`'s
- *   `emptyRemovesKey` and row classes, `CheckboxField`'s `onToggle`,
- *   `disabled` and block classes, `TextField`'s `disabled`, `RadioField`'s
- *   `optionClassName` and `ignoreCase` (Ruling 74).
+ *   Include Virtual Filesystems and Divide by CPU Count);
+ * - `TextField`'s and `CheckboxField`'s `excludes`, pairs the collector
+ *   refuses together (csv's Header and Header Attribute, Lazy and Ignore
+ *   quotes): typing in one removes the other, ticking one unticks the other,
+ *   in the same change, with no alert (as filelog's multiline patterns);
+ * - the logs receivers' options: `MultiValueField`'s `emptyRemovesKey` and
+ *   row classes, `CheckboxField`'s `onToggle`, `disabled` and block
+ *   classes, `TextField`'s `disabled`, `RadioField`'s `optionClassName`
+ *   and `ignoreCase`.
  *
- * D9d's (its decision 12; Preflight rulings 7, 14, 21, 23): `FormScope`'s
- * `prune`; `SelectField`'s `unsetOption` (`UNSET_OPTION`, `__unset__`);
- * `CheckboxField`'s `checkedRemoves`; `CheckboxSetField`'s
- * `""` item; `NumberField`'s `writeSame`; `MultiValueField`'s `numeric`
- * rows. The rest are in `shared/`: `ListTextField` and `NumberListField`,
- * `NativeSelectField`, held cards (`useHeldItem`, `ItemScope`),
- * `DimensionListField`, and the retry and queue sections' `idPrefix` and
- * `absentMeans`. Task 5: `DurationField`'s `grammar: "prometheus"`.
+ * And: `FormScope`'s `prune`; `SelectField`'s `unsetOption`
+ * (`UNSET_OPTION`, `__unset__`); `CheckboxField`'s `checkedRemoves`;
+ * `CheckboxSetField`'s `""` item; `NumberField`'s `writeSame`;
+ * `MultiValueField`'s `numeric` rows. The rest are in `shared/`:
+ * `ListTextField` and `NumberListField`, `NativeSelectField`, held cards
+ * (`useHeldItem`, `ItemScope`), `DimensionListField`, and the retry and
+ * queue sections' `idPrefix` and `absentMeans`; and `DurationField`'s
+ * `grammar: "prometheus"`.
  */
 
 /**
- * A box in an `items-start` row beside a `text-sm` label and its
- * description (Ruling 85): the label's first line is 20 px tall (`text-sm`
- * keeps its own line height in a `leading-none` block, as tailwind-merge
- * drops the Label's `leading-none`), so the 16 px box is moved down 2 px to
- * sit centred on it, not 2 px high.
+ * A box in an `items-start` row beside a `text-sm` label and its description:
+ * the label's first line is 20 px tall (`text-sm` keeps its own line height
+ * in a `leading-none` block, as tailwind-merge drops the Label's
+ * `leading-none`), so the 16 px box is moved down 2 px to sit centered on it,
+ * not 2 px high.
  */
 export const DESCRIBED_BOX = "mt-0.5";
 
-/** Under a field whose value in the text it can't show (decision 3). */
+/** Under a field whose value in the text it can't show. */
 export const UNSHOWABLE_VALUE_MESSAGE = "This value is written in a form this field can't show. Edit it in the YAML below.";
 
 export interface FormSource {
@@ -147,13 +144,13 @@ export interface FormSource {
    * The component's key in the text (`connectors.routing/tenants`), on a
    * component's own source (`useComponentForm`) only: a form that needs its
    * component's name reads it from the source its fields are given
-   * (routing's and failover's pipeline options, D9d Task 4).
+   * (routing's and failover's pipeline options).
    */
   componentKey?: string | undefined;
   /**
    * The component's node, on a component's own source only: `readLatest`
    * finds the component's key in the store by it, so a rename written since
-   * this render (Instance Name's held edit, flushed) is followed (D9d Ruling 48a).
+   * this render (Instance Name's held edit, flushed) is followed.
    */
   nodeId?: string | undefined;
 }
@@ -205,16 +202,15 @@ export function useForm(): FormSource {
 /**
  * The fields below address paths under `path` (a shared section bound to `protocols.grpc`).
  *
- * With `prune` (D9d decision 12; Preflight ruling 23), a change that leaves
- * the scope's block (a mapping) with no keys removes the block instead, in
- * the same write: the file exporter's `rotation`, which the collector reads
- * as on while it exists, syslog's UDP `async` (D9c Ruling 74). Only a block
- * that held keys before the change is removed, so a block the text had
- * empty (`rotation: {}`) stays until a key typed into it is cleared. A
- * block holding a key no field shows still holds it after the change, so it
- * is never removed. Nested scopes prune each level: an inner scope's
- * removal of its block is a change to the outer block, which the outer
- * scope then removes in its place when that empties it.
+ * With `prune`, a change that leaves the scope's block (a mapping) with no
+ * keys removes the block instead, in the same write: the file exporter's
+ * `rotation`, which the collector reads as on while it exists, syslog's UDP
+ * `async`. Only a block that held keys before the change is removed, so a
+ * block the text had empty (`rotation: {}`) stays until a key typed into it
+ * is cleared. A block holding a key no field shows still holds it after the
+ * change, so it is never removed. Nested scopes prune each level: an inner
+ * scope's removal of its block is a change to the outer block, which the
+ * outer scope then removes in its place when that empties it.
  */
 export function FormScope({ path, prune = false, children }: { path: ValuePath; prune?: boolean; children: ReactNode }) {
   const form = useForm();
@@ -230,7 +226,7 @@ export function FormScope({ path, prune = false, children }: { path: ValuePath; 
       form.disabled,
     );
   }, [form, prefixKey, prune]);
-  // Decision 7's messages from below name their paths under the scope: passed on under its path (D9d Ruling 41d).
+  // The adjustment messages from below name their paths under the scope: passed on under its path.
   return (
     <FormProvider form={scoped}>
       <HeldNotices prefix={path}>{children}</HeldNotices>
@@ -266,7 +262,7 @@ export function emptiesBlock(block: ValueView, changes: readonly ValueChange[]):
 
 // ── Sources ──
 
-/** A component's form: its value in the text, written through the store (decision 2). */
+/** A component's form: its value in the text, written through the store. */
 export function useComponentForm(nodeId: string): FormSource {
   const document = useEditorStore((state) => state.document);
   const locked = useEditorStore(selectIsEditingLocked);
@@ -291,15 +287,14 @@ export function useComponentForm(nodeId: string): FormSource {
 
 /**
  * What the text holds at `path` now, a write made since this render
- * included (D9d Ruling 46): a component's own source reads the store's
- * text, any other source its `read`. A button that flushes the fields' held
- * edits and then works out where to write (transform's templates,
- * redaction's Quick Add, a held card's write) reads the list this way, so a
- * typed statement just written is counted, not overwritten. The component's
- * key is the store's for the node now (Ruling 48a): an Instance Name typed
- * and flushed by the same click renamed it, and the key this render had
- * names nothing, so the list would read as empty and its first item be
- * written over.
+ * included: a component's own source reads the store's text, any other
+ * source its `read`. A button that flushes the fields' held edits and then
+ * works out where to write (transform's templates, redaction's Quick Add, a
+ * held card's write) reads the list this way, so a typed statement just
+ * written is counted, not overwritten. The component's key is the store's
+ * for the node now: an Instance Name typed and flushed by the same click
+ * renamed it, and the key this render had names nothing, so the list would
+ * read as empty and its first item be written over.
  */
 export function readLatest(form: FormSource, path: ValuePath): ValueView {
   if (form.nodeId === undefined) return form.read(path);
@@ -309,20 +304,20 @@ export function readLatest(form: FormSource, path: ValuePath): ValueView {
   return document !== null && key !== undefined ? readValue(document, splitKey(key), path) : ABSENT;
 }
 
-/** The Self-monitoring dialog's draft (decision 7). */
+/** The Self-monitoring dialog's draft. */
 export interface TelemetryDraft extends FormSource {
   /** The changes written into the draft since it was taken, in order: what Apply sends. */
   changes: readonly ValueChange[];
   /** Whether the draft reads differently from the text it was taken from. */
   changed: boolean;
-  /** The text the draft was taken from: Apply writes only while the text is still this (Ruling 65). */
+  /** The text the draft was taken from: Apply writes only while the text is still this. */
   seed: string;
   /** Takes the draft again from the text as it is now, dropping its changes. */
   retake: () => void;
   /**
    * The draft's changes as they are now, a write made since this render
-   * included: what Apply sends once it has flushed the held edits (Ruling
-   * 71). `changes` and `changed` are this render's.
+   * included: what Apply sends once it has flushed the held edits. `changes`
+   * and `changed` are this render's.
    */
   latest: () => { changes: readonly ValueChange[]; changed: boolean };
 }
@@ -342,18 +337,17 @@ function takeDraft(): DraftState {
 
 /**
  * The dialog's draft: taken from the text each time `open` turns true, and
- * while open only by `retake` (Apply over a text that changed since; Ruling
- * 65). Its fields read the draft; their changes are written
- * into the draft's text (a change the text edits can't write toasts D9a's
- * message and is refused). Read-only while the canvas is locked, and when
- * `service.telemetry` is neither a mapping nor unset (Preflight ruling 17).
+ * while open only by `retake` (Apply over a text that changed since). Its
+ * fields read the draft; their changes are written into the draft's text (a
+ * change the text edits can't write toasts `CANT_EDIT_ON_CANVAS_MESSAGE` and
+ * is refused). Read-only while the canvas is locked, and when
+ * `service.telemetry` is neither a mapping nor unset.
  *
  * Closed, the draft is kept, so the dialog's body shows it until Radix
- * unmounts it (no close animation today; a later one wouldn't blank it;
- * Rulings 73, 80), but it takes no write: a field flushing as
- * it goes then writes nothing. Reads go through the draft's ref, so a read
- * after a write (a flush at Apply, Ruling 71) sees it before the next
- * render.
+ * unmounts it (no close animation today; a later one wouldn't blank it), but
+ * it takes no write: a field flushing as it goes then writes nothing. Reads go
+ * through the draft's ref, so a read after a write (a flush at Apply) sees it
+ * before the next render.
  */
 export function useTelemetryDraft(open: boolean): TelemetryDraft {
   const locked = useEditorStore(selectIsEditingLocked);
@@ -510,7 +504,7 @@ export function TextField({
 }: FieldProps & {
   type?: "text" | "password" | "url";
   datalist?: readonly string[];
-  /** A key the collector refuses beside this one: what is typed removes it in the same change (decision 7). */
+  /** A key the collector refuses beside this one: what is typed removes it in the same change. */
   excludes?: ValuePath;
   /** Disabled by the form (filelog's multiline pattern while the other is set). */
   disabled?: boolean;
@@ -552,16 +546,15 @@ export function TextField({
 }
 
 /**
- * A string shown with its escapes (D9c decision 8; Preflight ruling 1;
- * recombine's Combine With): a newline shows as `\n`, a carriage return as
- * `\r`, a tab as `\t` and a backslash as `\\`. What is typed is read back
- * the same way (`\n`, `\r`, `\t`, `\\`; any other backslash is itself), so
- * typing `\n` writes a newline, which the text edits write double-quoted
- * (`"\n"`). A single-quoted `'\n'` (a backslash and an `n`) shows `\\n`, and
- * blurring it unchanged writes nothing. It reads the scalar itself: a line
- * break is what it shows, not a reason it can't; any other control
- * character has no escape here and makes the field read-only with
- * decision 3's hint (D9c review).
+ * A string shown with its escapes (recombine's Combine With): a newline shows
+ * as `\n`, a carriage return as `\r`, a tab as `\t` and a backslash as `\\`.
+ * What is typed is read back the same way (`\n`, `\r`, `\t`, `\\`; any other
+ * backslash is itself), so typing `\n` writes a newline, which the text edits
+ * write double-quoted (`"\n"`). A single-quoted `'\n'` (a backslash and an
+ * `n`) shows `\\n`, and blurring it unchanged writes nothing. It reads the
+ * scalar itself: a line break is what it shows, not a reason it can't; any
+ * other control character has no escape here and makes the field read-only
+ * with `UNSHOWABLE_VALUE_MESSAGE`.
  */
 export function EscapedTextField(field: FieldProps) {
   const form = useForm();
@@ -607,11 +600,10 @@ export function unescapeText(typed: string): string {
 /**
  * A number or a reference: what was typed, written plain when it reads as a number (0 included).
  *
- * With `writeSame` (D9d Preflight ruling 14), what is typed is written even
- * when it reads as what the field shows: statsd's `socket_permissions`
- * quoted (`"0622"`, which the collector refuses) is retyped to write it
- * plain, as D9c Ruling 47's docker_stats `api_version`. The write is a text
- * splice like any other.
+ * With `writeSame`, what is typed is written even when it reads as what the
+ * field shows: statsd's `socket_permissions` quoted (`"0622"`, which the
+ * collector refuses) is retyped to write it plain, as docker_stats'
+ * `api_version` is. The write is a text splice like any other.
  */
 export function NumberField({ writeSame = false, ...field }: FieldProps & { writeSame?: boolean }) {
   const { text, unshowable, readOnly } = useTextField(
@@ -645,10 +637,10 @@ export function NumberField({ writeSame = false, ...field }: FieldProps & { writ
  * A Go duration or a reference, written as a string; an error shows for what
  * the collector refuses.
  *
- * With `grammar: "prometheus"` (D9d decision 12; the prometheus receiver's
- * scrape jobs), the error shows for what Prometheus refuses, with its own
- * copy (`shared/prometheus-duration.ts`): `1d` and `1h30m` are taken, `1.5h`
- * and a bare number are not. Either way what was typed is written.
+ * With `grammar: "prometheus"` (the prometheus receiver's scrape jobs), the
+ * error shows for what Prometheus refuses, with its own copy
+ * (`shared/prometheus-duration.ts`): `1d` and `1h30m` are taken, `1.5h` and
+ * a bare number are not. Either way what was typed is written.
  */
 export function DurationField({ grammar = "go", ...field }: FieldProps & { grammar?: "go" | "prometheus" }) {
   const { form, text, unshowable, readOnly } = useTextField(field.path, false, (current, typed) =>
@@ -722,7 +714,7 @@ export function BareTextField({
   multiline?: boolean;
   rows?: number;
   className?: string;
-  /** Clearing removes the key, as a labelled field's does, rather than writing `""` (time_parser's custom layout; D9c Ruling 63). */
+  /** Clearing removes the key, as a labeled field's does, rather than writing `""` (time_parser's custom layout). */
   emptyRemoves?: boolean;
 }) {
   const { text, unshowable, readOnly } = useTextField(path, multiline, (form, typed) => form.set(path, typed), !emptyRemoves);
@@ -759,18 +751,18 @@ export function BareTextField({
 export interface SelectOption {
   value: string;
   label: string;
-  /** Listed but can't be chosen (redaction's HMAC hashes without an `hmac_key`; D9d Task 10). A text holding it still shows it. */
+  /** Listed but can't be chosen (redaction's HMAC hashes without an `hmac_key`). A text holding it still shows it. */
   disabled?: boolean;
 }
 
 /**
- * The unset option's value (D9d Preflight ruling 21), a sentinel.
- * It is never written; a text value with these characters shows as an
- * extra option whose value is `WRITTEN_OPTION`.
+ * The unset option's value, a sentinel. It is never written; a text value
+ * with these characters shows as an extra option whose value is
+ * `WRITTEN_OPTION`.
  */
 export const UNSET_OPTION = "__unset__";
 
-/** The value of an option showing a value the options don't have, where the value itself can't be the option's (decision 13). */
+/** The value of an option showing a value the options don't have, where the value itself can't be the option's. */
 export const WRITTEN_OPTION = "written-value";
 
 /**
@@ -778,14 +770,14 @@ export const WRITTEN_OPTION = "written-value";
  * placeholder (the default's label); a value outside the options is shown
  * as an extra option, as written.
  *
- * With `unsetOption` (D9d decision 12), an option with that label is listed
- * first and shown while the key is unset; choosing it removes the key (or
- * calls `onUnset`). Its value is `UNSET_OPTION`, never written.
+ * With `unsetOption`, an option with that label is listed first and shown
+ * while the key is unset; choosing it removes the key (or calls
+ * `onUnset`). Its value is `UNSET_OPTION`, never written.
  *
- * D9d Task 10 (redaction's Hash Function): an option may be `disabled`
- * (listed, not choosable); with `ignoreCase`, the text matches an option in
- * any case, as the collector reads it (`SHA1` shows as SHA-1, as
- * `RadioField`'s `ignoreCase`), and a choice writes the option's value.
+ * For redaction's Hash Function, an option may be `disabled` (listed, not
+ * choosable); with `ignoreCase`, the text matches an option in any case, as
+ * the collector reads it (`SHA1` shows as SHA-1, as `RadioField`'s
+ * `ignoreCase`), and a choice writes the option's value.
  */
 export function SelectField({
   options,
@@ -805,7 +797,7 @@ export function SelectField({
   onUnset?: () => void;
   /** The text matches an option in any case, as the collector reads it; a choice writes the option's value. */
   ignoreCase?: boolean;
-  /** The fixed options' classes (the S3 storage classes and ACLs are `font-mono text-xs`; D9d Task 12). */
+  /** The fixed options' classes (the S3 storage classes and ACLs are `font-mono text-xs`). */
   itemClassName?: string;
 }) {
   const form = useForm();
@@ -862,10 +854,10 @@ export function SelectField({
 
 /**
  * A select with no label of its own (k8sattributes' rule sources and the
- * label cards' From; D9c Task 3), as `SelectField` writes and shows it: at
+ * label cards' From), as `SelectField` writes and shows it: at
  * once, a value outside the options as an extra option, unset as the
  * placeholder (the collector's default's label, where it has one), a value
- * it can't show read-only with decision 3's hint.
+ * it can't show read-only with `UNSHOWABLE_VALUE_MESSAGE`.
  */
 export function BareSelectField({
   path,
@@ -883,7 +875,7 @@ export function BareSelectField({
   placeholder?: string;
   className?: string;
   onSelect?: (value: string) => void;
-  /** Fixed, never a value: the select's name where no label names it (metricstransform's "Operation action"; D9d Task 6). */
+  /** Fixed, never a value: the select's name where no label names it (metricstransform's "Operation action"). */
   ariaLabel?: string;
 }) {
   const form = useForm();
@@ -920,16 +912,15 @@ export function BareSelectField({
 /**
  * A boolean, written at once, as a checkbox row; unset shows the collector's
  * default. With `uncheckedRemoves`, unticking removes the key rather than
- * writing `false` (journald's boxes, which write `true` or nothing; D9c
- * Preflight ruling 11). With `describedClassName`, the label and its
- * description sit beside the box in that block, as described rows
- * (hostmetrics' Include Virtual Filesystems; D9c Task 4). The logs forms'
- * rows (D9c Task 8): `className` and `hintClassName` give the row's block
- * and its hint their classes (journald's and syslog's
- * `space-y-1.5` blocks with an unindented hint), `disabled` is the form's
- * (syslog's Allow Skip PRI Header under octet counting), and `onToggle`
- * overrides the write, as `SelectField`'s `onSelect` (filelog's Delete file
- * after reading, with decision 7's adjustment).
+ * writing `false` (journald's boxes, which write `true` or nothing). With
+ * `describedClassName`, the label and its description sit beside the box in
+ * that block, as described rows (hostmetrics' Include Virtual Filesystems).
+ * The logs forms' rows: `className` and `hintClassName` give the row's block
+ * and its hint their classes (journald's and syslog's `space-y-1.5` blocks
+ * with an unindented hint), `disabled` is the form's (syslog's Allow Skip PRI
+ * Header under octet counting), and `onToggle` overrides the write, as
+ * `SelectField`'s `onSelect` (filelog's Delete file after reading, with its
+ * adjustment message).
  */
 export function CheckboxField({
   path,
@@ -968,11 +959,11 @@ export function CheckboxField({
   uncheckedRemoves?: boolean;
   /**
    * Ticking removes the key rather than writing `true`: the default is true
-   * (the S3 receiver's "Expect Telemetry Type in File Prefix"; D9d decision
-   * 12). Unticking writes `false`.
+   * (the S3 receiver's "Expect Telemetry Type in File Prefix"). Unticking
+   * writes `false`.
    */
   checkedRemoves?: boolean;
-  /** A box the collector refuses ticked beside this one: ticking this one unticks it (writes `false`) in the same change (decision 7). */
+  /** A box the collector refuses ticked beside this one: ticking this one unticks it (writes `false`) in the same change. */
   excludes?: ValuePath;
   /** The block holding the row and its hint. */
   className?: string;
@@ -1039,22 +1030,20 @@ export interface CheckboxSetItem {
 }
 
 /**
- * A list of fixed items as checkboxes (D9c decisions 5 and 9; Preflight
- * ruling 10; node conditions, metric groups, detectors):
- * ticked while the list holds the item. Ticking appends it (an empty `[]`
- * takes it in block style, D9b Ruling 85); unticking removes its lines
- * (each of them, if it is there twice), and unticking the last leaves `[]`
- * or removes the key with `emptyRemovesKey`.
+ * A list of fixed items as checkboxes (node conditions, metric groups,
+ * detectors): ticked while the list holds the item. Ticking appends it (an
+ * empty `[]` takes it in block style); unticking removes its lines (each
+ * of them, if it is there twice), and unticking the last leaves `[]` or
+ * removes the key with `emptyRemovesKey`.
  *
- * An unset list shows `unsetShows` ticked (none by default: decision 5
- * shows the form's boxes, not the collector's default, which `defaultHint`
- * names as "Default <hint>"); its first toggle writes `unsetShows` with
- * the change, which for none is the
- * item alone. Items the list holds that aren't fixed ones show after
- * them, ticked, labelled with the item as text, so they can be unticked
- * and are never lost. A list holding anything but plain scalars, or a
- * value that isn't a list, is read-only with decision 3's hint. Ids are
- * `<id>-<index>`, never an item (decision 10).
+ * An unset list shows `unsetShows` ticked (none by default: the form shows its
+ * boxes, not the collector's default, which `defaultHint` names as "Default
+ * <hint>"); its first toggle writes `unsetShows` with the change, which for
+ * none is the item alone. Items the list holds that aren't fixed ones show
+ * after them, ticked, labeled with the item as text, so they can be unticked
+ * and are never lost. A list holding anything but plain scalars, or a value
+ * that isn't a list, is read-only with `UNSHOWABLE_VALUE_MESSAGE`. Ids are
+ * `<id>-<index>`, never an item.
  */
 export function CheckboxSetField({
   path,
@@ -1078,7 +1067,7 @@ export function CheckboxSetField({
   label: string;
   description?: string;
   items: readonly CheckboxSetItem[];
-  /** The collector's default, shown as "Default <hint>" (decision 5). */
+  /** The collector's default, shown as "Default <hint>". */
   defaultHint?: string;
   /** What an unset list shows ticked (resourcedetection's hostname sources: dns, os). */
   unsetShows?: readonly string[];
@@ -1153,7 +1142,7 @@ export interface CheckboxSet {
   isTicked: (value: string) => boolean;
   /** Ticks or unticks `value`, as `CheckboxSetField` writes it. */
   toggle: (value: string, on: boolean) => void;
-  /** The list holds something the boxes can't show, or isn't a list: read-only, with decision 3's hint. */
+  /** The list holds something the boxes can't show, or isn't a list: read-only, with `UNSHOWABLE_VALUE_MESSAGE`. */
   unshowable: boolean;
   /** The boxes can't be changed (the form can't write, or the list can't be shown). */
   disabled: boolean;
@@ -1163,8 +1152,8 @@ export interface CheckboxSet {
 
 /**
  * `CheckboxSetField`'s reading and writing, apart from its layout
- * (resourcedetection's detectors, in collapsible groups; D9c
- * Task 3). `items` are the fixed values.
+ * (resourcedetection's detectors, in collapsible groups). `items` are the
+ * fixed values.
  */
 export function useCheckboxSet({
   path,
@@ -1181,7 +1170,7 @@ export function useCheckboxSet({
 }): CheckboxSet {
   const form = useForm();
   const view = form.read(path);
-  // An item that is null (it reads as unset) can't be shown; `""` only when a fixed item is `""` (D9d Preflight ruling 7).
+  // An item that is null (it reads as unset) can't be shown; `""` only when a fixed item is `""`.
   const held =
     view.kind === "list"
       ? view.value.map((_item, index) => {
@@ -1235,14 +1224,14 @@ export interface RadioOption {
 }
 
 /**
- * One of `options` as native radios (D9c decision 9: journald's
- * Start At, syslog's transport and protocol, netflow's scheme), written at
- * once. Unset shows `defaultValue` checked (the collector's default), or
- * none where the collector has none. A value outside the options checks
- * none and makes the field read-only with decision 3's hint: no radio is
- * added for it, so a `value` attribute only ever holds a fixed option
- * (Preflight ruling 9). `onSelect` overrides the write, as `SelectField`'s.
- * The group's `name` and each radio's id (`<id>-<index>`) are fixed.
+ * One of `options` as native radios (journald's Start At, syslog's transport
+ * and protocol, netflow's scheme), written at once. Unset shows `defaultValue`
+ * checked (the collector's default), or none where the collector has none. A
+ * value outside the options checks none and makes the field read-only with
+ * `UNSHOWABLE_VALUE_MESSAGE`: no radio is added for it, so a `value` attribute
+ * only ever holds a fixed option. `onSelect` overrides the write, as
+ * `SelectField`'s. The group's `name` and each radio's id (`<id>-<index>`) are
+ * fixed.
  */
 export function RadioField({
   options,
@@ -1256,7 +1245,7 @@ export function RadioField({
   onSelect?: (value: string) => void;
   /** Each option's label classes (netflow's: `text-[13px]`). */
   optionClassName?: string;
-  /** The text matches an option in any case, as the collector reads it (syslog's protocol; D9c Ruling 74); a choice writes the option's value. */
+  /** The text matches an option in any case, as the collector reads it (syslog's protocol); a choice writes the option's value. */
   ignoreCase?: boolean;
 }) {
   const form = useForm();
@@ -1301,54 +1290,52 @@ export function RadioField({
 
 /**
  * A list of strings, written by item: a row's typing sets its item, Add
- * appends `""` (or `addValue`, a seeded row such as `/var/log/*.log`; D9c
- * Preflight ruling 12), Remove removes the
- * item's lines. Unset shows no rows; a list holding anything but plain
- * scalars, or a value that isn't a list, can't be shown.
+ * appends `""` (or `addValue`, a seeded row such as `/var/log/*.log`), Remove
+ * removes the item's lines. Unset shows no rows; a list holding anything but
+ * plain scalars, or a value that isn't a list, can't be shown.
  *
- * With `holdEmpty` (D9c decision 9; Preflight ruling 8), Add shows a held
- * row that isn't in the text: its first typing is appended as the list's
- * last item (after the pause, on blur or Enter, on a save, or when the
- * form goes), and the row becomes that item's in place (the same key, so
- * the input, its focus and its caret stay; rows are keyed by their items,
- * Ruling 68). Left empty, the held row goes,
- * as it does when the list's length changes; a row emptied and left removes
- * its item, never writing `""`.
+ * With `holdEmpty`, Add shows a held row that isn't in the text: its first
+ * typing is appended as the list's last item (after the pause, on blur or
+ * Enter, on a save, or when the form goes), and the row becomes that item's
+ * in place (the same key, so the input, its focus and its caret stay; rows
+ * are keyed by their items). Left empty, the held row goes, as it does when
+ * the list's length changes; a row emptied and left removes its item, never
+ * writing `""`.
  *
- * The Kubernetes forms' own rows (D9c Task 2): `removeLabel` names
- * the remove buttons (a fixed label), `vaultAware` gives the rows the `$`
- * picker, and `sortable` (a fixed list name and context id) reorders the
- * items by drag, moving each item's own lines (`form.move`); the held row
- * isn't one of them.
+ * The Kubernetes forms' own rows: `removeLabel` names the remove buttons
+ * (a fixed label), `vaultAware` gives the rows the `$` picker, and
+ * `sortable` (a fixed list name and context id) reorders the items by
+ * drag, moving each item's own lines (`form.move`); the held row isn't
+ * one of them.
  *
- * The logs forms' lists (D9c Task 8): with `emptyRemovesKey`, removing the
+ * The logs forms' lists: with `emptyRemovesKey`, removing the
  * last item removes the key (filelog's and journald's lists), and the rows
  * take the form's classes (`inputClassName`, `addButtonClassName`,
  * `addIconClassName`).
  *
- * D9d's numeric rows (decision 12; load balancing's Kubernetes ports):
- * with `numeric`, a row's typing is written as a `NumberField`'s is, plain
- * as typed when it reads as a number (`4317`, `0x10E1`), a string otherwise
- * (`${env:PORT}`); the rows take `inputMode="decimal"`.
+ * Numeric rows (load balancing's Kubernetes ports): with `numeric`, a row's
+ * typing is written as a `NumberField`'s is, plain as typed when it reads
+ * as a number (`4317`, `0x10E1`), a string otherwise (`${env:PORT}`); the
+ * rows take `inputMode="decimal"`.
  *
- * Load balancing's lists (D9d Task 4; Preflight ruling 6): `keepLast` keeps
- * the list's last item (its Remove disabled, and emptying its row and
- * leaving writes nothing), with `keepLastHint` under the rows while it
- * does; `alsoOnAppend` gives changes written with an appended item, in the
- * same write (the held Custom Attributes routing key with its first
- * attribute); `startHeld` shows a held row from the start (Custom
- * Attributes chosen: the attributes' held row).
+ * Load balancing's lists: `keepLast` keeps the list's last item (its
+ * Remove disabled, and emptying its row and leaving writes nothing), with
+ * `keepLastHint` under the rows while it does; `alsoOnAppend` gives
+ * changes written with an appended item, in the same write (the held
+ * Custom Attributes routing key with its first attribute); `startHeld`
+ * shows a held row from the start (Custom Attributes chosen: the
+ * attributes' held row).
  *
- * cumulativetodelta's metric lists (D9d Task 6): `onEmptied` gives the
- * changes removing the last item writes in place of removing it (or the
- * key): the list and its side's `match_type` together, which the collector
- * refuses apart (`processor/cumulativetodeltaprocessor/config.go:64-67`).
+ * cumulativetodelta's metric lists: `onEmptied` gives the changes removing
+ * the last item writes in place of removing it (or the key): the list and
+ * its side's `match_type` together, which the collector refuses apart
+ * (`processor/cumulativetodeltaprocessor/config.go:64-67`).
  *
- * D9d Task 9's: `multiline` rows (a Textarea of that many rows, Enter a
- * new line; an item over several lines is shown, not unshowable: transform's
- * group statements), `emptyText` under no rows (transform's conditions),
- * and `locked` (typing and Add disabled, Remove still enabled: logdedup's
- * Include Fields while Exclude Fields has items, and the mirror).
+ * Transform's and logdedup's: `multiline` rows (a Textarea of that many rows,
+ * Enter a new line; an item over several lines is shown, not unshowable:
+ * transform's group statements), `emptyText` under no rows (transform's
+ * conditions), and `locked` (typing and Add disabled, Remove still enabled:
+ * logdedup's Include Fields while Exclude Fields has items, and the mirror).
  */
 export function MultiValueField({
   path,
@@ -1433,10 +1420,11 @@ export function MultiValueField({
     const appended = index === (shown?.length ?? -1) ? (alsoOnAppend?.() ?? []) : [];
     return form.apply([change, ...appended]);
   };
-  // Rows keyed by their items (Ruling 68): a Remove click can't land on the next item's row.
+  // Rows keyed by their items: a Remove click can't land on the next item's row.
   const cards = useCardKeys(shown ?? []);
-  // The held row belongs to the list as it was when Add made it: a change of length (its own item
-  // written, or the list edited elsewhere) drops it, so it never comes back (D9c review).
+  // The held row belongs to the list as it was when Add made it: a change of
+  // length (its own item written, or the list edited elsewhere) drops it, so
+  // it never comes back.
   const length = shown?.length ?? -1;
   const [seenLength, setSeenLength] = useState(length);
   if (seenLength !== length) {

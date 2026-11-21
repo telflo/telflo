@@ -60,9 +60,8 @@ import { paletteSubType } from "~/lib/graph/parse.js";
 import type { ComponentType } from "~/lib/graph/types.js";
 
 /*
- * Which form a component gets (D9b decision 6): by type and
- * sub-type, never the sub-type alone, so the `memory_limiter` extension
- * doesn't get the processor's form.
+ * Which form a component gets: by type and sub-type, never the sub-type
+ * alone, so the `memory_limiter` extension doesn't get the processor's form.
  *
  * A form is found by the component's type and its palette sub-type: a
  * renamed spelling (`otlp_grpc`, `otlp_http`) resolves through
@@ -71,8 +70,8 @@ import type { ComponentType } from "~/lib/graph/types.js";
  *
  * A form takes no props: it reads and writes through the form hook's
  * source (`useForm`), which the Configuration tab provides for the selected
- * component. D9b's later tasks and D9c/D9d add a form by adding its row to
- * `FORMS` below, under its type.
+ * component. A form is added by adding its row to `FORMS` below, under its
+ * type.
  */
 
 /** A component's form: its fields read and write through `useForm()`. */

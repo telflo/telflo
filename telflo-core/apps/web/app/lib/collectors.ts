@@ -18,22 +18,21 @@ import { useCurrentUser } from "~/lib/use-current-user.js";
 import { readsFor } from "~/lib/workspace-reads.js";
 
 /*
- * A server fleet's Collectors tab's data (D17b-1 decisions 2, 3, 21 and 29;
- * Preflight ruling 9): one page of the fleet's collectors at a time, with
- * Prev and Next over the cursors of the pages seen, a search, a Group
- * filter and a sort, and the fleet's groups, polled every 15 seconds while
- * the tab is visible. Nothing here puts a collector's or a group's name, an
- * address or the search text anywhere but the data it returns: no toast,
- * log or attribute carries one (ADR 0024).
+ * A server fleet's Collectors tab's data: one page of the fleet's collectors
+ * at a time, with Prev and Next over the cursors of the pages seen, a search,
+ * a Group filter and a sort, and the fleet's groups, polled every 15 seconds
+ * while the tab is visible. Nothing here puts a collector's or a group's name,
+ * an address or the search text anywhere but the data it returns: no toast,
+ * log or attribute carries one.
  */
 
-/** How many collectors a page holds (decision 21). */
+/** How many collectors a page holds. */
 export const COLLECTORS_PAGE_SIZE = 50;
 
-/** The toast of a person's read that failed over rows shown, and the failed state's words (decision 21). */
+/** The toast of a person's read that failed over rows shown, and the failed state's words. */
 export const COLLECTORS_LOAD_FAILED_MESSAGE = "Failed to load collectors";
 
-/** The columns a person sorts by (decision 21): Name and Last seen. */
+/** The columns a person sorts by: Name and Last seen. */
 export type CollectorsSortColumn = "name" | "lastSeen";
 
 /** What the page is read with: the search text, the Group filter and the sort. */
@@ -55,10 +54,10 @@ export const DEFAULT_COLLECTORS_QUERY: CollectorsListQuery = { q: "", groupId: n
 export const KUBERNETES_NODE_ATTRIBUTE = "k8s.node.name";
 
 /**
- * The node a Kubernetes fleet's collector runs on (D17d-1 decision 23;
- * Preflight ruling 26): its reported `k8s.node.name`, read as an own key
- * only (never an inherited one), else null. Configuration text: shown
- * inside `ph-no-capture` only, never in an attribute.
+ * The node a Kubernetes fleet's collector runs on: its reported
+ * `k8s.node.name`, read as an own key only (never an inherited one), else
+ * null. Configuration text: shown inside `ph-no-capture` only, never in an
+ * attribute.
  */
 export function collectorNodeName(attributes: Record<string, string> | null): string | null {
   if (attributes === null || !Object.hasOwn(attributes, KUBERNETES_NODE_ATTRIBUTE)) return null;
@@ -110,10 +109,10 @@ function settledOf<Value>(result: PromiseSettledResult<Value>): Settled<Value> {
 }
 
 /**
- * One read (the first, a person's or a poll's; Preflight ruling 9): the page
- * at `start` and the fleet's groups together, both under the read's one
- * hang guard (`signal`); the read fails only when the page does. Within the
- * same read, under the same guard:
+ * One read (the first, a person's or a poll's): the page at `start` and the
+ * fleet's groups together, both under the read's one hang guard (`signal`);
+ * the read fails only when the page does. Within the same read, under the
+ * same guard:
  * - a stale cursor reads the query's first page, silently;
  * - a filter whose group the groups' answer no longer holds reads the first
  *   page of "All groups";
@@ -181,7 +180,7 @@ interface ShownGroups {
   groups: CollectorGroup[];
 }
 
-/** The pager's numbers (decision 21): "Showing {from} to {to} of {total}" (an en dash between), without "of" when `total` is null. */
+/** The pager's numbers: "Showing {from} to {to} of {total}" (an en dash between), without "of" when `total` is null. */
 export interface CollectorsPager {
   from: number;
   to: number;
@@ -232,9 +231,9 @@ export interface CollectorsPageRead {
 }
 
 /**
- * A server fleet's collectors, a page at a time (D17b-1 decisions 2, 21 and
- * 29; Preflight ruling 9), for the Collectors tab; `summary` is the fleet's
- * (the pager's total), `onFleetGone` the route's `useFleet().reload`.
+ * A server fleet's collectors, a page at a time, for the Collectors tab;
+ * `summary` is the fleet's (the pager's total), `onFleetGone` the route's
+ * `useFleet().reload`.
  *
  * - Page 1 loads for the active organization and the fleet (newest first,
  *   nothing searched or filtered); an organization switch, or another fleet,
@@ -351,7 +350,7 @@ export function useCollectorsPage(fleetId: string, summary: FleetSummary, { onFl
       const current = shownFor(organization);
       // A failed person's read leaves the rows, their query and their page as they were.
       if (current !== null) request(current.position);
-      // The session is over: the session-ended handler, or Logout, has the page (D12 Ruling 39).
+      // The session is over: the session-ended handler, or Logout, has the page.
       if (revalidating || isSessionEnded(outcome.error)) return;
       if (current !== null) {
         toast.error(COLLECTORS_LOAD_FAILED_MESSAGE);

@@ -1,5 +1,4 @@
-"""The environment a run's processes get (D14a spec decision 5: the
-environment allowlist).
+"""The environment a run's processes get: the environment allowlist.
 
 A collector expands `${env:VAR}` at load time, so any variable it holds can
 be read back through a run's output or logs. The run's child process and its
@@ -8,8 +7,8 @@ else the service holds (a future operator-injected secret, the telemetry
 endpoint) is stripped before exec. The shared secret is never in the
 service's environment to begin with (app/settings.py). Add to this set only
 with a deliberate reason: anything added becomes readable by any text a
-person runs. `app/sandbox_env.py` (D14a Task 4) adds the sandbox's fixed
-overrides on top of it for the collector.
+person runs. `app/sandbox_env.py` adds the sandbox's fixed overrides on top
+of it for the collector.
 """
 
 from __future__ import annotations

@@ -1,13 +1,13 @@
-"""The collector catalogue, read from `catalog/distributions/*.json`: the
-validator's `app/catalog.py`, copied for the tester (D14a spec decision 14)
-and changed in its words only.
+"""The collector catalog, read from `catalog/distributions/*.json`: the
+validator's `app/catalog.py`, copied for the tester and changed in its words
+only.
 
-The platform's migration step owns the catalogue's rules (catalog/README.md);
+The platform's migration step owns the catalog's rules (catalog/README.md);
 the tester reads only what it needs, each file's `distribution` and each
 version's `version` and `deprecated`, and ignores every other field, so a
-field added to the format later (D13b Task 3's `renamedTypes`) changes
+field added to the format later (such as `renamedTypes`) changes
 nothing here. A version is offered (not deprecated), retired (deprecated) or
-unknown; a distribution the catalogue doesn't list makes every version
+unknown; a distribution the catalog doesn't list makes every version
 unknown.
 """
 
@@ -20,7 +20,7 @@ from pathlib import Path
 
 
 class CatalogError(ValueError):
-    """The catalogue directory can't be read as the tester needs it. The
+    """The catalog directory can't be read as the tester needs it. The
     service refuses to start."""
 
 

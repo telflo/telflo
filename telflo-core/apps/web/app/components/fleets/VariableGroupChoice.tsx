@@ -16,20 +16,18 @@ import {
 } from "~/lib/variable-group-display.js";
 
 /*
- * The fleet dialogs' variable group parts (D20 defaults 23 and 24; Q83, Q86,
- * Q103; Preflight rulings 32 and 33): the organization's variable groups read
- * at the dialog's opening (a snapshot: the list it offers never moves while
- * it is open, D17c-1 Ruling 66), the "Variable group" Select over them, the
- * group dialogs' "Variables used" (the chosen version's names that no
- * organization variable has, before Save), and a 422 `variables_undefined`'s
- * names.
+ * The fleet dialogs' variable group parts: the organization's variable groups
+ * read at the dialog's opening (a snapshot: the list it offers never moves
+ * while it is open), the "Variable group" Select over them, the group
+ * dialogs' "Variables used" (the chosen version's names that no organization
+ * variable has, before Save), and a 422 `variables_undefined`'s names.
  *
- * Privacy (Q88): a variable group's name and a variable's name are
- * configuration text. The whole Select sits inside `ph-no-capture`: its
- * trigger, the hidden native `<select>` Radix renders beside it inside the
- * form (its options hold the names as text), and its list (a portal: its
- * own class); its item values are ids or the fixed choices. The names
- * listed sit inside `ph-no-capture`, as text only. No attribute holds one.
+ * Privacy: a variable group's name and a variable's name are configuration
+ * text. The whole Select sits inside `ph-no-capture`: its trigger, the
+ * hidden native `<select>` Radix renders beside it inside the form (its
+ * options hold the names as text), and its list (a portal: its own class);
+ * its item values are ids or the fixed choices. The names listed sit
+ * inside `ph-no-capture`, as text only. No attribute holds one.
  */
 
 // ---------------------------------------------------------------------------
@@ -150,7 +148,7 @@ export function VariableGroupSelect({ id, label, offered, value, fixed, onChange
 }
 
 // ---------------------------------------------------------------------------
-// "Variables used" (default 23; Q86; Preflight ruling 32).
+// "Variables used".
 
 export const VARIABLES_USED_LABEL = "Variables used";
 export const VARIABLES_USED_LOADING = "Checking the version's organization variables…";
@@ -238,7 +236,7 @@ function NamesList({ names, total }: { names: readonly string[]; total: number }
 
 /**
  * "Variables used" for the version chosen: the names it references that no
- * organization variable of that name has (Q86: "defined" is an organization
+ * organization variable of that name has ("defined" is an organization
  * variable; a group override needs one), shown before Save. The names come
  * from the one shared read (`useOrgVariables`). A read under way says so; a
  * failure (the version's text, or the names) says it couldn't check, with
@@ -256,7 +254,7 @@ export function VariablesUsed({
 }) {
   const organization = useOrgVariables();
   // The names may be a minute old: the dialog's opening reads them again when they are (or after a failure), so a
-  // variable just defined elsewhere isn't listed as undefined (Task 13's review). Once per opening: the session is keyed.
+  // variable just defined elsewhere isn't listed as undefined. Once per opening: the session is keyed.
   const { refresh } = organization;
   useEffect(() => {
     refresh();
@@ -304,7 +302,7 @@ export function VariablesUsed({
   );
 }
 
-/** A 422 `variables_undefined`'s names (Q102: at most 100, then "… and N more" from `totalNames`), under the dialog's alert. */
+/** A 422 `variables_undefined`'s names (at most 100, then "… and N more" from `totalNames`), under the dialog's alert. */
 export function UndefinedNamesRefused({ details }: { details: VariablesUndefinedDetails | null }) {
   if (details === null || details.names.length === 0) return null;
   return (

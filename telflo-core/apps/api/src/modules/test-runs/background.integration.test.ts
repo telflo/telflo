@@ -35,11 +35,10 @@ import type { IOrganizationVariables } from "./organization-variables.js";
 import { createTestRunQueueSignal, type TestingDependencies, type TestRunQueueSignal } from "./test-runs-dependencies.js";
 
 /*
- * D14a Task 8: the test runs' one background starter (Preflight rulings 7
- * and 17). index.ts and e2e/start-api.ts run it, after listen; buildServer
- * never does, so no test's server runs a loop. Closing the server stops the
- * health monitors (the tester's, and the OTTL evaluator's: D15a Preflight
- * ruling 23), the reaper and the dispatcher, which finishes the run it
+ * The test runs' one background starter. index.ts and e2e/start-api.ts run
+ * it, after listen; buildServer never does, so no test's server runs a loop.
+ * Closing the server stops the health monitors (the tester's, and the OTTL
+ * evaluator's), the reaper and the dispatcher, which finishes the run it
  * aborts as interrupted.
  */
 
@@ -200,7 +199,7 @@ describe("the test runs' background starter", () => {
     await eventually(async () => (await status(id)) === "succeeded");
   });
 
-  it("hands the dispatcher the organization variables' source: the tester gets the values filled in, the run keeps its text (D20 decision 13)", async () => {
+  it("hands the dispatcher the organization variables' source: the tester gets the values filled in, the run keeps its text", async () => {
     const reads: string[] = [];
     const variables: IOrganizationVariables = {
       read: (organizationId) => {
@@ -276,7 +275,7 @@ describe("the test runs' background starter", () => {
     it.each([
       ["apps/api/src/index.ts", index],
       ["e2e/start-api.ts", e2e],
-    ])("%s reads a run's organization variables from its opamp-server client (D20 decision 38)", (_path, text) => {
+    ])("%s reads a run's organization variables from its opamp-server client", (_path, text) => {
       // The dependency is required (the type checker refuses an entry point
       // that passes none): this pins which source it is.
       expect(text).toMatch(/createTestRunsDependencies\(\{[^}]*organizationVariables: opampOrganizationVariables\(opampServer\),/);

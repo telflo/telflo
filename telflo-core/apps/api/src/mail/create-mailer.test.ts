@@ -36,7 +36,7 @@ describe("createMailer", () => {
     ).not.toThrow();
   });
 
-  it("passes the TLS mode and the login through: TLS needs no override, a login in cleartext is refused (D36-1 decision 38)", () => {
+  it("passes the TLS mode and the login through: TLS needs no override, a login in cleartext is refused", () => {
     const smtp = { kind: "smtp", host: "smtp.example.com", port: 587, allowInsecureTransport: false, login: null, ca: null } as const;
     for (const tls of ["starttls", "implicit"] as const) {
       expect(() => createMailer({ from: "no-reply@telflo.local", transport: { ...smtp, tls } })).not.toThrow();

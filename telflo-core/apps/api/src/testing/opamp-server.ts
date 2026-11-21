@@ -2,9 +2,9 @@ import { afterAll, beforeAll } from "vitest";
 import { createOpampServerClient, type OpampServerClient } from "../opamp-server/client.js";
 import { startFakeOpampServer, type FakeOpampServer } from "./fake-opamp-server.js";
 
-// Every server needs an opamp-server (D11b decision 8), so every test file
-// that builds one starts the OpenAPI-checked fake (fake-opamp-server.ts) and
-// passes its client as buildServer's `opampServer`. One fake per file:
+// Every server needs an opamp-server, so every test file that builds one
+// starts the OpenAPI-checked fake (fake-opamp-server.ts) and passes its
+// client as buildServer's `opampServer`. One fake per file:
 //
 //   const opamp = useFakeOpampServer();
 //   ...

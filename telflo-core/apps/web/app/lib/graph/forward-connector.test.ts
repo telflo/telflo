@@ -5,11 +5,11 @@
  * pipelines (merge several pipelines into one, or fan one out into many). It
  * has no configuration (an empty `forward: {}` block) and is signal-agnostic.
  *
- * Generation is the model the graph describes (`deriveModel`; D9a Parity
- * Notes); the round trip reads forward-connector.yaml, the generated YAML for
- * buildForwardScenario("logs", "logs"). The validation
- * tests are the collector validator's binary tests (D13b Ruling 68,
- * services/otelcol-validator/tests/test_binary_builder_texts.py).
+ * Generation is the model the graph describes (`deriveModel`); the round trip
+ * reads forward-connector.yaml, the generated YAML for
+ * buildForwardScenario("logs", "logs"). The validation tests are the
+ * collector validator's binary tests
+ * (services/otelcol-validator/tests/test_binary_builder_texts.py).
  */
 import { describe, expect, it } from "vitest";
 

@@ -46,10 +46,8 @@ import {
 } from "./test-spec-file.js";
 
 /*
- * A test spec (the older Telflo CLI's YAML) and its rules converted to the
- * platform's OTTL rule and checked as the API would (D27 decision 27,
- * Preflight rulings 6 and 23): the older CLI's spec tests where they still
- * hold, and drift tests against @telflo/contracts.
+ * A test spec (YAML) and its rules converted to the platform's OTTL rule
+ * and checked as the API would, and drift tests against @telflo/contracts.
  */
 
 let dir: string;
@@ -83,7 +81,7 @@ function usageError(call: () => unknown): ExitError {
   throw new Error("expected a usage error");
 }
 
-describe("parseTestSpec (the older CLI's YAML)", () => {
+describe("parseTestSpec", () => {
   it("parses, inlines the sample and converts the rules to the platform's shape", () => {
     const spec = parseTestSpec(BASE, dir);
     expect(spec).toEqual({
@@ -95,7 +93,7 @@ describe("parseTestSpec (the older CLI's YAML)", () => {
     });
   });
 
-  it("takes sample_text, the collector fields, a duration and the older CLI's pipeline name (read, never sent)", () => {
+  it("takes sample_text, the collector fields, a duration and a pipeline name (read, never sent)", () => {
     const spec = parseTestSpec(
       `name: redaction checks\nduration: 9\ncollector_version: 0.147.0\ndistribution: otelcol-contrib\n${BASE.replace("sample: ./sample.json", 'sample_text: "{}"')}`,
       dir,
@@ -211,7 +209,7 @@ describe("parseTestSpec (the older CLI's YAML)", () => {
 
 const COUNT = { operator: "gte", value: 1 };
 
-describe("convertRule (Preflight ruling 6)", () => {
+describe("convertRule", () => {
   it("converts each quantifier's rule, a name trimmed, an empty name left out", () => {
     expect(convertRule({ name: "  each  ", context: "log", quantifier: "all", condition: "body != nil" }, 0, "logs")).toEqual({
       kind: "ottl",
@@ -233,7 +231,7 @@ describe("convertRule (Preflight ruling 6)", () => {
     expect(convertRule({ context: "log", quantifier: "distinct", expression: "body", condition: "x != nil", count: COUNT }, 0, "logs").ottl.condition).toBe("x != nil");
   });
 
-  /** Each case the older CLI's spec let through and the API refuses, with the place the message must name. */
+  /** Each case the API refuses, with the place the message must name. */
   const REFUSED: Array<[string, Record<string, unknown>, string]> = [
     ["an unknown context", { context: "logs", quantifier: "all", condition: "c" }, "rules[3].context"],
     ["a context its signal lacks", { context: "span", quantifier: "all", condition: "c" }, "rules[3].context"],
@@ -315,13 +313,13 @@ describe("convertRule (Preflight ruling 6)", () => {
       };
       const schemaRefuses = !CreateValidationRuleRequestSchema.safeParse(request).success;
       const contextRefuses = typeof ottl.context === "string" && !isOttlContextOfSignal(ottl.context, "logs");
-      // The older CLI's `description` is the one key the platform's rule has but the spec's doesn't: refused by the CLI alone.
+      // `description` is the one key the platform's rule has but the spec's doesn't: refused by the CLI alone.
       expect(schemaRefuses || contextRefuses || description !== undefined).toBe(true);
     }
   });
 });
 
-describe("drift: the CLI's copies of the contracts' constants (Preflight ruling 23)", () => {
+describe("drift: the CLI's copies of the contracts' constants", () => {
   it("signals, contexts by signal, quantifiers and count operators", () => {
     expect([...TEST_SIGNALS]).toEqual([...TEST_RUN_SIGNALS]);
     expect([...RULE_CONTEXTS]).toEqual([...OTTL_CONTEXTS]);

@@ -43,13 +43,13 @@ import { UNCALLED_FILE_STORE } from "../../testing/file-store.js";
 import { UNCALLED_TESTING } from "../../testing/otelcol-testing.js";
 import { TEST_TERMS_VERSION } from "../../testing/site.js";
 
-// The opamp-server every server needs (D11b decision 8): this file's own fake.
+// The opamp-server every server needs: this file's own fake.
 const opamp = useFakeOpampServer();
 
 /*
- * D6 decisions 6 to 11: inviting, listing, resending and cancelling, and the
- * invitee's previewing, accepting and creating an account, against the real
- * database, as the application role.
+ * Inviting, listing, resending and canceling, and the invitee's
+ * previewing, accepting and creating an account, against the real database,
+ * as the application role.
  */
 
 const csrfHeaders = { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE };
@@ -198,7 +198,7 @@ describe("organization invitations", () => {
       payload: { organizationId },
     });
     expect(response.statusCode).toBe(200);
-    // A no-op when the sign-in already landed there (D36-1 decision 56): no new cookie, the token sent stands.
+    // A no-op when the sign-in already landed there: no new cookie, the token sent stands.
     return response.headers["set-cookie"] === undefined ? access : cookieValue(response, "telflo_access");
   };
 
@@ -427,7 +427,7 @@ describe("organization invitations", () => {
       ]);
     });
 
-    it("invites into a personal organization (decision 4) while registration is open, as the tests' setup has it (D36-1 decision 57)", async () => {
+    it("invites into a personal organization while registration is open, as the tests' setup has it", async () => {
       const account = await verifiedUser();
       const access = await signedIn(account.user.email);
 
@@ -438,13 +438,13 @@ describe("organization invitations", () => {
         expect.objectContaining({ email: "friend@example.com", role: "admin" }),
       ]);
       expect(mailer.sent.map((message) => message.to)).toEqual(["friend@example.com"]);
-      // Named by its owner's email (Q263), it is "<email>'s organization" in the subject (D36-1 Q264).
+      // Named by its owner's email, it is "<email>'s organization" in the subject.
       expect(account.organization.name).toBe(account.user.email.toLowerCase());
       expect(mailer.sent[0]!.subject).toBe(`You've been invited to join ${account.organization.name}'s organization on Telflo`);
       expect(mailer.sent[0]!.text).toContain(`join ${account.organization.name}'s organization on Telflo, the visual`);
     });
 
-    it("allows another invitation once the address's earlier one was cancelled or accepted", async () => {
+    it("allows another invitation once the address's earlier one was canceled or accepted", async () => {
       const { group, access } = await memberActiveInGroup("admin");
       await addInvitation(ownerDb, { organizationId: group.id, email: "again@example.com", revoked_at: new Date() });
       await addInvitation(ownerDb, { organizationId: group.id, email: "again@example.com", accepted_at: new Date() });
@@ -454,7 +454,7 @@ describe("organization invitations", () => {
       );
     });
 
-    describe("decision 8's refusals, each writing and sending nothing", () => {
+    describe("refusals, each writing and sending nothing", () => {
       /** Runs `request`, asserts the refusal, and that no invitation, audit row or email came of it. */
       const expectNothingDone = async (
         organizationId: string,
@@ -531,11 +531,10 @@ describe("organization invitations", () => {
       });
 
       /**
-       * D22 decision 23, Preflight ruling 13: after the organization and
-       * role checks, before the mail limit and the organization lock. The
-       * service account is a member of the group, so without the refusal
-       * its address would be 409 member_already_active; an address nobody
-       * holds would be invited.
+       * After the organization and role checks, before the mail limit and the
+       * organization lock. The service account is a member of the group, so
+       * without the refusal its address would be 409 member_already_active; an
+       * address nobody holds would be invited.
        */
       it("refuses the reserved domain with 422 email_reserved before the lock, and writes no invitation", async () => {
         const admin = await memberActiveInGroup("admin");
@@ -556,7 +555,7 @@ describe("organization invitations", () => {
         }
       });
 
-      it("refuses the deleted accounts' domain with 422 email_reserved, and writes no invitation (D29 decision 10, Preflight ruling 6)", async () => {
+      it("refuses the deleted accounts' domain with 422 email_reserved, and writes no invitation", async () => {
         const admin = await memberActiveInGroup("admin");
 
         for (const email of [
@@ -598,7 +597,7 @@ describe("organization invitations", () => {
           "Only an admin of this organization can do that",
         );
         const { account, group } = await memberActiveInGroup("admin");
-        // Signed in again, then in their personal organization (a new sign-in starts where they last were, D36-1 decision 56).
+        // Signed in again, then in their personal organization (a new sign-in starts where they last were).
         const personalAccess = await switchTo(await signedIn(account.user.email), account.organization.id);
         await expectNothingDone(
           group.id,
@@ -624,7 +623,7 @@ describe("organization invitations", () => {
       it("answers another organization's id with 404 organization_not_found, even for its admin", async () => {
         const { account, group } = await memberActiveInGroup("admin");
         // The same admin, signed in again and switched to their personal organization (a new sign-in
-        // starts where they last were, D36-1 decision 56).
+        // starts where they last were).
         const access = await switchTo(await signedIn(account.user.email), account.organization.id);
 
         await expectNothingDone(
@@ -637,7 +636,7 @@ describe("organization invitations", () => {
       });
     });
 
-    it("refuses viewer, which is retired, with 400 invalid_request, storing, auditing and sending nothing (D7 decision 2)", async () => {
+    it("refuses viewer, which is retired, with 400 invalid_request, storing, auditing and sending nothing", async () => {
       const { group, access } = await memberActiveInGroup("admin");
 
       const response = await invite(access, group.id, { email: "someone@example.com", role: "viewer" });
@@ -966,12 +965,11 @@ describe("organization invitations", () => {
     });
 
     /**
-     * D22 decision 22: the preview's lookup matches people only. An
-     * invitation written by the owner, as one from before D22 could be
-     * (inviting now refuses the domain), to a service account's address
-     * reads as no account.
+     * The preview's lookup matches people only. An invitation written by the
+     * owner, as an older one could be (inviting refuses the domain), to a
+     * service account's address reads as no account.
      */
-    it("carries the organization's type: personal for a person's own organization, group for a group (D36-1 Q264)", async () => {
+    it("carries the organization's type: personal for a person's own organization, group for a group", async () => {
       const { organization: personal } = await verifiedUser();
       const token = randomBytes(32).toString("base64url");
       await addInvitation(ownerDb, {
@@ -1006,7 +1004,7 @@ describe("organization invitations", () => {
       expect((await preview(token)).json()).toMatchObject({ invitation: { email: human.user.email, hasAccount: true } });
     });
 
-    it("answers an unknown, a cancelled and a superseded token, and a deleted organization, with 404", async () => {
+    it("answers an unknown, a canceled and a superseded token, and a deleted organization, with 404", async () => {
       const revoked = await pendingInvitation({ revoked_at: new Date() });
       const inDeleted = await pendingInvitation();
       await ownerDb
@@ -1039,7 +1037,7 @@ describe("organization invitations", () => {
   });
 
   describe("POST /api/v1/invitation-acceptances", () => {
-    it("answers with the organization's logo id, accepting and registering alike (D23-2 decision 40)", async () => {
+    it("answers with the organization's logo id, accepting and registering alike", async () => {
       const logoId = "0199e000-0000-7000-8000-00000000b001";
       const { access, group, token } = await invitedAccount("contributor");
       await ownerDb
@@ -1103,12 +1101,12 @@ describe("organization invitations", () => {
       expect(await sessionOf(account.user.id)).toMatchObject({ active_organization_id: group.id });
       expect(mailer.sent).toEqual([]);
       // An existing account joins with no starter configuration, here or in
-      // its personal organization (D8 decision 10).
+      // its personal organization.
       expect(await ownerDb.selectFrom("configurations").selectAll().execute()).toEqual([]);
       expect(await ownerDb.selectFrom("configuration_versions").selectAll().execute()).toEqual([]);
     });
 
-    describe("decision 9's refusals, each changing nothing", () => {
+    describe("refusals, each changing nothing", () => {
       /** Asserts the refusal, and that no membership, audit row or session move came of it. */
       const expectNothingJoined = async (
         setup: Awaited<ReturnType<typeof invitedAccount>>,
@@ -1135,7 +1133,7 @@ describe("organization invitations", () => {
         await expectNothingJoined(setup, unknown, 404, "invitation_not_found", MESSAGES.invalidLink);
       });
 
-      it("answers a cancelled invitation with 404", async () => {
+      it("answers a canceled invitation with 404", async () => {
         const setup = await invitedAccount();
         await ownerDb
           .updateTable("organization_invitations")
@@ -1191,7 +1189,7 @@ describe("organization invitations", () => {
         );
       });
 
-      it("answers another address with 403, naming the invited one (decision 3)", async () => {
+      it("answers another address with 403, naming the invited one", async () => {
         const setup = await invitedAccount();
         const other = await pendingInvitation();
         // The account's session, but another address's invitation, in another organization.
@@ -1265,7 +1263,7 @@ describe("organization invitations", () => {
   });
 
   describe("POST /api/v1/invitation-registrations", () => {
-    it("the invitation registration sets dark: telflo_theme with the session cookies, no settings row read or made (D21 decision 23)", async () => {
+    it("the invitation registration sets dark: telflo_theme with the session cookies, no settings row read or made", async () => {
       const email = `newcomer-${randomUUID()}@example.com`;
       const { token } = await pendingInvitation({ email, role: "contributor" });
 
@@ -1336,9 +1334,9 @@ describe("organization invitations", () => {
         }),
       ]);
 
-      // The starter configuration (D8 decision 10): in the invitee's own
-      // personal organization, and none in the inviting one,
-      // at the catalogue's default distribution and version (D13a decision 9).
+      // The starter configuration: in the invitee's own personal
+      // organization, and none in the inviting one, at the catalog's
+      // default distribution and version.
       const pin = await catalogueDefaults(ownerDb);
       const configurations = await configurationsIn(personal.id);
       expect(configurations).toEqual([
@@ -1414,7 +1412,7 @@ describe("organization invitations", () => {
         expect(mailer.sent).toEqual([]);
       };
 
-      it("answers an unknown token and a cancelled invitation with 404", async () => {
+      it("answers an unknown token and a canceled invitation with 404", async () => {
         const { invitation, token } = await pendingInvitation({ revoked_at: new Date() });
         await expectNoAccount(
           invitation.email,
@@ -1461,13 +1459,12 @@ describe("organization invitations", () => {
       });
 
       /**
-       * D22 decision 23, Preflight ruling 13: after the token's lookup,
-       * before the invitation's other refusals and the lookup by email.
-       * Invitations written by the owner, as ones from before D22 could
-       * be: one to a service account's address (without the refusal, the
-       * human-only lookup finds no account and the insert is refused by
-       * the database), one nobody holds, an expired one, which is still
-       * 422, not 410, and an accepted one, still 422, not 409.
+       * After the token's lookup, before the invitation's other refusals and
+       * the lookup by email. Invitations written by the owner, as older ones
+       * could be: one to a service account's address (without the refusal, the
+       * human-only lookup finds no account and the insert is refused by the
+       * database), one nobody holds, an expired one, which is still 422, not
+       * 410, and an accepted one, still 422, not 409.
        */
       it("refuses an invitation to the reserved domain with 422 email_reserved", async () => {
         const { organization } = await verifiedUser();
@@ -1495,7 +1492,7 @@ describe("organization invitations", () => {
         expect(await auditRows("user.registered")).toEqual([]);
       });
 
-      it("refuses an invitation to the deleted accounts' domain with 422 email_reserved, and creates no account (D29 decision 10, Preflight ruling 6)", async () => {
+      it("refuses an invitation to the deleted accounts' domain with 422 email_reserved, and creates no account", async () => {
         for (const overrides of [
           { email: `deleted-${"0c".repeat(12)}@deleted-accounts.telflo.invalid` },
           { email: `expired-${randomUUID().slice(0, 8)}@deleted-accounts.telflo.invalid`, expires_at: clock },
@@ -1541,7 +1538,7 @@ describe("organization invitations", () => {
     });
   });
 
-  describe("the site's registration mode (D36-1 decision 35, Preflight ruling 4)", () => {
+  describe("the site's registration mode", () => {
     const servers: FastifyInstance[] = [];
     const modeServer = async (registration: AppSettings["site"]["registration"]) => {
       const built = serverWith({ site: { registration } });
@@ -1604,8 +1601,8 @@ describe("organization invitations", () => {
       expect(mailer.sent).toEqual([]);
     });
 
-    // D36-1 decision 52 (Q252): under invite-only, a personal organization's
-    // invitation makes no account; an existing account still accepts it.
+    // Under invite-only, a personal organization's invitation makes no
+    // account; an existing account still accepts it.
 
     /** A pending invitation from a person's own personal organization, with a token the test knows. */
     const personalInvitation = async (email = `newcomer-${randomUUID()}@example.com`) => {
@@ -1641,9 +1638,9 @@ describe("organization invitations", () => {
       expect(await usersWithEmail(email)).toEqual([]);
     });
 
-    // D36-1 decision 57 (Q268): while registration isn't open, a personal
-    // organization sends no invitation at all; a group organization's admins
-    // still invite, and leftover invitations can still be listed and revoked.
+    // While registration isn't open, a personal organization sends no
+    // invitation at all; a group organization's admins still invite, and
+    // leftover invitations can still be listed and revoked.
 
     const personalInvitationsRefusal = {
       error: {
@@ -1791,7 +1788,7 @@ describe("organization invitations", () => {
     });
   });
 
-  describe("a site that asks for no Terms (D36-1 decision 32, Preflight ruling 1)", () => {
+  describe("a site that asks for no Terms", () => {
     let noTerms: FastifyInstance;
     beforeAll(async () => {
       noTerms = serverWith({ site: { terms: { version: "", termsUrl: "", privacyUrl: "", cookiePolicyUrl: "" } } });
@@ -1829,7 +1826,7 @@ describe("organization invitations", () => {
     });
   });
 
-  describe("a removed or demoted admin's invitations (Ruling 17)", () => {
+  describe("a removed or demoted admin's invitations", () => {
     const memberUrl = (organizationId: string, userId: string) =>
       `/api/v1/organizations/${organizationId}/members/${userId}`;
 
@@ -1852,7 +1849,7 @@ describe("organization invitations", () => {
 
     /**
      * Two admins of one group. The second has invited two addresses (one of
-     * them since expired), and has an accepted and a cancelled invitation;
+     * them since expired), and has an accepted and a canceled invitation;
      * the first has invited one address of their own.
      */
     const twoAdminsInviting = async () => {
@@ -1971,7 +1968,7 @@ describe("organization invitations", () => {
     });
   });
 
-  describe("the mail limit (decision 6)", () => {
+  describe("the mail limit", () => {
     it("refuses the 51st invitation email of one user in an hour, resends included; another admin is unaffected", async () => {
       const limited = serverWith({
         rateLimits: { ...TEST_RATE_LIMITS, invitationEmailsPerUser: RATE_LIMITS.invitationEmailsPerUser },
@@ -2025,7 +2022,7 @@ describe("organization invitations", () => {
       }
     }, 30_000);
 
-    it("an invite to the reserved domain spends none of the limit (D22 Preflight ruling 13)", async () => {
+    it("an invite to the reserved domain spends none of the limit", async () => {
       const limited = serverWith({
         rateLimits: { ...TEST_RATE_LIMITS, invitationEmailsPerUser: { max: 1, windowMs: 60 * 60 * 1000 } },
       });
@@ -2058,11 +2055,10 @@ describe("organization invitations", () => {
     });
   });
 
-  describe("under concurrency (decision 10)", () => {
+  describe("under concurrency", () => {
     /**
      * Resolves once `count` backends other than this test's own wait on a
-     * lock (D2a Ruling 6), or once `isSettled()` holds. Throws after five
-     * seconds.
+     * lock, or once `isSettled()` holds. Throws after five seconds.
      */
     const waitForLockWaits = async (count: number, isSettled: () => boolean = () => false): Promise<void> => {
       const deadline = Date.now() + 5_000;
@@ -2107,7 +2103,7 @@ describe("organization invitations", () => {
       }
     };
 
-    it("an invite to the reserved domain is refused while another transaction holds the organization: before the lock (D22 decision 23)", async () => {
+    it("an invite to the reserved domain is refused while another transaction holds the organization: before the lock", async () => {
       const admin = await memberActiveInGroup("admin");
 
       await withLocker(async (locker) => {
@@ -2128,9 +2124,9 @@ describe("organization invitations", () => {
 
     it("two admins inviting one address at once: one 201, one 409, one invitation and one email", async () => {
       // A separate connection holds the organization, which every writer
-      // locks first (Preflight ruling 8). Both requests queue on it; once it
-      // is released, the first commits its invitation before the second,
-      // under the same lock, looks for a pending one.
+      // locks first. Both requests queue on it; once it is released, the
+      // first commits its invitation before the second, under the same lock,
+      // looks for a pending one.
       const a = await memberActiveInGroup("admin");
       const b = await memberActiveInGroup("admin", a.group.id);
       const payload = { email: "wanted@example.com", role: "contributor" };
@@ -2159,7 +2155,7 @@ describe("organization invitations", () => {
      * Holds the organization's row from a side connection, starts `first`
      * and waits until it is blocked, then `second` and waits again, then
      * releases: the two go on in that order under the organization's lock,
-     * which every writer takes first (Preflight ruling 8).
+     * which every writer takes first.
      */
     const inOrder = async (
       organizationId: string,
@@ -2235,7 +2231,7 @@ describe("organization invitations", () => {
       expect(await auditRows("organization_invitation.accepted")).toHaveLength(1);
     });
 
-    it("a resend that commits between an accept's lookup and its lock supersedes the token: 404 (Preflight ruling 1)", async () => {
+    it("a resend that commits between an accept's lookup and its lock supersedes the token: 404", async () => {
       // The resend queues first; the accept has looked the old token up
       // (unlocked, still current) before it queues behind it.
       const { account, access, admin, group, invitation, token } = await invitedBySomeone();
@@ -2353,7 +2349,7 @@ describe("organization invitations", () => {
       expect((await me(access)).json()).toMatchObject({ organization: { id: account.organization.id } });
     });
 
-    it("the inviting admin's removal, then a concurrent accept: the invitation is revoked with them, and the accept is 404 (Ruling 17)", async () => {
+    it("the inviting admin's removal, then a concurrent accept: the invitation is revoked with them, and the accept is 404", async () => {
       // The removal takes the invitations under the organization's lock,
       // before the account's, as a cancel does: the accept, queued behind it
       // on the same lock, finds the invitation revoked.
@@ -2419,7 +2415,7 @@ describe("organization invitations", () => {
       ]);
     });
 
-    it("an accept whose switch fails after the join committed answers 200 without a cookie (Preflight ruling 5)", async () => {
+    it("an accept whose switch fails after the join committed answers 200 without a cookie", async () => {
       // A side connection holds the session row, which the join doesn't
       // touch and the switch after it locks. Once the switch waits on it,
       // the session is revoked and the lock released: the switch refuses,
@@ -2461,7 +2457,7 @@ describe("organization invitations", () => {
       }
     });
 
-    it("an acceptance by an account a product admin's delete takes while it waits: the account's row read under its lock, 401 unauthenticated, no membership, the invitation still pending (D29 Ruling 271)", async () => {
+    it("an acceptance by an account a product admin's delete takes while it waits: the account's row read under its lock, 401 unauthenticated, no membership, the invitation still pending", async () => {
       const { account, access, group, invitation, token } = await invitedAccount();
 
       await withLocker(async (locker) => {
@@ -2491,7 +2487,7 @@ describe("organization invitations", () => {
     });
   });
 
-  describe("the logs (Preflight ruling 4)", () => {
+  describe("the logs", () => {
     /** A server logging everything, request lines included, into `lines`. */
     const tracing = async (lines: string[]) => {
       const traced = serverWith({ level: "trace", lines });

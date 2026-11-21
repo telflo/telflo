@@ -29,12 +29,12 @@ export interface ServerDependencies {
   now?: () => Date;
   /**
    * Overrides RATE_LIMITS. Tests only: every test server passes
-   * TEST_RATE_LIMITS unless it is testing the limits themselves (Preflight
-   * Ruling 2). Production wiring never sets it.
+   * TEST_RATE_LIMITS unless it is testing the limits themselves. Production
+   * wiring never sets it.
    */
   rateLimits?: RateLimits;
   /**
-   * Runs work after the response (D3 decision 2). Defaults to
+   * Runs work after the response. Defaults to
    * createAfterResponseRunner in buildServer. Every test server that calls an
    * email endpoint passes createCollectingRunner's `run`, so no queued work
    * outlives its test.
@@ -52,15 +52,14 @@ export interface ServerDependencies {
    */
   oidcFetch?: CustomFetch;
   /**
-   * The opamp-server's management API (D11a decision 12), built in index.ts
-   * from settings.opampServer; required (D11b decision 8). The
-   * organizations' changes are sent to its registry after each commit
-   * (D11a decision 20), and D11b publishes through it. Tests pass a client
-   * of the fake (testing/opamp-server.ts).
+   * The opamp-server's management API, built in index.ts from
+   * settings.opampServer; required. The organizations' changes are sent to
+   * its registry after each commit, and configurations are published
+   * through it. Tests pass a client of the fake (testing/opamp-server.ts).
    */
   opampServer: OpampServerClient;
   /**
-   * The collector validator (D13b decisions 11 and 12), built in index.ts
+   * The collector validator, built in index.ts
    * from settings.otelcolValidator; required. A version's validation asks it
    * after its read commits. Tests about validation pass a client of the
    * fake (testing/otelcol-validator.ts); every other test server passes
@@ -68,9 +67,9 @@ export interface ServerDependencies {
    */
   otelcolValidator: OtelcolValidatorClient;
   /**
-   * Where the platform's files live (ADR 0012; D23-2 decision 31): test
-   * files, runs' files, test templates, definitions' inputs, and from D23-2
-   * organizations' logos and library files. Built once in index.ts and
+   * Where the platform's files live: test files, runs' files, test
+   * templates, definitions' inputs, organizations' logos and library files.
+   * Built once in index.ts and
    * e2e/start-api.ts by createFileStore (its startup check runs before
    * listen) and shared with the test runs' background work; required, so
    * production wiring can't leave it out. Tests that keep files pass a
@@ -80,20 +79,19 @@ export interface ServerDependencies {
    */
   fileStore: IFileStore;
   /**
-   * The test runs' collaborators (D14a Preflight ruling 17): the collector
-   * tester's client and its health monitor, the queue's wake,
-   * and the OTTL evaluator's client and its health monitor (D15a: a rule's
-   * save is checked, and a run's rules evaluated, through it). Built in
-   * index.ts and e2e/start-api.ts by createTestRunsDependencies; required.
-   * Tests about test runs and validation rules pass their own (the fake
-   * tester's client, the fake evaluator's: testing/ottl-evaluator.ts);
-   * every other test server passes
+   * The test runs' collaborators: the collector tester's client and its
+   * health monitor, the queue's wake, and the OTTL evaluator's client and its
+   * health monitor (a rule's save is checked, and a run's rules evaluated,
+   * through it). Built in index.ts and e2e/start-api.ts by
+   * createTestRunsDependencies; required. Tests about test runs and
+   * validation rules pass their own (the fake tester's client, the fake
+   * evaluator's: testing/ottl-evaluator.ts); every other test server passes
    * UNCALLED_TESTING (testing/otelcol-testing.ts), whose evaluator is
    * UNCALLED_OTTL_EVALUATOR, which fails a test that reaches it.
    */
   testing: TestingDependencies;
   /**
-   * The install templates' loader (D17c-1 decision 36), built and checked in
+   * The install templates' loader, built and checked in
    * index.ts and e2e/start-api.ts before listening (checkInstallTemplates).
    * Optional: left out, the fleet routes build one on
    * settings.install.templatesDirectory, which the tests' setup points at

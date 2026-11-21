@@ -10,7 +10,7 @@ import { UNLINK_FAILED_MESSAGE } from "~/lib/account.js";
 import { GOOGLE, held } from "~/test/account.js";
 import { expectNoAttributeHolds } from "~/test/fleets.js";
 
-/* Unlinking a provider (D21 decisions 39 and 45). */
+/* Unlinking a provider. */
 
 const PASSWORD = "canary-unlink-pw-3e9f";
 const onChanged = vi.fn();
@@ -40,7 +40,7 @@ describe("UnlinkProviderDialog", () => {
 
     await user.click(screen.getByRole("button", { name: "Open" }));
     const dialog = await screen.findByRole("dialog", { name: "Unlink Google" });
-    // Q126: a Google sign-in with the account's own address links it again, and the words say so.
+    // A Google sign-in with the account's own address links it again, and the words say so.
     expect(dialog).toHaveAccessibleDescription(
       "Enter your current password to remove this sign-in. You can still sign in with your password. " +
         "If your Telflo address is this Google account's address, signing in with Google links it again.",
@@ -72,7 +72,7 @@ describe("UnlinkProviderDialog", () => {
     );
   });
 
-  it("leaves the re-link sentence out when the identity's provider doesn't re-link by email (Ruling 92)", async () => {
+  it("leaves the re-link sentence out when the identity's provider doesn't re-link by email", async () => {
     // relinksByEmail false: not configured, or configured without an email-authority rule (Google at another issuer).
     render(
       <UnlinkProviderDialog

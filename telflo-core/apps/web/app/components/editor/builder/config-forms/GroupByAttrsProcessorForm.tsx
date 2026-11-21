@@ -3,12 +3,12 @@ import { InlineAlert } from "./InlineAlert.js";
 import { StringListField } from "./shared/StringListField.js";
 
 /*
- * The group-by-attributes processor's form (ADR 0018), over the form's fields
- * (D9d decision 2, D9b's contract): Grouping Keys is the shared
- * `StringListField` over `keys`, written by item; removing the last leaves
- * `keys: []`, which the collector takes (contrib v0.162.0
- * `processor/groupbyattrsprocessor/factory.go:32-36`, its default). The
- * compaction alert shows while the text has no keys (unset, null or `[]`).
+ * The group-by-attributes processor's form, over the form's fields:
+ * Grouping Keys is the shared `StringListField` over `keys`, written by
+ * item; removing the last leaves `keys: []`, which the collector takes
+ * (contrib v0.162.0 `processor/groupbyattrsprocessor/factory.go:32-36`,
+ * its default). The compaction alert shows while the text has no keys
+ * (unset, null or `[]`).
  */
 
 export const COMPACTION_ALERT =

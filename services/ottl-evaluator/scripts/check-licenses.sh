@@ -2,17 +2,16 @@
 # Fails if any Go module this service builds on carries a license that does
 # not allow redistribution. telflo ships the ottl-evaluator too, so its Go
 # dependencies follow the same rule as the npm ones. As the opamp-server's
-# scripts/check-licenses.sh, with one addition (D15a spec decision 4,
-# Preflight ruling 3): the policy's "goModules" names reviewed MPL-2.0
-# modules, each at one version.
-# Only licenses on the policy's allowed list pass (ADR 0019, amended by D15a).
+# scripts/check-licenses.sh, with one addition: the policy's "goModules"
+# names reviewed MPL-2.0 modules, each at one version.
+# Only licenses on the policy's allowed list pass.
 #
 # Usage: scripts/check-licenses.sh [license-policy.json] [module-dir]
 #
 #   license-policy.json  the allowed list and the named modules; defaults to
 #                        the platform's scripts/license-policy.json, two
-#                        levels above this service. An argument, so that D26
-#                        can vendor the file when the service moves to its own
+#                        levels above this service. An argument, so that the
+#                        file can be vendored if the service moves to its own
 #                        repository.
 #   module-dir           the Go module to check; defaults to this service.
 #                        The self-test points it at its fixtures.
@@ -166,7 +165,7 @@ done < <(grep -v '^$' <<<"$report" | sort -u)
 if [ "$disallowed" -gt 0 ]; then
   echo ""
   echo "ERROR: $disallowed module license(s) above are not on the allowed list in $policy."
-  echo "Only a license that allows redistribution may be added to that list (ADR 0019)."
+  echo "Only a license that allows redistribution may be added to that list."
   exit 1
 fi
 echo "All Go module licenses are allowed."

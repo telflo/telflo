@@ -19,19 +19,17 @@ interface MyFilesPanelProps {
 }
 
 /**
- * The person's own test files in this organization (D14a decision 7). The
- * run dialog reads them afresh each time it opens (the store's `loadFiles`).
- * Highlight a row and OK selects it; the trash button deletes a file at once,
- * and a deleted file leaves the dialog's selection too.
+ * The person's own test files in this organization. The run dialog reads
+ * them afresh each time it opens (the store's `loadFiles`). Highlight a row
+ * and OK selects it; the trash button deletes a file at once, and a deleted
+ * file leaves the dialog's selection too.
  *
- * Differences (the Parity Notes): no file name reaches an attribute (ADR
- * 0024). The delete and details buttons are named by hidden text, through
- * `aria-labelledby` (as D12's visibility switch is), never `Delete <name>`
- * in an `aria-label`; their titles stay the fixed "Delete" and "Show
- * details". A session that ended toasts nothing. In the
- * playground (D31-1 decisions 12 and 24), Upload and a file's delete open the
- * sign-up prompt at their buttons (`useLockedAction`), never reaching
- * signed-in routes.
+ * No file name reaches an attribute. The delete and details buttons are named
+ * by hidden text, through `aria-labelledby`, never `Delete <name>` in an
+ * `aria-label`; their titles stay the fixed "Delete" and "Show details". A
+ * session that ended toasts nothing. In the playground, Upload and a file's
+ * delete open the sign-up prompt at their buttons (`useLockedAction`), never
+ * reaching signed-in routes.
  */
 export function MyFilesPanel({ organizationId, onDone, onCancel, onSelectFile, onRequestUpload }: MyFilesPanelProps) {
   const files = useTestingStore((state) => (state.filesOrganizationId === organizationId ? state.files : NO_FILES));
@@ -95,7 +93,7 @@ export function MyFilesPanel({ organizationId, onDone, onCancel, onSelectFile, o
                       isSelected ? "bg-accent border-l-brand" : "border-l-transparent hover:bg-accent/50"
                     }`}
                   >
-                    {/* The name in text, which replay masks, never in an attribute (ADR 0024). */}
+                    {/* The name in text, which replay masks, never in an attribute. */}
                     <span id={deleteLabelId} className="sr-only">
                       Delete {file.displayName}
                     </span>

@@ -1,8 +1,6 @@
 /*
- * `telflo fleet list|create|groups|install` (D27 decisions 11 and 28), on
- * the platform's names, the older CLI's renamed (`fleet
- * deployments` is `fleet groups`, `--deployment` is `--group`,
- * `--server-name` is `--display-name`, `server-supervisor` is `server`).
+ * `telflo fleet list|create|groups|install`, in the platform's names
+ * (collector groups, `--group`, `--display-name`, the `server` type).
  *
  * `fleet install` prints a SECRET: its command holds the fleet's bearer, or
  * a link's secret whose download answers it. The command goes to stdout
@@ -42,8 +40,8 @@ export async function fleetList(client: ApiClient): Promise<void> {
 /**
  * `telflo fleet create`: the fleet's id and its rotate token's id (no bearer:
  * the reply holds none), then the next steps: a new fleet's Default group
- * serves nothing, so a deploy comes first (it goes to the Default group,
- * Ruling 248), then the install, which joins it.
+ * serves nothing, so a deploy comes first (it goes to the Default group),
+ * then the install, which joins it.
  */
 export async function fleetCreate(client: ApiClient, options: CreateFleetOptions): Promise<void> {
   const fleet = await createFleet(client, options);
@@ -77,7 +75,7 @@ export async function fleetInstall(client: ApiClient, fleetId: string, options: 
     emit(reply, () => "");
     return;
   }
-  // The reply's words through terminalText (Ruling 237); the command byte-exact: it is what to run.
+  // The reply's words through terminalText; the command byte-exact: it is what to run.
   writeErr(terminalText(`# ${reply.platform} install for ${reply.fleetType} fleet ${reply.fleetId}, group "${reply.groupName}" (${reply.groupId})`));
   if (reply.expiresAt !== null) writeErr(terminalText(`# The command's link works until ${reply.expiresAt}.`));
   for (const note of reply.notes) writeErr(`# ${terminalText(note)}`);

@@ -1,23 +1,21 @@
-"""The tester's settings, read once, at startup (D14a spec decisions 5 and 30;
-Preflight rulings 2 and 4).
+"""The tester's settings, read once, at startup.
 
-The shared secret follows the validator's pattern (ADR 0026, ADR 0027): the
-current secret and every previous one are kept for the comparison only as
-SHA-256 digests, each secret at least 32 bytes, and a presented token is
-compared with all of them in constant time. Unlike the validator's, the
-secrets are read from FILES (`OTELCOL_TESTING_SECRET_FILE`, and
-`OTELCOL_TESTING_SECRETS_PREVIOUS_FILE` during a rotation), never from the
-environment: the collectors and kwok a run starts are execs, which reset the
-process's non-dumpable flag (ruling 4), so the secret must be in no
-process's environment. Without a readable current secret of 32 bytes or
-more the service refuses to start; it refuses as well when the secret is
-also in its environment.
+The shared secret follows the validator's pattern: the current secret and
+every previous one are kept for the comparison only as SHA-256 digests, each
+secret at least 32 bytes, and a presented token is compared with all of them
+in constant time. Unlike the validator's, the secrets are read from FILES
+(`OTELCOL_TESTING_SECRET_FILE`, and `OTELCOL_TESTING_SECRETS_PREVIOUS_FILE`
+during a rotation), never from the environment: the collectors and kwok a run
+starts are execs, which reset the process's non-dumpable flag, so the secret
+must be in no process's environment. Without a readable current secret of
+32 bytes or more the service refuses to start; it refuses as well when the
+secret is also in its environment.
 
 The secrets' exact values are also kept, in a `Redactions` object of their
-own, for one use: removing them from every answer (ruling 3). Neither
-object's repr shows a value or a digest.
+own, for one use: removing them from every answer. Neither object's repr
+shows a value or a digest.
 
-The budgets (ruling 2), with d the run's duration (1 to 60 s):
+The budgets, with d the run's duration (1 to 60 s):
 
     phase                                   limit
     slot wait                                5 s
@@ -31,8 +29,8 @@ The budgets (ruling 2), with d the run's duration (1 to 60 s):
 
 so a run's process group is killed at its deadline, 57 + d s after its child
 started, and a request has 64 + d s in all. The platform's client waits
-74 + d s and its lease is 174 + d s (the API's dispatcher; since D15a, which
-adds the OTTL evaluator's check, ADR 0028 amended).
+74 + d s and its lease is 174 + d s (the API's dispatcher, whose lease also
+covers the OTTL evaluator's check).
 """
 
 from __future__ import annotations
@@ -53,20 +51,19 @@ CATALOG_DIR_VARIABLE = "OTELCOL_CATALOG_DIR"
 
 MIN_SECRET_BYTES = 32
 
-# At most this many runs at once (ruling 4): the platform's
-# TELFLO_TEST_RUNS_PER_TESTER defaults to the same 4. Each run's collector
-# holds about 180 MiB.
+# At most this many runs at once: the platform's TELFLO_TEST_RUNS_PER_TESTER
+# defaults to the same 4. Each run's collector holds about 180 MiB.
 DEFAULT_MAX_CONCURRENCY = 4
 # A request waits at most this long for a free slot, then answers 503
-# tester_busy (ruling 2). Not an environment setting.
+# tester_busy. Not an environment setting.
 DEFAULT_SLOT_WAIT_SECONDS = 5.0
 DEFAULT_BINARY_DIR = Path("/opt/otelcol")
-# Run from the checkout, the catalogue is the repository's own
+# Run from the checkout, the catalog is the repository's own
 # (services/otelcol-testing/app/settings.py -> <repo>/catalog/distributions).
 # The image sets OTELCOL_CATALOG_DIR to the copy it carries.
 DEFAULT_CATALOG_DIR = Path(__file__).resolve().parents[3] / "catalog" / "distributions"
 
-# The phase limits of ruling 2, in seconds.
+# The phase limits, in seconds.
 PREPARATION_SECONDS = 2.0
 COLLECTOR_READY_SECONDS = 10.0
 KWOK_INFORMER_SECONDS = 5.2
@@ -75,7 +72,7 @@ REPLAY_POST_SECONDS = 5.0
 STOP_GRACE_SECONDS = 5.0  # SIGTERM, then this long, then SIGKILL
 STOP_SECONDS = 6.0
 FINISH_SECONDS = 3.0
-# kwok's start (Ruling 26): attempts, and the backoff before each retry.
+# kwok's start: attempts, and the backoff before each retry.
 KWOK_START_ATTEMPTS = 3
 KWOK_RETRY_BACKOFF_SECONDS: tuple[float, ...] = (2.0, 4.0)
 # A run's process group is killed RUN_DEADLINE_BASE_SECONDS + d after its
@@ -121,7 +118,7 @@ class Secrets:
 
 class Redactions:
     """The secrets' exact values, for one use only: `app/scrub.py` replaces
-    each with `<redacted>` in every field of an answer (ruling 3), in case a
+    each with `<redacted>` in every field of an answer, in case a
     run's collector read the secret's file. Never shown by repr."""
 
     __slots__ = ("_values",)
@@ -191,10 +188,10 @@ class Settings:
     slot_wait_seconds: float = DEFAULT_SLOT_WAIT_SECONDS
     binary_dir: Path = DEFAULT_BINARY_DIR
     catalog_dir: Path = DEFAULT_CATALOG_DIR
-    # Ruling 2's arithmetic; only the tests lower them.
+    # The deadline's and the budget's bases; only the tests lower them.
     run_deadline_base_seconds: float = RUN_DEADLINE_BASE_SECONDS
     request_budget_base_seconds: float = REQUEST_BUDGET_BASE_SECONDS
-    # Ruling 26: kwok's start, three attempts with a backoff before each
+    # kwok's start: three attempts with a backoff before each
     # retry. Not environment settings; only the tests lower them.
     kwok_start_attempts: int = KWOK_START_ATTEMPTS
     kwok_retry_backoff_seconds: tuple[float, ...] = KWOK_RETRY_BACKOFF_SECONDS
@@ -219,7 +216,7 @@ class Settings:
         for secret in (current, *previous):
             if any(secret in value for value in environ.values()):
                 raise SettingsError(
-                    "a secret is also in the environment: it must be in no environment (D14a Preflight ruling 4)"
+                    "a secret is also in the environment: it must be in no environment"
                 )
         return cls(
             secrets=Secrets(current, previous),

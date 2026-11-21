@@ -21,9 +21,9 @@ import { GROUP_ID, MINE, versionFixture } from "~/test/configurations.js";
 
 /*
  * The ComponentPalette tests (the allowlist's: the palette takes the
- * components from the catalogue, not a fetch of its own; D13a Preflight
- * ruling 18), with the sections, the drag, the help popover, the lock, the
- * toolbox's collapse, and the distribution's filter (D13a decision 6).
+ * components from the catalog, not a fetch of its own), with the sections,
+ * the drag, the help popover, the lock, the toolbox's collapse, and the
+ * distribution's filter.
  */
 
 const initialState = useEditorStore.getState();
@@ -60,7 +60,7 @@ describe("ComponentPalette", () => {
     expect(screen.getAllByText("Datadog", { selector: "span" })).toHaveLength(2);
   });
 
-  it("no longer renders the Quick Setup template button", () => {
+  it("renders no Quick Setup template button", () => {
     render(<ComponentPalette />);
     expect(screen.queryByText("Quick Setup")).toBeNull();
   });
@@ -158,7 +158,7 @@ const SMALL_COMPONENTS: CollectorSupportedComponents = {
 };
 
 /**
- * A fixture distribution with a component list (the committed catalogue's
+ * A fixture distribution with a component list (the committed catalog's
  * one distribution, Contrib, has none): 2.36.0 supports SMALL_COMPONENTS,
  * 2.35.0 those and the Jaeger receiver.
  */
@@ -189,8 +189,8 @@ function sectionsOf(container: HTMLElement) {
   return [...container.querySelectorAll("h3")].map((heading) => [heading.textContent, heading.nextElementSibling?.textContent]);
 }
 
-describe("ComponentPalette: the distribution's components (D13a decision 6)", () => {
-  it("filters the palette to the distribution's supported components, without reading the catalogue itself", () => {
+describe("ComponentPalette: the distribution's components", () => {
+  it("filters the palette to the distribution's supported components, without reading the catalog itself", () => {
     const read = vi.spyOn(apiClient, "getCollectorDistributions");
     seedCatalogue([...CATALOGUE, SMALL]);
     openOf(SMALL.id, "2.36.0");
@@ -209,7 +209,7 @@ describe("ComponentPalette: the distribution's components (D13a decision 6)", ()
       ["Connectors", "2"],
     ]);
     expect(container.querySelectorAll('[draggable="true"]')).toHaveLength(11);
-    // The editor page reads the catalogue; the palette never does.
+    // The editor page reads the catalog; the palette never does.
     expect(read).not.toHaveBeenCalled();
   });
 
@@ -223,7 +223,7 @@ describe("ComponentPalette: the distribution's components (D13a decision 6)", ()
     expect(container.querySelectorAll('[draggable="true"]')).toHaveLength(componentPalette.length);
   });
 
-  it("takes the components from the catalogue for the configuration's distribution and the pin on screen", async () => {
+  it("takes the components from the catalog for the configuration's distribution and the pin on screen", async () => {
     seedCatalogue([...CATALOGUE, SMALL]);
     openOf(SMALL.id, "2.36.0");
     render(<CollapsibleToolbox />);
@@ -239,7 +239,7 @@ describe("ComponentPalette: the distribution's components (D13a decision 6)", ()
     expect(screen.queryByText("Jaeger")).not.toBeInTheDocument();
   });
 
-  it("shows every component while the catalogue is unread or its read failed, and filters once it is read", () => {
+  it("shows every component while the catalog is unread or its read failed, and filters once it is read", () => {
     openOf(SMALL.id, "2.36.0");
     const { container } = render(<ComponentPalette />);
     expect(container.querySelectorAll('[draggable="true"]')).toHaveLength(componentPalette.length);
@@ -251,7 +251,7 @@ describe("ComponentPalette: the distribution's components (D13a decision 6)", ()
     expect(container.querySelectorAll('[draggable="true"]')).toHaveLength(11);
   });
 
-  it("shows every component for a pin the catalogue no longer offers, or a distribution it doesn't list", () => {
+  it("shows every component for a pin the catalog no longer offers, or a distribution it doesn't list", () => {
     seedCatalogue([...CATALOGUE, SMALL]);
     openOf(SMALL.id, "2.20.0");
     const { container, unmount } = render(<ComponentPalette />);
@@ -288,8 +288,8 @@ service:
   });
 });
 
-describe("ComponentPalette in the playground (D31-1 decision 11, Ruling 282)", () => {
-  it("shows every component, even with a catalogue this tab read on a signed-in page that would narrow it", () => {
+describe("ComponentPalette in the playground", () => {
+  it("shows every component, even with a catalog this tab read on a signed-in page that would narrow it", () => {
     seedCatalogue([...CATALOGUE, SMALL]);
     openOf(SMALL.id, "2.36.0");
     const value = { visitor: sampleVisitor(), lock: () => undefined, catalogue: PLAYGROUND_CATALOGUE, openSignInToSave: () => undefined };

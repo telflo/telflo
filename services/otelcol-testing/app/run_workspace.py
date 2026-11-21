@@ -1,7 +1,5 @@
 """A run's scratch directory and the paths in it.
 
-D14a Task 4:
-
 - **A workspace that already exists is refused, never removed**, so a run
   sent twice can't delete the live run's workspace. Entering one that
   exists raises ``FileExistsError``; the directory is made mode 0700.

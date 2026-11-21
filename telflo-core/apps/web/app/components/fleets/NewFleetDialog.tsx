@@ -38,15 +38,14 @@ import { useOpeningKey } from "~/lib/hooks/use-opening-key.js";
 import { randomUuid } from "~/lib/ids.js";
 
 /*
- * The create dialogs' shared body (D17a decision 24, Preflight ruling 13;
- * ADR 0018): the dialogs differ only in their title, text and the Token
- * expiry field, which `NewServerFleetDialog` and `NewKubernetesFleetDialog`
- * give. Per the D17a Parity Notes:
+ * The create dialogs' shared body: the dialogs differ only in their title,
+ * text and the Token expiry field, which `NewServerFleetDialog` and
+ * `NewKubernetesFleetDialog` give. Its details:
  *
- * - The Name is trimmed before it is sent (decision 12); a name the contract
- *   still refuses (`FleetLabelSchema`: a control character, say) shows its
- *   words under the field and nothing is sent. "…within your org." reads
- *   "…within your organization." (§3.12).
+ * - The Name is trimmed before it is sent; a name the contract still refuses
+ *   (`FleetLabelSchema`: a control character, say) shows its words under the
+ *   field and nothing is sent. "…within your org." reads "…within your
+ *   organization.".
  * - The request carries an id the dialog made when it opened (`randomUuid`:
  *   `crypto.randomUUID`, else `getRandomValues`), so a retry is safe.
  * - **An unknown outcome** (`isUnknownOutcome`: any 5xx, no connection, a
@@ -69,10 +68,10 @@ import { randomUuid } from "~/lib/ids.js";
  *   the same random id) it makes a new id and shows the API's words, the
  *   dialog open. So no retry makes a second fleet.
  * - A 403 `terms_acceptance_required` or 404 `organization_not_found` closes
- *   the dialog and revalidates the layout (decision 28), while locked too; a
- *   session ended is silent (the session-ended handler has the page).
- *   Anything else shows `fleetRefusalMessage`'s words, or "Failed to create
- *   fleet"; a 400's details naming a field show under it.
+ *   the dialog and revalidates the layout, while locked too; a session ended
+ *   is silent (the session-ended handler has the page). Anything else shows
+ *   `fleetRefusalMessage`'s words, or "Failed to create fleet"; a 400's
+ *   details naming a field show under it.
  * - On success the dialog shows both bearers once (`CreatedFleetTokens`) and
  *   toasts `Fleet "{label}" created` (no bearer). Done forgets the bearers,
  *   closes and opens the fleet's page.
@@ -90,14 +89,14 @@ import { randomUuid } from "~/lib/ids.js";
 
 export const CREATE_FAILED_MESSAGE = "Failed to create fleet";
 
-/** After an unknown outcome (Preflight ruling 13), while the fields are locked. */
+/** After an unknown outcome, while the fields are locked. */
 export const UNKNOWN_OUTCOME_MESSAGE = "The fleet may or may not have been created. Trying again won't make a second one.";
 
 /** The toast of a `fleet_conflict` after an unknown outcome, as the dialog closes. */
 export const MAY_ALREADY_EXIST_MESSAGE =
   "This fleet may already exist under another name: check the list before creating another.";
 
-/** A retry answered 200, but the fleet's tokens couldn't be read or revealed (D17a has no Tokens tab yet). */
+/** A retry answered 200, but the fleet's tokens couldn't be read or revealed. */
 export const EARLIER_ATTEMPT_TOKENS_FAILED_MESSAGE =
   "The fleet was created by your earlier attempt, but its tokens couldn't be shown here. Delete it and create it again to get new tokens.";
 
@@ -134,7 +133,7 @@ export interface NewFleetDialogProps {
   organizationId: string;
   /** Called as the dialog closes after an unknown outcome: the list reloads, as a fleet may have been made. */
   onMayHaveCreated?: (() => void) | undefined;
-  /** Where the focus goes once the dialog has closed (Radix's `onCloseAutoFocus`): the page gives it back to the opener (D14b Ruling 46). */
+  /** Where the focus goes once the dialog has closed (Radix's `onCloseAutoFocus`): the page gives it back to the opener. */
   onCloseAutoFocus?: ((event: Event) => void) | undefined;
 }
 

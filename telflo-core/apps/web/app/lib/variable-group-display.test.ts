@@ -19,7 +19,7 @@ import {
   variablesUndefinedOf,
 } from "./variable-group-display.js";
 
-/* A collector's variable group and its variables' values, on D20's fields and levels (Q84). */
+/* A collector's variable group and its variables' values, at the group and organization levels. */
 
 const PIN = "7b000000-0000-4000-8000-0000000000a1";
 const BOUND = "7b000000-0000-4000-8000-0000000000b1";
@@ -35,7 +35,7 @@ describe("effectiveVariableGroupId", () => {
   });
 });
 
-describe("followGroupWords (default 24)", () => {
+describe("followGroupWords", () => {
   it('says "Follow group (eu-edge)", "(Organization values)" for none, and no group when unknown', () => {
     expect(followGroupWords("eu-edge")).toBe("Follow group (eu-edge)");
     expect(followGroupWords(null)).toBe("Follow group (Organization values)");
@@ -43,7 +43,7 @@ describe("followGroupWords (default 24)", () => {
   });
 });
 
-describe("resolvedVariables (Q84: per variable)", () => {
+describe("resolvedVariables (per variable)", () => {
   const a = organizationVariable({ id: "7a000000-0000-4000-8000-0000000000a1", name: "A", value: "org-a" });
   const b = organizationVariable({ id: "7a000000-0000-4000-8000-0000000000b1", name: "B", value: "org-b" });
   const c = organizationVariable({ id: "7a000000-0000-4000-8000-0000000000c1", name: "C", value: "org-c" });
@@ -58,14 +58,14 @@ describe("resolvedVariables (Q84: per variable)", () => {
     );
     expect(rows.map((row) => [row.variable.name, row.value, row.source])).toEqual([
       ["A", "pin-a", "pin"],
-      // An empty override overrides (D20).
+      // An empty override overrides.
       ["B", "", "group"],
       ["C", "org-c", "Organization value"],
     ]);
   });
 });
 
-describe("the undefined names (Q86; Q102)", () => {
+describe("the undefined names", () => {
   it("lists the references no variable has, as written (case-sensitive), in the order referenced", () => {
     expect(undefinedNames(["B", "a", "A"], [{ name: "A" }])).toEqual(["B", "a"]);
     expect(moreNamesText(3)).toBe("… and 3 more");

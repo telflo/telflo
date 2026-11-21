@@ -24,11 +24,11 @@ import {
 } from "./compare-prefills-fixture.js";
 
 /*
- * The first describe holds the 5 basic cases: the candidates are this
- * file's shape, kind, key and the rule's Require and Condition, as the rule
- * editor's prefill writes them. The rest are D15b's (Task 5; Preflight
- * rulings 8-10): the walks, the values, the files' forms, the order, the
- * load, the OTTL written, and the fixture the evaluator's Go suite checks.
+ * The first describe holds the 5 basic cases: the candidates are this file's
+ * shape, kind, key and the rule's Require and Condition, as the rule editor's
+ * prefill writes them. The rest cover the walks, the values, the files' forms,
+ * the order, the load, the OTTL written, and the fixture the evaluator's Go
+ * suite checks.
  */
 
 type Attributes = Record<string, unknown>;
@@ -112,7 +112,7 @@ describe("detectRuleCandidates: the 5 basic cases", () => {
   });
 });
 
-describe("Ana's run: env added, level changed (the deliverable's example)", () => {
+describe("Ana's run: env added, level changed", () => {
   it("offers the changed level first (the input's keys first), then the added env, each with its condition", () => {
     const input = [{ level: "debug", msg: "a" }, { level: "debug", msg: "b" }];
     const output = [
@@ -244,7 +244,7 @@ describe("the values compared, as OTTL compares them", () => {
     // A fractional double is no int.
     expect(logCandidates([{ k: { intValue: "5" } }], [{ k: { doubleValue: 5.5 } }])).toEqual([changed("k", 'attributes["k"] == 5.5')]);
     // Nor is an int a fractional double, the other way round (the double
-    // against the int converted, Ruling 27).
+    // against the int converted).
     expect(logCandidates([{ k: { doubleValue: 5.5 } }], [{ k: { intValue: "5" } }])).toEqual([changed("k", 'attributes["k"] == 5')]);
   });
 
@@ -400,7 +400,7 @@ describe("the OTTL written: the key and value escaped", () => {
     expect(candidatePrefill({ kind: "added", key: "\udc00" })).toBeNull();
   });
 
-  describe("no chip past a rule's 8,192 bytes (Ruling 24)", () => {
+  describe("no chip past a rule's 8,192 bytes", () => {
     // `attributes["` and `"] != nil` are 21 bytes: a key of 8,171 bytes as
     // written makes a condition of 8,192, the most a rule saves.
     const prefix = 'attributes["';
@@ -445,7 +445,7 @@ describe("the OTTL written: the key and value escaped", () => {
 
   it("reopens a saved prefill as it was written (a prefill saved and reopened)", () => {
     // The caller saves each on the run's signal's record context; reopening
-    // goes through D15a's recognition with ruling 11's unescape.
+    // goes through `recognizeBuilderRule` and its unescape.
     const signal: TestRunSignal = "logs";
     const [changedLevel, addedKey] = logCandidates([{ level: "debug" }], [{ level: "info", "a\nb\t\u0001": "v" }]);
     expect(addedKey?.condition).toBe('attributes["a\\nb\\t\\u0001"] != nil');
@@ -516,13 +516,13 @@ describe("the files read", () => {
 const nextTimerTurn = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
 describe("the load", () => {
-  // One pass (Preflight ruling 9, Ruling 24): per-key filtering (even with a
-  // Map per record, each key filtering every record) is quadratic: at 100,000
-  // records it ran far past the suite's testTimeout (216.7 s in Ruling 24's
-  // probe), so it times out here. The suite's testTimeout is the only bound,
-  // made to hold for synchronous work: the test yields before it, so vitest's
-  // timeout is already running, and yields to the timers after it, so a
-  // timeout that fell due during the work fails the test.
+  // One pass: per-key filtering (even with a Map per record, each key
+  // filtering every record) is quadratic: at 100,000 records it ran far past
+  // the suite's testTimeout (216.7 s in one measurement), so it times out
+  // here. The suite's testTimeout is the only bound, made to hold for
+  // synchronous work: the test yields before it, so vitest's timeout is
+  // already running, and yields to the timers after it, so a timeout that fell
+  // due during the work fails the test.
   it("detects 100,000 records of unique keys in one pass (the suite's testTimeout the only bound)", async () => {
     const records = 100_000;
     const input = { resourceLogs: [{ scopeLogs: [{ logRecords: Array.from({ length: records }, (_, i) => ({ attributes: [{ key: `key.${i}`, value: { stringValue: "v" } }] })) }] }] };
@@ -537,8 +537,8 @@ describe("the load", () => {
 });
 
 /*
- * The writer's cases, checked by the evaluator (Preflight ruling 10, Ruling
- * 24): `services/ottl-evaluator/internal/rules/testdata/compare-prefills.json`,
+ * The writer's cases, checked by the evaluator:
+ * `services/ottl-evaluator/internal/rules/testdata/compare-prefills.json`,
  * written by compare-prefills-fixture.ts from this writer, whose every
  * condition compare_prefills_test.go validates in the log, span and
  * datapoint contexts and evaluates, over the case's value, its sameAs and
@@ -577,7 +577,7 @@ describe("the fixture the evaluator checks", () => {
     expect(readFileSync(join(COMPARE_PREFILLS_FIXTURE_PATH, "../../check.go"), "utf8")).toContain("package rules");
   });
 
-  it("holds ruling 10's 7 keys by 6 shapes, the crafted key's included, and the number cases", () => {
+  it("holds the 7 keys by 6 shapes, the crafted key's included, and the number cases", () => {
     expect(fixture.cases.length).toBeGreaterThanOrEqual(42);
     const crafted = fixture.cases.filter((c) => c.key === 'x"] != nil or attributes["y').map((c) => c.kind);
     expect(crafted).toEqual(expect.arrayContaining(["added", "removed", "changed"]));
@@ -586,7 +586,7 @@ describe("the fixture the evaluator checks", () => {
     expect(fixture.cases.some((c) => Object.is(c.value?.doubleValue, -0))).toBe(true);
   });
 
-  it("holds OTTL's int and double cases: the double 2^53 the int 2^53 + 1 equals (Ruling 24)", () => {
+  it("holds OTTL's int and double cases: the double 2^53 the int 2^53 + 1 equals", () => {
     const double = fixture.cases.find((c) => c.value?.doubleValue === 9007199254740992);
     expect(double?.sameAs).toContainEqual({ intValue: "9007199254740993" });
     const integer = fixture.cases.find((c) => c.value?.intValue === "9007199254740993");

@@ -56,15 +56,13 @@ export function buildServer(deps: ServerDependencies): FastifyInstance {
       // the configurations list's its search text, and a fleet route's a
       // collector's name or address, and a product-admin route's other
       // people's data (the Users search): the request's log lines leave them
-      // out (D2c Preflight minor, D7 Preflight ruling 4, D16b Preflight
-      // ruling 16, D29 decision 41).
+      // out.
       serializers: { req: serializeRequest },
       // A Postgres error's DETAIL and WHERE name the values of the row that
       // failed ("Failing row contains (…)", "Key (token_hash)=(…)"): a token's
       // hash, an address. Every logged error loses both, whichever table and
       // whichever log line; its code, constraint and message, which name no
-      // values, stay (D6 Preflight ruling 4). Nothing else logs a property
-      // of either name.
+      // values, stay. Nothing else logs a property of either name.
       redact: { paths: ["err.detail", "err.where"], remove: true },
       ...(deps.logStream ? { stream: deps.logStream } : {}),
     },
@@ -72,11 +70,11 @@ export function buildServer(deps: ServerDependencies): FastifyInstance {
     bodyLimit: 1_048_576,
     // A URL the router can't take (a malformed escape, a parameter over its
     // length): Fastify's own answer quotes the path back, and a
-    // quick-deploy link's secret with it (D17c-2 Task 2's open point). Ours
+    // quick-deploy link's secret with it. Ours
     // answers the envelope's generic words and logs no URL.
     frameworkErrors: respondToFrameworkError,
   };
-  // A hop count, never `true` (Ruling 39): `true` would believe any
+  // A hop count, never `true`: `true` would believe any
   // X-Forwarded-For a client sends when nothing sits in front of the API.
   // Left unset at 0, so request.ip is the socket peer.
   //
@@ -92,7 +90,7 @@ export function buildServer(deps: ServerDependencies): FastifyInstance {
     options.trustProxy = (_address: string, hop: number) => hop < trustedHops;
   }
   const server = Fastify(options);
-  // First, before any plugin, hook or route (D25 Rulings 163 and 164): no
+  // First, before any plugin, hook or route: no
   // request under /api/public/v1, in any spelling, is answered by a route
   // outside the public plugin's checks (the verification, run before every
   // other hook), and no such route registers (the guard).
@@ -105,9 +103,9 @@ export function buildServer(deps: ServerDependencies): FastifyInstance {
   server.setValidatorCompiler(validatorCompiler);
   server.setSerializerCompiler(serializerCompiler);
 
-  // The stack is same-origin (ADR 0017): the gateway serves the web app and
-  // routes /api/ to this API, so a browser never makes a cross-origin call
-  // and needs no CORS. This is ADR 0017's escape hatch for a deployment that
+  // The stack is same-origin: the gateway serves the web app and routes /api/
+  // to this API, so a browser never makes a cross-origin call and needs no
+  // CORS. This is the escape hatch for a deployment that
   // serves the API from a separate origin (VITE_TELFLO_API_URL): the client
   // sends `credentials: "include"`, which forbids a wildcard
   // Access-Control-Allow-Origin, so the one allowed origin is explicit. The
@@ -123,18 +121,17 @@ export function buildServer(deps: ServerDependencies): FastifyInstance {
   void server.register(cookie);
 
   registerErrorHandling(server);
-  // Before every route (D2a decision 6). Fastify queues root hooks in
+  // Before every route. Fastify queues root hooks in
   // registration order, so CORS headers are already on a refused response.
   registerCsrfGuard(server);
   // Per-route hooks, so they run after the CSRF guard: a refused request
-  // doesn't spend the caller's budget (D2a decision 9).
+  // doesn't spend the caller's budget.
   const rateLimiters = registerRateLimits(server, deps.rateLimits ?? RATE_LIMITS);
   // Defaulted once, here, so every module shares one clock and one runner.
   const runAfterResponse = deps.runAfterResponse ?? createAfterResponseRunner(server.log);
-  // The opamp-server's registry, kept in step after each commit (D11a
-  // decision 20), an organization's delete retried (D16b Preflight ruling
-  // 14). At close, the deletes still pending are logged: their retries are
-  // lost with the process.
+  // The opamp-server's registry, kept in step after each commit, an
+  // organization's delete retried. At close, the deletes still pending are
+  // logged: their retries are lost with the process.
   const opampRegistration = createOpampRegistration({ opampServer: deps.opampServer, runAfterResponse, log: server.log });
   server.addHook("onClose", async () => {
     opampRegistration.close();
@@ -145,48 +142,48 @@ export function buildServer(deps: ServerDependencies): FastifyInstance {
     runAfterResponse,
     opampRegistration,
   };
-  // One instance of each data service (D25 decision 15, Preflight ruling 4),
-  // shared by the browser routes and the public routes.
+  // One instance of each data service, shared by the browser routes and the
+  // public routes.
   const moduleDeps = { ...baseDeps, services: createModuleServices(baseDeps, rateLimiters, server.log) };
   registerHealthRoutes(server, deps.db);
   registerIdentityRoutes(server, moduleDeps, rateLimiters);
   registerSessionRoutes(server, moduleDeps, rateLimiters);
-  // The account's own routes (D21 decision 20), after the session routes.
+  // The account's own routes, after the session routes.
   registerAccountRoutes(server, moduleDeps, rateLimiters);
   registerPasswordResetRoutes(server, moduleDeps, rateLimiters);
   registerOidcRoutes(server, moduleDeps, rateLimiters);
   // After the session routes, which declare the request's authentication.
   registerOrganizationRoutes(server, moduleDeps, rateLimiters);
-  // The organization's service accounts, for its admins (D22 decision 26).
+  // The organization's service accounts, for its admins.
   registerServiceAccountRoutes(server, moduleDeps);
-  // The public surface, /api/public/v1/ (D22 decision 33): a service account's tf_ token, no session, no terms.
+  // The public surface, /api/public/v1/: a service account's tf_ token, no session, no terms.
   registerPublicApiRoutes(server, moduleDeps, rateLimiters);
   registerConfigurationRoutes(server, moduleDeps);
-  // The opamp-server's fleets, for every member (D16b decisions 6 and 13).
+  // The opamp-server's fleets, for every member.
   registerFleetRoutes(server, moduleDeps);
-  // The organization's variables and variable groups, for every member (D20 decision 37).
+  // The organization's variables and variable groups, for every member.
   registerVariableRoutes(server, moduleDeps);
-  // The public download (D17c-2 decision 26, Preflight ruling 10): no session, its own limits and plain-text refusals.
+  // The public download: no session, its own limits and plain-text refusals.
   registerQuickDeployRoutes(server, moduleDeps, rateLimiters);
-  // The public logo read (D23-2 decision 39): no session, its own per-IP limit and plain-text refusals.
+  // The public logo read: no session, its own per-IP limit and plain-text refusals.
   registerOrganizationLogoRoutes(server, moduleDeps, rateLimiters);
   registerCollectorCatalogueRoutes(server, moduleDeps);
   registerFlowRoutes(server, moduleDeps, rateLimiters);
   registerTestRunsRoutes(server, moduleDeps, rateLimiters);
   registerTestSuitesRoutes(server, moduleDeps, rateLimiters);
   registerTestTemplatesRoutes(server, moduleDeps, rateLimiters);
-  // The library (D23-2 decisions 41 to 45): members read, product admins write; its link's public route has no session.
+  // The library: members read, product admins write; its link's public route has no session.
   registerLibraryFilesRoutes(server, moduleDeps, rateLimiters);
   registerTestRegexesRoutes(server, moduleDeps, rateLimiters);
   registerValidationPipelinesRoutes(server, moduleDeps);
   registerSalesInquiryRoutes(server, moduleDeps, rateLimiters);
-  // Product administration across organizations (D29 decision 28): every route
-  // [authenticate, requireProductAdmin], through the SystemRepository alone.
+  // Product administration across organizations: every route [authenticate,
+  // requireProductAdmin], through the SystemRepository alone.
   registerProductAdminUsersRoutes(server, moduleDeps, rateLimiters);
   registerProductAdminsRoutes(server, moduleDeps, rateLimiters);
   registerProductAdminSettingsRoutes(server, moduleDeps, rateLimiters);
   registerProductAdminFeedbackRoutes(server, moduleDeps, rateLimiters);
-  // "Contact us" (D29 decision 32): any signed-in person with the current terms.
+  // "Contact us": any signed-in person with the current terms.
   registerFeedbackRoutes(server, moduleDeps, rateLimiters);
 
   return server;

@@ -111,8 +111,8 @@ describe("schema", () => {
       await expect(insertUser("Person@Example.com")).rejects.toThrow(/uq_users_lower_email/);
     });
 
-    // Inverted by D2c: an account created through a provider has accepted
-    // no terms until the terms dialog records them (decision 6).
+    // An account created through a provider has accepted no terms until the
+    // terms dialog records them.
     it("allows a user who has accepted no terms version", async () => {
       const user = await insertUserWithMembership({ email: "noterms@example.com" });
       expect(user).toMatchObject({ accepted_terms_version: null, terms_accepted_at: null });
@@ -263,14 +263,14 @@ describe("schema", () => {
     });
 
     it("is untouched when the user it names is deleted, actor_user_id included", async () => {
-      // Spec §3.11 applies the same reasoning to opamp: a snapshotted email
-      // outlives the user row, which is what an audit trail requires. But the
-      // audit row must be untouched, full stop -- actor_user_id carries no
-      // foreign key, so deleting the user does not null it out either. The
-      // dangling uuid stays, so events by the same actor remain correlatable;
-      // actor_email carries the human-readable identity forward regardless.
-      // Asserted against the whole row, not just the two columns the FK
-      // removal touches, so the test proves the row is untouched full stop.
+      // A snapshotted email outlives the user row, which is what an audit
+      // trail requires. But the audit row must be untouched, full stop --
+      // actor_user_id carries no foreign key, so deleting the user does not
+      // null it out either. The dangling uuid stays, so events by the same
+      // actor remain correlatable; actor_email carries the human-readable
+      // identity forward regardless. Asserted against the whole row, not just
+      // the two columns the FK removal touches, so the test proves the row is
+      // untouched full stop.
       const { user } = await createUserWithOrganization(ownerDb, {
         user: { email: "leaving@example.com" },
       });
@@ -358,7 +358,7 @@ describe("schema", () => {
       expect(group).toMatchObject({ type: "group", owner_user_id: null });
     });
 
-    // D5 decision 6: owner_user_id is set exactly when the organization is personal.
+    // owner_user_id is set exactly when the organization is personal.
     it("refuses a group organization with an owner, and a personal one without", async () => {
       const { user } = await createUserWithOrganization(ownerDb);
       await expect(
@@ -369,7 +369,7 @@ describe("schema", () => {
       ).rejects.toThrow(/ck_organizations_owner_only_personal/);
     });
 
-    // D5 decision 6: group names are unique, ignoring case, among live group organizations.
+    // Group names are unique, ignoring case, among live group organizations.
     it("refuses two live group organizations named Acme and acme", async () => {
       await insertGroup("Acme");
       await expect(insertGroup("acme")).rejects.toThrow(/uq_organizations_lower_name_group/);
@@ -401,7 +401,7 @@ describe("schema", () => {
       ).rejects.toThrow(/uq_organization_members_organization_id_user_id/);
     });
 
-    // D23-2 decisions 12 and 27: a logo has both columns or neither, and is PNG, JPEG or WebP.
+    // A logo has both columns or neither, and is PNG, JPEG or WebP.
     describe("ck_organizations_logo", () => {
       const LOGO_ID = "0199e000-0000-7000-8000-00000000c001";
       const setLogo = (id: string, logoId: string | null, contentType: string | null) =>
@@ -466,7 +466,7 @@ describe("schema", () => {
     });
 
     /**
-     * D1b decision 2: at commit, every user a transaction touched must still
+     * At commit, every user a transaction touched must still
      * exist with at least one membership, be soft-deleted, or be gone.
      * Enforced by the deferred constraint triggers in
      * 1700000000003_organization_membership_invariant, tightened by
@@ -544,11 +544,11 @@ describe("schema", () => {
         expect(await membershipCount(user.id)).toBe(1);
       });
 
-      // A service account (D22, migration 1700000000035): a users row of
-      // kind service with one contributor membership in its group
-      // organization, its service_accounts row, and no personal organization
-      // (D1b decision 2). The invariant is membership, so this shape must
-      // commit, provided account and membership commit together.
+      // A service account (migration 1700000000035): a users row of kind
+      // service with one contributor membership in its group organization, its
+      // service_accounts row, and no personal organization. The invariant is
+      // membership, so this shape must commit, provided account and membership
+      // commit together.
       it("accepts the service-account shape, and refuses deleting its group organization while the account exists", async () => {
         const group = await insertGroup("A team");
 
@@ -674,7 +674,7 @@ describe("schema", () => {
       });
 
       /**
-       * D5 decision 6: the rule is a live membership in a live organization,
+       * The rule is a live membership in a live organization,
        * and it is checked when a membership is removed (deleted_at) and when
        * an organization is deleted. 1700000000010_organizations_and_memberships.
        */
@@ -1176,7 +1176,7 @@ describe("schema", () => {
     });
   });
 
-  /** D5 decision 1: the API's own role gets only what it needs. */
+  /** The API's own role gets only what it needs. */
   describe("the application role's privileges", () => {
     /** Every privilege a table can carry (Postgres 17 added MAINTAIN). */
     const tablePrivileges = ["SELECT", "INSERT", "UPDATE", "DELETE", "TRUNCATE", "REFERENCES", "TRIGGER", "MAINTAIN"];
@@ -1198,7 +1198,7 @@ describe("schema", () => {
       return rows[0]!.name;
     };
 
-    it("grants select, insert, update and delete on every application table but audit_events, which gets select and insert, test_templates, which gets select, insert and update (deletes are soft, migration 1700000000029), user_feedback, which gets insert only, and user_deletion_records, which gets nothing (D29 decision 21, Preflight ruling 3), to the role and its login", async () => {
+    it("grants select, insert, update and delete on every application table but audit_events, which gets select and insert, test_templates, which gets select, insert and update (deletes are soft, migration 1700000000029), user_feedback, which gets insert only, and user_deletion_records, which gets nothing, to the role and its login", async () => {
       const login = await currentUser(db);
       const granted: Partial<Record<(typeof applicationTables)[number], string[]>> = {
         audit_events: ["SELECT", "INSERT"],
@@ -1294,7 +1294,7 @@ describe("schema", () => {
       expect(first.user.email).not.toBe(second.user.email);
     });
 
-    it("truncateAll empties every table in the platform schema but the collector catalogue's, which it leaves as the sync wrote it, and the tester's and the evaluator's states, whose one rows it marks up", async () => {
+    it("truncateAll empties every table in the platform schema but the collector catalog's, which it leaves as the sync wrote it, and the tester's and the evaluator's states, whose one rows it marks up", async () => {
       const tables = await sql<{ table_name: string }>`
         select table_name
           from information_schema.tables
@@ -1425,8 +1425,7 @@ describe("schema", () => {
      * Runs `body` against a freshly created, unmigrated database, dropped
      * afterwards whatever happens. Every test here calls it, so every test
      * takes THROWAWAY_DATABASE_DROP_TIMEOUT: the drop waits for a checkpoint that
-     * fsyncs every file the run has written since the last one (D7 Ruling
-     * 15, D31-1 Ruling 316).
+     * fsyncs every file the run has written since the last one.
      */
     async function withThrowawayDatabase(body: (context: Throwaway) => Promise<void>): Promise<void> {
       const serverUrl = new URL(process.env.TELFLO_MIGRATION_DATABASE_URL!);
@@ -1477,7 +1476,7 @@ describe("schema", () => {
 
     it("the organizations backfill gives each existing user a personal organization, an admin membership and their backfill audit events, and skips soft-deleted users", async () => {
       await withThrowawayDatabase(async ({ throwaway, migrate }) => {
-        // Up to and including 1700000000001_identity: the D1 schema.
+        // Up to and including 1700000000001_identity: the first schema.
         await migrate(2);
         const applied = await sql<{ name: string }>`select name from pgmigrations order by id`.execute(
           throwaway,
@@ -1662,7 +1661,7 @@ describe("schema", () => {
 
     it("the organizations and memberships migration refuses a user whose only membership is in a deleted organization, clears group owners, and its down restores them from live admins only", async () => {
       await withThrowawayDatabase(async ({ throwaway, migrate, migrateDown }) => {
-        // Through 1700000000009_application_role: the schema before D5's.
+        // Through 1700000000009_application_role: the schema before migration 010's.
         await migrate(10);
         const { founder, stranded, team, stranding } = await throwaway.transaction().execute(async (transaction) => {
           const founder = await transaction.insertInto("users").values({ email: "founder@example.com" }).returningAll().executeTakeFirstOrThrow();
@@ -1672,7 +1671,7 @@ describe("schema", () => {
             .values({ name: "founder@example.com's workspace", type: "personal", owner_user_id: founder.id })
             .returningAll()
             .executeTakeFirstOrThrow();
-          // Before D5 a group organization had an owner, its creator.
+          // Before migration 010 a group organization had an owner, its creator.
           const team = await transaction
             .insertInto("organizations")
             .values({ name: "Team", type: "group", owner_user_id: founder.id })
@@ -1838,7 +1837,7 @@ describe("schema", () => {
           return columns.rows;
         };
 
-        // Through 1700000000006: the schema before D2c.
+        // Through 1700000000006: the schema before federated identity.
         await migrate(7);
         const registered = await insertAccount({ email: "registered@example.com", accepted_terms_version: "2026-01-01" });
 
@@ -1953,7 +1952,7 @@ describe("schema", () => {
           return rows;
         };
 
-        // Through 1700000000013_organization_invitations: the schema before D7.
+        // Through 1700000000013_organization_invitations: the schema before migration 014.
         await migrate(14);
         expect(await roleValues()).toEqual(["admin", "contributor", "viewer"]);
         const before = await definer();
@@ -2140,13 +2139,12 @@ describe("schema", () => {
 
     it("the configuration versions migration gives every existing configuration, deleted or not, exactly one version 1 with empty YAML, its creator and its created_at", async () => {
       await withThrowawayDatabase(async ({ throwaway, migrate }) => {
-        // Through 1700000000015_configurations: the schema before D8.
+        // Through 1700000000015_configurations: the schema before configuration versions.
         await migrate(16);
 
         // The fixtures commit each user with a membership, as the membership
         // invariant requires. The hard-deleted creator's configuration is in a
-        // group organization, since a personal one would go with its owner
-        // (D7 Preflight ruling 6).
+        // group organization, since a personal one would go with its owner.
         const admin = await createUserWithOrganization(throwaway);
         const departed = await createUserWithOrganization(throwaway);
         const group = await addMembership(throwaway, { userId: admin.user.id });
@@ -2297,7 +2295,7 @@ describe("schema", () => {
 
     it("the configuration version graph migration gives every existing version, a deleted configuration's included, '[]' in nodes, edges and pipelines, and changes nothing else", async () => {
       await withThrowawayDatabase(async ({ throwaway, migrate }) => {
-        // Through 1700000000016_configuration_versions: D8's schema.
+        // Through 1700000000016_configuration_versions.
         await migrate(17);
 
         const admin = await createUserWithOrganization(throwaway);
@@ -2384,7 +2382,7 @@ describe("schema", () => {
 
         await migrateDown(1);
         expect(await installed()).toEqual({ columns: [], checks: [] });
-        // The table itself, and D8's own checks, stay.
+        // The table itself, and migration 016's own checks, stay.
         const { rows: kept } = await sql<{ name: string }>`
           select conname as name from pg_constraint
            where conrelid = to_regclass('configuration_versions') and contype = 'c'
@@ -2402,7 +2400,7 @@ describe("schema", () => {
 
     it("the version labels and selections migration keeps every existing version, a deleted configuration's included, unnamed, and changes nothing else", async () => {
       await withThrowawayDatabase(async ({ throwaway, migrate }) => {
-        // Through 1700000000017_configuration_version_graph: D9's schema.
+        // Through 1700000000017_configuration_version_graph.
         await migrate(18);
 
         const admin = await createUserWithOrganization(throwaway);
@@ -2537,7 +2535,7 @@ describe("schema", () => {
 
         await migrateDown(1);
         expect(await installed()).toEqual(absent);
-        // configuration_versions, with D8's and D9a's columns, stays.
+        // configuration_versions, with migration 016's and 017's columns, stays.
         const { rows: kept } = await sql<{ column: string }>`
           select column_name as column from information_schema.columns
            where table_schema = 'platform' and table_name = 'configuration_versions'
@@ -2732,7 +2730,7 @@ describe("schema", () => {
           ],
         };
 
-        // Through 1700000000019_connect_only_by_application: D11a's schema.
+        // Through 1700000000019_connect_only_by_application.
         await migrate(20);
         const before = await structure();
         expect(before.triggers).toBeNull();
@@ -2869,7 +2867,7 @@ describe("schema", () => {
         const childVisible = (table: string) => `(${inOrganization} AND ${exists(table)})`;
         const role = "telflo_platform_runtime";
 
-        // Through 1700000000020_publishing: the schema before D11b's draft rules.
+        // Through 1700000000020_publishing: the schema before the draft rules.
         await migrate(21);
         const before = { policies: await policies(), tables: await tableFacts() };
         // Every policy then was the organization alone (migrations 015, 016 and 018).
@@ -3187,13 +3185,13 @@ describe("schema", () => {
         const changed = new Map([
           [
             "configuration_versions_delete",
-            { using: "false", comment: expect.stringContaining("the API's role deletes no version (D11b Ruling 29)") },
+            { using: "false", comment: expect.stringContaining("the API's role deletes no version: a version goes") },
           ],
           [
             "configurations_delete",
             {
               using: "false",
-              comment: expect.stringContaining("the API's role deletes no configuration (D11b Ruling 29)"),
+              comment: expect.stringContaining("the API's role deletes no configuration: deleting"),
             },
           ],
         ]);
@@ -3209,7 +3207,7 @@ describe("schema", () => {
               isDefiner: false,
               volatility: "v",
               config: ["search_path=platform, pg_temp"],
-              comment: expect.stringContaining("a configuration keeps its author (D11b Ruling 29)"),
+              comment: expect.stringContaining("a configuration keeps its author, kept by the database"),
             },
           ],
           triggers: [
@@ -3246,7 +3244,7 @@ describe("schema", () => {
       });
     }, THROWAWAY_DATABASE_DROP_TIMEOUT);
 
-    it("the collector catalogue migration makes every existing configuration Contrib and every version 0.162.0, published ones otherwise untouched; adds the two global tables (SELECT only for the API's role, no row-level security) holding Contrib and 0.162.0, no column default, the composite keys, the distribution's lock and the guarded pin; its down puts back migration 020's function and comment exactly and drops the rest; and it applies again", async () => {
+    it("the collector catalog migration makes every existing configuration Contrib and every version 0.162.0, published ones otherwise untouched; adds the two global tables (SELECT only for the API's role, no row-level security) holding Contrib and 0.162.0, no column default, the composite keys, the distribution's lock and the guarded pin; its down puts back migration 020's function and comment exactly and drops the rest; and it applies again", async () => {
       await withThrowawayDatabase(async ({ throwaway, migrate, migrateDown }) => {
         /** Migration 020's guard function as the catalog holds it: its body, comment and settings. */
         const guard = async () =>
@@ -3413,7 +3411,7 @@ describe("schema", () => {
             isDefiner: false,
           },
         ]);
-        // A version the catalogue here lacks: the before trigger's P0001 comes before the foreign key's 23503.
+        // A version the catalog here lacks: the before trigger's P0001 comes before the foreign key's 23503.
         await expect(
           sql`update configuration_versions set collector_version = '0.161.0' where id = ${published.id}`.execute(
             throwaway,
@@ -3537,7 +3535,7 @@ describe("schema", () => {
               type: "jsonb",
               notNull: true,
               default: "'[]'::jsonb",
-              comment: expect.stringContaining("the collector's renames (D13b decision 6)"),
+              comment: expect.stringContaining("the collector's renames: the catalog file's"),
             },
           ],
           check: [
@@ -3699,7 +3697,7 @@ describe("schema", () => {
             flowColumn("author_url", "text", false, null, "a link for the author"),
             flowColumn("signals", "text[]", true, "'{}'::text[]", "the telemetry signals it handles"),
             flowColumn("tags", "text[]", true, "'{}'::text[]", "its categories"),
-            flowColumn("yaml_content", "text", true, null, "copied byte for byte (D12 decision 5)"),
+            flowColumn("yaml_content", "text", true, null, "copied byte for byte"),
             flowColumn("collector_distribution", "text", true, null, "No default: the API always writes it."),
             flowColumn("collector_version", "text", true, null, "key: the API refuses"),
             flowColumn("source_url", "text", false, null, "an http(s) link"),
@@ -3712,7 +3710,7 @@ describe("schema", () => {
               type: "boolean",
               notNull: true,
               default: "false",
-              comment: commented("a product admin (D12 decision 3)"),
+              comment: commented("a product admin: writes the flows"),
             },
           ],
           constraints: [
@@ -3729,7 +3727,7 @@ describe("schema", () => {
             {
               name: "ck_flows_slug_length",
               definition: "CHECK ((char_length(slug) <= 80))",
-              comment: commented("at most 80 characters (D12 Preflight ruling 19)"),
+              comment: commented("at most 80 characters, the API's limit"),
             },
             {
               name: "ck_flows_source",
@@ -3744,7 +3742,7 @@ describe("schema", () => {
             {
               name: "fk_flows_collector_distribution",
               definition: "FOREIGN KEY (collector_distribution) REFERENCES collector_distributions(id)",
-              comment: commented("a distribution of the catalogue (23503 otherwise)"),
+              comment: commented("a distribution of the catalog (23503 otherwise)"),
             },
             { name: "flows_pkey", definition: "PRIMARY KEY (id)", comment: commented("one row per flow") },
             {
@@ -3759,7 +3757,7 @@ describe("schema", () => {
               rls: false,
               force: false,
               acl: expect.arrayContaining([expect.stringMatching(/^telflo_platform_runtime=arwd\//)]),
-              comment: commented("Global (ADR 0008): no organization column, no row-level security."),
+              comment: commented("Global: no organization column, no row-level security."),
             },
           ],
           functions: [
@@ -3862,7 +3860,7 @@ describe("schema", () => {
             "AND (cardinality(array_positions(signals, 'traces'::text)) <= 1) " +
             "AND (cardinality(array_positions(signals, 'metrics'::text)) <= 1) " +
             "AND (cardinality(array_positions(signals, 'logs'::text)) <= 1))\nEND)",
-          comment: expect.stringContaining("the contract's signals (D12 Ruling 37, FlowSignalsSchema)"),
+          comment: expect.stringContaining("the contract's signals (FlowSignalsSchema)"),
         };
         const flows = async () => throwaway.selectFrom("flows").selectAll().orderBy("slug").execute();
         /** Inserts a flow with `signals` (a text[] literal). */
@@ -4451,7 +4449,7 @@ describe("schema", () => {
                 "REFERENCES test_suites(id, configuration_version_id, configuration_id, organization_id) ON DELETE CASCADE",
               deferrable: false,
             }),
-            // No action, checked at commit (Preflight ruling 3).
+            // No action, checked at commit.
             expect.objectContaining({
               name: "fk_test_definitions_input",
               definition:
@@ -4592,7 +4590,7 @@ describe("schema", () => {
       });
     }, THROWAWAY_DATABASE_DROP_TIMEOUT);
 
-    it("the validation rules migration adds validation_pipelines and validation_rules (row-level security, their policies, checks, foreign keys and indexes) with the rules' identity trigger and its function, the evaluator's one-row state (SELECT only for the API's role) and its mark, the runs' validation_failed status, rules' snapshot and results with their checks, test_runs_rules, and test_runs_finish taking the final status; replaces refuse_test_run_change (the snapshot's two columns, running → validation_failed), each with its comment; changes no other object or row; its down refuses while a run is validation_failed, then restores migration 029's catalogue exactly, the guard and the boolean finish byte for byte, and drops the rest; and it applies again", async () => {
+    it("the validation rules migration adds validation_pipelines and validation_rules (row-level security, their policies, checks, foreign keys and indexes) with the rules' identity trigger and its function, the evaluator's one-row state (SELECT only for the API's role) and its mark, the runs' validation_failed status, rules' snapshot and results with their checks, test_runs_rules, and test_runs_finish taking the final status; replaces refuse_test_run_change (the snapshot's two columns, running → validation_failed), each with its comment; changes no other object or row; its down refuses while a run is validation_failed, then restores migration 029's catalog exactly, the guard and the boolean finish byte for byte, and drops the rest; and it applies again", async () => {
       await withThrowawayDatabase(async ({ throwaway, migrate, migrateDown }) => {
         /** Rows of a catalog query, each as one comparable JSON text, sorted. */
         const listed = async (query: ReturnType<typeof sql<Record<string, unknown>>>) =>
@@ -4854,7 +4852,7 @@ describe("schema", () => {
         for (const name of ["validation_pipelines_created_by_user_id_fkey", "validation_rules_created_by_user_id_fkey"]) {
           expect(constraint(name).definition).toBe("FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE SET NULL");
         }
-        // Bytes, not characters (Preflight ruling 10).
+        // Bytes, not characters.
         for (const name of [
           "ck_validation_rules_pattern_length",
           "ck_validation_rules_ottl_condition_length",
@@ -4975,7 +4973,7 @@ describe("schema", () => {
       });
     }, THROWAWAY_DATABASE_DROP_TIMEOUT);
 
-    it("the test regex migration adds test_regex (no row-level security, the API's role's four privileges, its unique name and checks, each commented) holding the 35 seeded entries, and changes no other object or row; its down restores migration 030's catalogue exactly; and it applies again, seeded again", async () => {
+    it("the test regex migration adds test_regex (no row-level security, the API's role's four privileges, its unique name and checks, each commented) holding the 35 seeded entries, and changes no other object or row; its down restores migration 030's catalog exactly; and it applies again, seeded again", async () => {
       await withThrowawayDatabase(async ({ throwaway, migrate, migrateDown }) => {
         /** Rows of a catalog query, each as one comparable JSON text, sorted. */
         const listed = async (query: ReturnType<typeof sql<Record<string, unknown>>>) =>
@@ -5162,7 +5160,7 @@ describe("schema", () => {
             `CHECK (((octet_length(regex) <= 8192) AND (btrim(regex, ${printedBlank}) <> ''::text)))`,
         });
 
-        // down drops the table with its rows, restoring migration 030's catalogue exactly; up again seeds again.
+        // down drops the table with its rows, restoring migration 030's catalog exactly; up again seeds again.
         await migrateDown(1);
         expect(await catalog()).toEqual(before);
         expect(await rows()).toEqual(rowsBefore);
@@ -5174,7 +5172,7 @@ describe("schema", () => {
       });
     }, THROWAWAY_DATABASE_DROP_TIMEOUT);
 
-    it("the quick-deploy links migration adds quick_deploy_links (row-level security, not forced, the API's role's four privileges, four policies, its checks and indexes, each commented) and the definer quick_deploy_link_by_secret_hash (EXECUTE for telflo_platform_runtime only), and changes no other object or row; its down restores migration 031's catalogue exactly; and it applies again", async () => {
+    it("the quick-deploy links migration adds quick_deploy_links (row-level security, not forced, the API's role's four privileges, four policies, its checks and indexes, each commented) and the definer quick_deploy_link_by_secret_hash (EXECUTE for telflo_platform_runtime only), and changes no other object or row; its down restores migration 031's catalog exactly; and it applies again", async () => {
       await withThrowawayDatabase(async ({ throwaway, migrate, migrateDown }) => {
         /** Rows of a catalog query, each as one comparable JSON text, sorted. */
         const listed = async (query: ReturnType<typeof sql<Record<string, unknown>>>) =>
@@ -5330,7 +5328,7 @@ describe("schema", () => {
             acl: [`${owner}=X/${owner}`, `telflo_platform_runtime=X/${owner}`],
           },
         ]);
-        // What the definer answers, and nothing more (ADR 0023).
+        // What the definer answers, and nothing more.
         const { rows: returned } = await sql<{ name: string; type: string }>`
           select a.name, a.type
             from pg_proc p,
@@ -5375,7 +5373,7 @@ describe("schema", () => {
             "CHECK (((download_count >= 0) AND ((download_count = 0) = (last_downloaded_at IS NULL))))",
         });
 
-        // down drops the table and the function, restoring migration 031's catalogue exactly; up again.
+        // down drops the table and the function, restoring migration 031's catalog exactly; up again.
         await addQuickDeployLink(throwaway, { organizationId: ana.organization.id, created_by_user_id: ana.user.id });
         await migrateDown(1);
         expect(await catalog()).toEqual(before);
@@ -5388,7 +5386,7 @@ describe("schema", () => {
       });
     }, THROWAWAY_DATABASE_DROP_TIMEOUT);
 
-    it("the public install links migration adds organizations.public_install_links_enabled (boolean, not null, default true, commented; existing rows true) and re-comments quick_deploy_links.choices, and changes no other object or row; its down restores migration 032's catalogue exactly; and it applies again", async () => {
+    it("the public install links migration adds organizations.public_install_links_enabled (boolean, not null, default true, commented; existing rows true) and re-comments quick_deploy_links.choices, and changes no other object or row; its down restores migration 032's catalog exactly; and it applies again", async () => {
       await withThrowawayDatabase(async ({ throwaway, migrate, migrateDown }) => {
         /** Rows of a catalog query, each as one comparable JSON text, sorted. */
         const listed = async (query: ReturnType<typeof sql<Record<string, unknown>>>) =>
@@ -5473,7 +5471,7 @@ describe("schema", () => {
 
         await migrate(1);
         const after = await catalog();
-        /** quick_deploy_links.choices' column, as a catalogue lists it. */
+        /** quick_deploy_links.choices' column, as a catalog lists it. */
         const choicesColumn = (catalogue: Catalog) =>
           catalogue.columns
             .map((item) => JSON.parse(item) as Record<string, unknown>)
@@ -5529,7 +5527,7 @@ describe("schema", () => {
         expect(later.public_install_links_enabled).toBe(true);
         await throwaway.updateTable("organizations").set({ public_install_links_enabled: false }).where("id", "=", later.id).execute();
 
-        // down drops the column and restores migration 032's comment: its catalogue exactly; up again, every row on.
+        // down drops the column and restores migration 032's comment: its catalog exactly; up again, every row on.
         await migrateDown(1);
         expect(await catalog()).toEqual(before);
         expect(await rows()).toEqual(rowsBefore);
@@ -5545,7 +5543,7 @@ describe("schema", () => {
       });
     }, THROWAWAY_DATABASE_DROP_TIMEOUT);
 
-    it("the user settings migration adds user_settings (no row-level security, the API's role's four privileges by default, its two checks, its cascade from users, each commented) and signed_out_elsewhere to sessions.revoked_reason's comment, and changes no other object or row; its down restores migration 033's catalogue exactly; and it applies again", async () => {
+    it("the user settings migration adds user_settings (no row-level security, the API's role's four privileges by default, its two checks, its cascade from users, each commented) and signed_out_elsewhere to sessions.revoked_reason's comment, and changes no other object or row; its down restores migration 033's catalog exactly; and it applies again", async () => {
       await withThrowawayDatabase(async ({ throwaway, migrate, migrateDown }) => {
         /** Rows of a catalog query, each as one comparable JSON text, sorted. */
         const listed = async (query: ReturnType<typeof sql<Record<string, unknown>>>) =>
@@ -5635,7 +5633,7 @@ describe("schema", () => {
 
         await migrate(1);
         const after = await catalog();
-        /** sessions.revoked_reason's column, as a catalogue lists it. */
+        /** sessions.revoked_reason's column, as a catalog lists it. */
         const revokedReasonColumn = (catalogue: Catalog) =>
           catalogue.columns
             .map((item) => JSON.parse(item) as Record<string, unknown>)
@@ -5647,7 +5645,7 @@ describe("schema", () => {
         for (const word of [
           "one of logout, sign_out_everywhere, refresh_token_reused, password_reset, account_taken_over",
           "organization_access_lost",
-          "or signed_out_elsewhere (one session signed out from Settings › Account, D21 decision 40)",
+          "or signed_out_elsewhere (one session signed out from Settings › Account)",
           "Text rather than an enum until a third consumer needs to branch on it.",
         ]) {
           expect(reasons).toContain(word);
@@ -5687,7 +5685,7 @@ describe("schema", () => {
           "light, dark or navy; dark when there is no row.",
         );
         expect(String(settingsColumns.find((column) => column.name === "preferences")!.comment).replace(/\s+/g, " ")).toBe(
-          "only the editor and email keys ever saved; read through the API's schema, which fills in defaults and reads a bad key as its default (D21 decision 19).",
+          "only the editor and email keys ever saved; read through the API's schema, which fills in defaults and reads a bad key as its default.",
         );
         expect(add.indexes).toEqual([
           {
@@ -5729,7 +5727,7 @@ describe("schema", () => {
             "CHECK (((jsonb_typeof(preferences) = 'object'::text) AND (octet_length((preferences)::text) <= 4096)))",
         });
 
-        // down drops the table with its rows and restores migration 010's comment: migration 033's catalogue exactly; up again.
+        // down drops the table with its rows and restores migration 010's comment: migration 033's catalog exactly; up again.
         const at = new Date();
         await throwaway
           .insertInto("user_settings")
@@ -5746,14 +5744,14 @@ describe("schema", () => {
       });
     }, THROWAWAY_DATABASE_DROP_TIMEOUT);
 
-    it("the service accounts migration adds users.kind with its two checks and four triggers, service_accounts and api_tokens with row-level security, the API's role's four privileges by default, and find_live_api_token_by_hash executable only by telflo_platform_runtime, each commented, and changes no other object or row; its down restores migration 034's catalogue exactly; and it applies again", async () => {
+    it("the service accounts migration adds users.kind with its two checks and four triggers, service_accounts and api_tokens with row-level security, the API's role's four privileges by default, and find_live_api_token_by_hash executable only by telflo_platform_runtime, each commented, and changes no other object or row; its down restores migration 034's catalog exactly; and it applies again", async () => {
       await withThrowawayDatabase(async ({ throwaway, migrate, migrateDown }) => {
         /** Rows of a catalog query, each as one comparable JSON text, sorted. */
         const listed = async (query: ReturnType<typeof sql<Record<string, unknown>>>) =>
           (await query.execute(throwaway)).rows.map((row) => JSON.stringify(row)).sort();
         /**
          * Everything in the platform schema a migration can add or change, as the user settings migration's test reads
-         * it, and the types (Preflight ruling 1): an enum's labels, its grants and its comment.
+         * it, and the types: an enum's labels, its grants and its comment.
          */
         const catalog = async () => ({
           relations: await listed(sql`
@@ -5990,7 +5988,7 @@ describe("schema", () => {
             (signature) => ({ signature, isDefiner: false, volatility: "v", config: ["search_path=platform, pg_temp"], acl: null }),
           ),
         ]);
-        // What the definer answers, and nothing more (decision 18): not the token's name.
+        // What the definer answers, and nothing more: not the token's name.
         const { rows: returned } = await sql<{ name: string; type: string }>`
           select a.name, a.type
             from pg_proc p,
@@ -6096,7 +6094,7 @@ describe("schema", () => {
           ck_api_tokens_revoked_by: "CHECK (((revoked_at IS NOT NULL) OR (revoked_by_user_id IS NULL)))",
         });
 
-        // down refuses while a service account exists (Preflight ruling 1), naming a count only, and changes nothing.
+        // down refuses while a service account exists, naming a count only, and changes nothing.
         const group = await addMembership(throwaway, { userId: ana.user.id });
         const bot = await addServiceAccount(throwaway, { organizationId: group.organization.id, createdByUserId: ana.user.id });
         await addApiToken(throwaway, { organizationId: group.organization.id, serviceAccountUserId: bot.user.id });
@@ -6108,7 +6106,7 @@ describe("schema", () => {
         expect(await throwaway.selectFrom("service_accounts").selectAll().execute()).toEqual([]);
         expect(await throwaway.selectFrom("api_tokens").selectAll().execute()).toEqual([]);
 
-        // down then drops exactly what up added: migration 034's catalogue and rows exactly.
+        // down then drops exactly what up added: migration 034's catalog and rows exactly.
         await migrateDown(1);
         expect(await catalog()).toEqual(before);
         expect(await rows()).toEqual(rowsBefore);
@@ -6130,7 +6128,7 @@ describe("schema", () => {
       });
     }, THROWAWAY_DATABASE_DROP_TIMEOUT);
 
-    it("the organization logos migration adds organizations.logo_id and logo_content_type (nullable, commented; existing rows without a logo) and ck_organizations_logo (commented), and changes no other object or row; its down restores migration 035's catalogue exactly; and it applies again", async () => {
+    it("the organization logos migration adds organizations.logo_id and logo_content_type (nullable, commented; existing rows without a logo) and ck_organizations_logo (commented), and changes no other object or row; its down restores migration 035's catalog exactly; and it applies again", async () => {
       await withThrowawayDatabase(async ({ throwaway, migrate, migrateDown }) => {
         /** Rows of a catalog query, each as one comparable JSON text, sorted. */
         const listed = async (query: ReturnType<typeof sql<Record<string, unknown>>>) =>
@@ -6264,7 +6262,7 @@ describe("schema", () => {
           throwaway.updateTable("organizations").set({ logo_content_type: "image/svg+xml" as never }).where("id", "=", later.id).execute(),
         ).rejects.toThrow(/ck_organizations_logo/);
 
-        // down drops both columns and the check: migration 035's catalogue exactly; up again, no logo anywhere.
+        // down drops both columns and the check: migration 035's catalog exactly; up again, no logo anywhere.
         await migrateDown(1);
         expect(await catalog()).toEqual(before);
         expect(await rows()).toEqual(rowsBefore);
@@ -6280,7 +6278,7 @@ describe("schema", () => {
       });
     }, THROWAWAY_DATABASE_DROP_TIMEOUT);
 
-    it("the library files migration adds library_files (no row-level security, the default grants, its five named checks, its foreign key and two indexes, each commented) and its guard trigger with its function, and changes no other object or row; its down restores migration 036's catalogue exactly; and it applies again", async () => {
+    it("the library files migration adds library_files (no row-level security, the default grants, its five named checks, its foreign key and two indexes, each commented) and its guard trigger with its function, and changes no other object or row; its down restores migration 036's catalog exactly; and it applies again", async () => {
       await withThrowawayDatabase(async ({ throwaway, migrate, migrateDown }) => {
         /** Rows of a catalog query, each as one comparable JSON text, sorted. */
         const listed = async (query: ReturnType<typeof sql<Record<string, unknown>>>) =>
@@ -6382,7 +6380,7 @@ describe("schema", () => {
         expect(table).toMatchObject({ kind: "r", rls: false, force: false });
         // Migration 009's default privileges: select, insert, update and delete (a hard delete) for the API's role.
         expect((table.acl as string[]).some((entry) => /^telflo_platform_runtime=arwd\//.test(entry))).toBe(true);
-        expect(flat(table.comment)).toContain("Global (ADR 0008)");
+        expect(flat(table.comment)).toContain("Global: no organization column, no row-level security");
         expect(flat(table.comment)).toContain("global/library-files/<id>");
 
         expect(names(added.columns)).toEqual([
@@ -6478,7 +6476,7 @@ describe("schema", () => {
         ).rejects.toMatchObject({ code: "P0001" });
         await throwaway.deleteFrom("library_files").execute();
 
-        // down drops the table, its trigger and its function: migration 036's catalogue exactly; up again.
+        // down drops the table, its trigger and its function: migration 036's catalog exactly; up again.
         await migrateDown(1);
         expect(await catalog()).toEqual(before);
         expect(await rows()).toEqual(rowsBefore);
@@ -6488,7 +6486,7 @@ describe("schema", () => {
       });
     }, THROWAWAY_DATABASE_DROP_TIMEOUT);
 
-    it("the public API tokens migration adds personal_api_tokens (row-level security on the context's user, the default grants, its six named checks, its foreign key and three indexes, each commented) and re-creates find_live_api_token_by_hash with both kinds, its comment and its grants, and changes no other object or row; its down restores migration 037's catalogue exactly, the lookup's definition, comment and grants included; and it applies again", async () => {
+    it("the public API tokens migration adds personal_api_tokens (row-level security on the context's user, the default grants, its six named checks, its foreign key and three indexes, each commented) and re-creates find_live_api_token_by_hash with both kinds, its comment and its grants, and changes no other object or row; its down restores migration 037's catalog exactly, the lookup's definition, comment and grants included; and it applies again", async () => {
       await withThrowawayDatabase(async ({ throwaway, migrate, migrateDown }) => {
         /** Rows of a catalog query, each as one comparable JSON text, sorted. */
         const listed = async (query: ReturnType<typeof sql<Record<string, unknown>>>) =>
@@ -6716,7 +6714,7 @@ describe("schema", () => {
         for (const words of ["of either kind", "kind person", "kind human, not deleted", "findLiveApiTokenByHash"]) {
           expect(flat(lookup.comment)).toContain(words);
         }
-        // The service account's token answers as before, with its kind and address (decision 21).
+        // The service account's token answers as before, with its kind and address.
         expect(await lookUp()).toEqual([
           {
             kind: "service_account",
@@ -6740,7 +6738,7 @@ describe("schema", () => {
         ].filter((item) => item.comment === null);
         expect(uncommented).toEqual([]);
 
-        // down drops the table with its rows and creates migration 035's lookup again: migration 037's catalogue
+        // down drops the table with its rows and creates migration 035's lookup again: migration 037's catalog
         // exactly (its definition's md5, its result, comment and grants among it); up again.
         const person = await addPersonalApiToken(throwaway, { userId: admin.user.id });
         expect(person.token.startsWith("tf_")).toBe(true);
@@ -6755,7 +6753,7 @@ describe("schema", () => {
       });
     }, THROWAWAY_DATABASE_DROP_TIMEOUT);
 
-    it("the product administration migration adds user_feedback (INSERT only for the API's role) and user_deletion_records (nothing for the API's role), both without row-level security, with their named checks, foreign keys and indexes, assert_product_admin (EXECUTE for no one) and the seven product-admin definer functions (EXECUTE for telflo_platform_runtime only, a fixed search_path), each commented, and re-comments users.is_product_admin; changes no other object or row; its down restores migration 040's catalogue exactly; and it applies again", async () => {
+    it("the product administration migration adds user_feedback (INSERT only for the API's role) and user_deletion_records (nothing for the API's role), both without row-level security, with their named checks, foreign keys and indexes, assert_product_admin (EXECUTE for no one) and the seven product-admin definer functions (EXECUTE for telflo_platform_runtime only, a fixed search_path), each commented, and re-comments users.is_product_admin; changes no other object or row; its down restores migration 040's catalog exactly; and it applies again", async () => {
       await withThrowawayDatabase(async ({ throwaway, migrate, migrateDown }) => {
         /** Rows of a catalog query, each as one comparable JSON text, sorted. */
         const listed = async (query: ReturnType<typeof sql<Record<string, unknown>>>) =>
@@ -6863,7 +6861,7 @@ describe("schema", () => {
         const flagColumn = added.columns.find((column) => column.relation === "users")!;
         expect(flat(flagColumn.comment)).toContain("product_admin_grant and product_admin_revoke");
 
-        // The two tables: no row-level security; INSERT only, and nothing, for the API's role (Preflight ruling 3).
+        // The two tables: no row-level security; INSERT only, and nothing, for the API's role.
         expect(names(added.relations)).toEqual([
           "idx_user_deletion_records_deleted_by_user_id",
           "idx_user_feedback_handled_by_user_id",
@@ -6992,14 +6990,14 @@ describe("schema", () => {
         ].filter((item) => item.comment === null);
         expect(uncommented).toEqual([]);
 
-        // The gate's refusal carries its own HINT (Ruling 260), at both of its raises, and its comment names it.
+        // The gate's refusal carries its own HINT, at both of its raises, and its comment names it.
         const gate = (
           await sql<{ source: string }>`select prosrc as source from pg_proc where oid = 'assert_product_admin()'::regprocedure`.execute(throwaway)
         ).rows[0]!.source;
         expect(gate.split("hint = 'telflo_product_admin_gate'").length - 1).toBe(2);
         expect(flat(added.functions.find((item) => item.signature === "assert_product_admin()")!.comment)).toContain("telflo_product_admin_gate");
 
-        // down: migration 040's catalogue exactly, and the rows as they were; up again.
+        // down: migration 040's catalog exactly, and the rows as they were; up again.
         await migrateDown(1);
         expect(await catalog()).toEqual(before);
         expect(await rows()).toEqual(rowsBefore);
@@ -7010,7 +7008,7 @@ describe("schema", () => {
       });
     }, THROWAWAY_DATABASE_DROP_TIMEOUT);
 
-    it("the product-admin delete migration adds product_admin_delete_account (a definer with a fixed search_path, EXECUTE for telflo_platform_runtime only, commented) and account_deleted to sessions.revoked_reason's comment, and changes no other object or row; its down restores migration 041's catalogue exactly; and it applies again", async () => {
+    it("the product-admin delete migration adds product_admin_delete_account (a definer with a fixed search_path, EXECUTE for telflo_platform_runtime only, commented) and account_deleted to sessions.revoked_reason's comment, and changes no other object or row; its down restores migration 041's catalog exactly; and it applies again", async () => {
       await withThrowawayDatabase(async ({ throwaway, migrate, migrateDown }) => {
         /** Rows of a catalog query, each as one comparable JSON text, sorted. */
         const listed = async (query: ReturnType<typeof sql<Record<string, unknown>>>) =>
@@ -7120,7 +7118,7 @@ describe("schema", () => {
           defaultPrivileges: [],
         });
         expect(added.columns.map(({ relation, name }) => ({ relation, name }))).toEqual([{ relation: "sessions", name: "revoked_reason" }]);
-        expect(flat(added.columns[0]!.comment)).toContain("signed_out_elsewhere (one session signed out from Settings › Account, D21 decision 40) or account_deleted");
+        expect(flat(added.columns[0]!.comment)).toContain("signed_out_elsewhere (one session signed out from Settings › Account) or account_deleted");
         expect(await rows()).toEqual(rowsBefore);
 
         const owner = (await sql<{ name: string }>`select current_user as name`.execute(throwaway)).rows[0]!.name;
@@ -7146,14 +7144,14 @@ describe("schema", () => {
         expect(source.indexOf("perform platform.assert_product_admin()")).toBeLessThan(source.indexOf("p_user_id is null"));
         expect(source.match(/when\s+\S+\s+\S+\s+then/gi)).toEqual(["when sqlstate 'TFR01' then"]);
         expect(/when\s+others/i.test(source)).toBe(false);
-        // Ruling 266: one anonymous address, for the email and the personal organization's name; the person's sessions forget their client.
+        // One anonymous address, for the email and the personal organization's name; the person's sessions forget their client.
         expect(source.match(/gen_random_bytes/g)?.length).toBe(1);
         expect(/name = case when type = 'personal' and owner_user_id = p_user_id\s+then anonymous \|\| '''s workspace'/.test(source)).toBe(true);
         expect(/ip_address = null, user_agent = null/.test(source)).toBe(true);
-        // Ruling 267: the deleted organizations' invitations to the original email take the anonymous address.
+        // The deleted organizations' invitations to the original email take the anonymous address.
         expect(/update platform\.organization_invitations\s+set email = anonymous, updated_at = p_at\s+where organization_id = any \(locked\) and lower\(email\) = lower\(original\)/.test(source)).toBe(true);
 
-        // down: migration 041's catalogue exactly, and the rows as they were; up again.
+        // down: migration 041's catalog exactly, and the rows as they were; up again.
         await migrateDown(1);
         expect(await catalog()).toEqual(before);
         expect(await rows()).toEqual(rowsBefore);
@@ -7164,7 +7162,7 @@ describe("schema", () => {
       });
     }, THROWAWAY_DATABASE_DROP_TIMEOUT);
 
-    it("the first product admin migration adds bootstrap_first_product_admin (a definer with a fixed search_path, EXECUTE for telflo_platform_runtime only, commented) and rewrites users.accepted_terms_version's and users.is_product_admin's comments, and changes no other object or row; its down restores migration 042's catalogue exactly; and it applies again", async () => {
+    it("the first product admin migration adds bootstrap_first_product_admin (a definer with a fixed search_path, EXECUTE for telflo_platform_runtime only, commented) and rewrites users.accepted_terms_version's and users.is_product_admin's comments, and changes no other object or row; its down restores migration 042's catalog exactly; and it applies again", async () => {
       await withThrowawayDatabase(async ({ throwaway, migrate, migrateDown }) => {
         /** Rows of a catalog query, each as one comparable JSON text, sorted. */
         const listed = async (query: ReturnType<typeof sql<Record<string, unknown>>>) =>
@@ -7305,7 +7303,7 @@ describe("schema", () => {
         expect(source.match(/advisory/g)?.length).toBe(1);
         expect(/\b(?:from|update|insert\s+into)\s+(?!platform\.)\w/.test(source)).toBe(false);
 
-        // down: migration 042's catalogue exactly, and the rows as they were; up again.
+        // down: migration 042's catalog exactly, and the rows as they were; up again.
         await migrateDown(1);
         expect(await catalog()).toEqual(before);
         expect(await rows()).toEqual(rowsBefore);
@@ -7316,7 +7314,7 @@ describe("schema", () => {
       });
     }, THROWAWAY_DATABASE_DROP_TIMEOUT);
 
-    it("the site settings migration adds site_settings (one row, product_admins by default (Q259), SELECT only for the API's role, no row-level security) and product_admin_set_organization_creation (a definer with a fixed search_path, EXECUTE for telflo_platform_runtime only, gated by assert_product_admin), each commented, and changes no other object or row; its down restores migration 043's catalogue exactly; and it applies again", async () => {
+    it("the site settings migration adds site_settings (one row, product_admins by default, SELECT only for the API's role, no row-level security) and product_admin_set_organization_creation (a definer with a fixed search_path, EXECUTE for telflo_platform_runtime only, gated by assert_product_admin), each commented, and changes no other object or row; its down restores migration 043's catalog exactly; and it applies again", async () => {
       await withThrowawayDatabase(async ({ throwaway, migrate, migrateDown }) => {
         /** Rows of a catalog query, each as one comparable JSON text, sorted. */
         const listed = async (query: ReturnType<typeof sql<Record<string, unknown>>>) =>
@@ -7441,7 +7439,7 @@ describe("schema", () => {
         }
         expect(await rows()).toEqual(rowsBefore);
 
-        // One row, product_admins (only product admins create organizations on a fresh install, Q259);
+        // One row, product_admins (only product admins create organizations on a fresh install);
         // a second refused; the API's role reads it and nothing more.
         expect((await sql<{ id: boolean; organization_creation: string }>`select * from site_settings`.execute(throwaway)).rows).toEqual([
           { id: true, organization_creation: "product_admins" },
@@ -7480,7 +7478,7 @@ describe("schema", () => {
         expect(source.indexOf("where u.id = me for share")).toBeLessThan(source.indexOf("update platform.site_settings"));
         expect(/\b(?:from|update|insert\s+into)\s+(?!platform\.)\w/.test(source)).toBe(false);
 
-        // down: migration 043's catalogue exactly, and the rows as they were; up again.
+        // down: migration 043's catalog exactly, and the rows as they were; up again.
         await migrateDown(1);
         expect(await catalog()).toEqual(before);
         expect(await rows()).toEqual(rowsBefore);

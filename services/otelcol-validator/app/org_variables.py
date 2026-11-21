@@ -1,5 +1,4 @@
-"""The organization's values filled in before every check (D20 decisions 8,
-13, 16, 27 and 36; Preflight rulings 12 and 30).
+"""The organization's values filled in before every check.
 
 The validator's port of the opamp-server's fill-in (`store/orgvariables`,
 `render.go`), held to it by the shared corpus
@@ -10,8 +9,8 @@ The validator's port of the opamp-server's fill-in (`store/orgvariables`,
   `[A-Za-z_][A-Za-z0-9_]*` of any length, opened by a `$` that an EVEN run
   of `$` precedes (`_preceding_dollar_run_even`: an odd run makes it the
   trailing half of a `$$` escape, inert);
-- the legacy `$orgvar:NAME` form is plain text, filled in by nothing
-  (decision 16), and so is `${org:NAME:-default}`;
+- the legacy `$orgvar:NAME` form is plain text, filled in by nothing,
+  and so is `${org:NAME:-default}`;
 - a known NAME's value is written with every `$` doubled, so the
   collector's own confmap pass, which collapses `$$` to `$`, reads the value
   exactly: a value `${env:X}` stays that text, and a value's `${org:X}` is
@@ -21,12 +20,11 @@ The validator's port of the opamp-server's fill-in (`store/orgvariables`,
   sent.
 
 One scanner (`_scan`) serves `references`, `rendered_length` and `render`,
-so they can't disagree. The length comes first (Preflight ruling 12): a
-text of about 100,000 references to a value of 1,024 `$` fills in to about
-200 MB, so the caller measures it and refuses it over `MAX_RENDERED_BYTES`
-without building it.
+so they can't disagree. The length comes first: a text of about 100,000
+references to a value of 1,024 `$` fills in to about 200 MB, so the caller
+measures it and refuses it over `MAX_RENDERED_BYTES` without building it.
 
-Values are configuration text (ADR 0024, Q88): nothing here logs.
+Values are configuration text: nothing here logs.
 """
 
 from __future__ import annotations
@@ -66,7 +64,7 @@ def _scan(text: str) -> Iterator[tuple[int, int, str]]:
 
 
 def escape(value: str) -> str:
-    """`value` with every `$` written `$$` (decision 8)."""
+    """`value` with every `$` written `$$`."""
     return value.replace("$", "$$")
 
 

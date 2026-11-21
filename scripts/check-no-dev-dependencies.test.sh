@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
-# Tests for scripts/check-no-dev-dependencies.mjs (D36-1 decisions 43 and 46,
-# Preflight ruling 25). Each case is a throwaway tree (a lockfile and the
-# node_modules folders it names, empty package.json files only) in a
-# temporary directory removed on exit; the last cases read the repository's
-# own lockfile (read only).
+# Tests for scripts/check-no-dev-dependencies.mjs. Each case is a throwaway
+# tree (a lockfile and the node_modules folders it names, empty package.json
+# files only) in a temporary directory removed on exit; the last cases read the
+# repository's own lockfile (read only).
 #
 # Run:  bash scripts/check-no-dev-dependencies.test.sh
 # bash 3.2 compatible (macOS's /bin/bash).
@@ -112,7 +111,7 @@ run "$tmp/package-lock.json" "$tmp/clean" extra
 check "an extra argument: exit 2, usage" "[ $rc -eq 2 ] && has 'usage:'"
 
 # The repository's own lockfile (read only): node-pg-migrate is the migrations'
-# runtime (Preflight ruling 24), so it and what it brings are production.
+# runtime, so it and what it brings are production.
 lock="$root/telflo-core/package-lock.json"
 check "the repository's lock: node-pg-migrate is production (no dev flag), a @telflo/db dependency" \
   "node -e 'const p = require(process.argv[1]).packages; process.exit(!p[\"node_modules/node-pg-migrate\"].dev && !p[\"node_modules/node-pg-migrate\"].devOptional && p[\"packages/db\"].dependencies[\"node-pg-migrate\"] && !(p[\"packages/db\"].devDependencies || {})[\"node-pg-migrate\"] ? 0 : 1)' '$lock'"

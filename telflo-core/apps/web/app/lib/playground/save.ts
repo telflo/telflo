@@ -9,15 +9,14 @@ import { NEW_CONFIGURATION_PIN, SAMPLE_DISTRIBUTION } from "./sample/types.js";
 import { stagePlaygroundEdit } from "./staged-edit.js";
 
 /*
- * The playground's Save (D31-1 decisions 4, 27 and 36; Ruling 278,
- * Preflight rulings 4 and 14): the playground editor's and the blank public
+ * The playground's Save: the playground editor's and the blank public
  * editor's Save button and Cmd/Ctrl+S. It stages the edit in this browser
  * (`stagePlaygroundEdit`), then:
  * - a signed-out visitor sees "Sign in to save" (the provider's
  *   `SignInToSaveDialog`): Sign in (`/login?redirectTo=/app`) or Create
  *   free account (`/register`);
  * - a signed-in one (this tab's user store holds them) goes to `/app`,
- *   where the handoff dialog opens (Task 5). Without the store, they see
+ *   where the handoff dialog opens. Without the store, they see
  *   the dialog too, and `/login` sends a signed-in person straight on.
  * The toasts are fixed words, never the configuration's name or text.
  */

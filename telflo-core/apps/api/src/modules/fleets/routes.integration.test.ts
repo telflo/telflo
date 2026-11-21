@@ -18,7 +18,7 @@ import { UNCALLED_FILE_STORE } from "../../testing/file-store.js";
 import { UNCALLED_TESTING } from "../../testing/otelcol-testing.js";
 import { hashPassword } from "../identity/password.js";
 
-// The opamp-server every server needs (D11b decision 8): this file's own fake.
+// The opamp-server every server needs: this file's own fake.
 const opamp = useFakeOpampServer();
 
 const csrfHeaders = { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE };
@@ -88,11 +88,10 @@ function createGate() {
 }
 
 /**
- * D16b decisions 1, 4 to 6, 13, 15 to 18 and 21 and Preflight rulings 8 to
- * 16 and 19, for the fleet and token routes (Task 3), against Postgres
- * through the API as its own role, with the OpenAPI-checked fake as the
- * opamp-server. The server's client is the fake's, wrapped: every call is
- * recorded, and a test can put a hook in front of any method.
+ * The fleet and token routes, against Postgres through the API as its own
+ * role, with the OpenAPI-checked fake as the opamp-server. The server's
+ * client is the fake's, wrapped: every call is recorded, and a test can
+ * put a hook in front of any method.
  */
 describe("the fleet routes", () => {
   let settings: AppSettings;
@@ -179,7 +178,7 @@ describe("the fleet routes", () => {
     if (message !== undefined) expect(response.json<{ error: { message: string } }>().error.message).toBe(message);
   }
 
-  /** The fields a 400's `details` name, by their instancePath: the contract's and the service's alike (Ruling 31). */
+  /** The fields a 400's `details` name, by their instancePath: the contract's and the service's alike. */
   function detailPaths(response: LightMyRequestResponse): string[] {
     return (response.json<{ error: { details?: { instancePath: string }[] } }>().error.details ?? []).map((detail) => detail.instancePath);
   }
@@ -230,7 +229,7 @@ describe("the fleet routes", () => {
       payload: { organizationId },
     });
     expect(response.statusCode).toBe(200);
-    // A no-op when the sign-in already landed there (D36-1 decision 56): no new cookie, the token sent stands.
+    // A no-op when the sign-in already landed there: no new cookie, the token sent stands.
     return response.headers["set-cookie"] === undefined ? access : cookieValue(response, "telflo_access");
   };
 
@@ -318,7 +317,7 @@ describe("the fleet routes", () => {
 
   // -------------------------------------------------------------------------
 
-  describe.each(["admin", "contributor"] as const)("for a %s (decision 6: every member)", (role) => {
+  describe.each(["admin", "contributor"] as const)("for a %s (every member)", (role) => {
     it("creates a fleet (201, no-store, both bearers once), lists it, reads it, renames and archives it, and deletes it", async () => {
       const { organizationId, admin, contributor } = await team();
       const person = role === "admin" ? admin : contributor;
@@ -346,7 +345,7 @@ describe("the fleet routes", () => {
       expect(body.tokens.default.bearer).toMatch(/^[A-Za-z0-9+/]+={0,2}$/);
       expect(body.tokens.rotate.bearer).toMatch(/^[A-Za-z0-9+/]+={0,2}$/);
       expect(body.tokens.rotate.expiresAt).toBe(tomorrow());
-      // Registered first (decision 15); the actor is the session's.
+      // Registered first; the actor is the session's.
       expect(operations()).toEqual(["createOrganization", "createFleet"]);
       expect(calls[1]?.args[1]).toMatchObject({ id, actor: { id: person.userId, email: person.email } });
       expect(opamp.fake.snapshotOf(organizationId)).toMatchObject({
@@ -443,7 +442,7 @@ describe("the fleet routes", () => {
     });
   });
 
-  describe.each(["admin", "contributor"] as const)("a new default token, for a %s (D17c-1 decisions 29 and 45)", (role) => {
+  describe.each(["admin", "contributor"] as const)("a new default token, for a %s", (role) => {
     it("answers 409 enrollment_token_default_exists while the default token is valid; once it is revoked, 201 no-store with the reveal's shape, audited enrollment_token.issued with ids only", async () => {
       const { organizationId, admin, contributor } = await team();
       const person = role === "admin" ? admin : contributor;
@@ -501,7 +500,7 @@ describe("the fleet routes", () => {
     });
   });
 
-  describe.each(["admin", "contributor"] as const)("the token history, for a %s (D17b-2 decision 20)", (role) => {
+  describe.each(["admin", "contributor"] as const)("the token history, for a %s", (role) => {
     it("pages the fleet's token events newest first, each actor as {userId, email}, no bearer, not no-store; a cursor the opamp-server refuses 400", async () => {
       const { organizationId, admin, contributor } = await team();
       const person = role === "admin" ? admin : contributor;
@@ -544,7 +543,7 @@ describe("the fleet routes", () => {
       expect(opamp.fake.takeViolations()).toEqual([]);
     });
 
-    // Task 1's review (Ruling 19): service.ts answers an invalid answer to a cursor 400, any other the one 503.
+    // service.ts answers an invalid answer to a cursor 400, any other the one 503.
     it("answers the opamp-server's invalid_request 503 when no cursor was sent, logged at error with the code only; 400 on /cursor when one was", async () => {
       const { organizationId, admin, contributor } = await team();
       const person = role === "admin" ? admin : contributor;
@@ -572,7 +571,7 @@ describe("the fleet routes", () => {
 
   // -------------------------------------------------------------------------
 
-  describe("a fleet's create (decision 15; Preflight ruling 13)", () => {
+  describe("a fleet's create", () => {
     it("answers a retry with the same id, label and type 200 with the fleet alone, no-store, auditing nothing more", async () => {
       const { organizationId, admin } = await team();
       const id = randomUUID();
@@ -865,7 +864,7 @@ describe("the fleet routes", () => {
 
   // -------------------------------------------------------------------------
 
-  describe("the refusals that are the person's to fix (Preflight ruling 8)", () => {
+  describe("the refusals that are the person's to fix", () => {
     it("answers a fleet the organization doesn't hold 404 fleet_not_found on every fleet route, and a token it doesn't 404 enrollment_token_not_found", async () => {
       const { organizationId, admin } = await team();
       const fleet = await created(admin, organizationId);
@@ -986,7 +985,7 @@ describe("the fleet routes", () => {
     ] as const;
   }
 
-  describe("tenancy (decisions 4 and 5)", () => {
+  describe("tenancy", () => {
     it("answers another organization's fleet and token ids 404, changing nothing of theirs", async () => {
       const mine = await team();
       const theirs = await team();
@@ -1085,8 +1084,8 @@ describe("the fleet routes", () => {
 
   // -------------------------------------------------------------------------
 
-  // D17a decision 17: the fleet's reads pass the opamp-server's last seen
-  // and rotate token state through, copied field by field.
+  // The fleet's reads pass the opamp-server's last seen and rotate token
+  // state through, copied field by field.
   describe("a fleet's summary", () => {
     it("answers the latest last seen and the rotate token's state in the list and the read, through a rotation and its revokes", async () => {
       const { organizationId, admin } = await team();
@@ -1161,7 +1160,7 @@ describe("the fleet routes", () => {
     });
   });
 
-  describe("the one 503 (Preflight rulings 8 and 19)", () => {
+  describe("the one 503", () => {
     const ROUTE_OPERATIONS = [
       ["the list", "listFleets"],
       ["the create", "createFleet"],
@@ -1229,7 +1228,7 @@ describe("the fleet routes", () => {
       expectNotLogged("a-wrong-management-secret-0123456789", opamp.fake.secret);
     });
 
-    it("answers any other throw of the client 503 fleets_unavailable, logged at error with its name only (Ruling 34)", async () => {
+    it("answers any other throw of the client 503 fleets_unavailable, logged at error with its name only", async () => {
       const { organizationId, admin } = await team();
       const fleet = await created(admin, organizationId);
       const canary = `CANARY-THROWN-${randomUUID()}`;
@@ -1273,7 +1272,7 @@ describe("the fleet routes", () => {
 
   // -------------------------------------------------------------------------
 
-  describe("the person's limits (decision 17; Preflight ruling 12)", () => {
+  describe("the person's limits", () => {
     let limited: FastifyInstance;
 
     beforeAll(async () => {
@@ -1312,7 +1311,7 @@ describe("the fleet routes", () => {
       expect((await send(contributor, "GET", fleetsPath(organizationId), undefined, limited)).statusCode).toBe(200);
     });
 
-    it("counts the token history as a read (D17b-2 decision 20): past the person's reads it is 429, calling nothing; their writes are their own count", async () => {
+    it("counts the token history as a read: past the person's reads it is 429, calling nothing; their writes are their own count", async () => {
       const { organizationId, admin } = await team(limited);
       const fleet = await created(admin, organizationId, {}, limited);
       const tokens = `${fleetPath(organizationId, fleet.fleet.id)}/tokens`;
@@ -1347,7 +1346,7 @@ describe("the fleet routes", () => {
       expectLimited(await send(admin, "POST", fleetsPath(organizationId), { label: "z", type: "server", rotateExpiresAt: null }, limited));
     });
 
-    it("counts a new default token as a bearer reply (D17c-1 decision 45), apart from the writes", async () => {
+    it("counts a new default token as a bearer reply, apart from the writes", async () => {
       const { organizationId, admin } = await team(limited);
       const fleet = await created(admin, organizationId, {}, limited);
       const tokens = `${fleetPath(organizationId, fleet.fleet.id)}/tokens`;
@@ -1483,7 +1482,7 @@ describe("the fleet routes", () => {
 
   // -------------------------------------------------------------------------
 
-  describe("audit rows (decision 18; Preflight ruling 15)", () => {
+  describe("audit rows", () => {
     it("lets the change stand when its audit row can't be written, logging an error with ids only", async () => {
       const { organizationId, admin } = await team();
       const fleet = await created(admin, organizationId);
@@ -1527,7 +1526,7 @@ describe("the fleet routes", () => {
 
   // -------------------------------------------------------------------------
 
-  describe("privacy (decisions 1 and 21; Preflight ruling 16)", () => {
+  describe("privacy", () => {
     it("logs no bearer and no label, and writes neither into an audit row or an error answer (canaries)", async () => {
       const { organizationId, admin } = await team();
       const label = `CANARY-LABEL-${randomUUID()}`;
@@ -1565,7 +1564,7 @@ describe("the fleet routes", () => {
       ["a percent-encoded path", (o: string) => `/api/v1/organizations/${o}/%66leets?cursor=CANARY-ENCODED`],
       ["a trailing slash (no route)", (o: string) => `${fleetsPath(o)}/?q=CANARY-SLASH`],
       ["an encoded trailing slash", (o: string) => `/api/v1/organizations/${o}/%66leets/?q=CANARY-ENCODED-SLASH`],
-      // D16b Ruling 30: a doubled slash matches no route.
+      // A doubled slash matches no route.
       ["a doubled slash before the organizations", (o: string) => `/api/v1//organizations/${o}/fleets/${randomUUID()}/collectors?q=CANARY-DOUBLED`],
       ["a doubled slash before the fleets", (o: string) => `/api/v1/organizations/${o}//fleets/${randomUUID()}/collectors?q=CANARY-DOUBLED-FLEETS`],
       ["a doubled slash before the configurations", (o: string) => `/api/v1/organizations/${o}//configurations?q=CANARY-CONFIGURATIONS`],

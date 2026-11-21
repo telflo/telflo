@@ -18,8 +18,8 @@ import {
  * contracts'. The canonical shapes are load-bearing (the evaluator runs them,
  * and the editor's recognize-on-edit parses them back); the round-trip below
  * is the contract test for the second. The describes after "helpers" are the
- * platform's: recognizeBuilderRule's context check (D15a Ruling 45), and
- * D15b's literal writers and unescape (Preflight rulings 10 and 11).
+ * platform's: recognizeBuilderRule's context check, and the literal writers
+ * and unescape.
  */
 
 function attrRule(operator: AttributeOperator, value: string, quantifier: ValidationRuleOttl["quantifier"] = "all"): ValidationRuleOttl {
@@ -170,7 +170,7 @@ describe("count and distinct recognition", () => {
   });
 });
 
-describe("recognizeBuilderRule: a builder only on the context it saves (new, D15a Ruling 45)", () => {
+describe("recognizeBuilderRule: a builder only on the context it saves", () => {
   it.each([
     [
       "a traces spanevent none-rule (the builder would save span)",
@@ -232,7 +232,7 @@ describe("helpers", () => {
   });
 });
 
-describe("ottlStringLiteral (new, D15b Preflight ruling 10)", () => {
+describe("ottlStringLiteral", () => {
   it.each([
     ["a plain string", "env", '"env"'],
     ["a backslash and a quote", 'say "hi" \\ done', '"say \\"hi\\" \\\\ done"'],
@@ -267,7 +267,7 @@ describe("ottlStringLiteral (new, D15b Preflight ruling 10)", () => {
   });
 });
 
-describe("the number writers (new, D15b Preflight ruling 10)", () => {
+describe("the number writers", () => {
   it.each([
     [0n, "0"],
     [-1n, "-1"],
@@ -313,7 +313,7 @@ describe("the number writers (new, D15b Preflight ruling 10)", () => {
   });
 });
 
-describe("unescapeOttlString: exactly the writer's escapes (new, D15b Preflight ruling 11)", () => {
+describe("unescapeOttlString: exactly the writer's escapes", () => {
   it.each([
     ["\\\\", "a backslash"],
     ['\\"', "a quote"],
@@ -381,7 +381,7 @@ describe("unescapeOttlString: exactly the writer's escapes (new, D15b Preflight 
     ).toBeNull();
   });
 
-  it("reopens a saved attributes[\"a\\nb\"] != nil with the key it saved (D15a's unescape gave anb)", () => {
+  it("reopens a saved attributes[\"a\\nb\"] != nil with the key it saved (not anb)", () => {
     expect(recognizeBuilderRule({ context: "log", condition: 'attributes["a\\nb"] != nil', quantifier: "all" }, "logs")).toMatchObject({
       key: "a\nb",
     });

@@ -37,7 +37,7 @@ describe("root App", () => {
     expect(screen.getAllByRole("region", { name: /Notifications/ })).toHaveLength(1);
   });
 
-  it("holds the one slot for Monaco's live region: replay-blocked, audible under dialogs (D14a Rulings 48, 52)", async () => {
+  it("holds the one slot for Monaco's live region: replay-blocked, audible under dialogs", async () => {
     const Stub = createRoutesStub([
       { path: "/", Component: App, children: [{ path: "/", Component: () => <p>a page</p> }] },
     ]);
@@ -51,7 +51,7 @@ describe("root App", () => {
     expect(slots[0]!.querySelector("[data-monaco-aria-host]")).not.toBeNull();
   });
 
-  it("shows the logout toast on /login, not after the next sign-in (D2a Ruling 12)", async () => {
+  it("shows the logout toast on /login, not after the next sign-in", async () => {
     vi.spyOn(apiClient, "deleteCurrentSession").mockResolvedValue(undefined);
     useUserStore.getState().setCurrent(CURRENT_USER);
     const Stub = createRoutesStub([
@@ -90,7 +90,7 @@ function loaderArgs(cookie?: string): Parameters<typeof loader>[0] {
   return { request, params: {}, context: {} } as unknown as Parameters<typeof loader>[0];
 }
 
-describe("root loader (D4 decisions 5 and 8)", () => {
+describe("root loader", () => {
   beforeEach(() => {
     vi.stubEnv("TELFLO_PUBLIC_WEB_URL", "");
     vi.stubEnv("TELFLO_POSTHOG_KEY", "");
@@ -114,7 +114,7 @@ describe("root loader (D4 decisions 5 and 8)", () => {
     expect(loader(loaderArgs())).toEqual({ publicWebUrl: null, analytics: null, theme: "dark", site });
   });
 
-  it("passes on the site's switches and links, the open source's defaults when unset (D36-1 decision 28)", () => {
+  it("passes on the site's switches and links, the open source's defaults when unset", () => {
     expect(loader(loaderArgs()).site).toEqual({
       registration: "invite-only",
       playground: false,
@@ -167,7 +167,7 @@ describe("root loader (D4 decisions 5 and 8)", () => {
     expect(message.includes("cnry")).toBe(false);
   });
 
-  it("the loader reads telflo_theme and gives dark for an absent, unknown or oversized value (D21 decision 23)", () => {
+  it("the loader reads telflo_theme and gives dark for an absent, unknown or oversized value", () => {
     // The word alone goes out: never the cookie header or anything else in it.
     expect(loader(loaderArgs("telflo_theme=light"))).toEqual({ publicWebUrl: null, analytics: null, theme: "light", site });
     expect(loader(loaderArgs("a=1; telflo_theme=navy; telflo_access=x")).theme).toBe("navy");
@@ -280,7 +280,7 @@ function htmlClass(html: string): string {
 
 const ROOT_DATA = (theme: Theme) => ({ publicWebUrl: null, analytics: null, theme });
 
-describe("root Layout's <html> class (D21 decision 22)", () => {
+describe("root Layout's <html> class", () => {
   beforeEach(() => {
     useUserStore.getState().clear();
   });
@@ -336,7 +336,7 @@ describe("root Layout's <html> class (D21 decision 22)", () => {
     expect(failedLayout).toContain("Oops!");
     expect(htmlClass(failedLayout)).toBe("dark");
 
-    // An error below a loaded signed-in layout keeps the stored theme (Preflight ruling 25).
+    // An error below a loaded signed-in layout keeps the stored theme.
     const childError = serverHtml("/app", {
       loaderData: { root: ROOT_DATA("light"), "routes/app-layout": SIGNED_IN("navy") },
       errors: { root: new Error("the page failed") },
@@ -345,7 +345,7 @@ describe("root Layout's <html> class (D21 decision 22)", () => {
     expect(htmlClass(childError)).toBe("dark navy");
   });
 
-  it("renders an auth screen's error in the cookie's theme, not dark (Ruling 84)", () => {
+  it("renders an auth screen's error in the cookie's theme, not dark", () => {
     // The error reaches root's boundary; the auth route is still matched, so its handle still holds.
     for (const [cookie, className] of [
       ["light", ""],
@@ -361,7 +361,7 @@ describe("root Layout's <html> class (D21 decision 22)", () => {
   });
 });
 
-describe("the Toaster (D21 decision 26)", () => {
+describe("the Toaster", () => {
   it("the Toaster follows the theme", async () => {
     const Stub = createRoutesStub([
       {
@@ -403,7 +403,7 @@ describe("the Toaster (D21 decision 26)", () => {
   });
 });
 
-describe("useSite (D36-1 decision 28)", () => {
+describe("useSite", () => {
   function SiteProbe() {
     const site = useSite();
     return <p>{`${site.registration} ${site.terms.version || "no terms"} ${site.docsUrl || "no docs"}`}</p>;

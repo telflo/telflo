@@ -22,10 +22,9 @@ import {
 } from "./MountsEditor.js";
 
 /*
- * A server group's mounts editor (D17c-1 decisions 31 and 32; Preflight
- * rulings 15 and 30); its dialog's cases are in `GroupDialog.test.tsx`. This
- * file covers the rules' words, the rows, and where a path may be in the
- * document.
+ * A server group's mounts editor; its dialog's cases are in
+ * `GroupDialog.test.tsx`. This file covers the rules' words, the rows, and
+ * where a path may be in the document.
  */
 
 describe("mountsOf and sameMounts", () => {
@@ -148,7 +147,7 @@ const hostPaths = () => screen.queryAllByRole("textbox", { name: "Host path" });
 const containerPaths = () => screen.queryAllByRole("textbox", { name: "Container path" });
 const readOnlies = () => screen.queryAllByRole("checkbox", { name: "Read-only" });
 
-describe("MountsEditor's rows (decision 32)", () => {
+describe("MountsEditor's rows", () => {
   it("shows no row, the hint and Add mount for a group with none", () => {
     renderEditor();
     expect(hostPaths()).toEqual([]);
@@ -233,7 +232,7 @@ describe("MountsEditor's rows (decision 32)", () => {
   });
 });
 
-describe("MountsEditor's privacy (decision 48)", () => {
+describe("MountsEditor's privacy", () => {
   it("keeps the paths inside ph-no-capture, in no attribute but their inputs' value", async () => {
     const host = "/srv/canary-host-6a1e";
     const container = "/canary-container-b47d";

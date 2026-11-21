@@ -24,69 +24,64 @@ import { plainNumber, type ValueChange, type ValuePath } from "~/lib/graph/text-
 import type { ValueView } from "~/lib/graph/value-view.js";
 
 /*
- * The StatsD receiver's form (ADR 0018), over the form's fields
- * (D9d decision 2, D9b's contract): each field writes its own key.
- * Collector claims are contrib v0.162.0's `receiver/statsdreceiver`.
+ * The StatsD receiver's form, over the form's fields: each field writes its
+ * own key. Collector claims are contrib v0.162.0's `receiver/statsdreceiver`.
  *
- * - Transport is native radios (`RadioField`), with the
- *   collector's full set (decision 6; `internal/transport/transport.go:17-
- *   25`): udp, udp4, udp6, tcp, tcp4, tcp6 and unixgram, not just
- *   UDP, TCP and Unix Socket. Unset shows udp, the collector's default
+ * - Transport is native radios (`RadioField`), with the collector's full set
+ *   (`internal/transport/transport.go:17- 25`): udp, udp4, udp6, tcp, tcp4,
+ *   tcp6 and unixgram. Unset shows udp, the collector's default
  *   (`factory.go:40-43`).
- * - Changed (D9c netflow's rule): a transport switch sets the endpoint to
+ * - As netflow's scheme switch does, a transport switch sets the endpoint to
  *   the transport's default (`localhost:8125`, or
- *   `/var/run/statsd-receiver.sock` for a Unix socket) only while the
- *   endpoint is unset or one of those; an endpoint of the person's own is
- *   kept.
- * - Fixed (decision 2): Unix Socket writes `socket_permissions` plain,
- *   `0622`, and only when the text has none, never the string
- *   `"0622"`, which the collector refuses: the field is an `os.FileMode`
- *   (`config.go:34`) and confmap has no string-to-number hook. Plain
- *   `0622` is octal to the collector's YAML reader (mode 0o622, the
- *   default, `factory.go:24`). Socket Permissions is a number field: what
- *   is typed is written plain when it reads as a number (`0644`). While
- *   the text holds a quoted number, a hint says so and retyping the same
- *   characters writes them plain (`NumberField`'s `writeSame`; D9c Ruling
- *   47's precedent).
- * - Changed (decision 7): Observer Type switched away from histogram
- *   removes the mapping's `histogram` block, and away from summary its
- *   `summary` block, in the same change, with a toast: the collector
- *   refuses either beside another observer (`config.go:90-105`).
- * - Changed (D9b decision 3): unset shows the collector's defaults as
- *   placeholders and "Default" hints: Endpoint localhost:8125
- *   (`factory.go:21`), Aggregation Interval 60s (`:22`), Socket
- *   Permissions 0622 (`:24`), Max Size 160 (`internal/parser/
- *   statsd_parser.go:254-256` with go-expohisto's default),
- *   Percentiles 0, 10, 50, 90, 95, 100
- *   (`internal/parser/metric_translator.go:20`). Cleared fields remove
- *   their keys (never `null`); the `histogram` and
- *   `summary` blocks go with their last key (a pruning scope).
- * - Percentiles are a `NumberListField` joined `", "` (Preflight ruling
- *   20): typing is held and written by item, each as typed (never
- *   filtered per keystroke, writing `5` on the way to `50`).
+ *   `/var/run/statsd-receiver.sock` for a Unix socket) only while the endpoint
+ *   is unset or one of those; an endpoint of the person's own is kept.
+ * - Unix Socket writes `socket_permissions` plain, `0622`, and only when the
+ *   text has none, never the string `"0622"`, which the collector refuses: the
+ *   field is an `os.FileMode` (`config.go:34`) and confmap has no
+ *   string-to-number hook. Plain `0622` is octal to the collector's YAML
+ *   reader (mode 0o622, the default, `factory.go:24`). Socket Permissions is a
+ *   number field: what is typed is written plain when it reads as a number
+ *   (`0644`). While the text holds a quoted number, a hint says so and
+ *   retyping the same characters writes them plain (`NumberField`'s
+ *   `writeSame`, as docker_stats' API Version).
+ * - Observer Type switched away from histogram removes the mapping's
+ *   `histogram` block, and away from summary its `summary` block, in the same
+ *   change, with a toast: the collector refuses either beside another
+ *   observer (`config.go:90-105`).
+ * - Unset shows the collector's defaults as placeholders and "Default"
+ *   hints: Endpoint localhost:8125 (`factory.go:21`), Aggregation Interval
+ *   60s (`:22`), Socket Permissions 0622 (`:24`), Max Size 160
+ *   (`internal/parser/ statsd_parser.go:254-256` with go-expohisto's
+ *   default), Percentiles 0, 10, 50, 90, 95, 100
+ *   (`internal/parser/metric_translator.go:20`). Cleared fields remove their
+ *   keys (never `null`); the `histogram` and `summary` blocks go with their
+ *   last key (a pruning scope).
+ * - Percentiles are a `NumberListField` joined `", "`: typing is held and
+ *   written by item, each as typed (never filtered per keystroke, writing `5`
+ *   on the way to `50`).
  * - The mappings are sortable cards (`useCardKeys`, `form.move`): a card's
- *   expanded state follows its mapping, not the index;
- *   the first starts expanded. Add Mapping appends
- *   the seed; on an unset list it writes that one mapping, which
- *   replaces the collector's three defaults (decision 5), and the empty
- *   state names them (`factory.go:27`). Removing the last leaves `[]`,
- *   which maps nothing (`internal/parser/statsd_parser.go:
- *   206-239`), with its own empty state.
+ *   expanded state follows its mapping, not the index; the first starts
+ *   expanded. Add Mapping appends the seed; on an unset list it writes
+ *   that one mapping, which replaces the collector's three defaults, and
+ *   the empty state names them (`factory.go:27`). Removing the last leaves
+ *   `[]`, which maps nothing
+ *   (`internal/parser/statsd_parser.go: 206-239`), with its own empty
+ *   state.
  *
- * Ids are fixed (`endpoint`, `statsd_type_0`, …; the
- * radios `transport-<index>`); no value reaches an attribute (decision 13).
+ * Ids are fixed (`endpoint`, `statsd_type_0`, …; the radios
+ * `transport-<index>`); no value reaches an attribute.
  */
 
-/** Decision 7's toasts (the plan's copy). */
+/** The toasts for a block a change removes with it. */
 export const REMOVED_HISTOGRAM = "Removed the histogram settings: they need observer type histogram.";
 export const REMOVED_SUMMARY = "Removed the summary percentiles: they need observer type summary.";
 
-/** An unset mapping list (decision 5): the collector's three defaults (`factory.go:27`). */
+/** An unset mapping list: the collector's three defaults (`factory.go:27`). */
 export const NO_MAPPINGS = "None set: the collector maps timer, histogram and distribution to gauge.";
 /** An empty list (`[]`), which maps nothing. */
 export const EMPTY_MAPPINGS = "No mappings configured";
 
-/** Under Socket Permissions while the text holds a quoted number (D9c Ruling 47's precedent). */
+/** Under Socket Permissions while the text holds a quoted number. */
 export const SOCKET_PERMISSIONS_STRING_HINT = "Written as a string; the collector needs a plain octal number. Retype it to unquote it.";
 
 /** The default endpoint for each kind of transport. */

@@ -27,9 +27,11 @@
 
 Telflo is a self-hosted web app designed to be used with the open source
 [telflo/opamp-server](https://github.com/telflo/opamp-server/) to enable
-the management of your OpenTelemetry Collectors. This full Telflo
-suite includes a visual editor, a YAML editor, configuration
-validation and testing, fleet management, a CLI, and more.
+the management of your OpenTelemetry Collectors. It includes a visual
+editor, a YAML editor, configuration validation and testing, fleet
+management and a CLI, with no limit on how many collectors you manage.
+The AI assistant and the MCP server offered at telflo.com are not part
+of it.
 
 Telflo runs as a handful of containers around one PostgreSQL, behind one
 gateway, with Docker Compose on one machine or with Helm on Kubernetes.
@@ -225,20 +227,20 @@ checksums file beside it.
 mkdir telflo-quick-start && cd telflo-quick-start
 
 # Save the release's download address, which the next command uses.
-release=https://github.com/telflo/telflo/releases/download/v0.2.0
+release=https://github.com/telflo/telflo/releases/download/v0.2.1
 
 # Download the Compose install's archive and the release's checksums.
-curl -fsSL -O "$release/telflo-compose-0.2.0.tar.gz" -O "$release/SHA256SUMS"
+curl -fsSL -O "$release/telflo-compose-0.2.1.tar.gz" -O "$release/SHA256SUMS"
 ```
 
 **2. Check it and unpack it.**
 
 ```sh
 # Check the archive against the checksums: it prints the archive's name and OK.
-grep 'telflo-compose-0.2.0.tar.gz$' SHA256SUMS | if command -v sha256sum >/dev/null; then sha256sum -c -; else shasum -a 256 -c -; fi
+grep 'telflo-compose-0.2.1.tar.gz$' SHA256SUMS | if command -v sha256sum >/dev/null; then sha256sum -c -; else shasum -a 256 -c -; fi
 
 # Unpack it, and go into the folder it makes.
-tar -xzf telflo-compose-0.2.0.tar.gz && cd telflo-compose-0.2.0
+tar -xzf telflo-compose-0.2.1.tar.gz && cd telflo-compose-0.2.1
 ```
 
 **3. Set it up.** `setup.sh` writes the install's settings into a `.env`
@@ -420,6 +422,8 @@ with its Compose and Helm names side by side, and the admin commands.
 
 ## What it doesn't do
 
+- **No AI assistant or MCP server.** Those are part of the hosted
+  service at [telflo.com](https://telflo.com), not this repository.
 - **No TLS of its own.** The gateway and the agent endpoint serve plain
   http; put your TLS proxy or load balancer in front
   ([docs/compose.md](docs/compose.md), [docs/kubernetes.md](docs/kubernetes.md)).
@@ -526,10 +530,23 @@ Collectors poll the `--agent-url` you gave `setup.sh` (the opamp-server's
   and published
 - [CHANGELOG.md](CHANGELOG.md): what each release changed
 
+## About this project
+
+The code for telflo.com was originally created by a combination of hand-coded
+software and AI (Claude) assisted development. When we decided to open source
+the platform, we used Claude to help port the closed-source software to a new
+architecture backed by PostgreSQL. This repo is the result of that port.
+Currently telflo.com still runs on the original codebase, because we wanted to
+prioritize making this solution available over swapping telflo.com. That
+effort is ongoing and will take place in the near future. We hope you enjoy
+using this solution, and we look forward to your feedback!
+
 ## Contributing
 
 Bugs and questions go to the repository's
-[issues](https://github.com/telflo/telflo/issues).
+[issues](https://github.com/telflo/telflo/issues). Report a security
+vulnerability privately instead, as [SECURITY.md](SECURITY.md) describes.
+[CONTRIBUTING.md](CONTRIBUTING.md) says how to propose a change, and
 [docs/development.md](docs/development.md) is the guide to working on it.
 A contribution is made under the project's license, below.
 

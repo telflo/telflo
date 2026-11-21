@@ -7,18 +7,17 @@ import { TLSConfigSection } from "./shared/TLSConfigSection.js";
 import { TLSInsecureCheckbox } from "./shared/TLSInsecureCheckbox.js";
 
 /*
- * The OTLP exporter's form (ADR 0018), over the form's fields (D9b
- * decisions 2 to 4): each field writes its own key.
+ * The OTLP exporter's form, over the form's fields: each field writes its own
+ * key.
  *
  * The collector's defaults (otlp exporter `createDefaultConfig`, core
  * v0.162.0: timeout 5s from `exporterhelper.NewDefaultTimeoutConfig`,
- * compression gzip) show while a key is unset (decision 3),
- * not written as values. A compression outside gzip/none (zstd, snappy …)
- * shows as an extra option, as written.
+ * compression gzip) show while a key is unset, not written as values. A
+ * compression outside gzip/none (zstd, snappy …) shows as an extra
+ * option, as written.
  *
- * Changed (decision 4, the owner's ruling, Preflight ruling 4): the TLS
- * section is the client variant ("Customize TLS for OTLP gRPC", no Client
- * CA fields), and the `insecure` box says what it does on gRPC.
+ * The TLS section is the client variant ("Customize TLS for OTLP gRPC", no
+ * Client CA fields), and the `insecure` box says what it does on gRPC.
  */
 
 const COMPRESSIONS = [

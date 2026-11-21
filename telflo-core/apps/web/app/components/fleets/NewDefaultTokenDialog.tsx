@@ -14,9 +14,9 @@ import { DialogErrorAlert } from "./DialogErrorAlert.js";
 import { SecretCopyBox } from "~/components/secrets/SecretCopyBox.js";
 
 /*
- * A new default token (D17c-1 decisions 4 and 45; Preflight ruling 31), to
- * follow a revoked default token: a Dialog opened by the Tokens tab's "New
- * default token", shown while the fleet has no valid default token.
+ * A new default token, to follow a revoked default token: a Dialog opened
+ * by the Tokens tab's "New default token", shown while the fleet has no
+ * valid default token.
  *
  * - The title "New default token" throughout; what issuing does and that the
  *   revoked token stays revoked; "Cancel" / "Issue token" ("Issuing…").
@@ -28,8 +28,7 @@ import { SecretCopyBox } from "~/components/secrets/SecretCopyBox.js";
  *   install command (on a container host, removing the old container
  *   first); "Done". The tab and the fleet reload as it shows (the history
  *   gains the issue, and the button goes).
- * - **A Kubernetes-supervisor fleet's** words (D17d-1 Ruling 55; D17d-2
- *   Preflight ruling 32; D18 decisions 6 and 30) speak of its groups' Helm
+ * - **A Kubernetes-supervisor fleet's** words speak of its groups' Helm
  *   releases, not hosts' install commands: the description says a pod
  *   starting with the revoked token is refused until its group's release is
  *   upgraded with the new one, and the result to run each group's Install
@@ -59,22 +58,21 @@ export const NEW_DEFAULT_TOKEN_TITLE = "New default token";
 export const NEW_DEFAULT_DESCRIPTION =
   "Issues a new default token for installing collectors. The revoked one stays revoked: collectors whose supervisors restart with it are refused until their install command is re-run with the new token.";
 export const NEW_DEFAULT_RESULT = "It is shown now only; Reveal gives it again. Re-run the install command on each host that used the revoked token.";
-/** The re-install on a container host (D17c-1 Ruling 62): the command's fixed --name is taken by the old container. */
+/** The re-install on a container host: the command's fixed --name is taken by the old container. */
 export const CONTAINER_REINSTALL =
   "On a container host, remove the old container first (docker rm -f telflo-collector); keep the telflo-opamp volume to keep the same collector.";
 /**
- * A Kubernetes-supervisor fleet's description (D17d-1 Ruling 55; D17d-2 decision 26, Preflight rulings 17 and 32; D18
- * decision 30): its collectors come from its groups' Helm releases; a pod starting with the revoked token is refused
- * until its release is upgraded with the new one, and that upgrade rolls the group's pods (the platform's chart puts a
- * checksum of the token Secret on each workload's pod template).
+ * A Kubernetes-supervisor fleet's description: its collectors come from its groups' Helm releases; a pod starting with
+ * the revoked token is refused until its release is upgraded with the new one, and that upgrade rolls the group's pods
+ * (the platform's chart puts a checksum of the token Secret on each workload's pod template).
  */
 export const NEW_DEFAULT_DESCRIPTION_KUBERNETES =
   "Issues a new default token for installing collectors. The revoked one stays revoked: pods that start with it are refused until their group's Helm release is upgraded with the new token.";
 /**
- * A Kubernetes-supervisor fleet's result (D17d-1 Ruling 55; D17d-2 Preflight ruling 32; D18 decisions 6 and 30), in
- * place of NEW_DEFAULT_RESULT and CONTAINER_REINSTALL: each group's Install with Helm again seals the new token into
- * its release's Secret, and the chart's `checksum/token` annotation on each workload's pod template changes with it,
- * so the upgrade rolls the group's pods (refused ones included), which start with the new token.
+ * A Kubernetes-supervisor fleet's result, in place of NEW_DEFAULT_RESULT and CONTAINER_REINSTALL: each group's
+ * Install with Helm again seals the new token into its release's Secret, and the chart's `checksum/token` annotation
+ * on each workload's pod template changes with it, so the upgrade rolls the group's pods (refused ones included),
+ * which start with the new token.
  */
 export const NEW_DEFAULT_RESULT_KUBERNETES =
   "It is shown now only; Reveal gives it again. Run each group's Install with Helm again: its pods restart with the new token.";
@@ -101,7 +99,7 @@ export interface NewDefaultTokenDialogProps {
   /** The active organization the dialog was opened in. */
   organizationId: string;
   fleetId: string;
-  /** The fleet's type: a Kubernetes-supervisor fleet's words name its groups' Helm releases (D17d-1 Ruling 55). */
+  /** The fleet's type: a Kubernetes-supervisor fleet's words name its groups' Helm releases. */
   fleetType: FleetType;
   /** After an issue answers (made, unknown, a default token found, the fleet archived or gone): the tab reloads, and the fleet. */
   onChanged: () => void;

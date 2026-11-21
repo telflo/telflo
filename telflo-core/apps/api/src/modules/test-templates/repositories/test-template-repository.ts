@@ -2,12 +2,11 @@ import { sql, type Kysely, type Selectable, type Transaction } from "kysely";
 import type { Database, TestRunSignal, TestTemplatesTable } from "@telflo/db";
 
 /*
- * Test templates (D14b decisions 3 and 13; Preflight rulings 4 and 11;
- * migration 1700000000029): a product-wide library of sample inputs, their
- * bytes in the FileStore at global/test-templates/<id>.
+ * Test templates (migration 1700000000029): a product-wide library of sample
+ * inputs, their bytes in the FileStore at global/test-templates/<id>.
  *
- * A global repository (ADR 0008; the resource registry's `kind: "global"`),
- * as flows': every organization picks from the same templates, so there is
+ * A global repository (the resource registry's `kind: "global"`), as
+ * flows': every organization picks from the same templates, so there is
  * no organization scope and no row-level security. Whether a caller may
  * write is the service's question (product admins only, requireProductAdmin
  * on the routes). A template is deleted softly (`deleted_at`; the API's
@@ -18,7 +17,7 @@ import type { Database, TestRunSignal, TestTemplatesTable } from "@telflo/db";
  * flows' do.
  */
 
-/** A live template. Its name, description and file name are configuration text (ADR 0024). */
+/** A live template. Its name, description and file name are configuration text. */
 export interface TestTemplate {
   id: string;
   name: string;

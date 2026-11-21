@@ -19,17 +19,17 @@ import {
 } from "./support/validation-pipelines-page.js";
 import { versionPath } from "./support/versions-page.js";
 
-// Compare's "Create an OTTL rule" (D15b decisions 3 to 6), in the browser: a
-// run whose pipeline added, changed and removed record attributes; the
-// footer's chips, in the keys' order (the input's first, Preflight ruling
-// 17); a chip opening the rule editor prefilled on its OTTL, whose Save adds
-// the rule the Validation subtab then lists; and a chip with no validation
-// pipeline for the run's pipeline, its toast, Compare kept open.
+// Compare's "Create an OTTL rule", in the browser: a run whose pipeline added,
+// changed and removed record attributes; the footer's chips, in the keys'
+// order (the input's first); a chip opening the rule editor prefilled on its
+// OTTL, whose Save adds the rule the Validation subtab then lists; and a chip
+// with no validation pipeline for the run's pipeline, its toast, Compare kept
+// open.
 //
-// - The fake tester answers a text carrying `# fake-otelcol-testing:
-//   changes-attributes` with an output whose every record gained `e2e.added`
-//   = "yes", had `e2e.changed` set to "after" and lost `e2e.removed`
-//   (Preflight ruling 6); its decoded input is the input's own bytes.
+// - The fake tester answers a text carrying
+//   `# fake-otelcol-testing: changes-attributes` with an output whose every
+//   record gained `e2e.added` = "yes", had `e2e.changed` set to "after" and
+//   lost `e2e.removed`; its decoded input is the input's own bytes.
 // - The fake evaluator passes every rule without a marker of its own.
 // Each test works in an organization of its own, so tests and browsers run
 // in parallel.

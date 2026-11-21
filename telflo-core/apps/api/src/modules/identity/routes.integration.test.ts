@@ -29,18 +29,17 @@ import { UNCALLED_FILE_STORE } from "../../testing/file-store.js";
 import { UNCALLED_TESTING } from "../../testing/otelcol-testing.js";
 import { TEST_TERMS_VERSION } from "../../testing/site.js";
 
-// The opamp-server every server needs (D11b decision 8): this file's own fake.
+// The opamp-server every server needs: this file's own fake.
 const opamp = useFakeOpampServer();
 
-/** Every state-changing /api/v1 request carries the CSRF header (D2a decision 6). */
+/** Every state-changing /api/v1 request carries the CSRF header. */
 const csrfHeaders = { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE };
 
 
 /**
  * A response's headers without the per-IP limit's `x-ratelimit-*`, which
  * count down from one request to the next whatever the address, and `date`,
- * which can tick between them: what is left must not differ by address (D3
- * decision 2).
+ * which can tick between them: what is left must not differ by address.
  */
 function comparableHeaders(response: LightMyRequestResponse): Record<string, unknown> {
   return Object.fromEntries(
@@ -188,7 +187,7 @@ describe("identity routes", () => {
       });
     });
 
-    it("gives the personal organization exactly one configuration, the Initial Configuration, created by the new user (D8 decision 10), built for the catalogue's default distribution at its default version (D13a decision 9)", async () => {
+    it("gives the personal organization exactly one configuration, the Initial Configuration, created by the new user, built for the catalog's default distribution at its default version", async () => {
       await register();
       const pin = await catalogueDefaults(ownerDb);
       const user = await ownerDb.selectFrom("users").selectAll().executeTakeFirstOrThrow();
@@ -240,7 +239,7 @@ describe("identity routes", () => {
       expect((await register(rest)).statusCode).toBe(400);
     });
 
-    it("refuses terms other than the current ones with terms_version_not_current, creating nothing and sending nothing (Ruling 18)", async () => {
+    it("refuses terms other than the current ones with terms_version_not_current, creating nothing and sending nothing", async () => {
       const response = await register({ ...body, acceptedTermsVersion: "2025-01-01" });
 
       expect(response.statusCode).toBe(400);
@@ -256,9 +255,9 @@ describe("identity routes", () => {
     });
 
     /**
-     * D22 decisions 22 and 23: the domain is refused, not the account. An
-     * address a service account holds and one nobody holds get the same
-     * answer, after the terms check and before any lookup or write.
+     * The domain is refused, not the account. An address a service account
+     * holds and one nobody holds get the same answer, after the terms check
+     * and before any lookup or write.
      */
     it("refuses an address at the reserved domain with 422 email_reserved, whether or not a service account holds it, and writes nothing", async () => {
       const { organization } = await createUserWithOrganization(ownerDb);
@@ -285,7 +284,7 @@ describe("identity routes", () => {
       expect(mailer.sent).toEqual([]);
     });
 
-    it("refuses an address at the deleted accounts' domain with 422 email_reserved, a deleted person's anonymous address included (it answered 500), and writes nothing (D29 decision 10, Preflight ruling 6)", async () => {
+    it("refuses an address at the deleted accounts' domain with 422 email_reserved, a deleted person's anonymous address included, and writes nothing", async () => {
       const { user: person } = await createUserWithOrganization(ownerDb);
       const anonymous = `deleted-${"0a".repeat(12)}@deleted-accounts.telflo.invalid`;
       await ownerDb
@@ -308,13 +307,13 @@ describe("identity routes", () => {
       expect(mailer.sent).toEqual([]);
     });
 
-    it("still registers an address at a subdomain of the reserved domain, which isn't the domain (D22 Q140)", async () => {
+    it("still registers an address at a subdomain of the reserved domain, which isn't the domain", async () => {
       const response = await register({ ...body, email: "person@sub.service-accounts.telflo.invalid" });
       expect(response.statusCode).toBe(200);
       expect(response.json()).toEqual({ status: "verification_sent" });
     });
 
-    it("a human's existing address still answers verification_sent with the duplicate notice (D22 decision 22)", async () => {
+    it("a human's existing address still answers verification_sent with the duplicate notice", async () => {
       const { user } = await createUserWithOrganization(ownerDb);
 
       const response = await register({ ...body, email: user.email });
@@ -342,11 +341,11 @@ describe("identity routes", () => {
     });
 
     /**
-     * Ruling 7 of D1b: the account, its organization and membership, the
-     * audit trail and the verification token commit together. Each case
-     * makes one insert inside the transaction fail, and checks that nothing
-     * persisted and that no verification email went out, since the email
-     * is sent only after the commit.
+     * The account, its organization and membership, the audit trail and the
+     * verification token commit together. Each case makes one insert inside
+     * the transaction fail, and checks that nothing persisted and that no
+     * verification email went out, since the email is sent only after the
+     * commit.
      */
     describe("when an insert inside the account transaction fails", () => {
       async function expectNothingPersistedAndNoEmail(): Promise<void> {
@@ -409,21 +408,19 @@ describe("identity routes", () => {
     });
 
     /**
-     * Finding 5 of the D1 final review: registerUser does `findByEmail` then
-     * `users.createAccount` with no transaction spanning the two, so two truly
-     * concurrent registrations of the same *brand-new* address (the
-     * sequential test above only covers an address that was already
-     * registered) can both pass the check and both reach the insert.
-     * `uq_users_lower_email` lets only one through; before the fix, the
-     * loser's unique-violation surfaced as a raw 500 — itself a second,
-     * subtler enumeration signal (500 vs 200 is observable), on top of a
-     * genuine double-submit bug (the client-side guard only protects one
+     * registerUser does `findByEmail` then `users.createAccount` with no
+     * transaction spanning the two, so two truly concurrent registrations of
+     * the same *brand-new* address (the sequential test above only covers an
+     * address that was already registered) can both pass the check and both
+     * reach the insert. `uq_users_lower_email` lets only one through; the
+     * loser's unique-violation must not surface as a raw 500 — itself a
+     * second, subtler enumeration signal (500 vs 200 is observable), on top of
+     * a genuine double-submit bug (the client-side guard only protects one
      * browser tab). Both responses must come back identical and exactly one
      * user row must exist, with exactly one organization and one membership:
-     * the loser's transaction rolls back its organization too (D1b). The
-     * in-memory fake used by service.test.ts
-     * cannot express a real unique-constraint violation, so this has to run
-     * against Postgres.
+     * the loser's transaction rolls back its organization too. The in-memory
+     * fake used by service.test.ts cannot express a real unique-constraint
+     * violation, so this has to run against Postgres.
      */
     it("returns the identical response and creates exactly one user when the same new email registers concurrently", async () => {
       const concurrentBody = {
@@ -458,7 +455,7 @@ describe("identity routes", () => {
     });
   });
 
-  describe("POST /api/v1/auth/register under the site's registration mode (D36-1 decision 35, Preflight ruling 4)", () => {
+  describe("POST /api/v1/auth/register under the site's registration mode", () => {
     const servers: FastifyInstance[] = [];
     const serverWith = async (site: Partial<AppSettings["site"]>) => {
       const built = buildServer({
@@ -543,7 +540,7 @@ describe("identity routes", () => {
     });
   });
 
-  describe("POST /api/v1/auth/register on a site that asks for no Terms (D36-1 decision 32, Preflight ruling 1)", () => {
+  describe("POST /api/v1/auth/register on a site that asks for no Terms", () => {
     let noTerms: FastifyInstance;
     beforeAll(async () => {
       noTerms = buildServer({
@@ -608,10 +605,10 @@ describe("identity routes", () => {
     });
 
     /**
-     * D1 acceptance criterion: clicking the same link twice — back button,
-     * bookmark, mail-client prefetch — must not report a false failure. A
-     * token that was already consumed is a different state from one that
-     * was never issued, and the response must say so.
+     * Clicking the same link twice — back button, bookmark, mail-client
+     * prefetch — must not report a false failure. A token that was
+     * already consumed is a different state from one that was never
+     * issued, and the response must say so.
      */
     it("reports already_verified rather than a false failure on a second click", async () => {
       await register();
@@ -734,7 +731,7 @@ describe("identity routes", () => {
       expect(responses[0]!.json()).toEqual({ status: "accepted" });
 
       // Every response is in, and nothing that depends on the address has
-      // happened: the route did not wait for the work (D3 decision 2).
+      // happened: the route did not wait for the work.
       expect(mailer.sent).toEqual([]);
       expect(await countRows("email_verification_tokens")).toBe(0);
       expect(await countRows("audit_events")).toBe(0);
@@ -745,8 +742,8 @@ describe("identity routes", () => {
     });
 
     /**
-     * D22 decision 22: a service account's address is an unknown address
-     * here. It is verified, so without the human-only lookup it would read
+     * A service account's address is an unknown address here. It is
+     * verified, so without the human-only lookup it would read
      * `already_verified`; it answers and audits `no_account` instead.
      */
     it("a service account's address answers 202 and sends nothing, audited no_account as an unknown address", async () => {
@@ -860,8 +857,8 @@ describe("identity routes", () => {
     });
 
     /**
-     * D3 decision 6: one budget per address across both email endpoints, so
-     * alternating between them buys no extra mail. The production limit is 5.
+     * One budget per address across both email endpoints, so alternating
+     * between them buys no extra mail. The production limit is 5.
      */
     it.each([
       ["a reset request", "/api/v1/auth/password-reset-requests"],

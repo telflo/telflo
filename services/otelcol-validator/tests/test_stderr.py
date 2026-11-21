@@ -1,8 +1,8 @@
-"""The stderr parser, on what the collector really prints (D13b Preflight
-ruling 6): tests/fixtures/collector-outputs.json holds `otelcol-contrib
-validate`'s recorded stderr for each case on 0.147.0 and 0.162.0. Since
-ruling 34 a requirement is a cause that matches a template whole, each
-template taken from a recorded output."""
+"""The stderr parser, on what the collector really prints:
+tests/fixtures/collector-outputs.json holds `otelcol-contrib validate`'s
+recorded stderr for each case on 0.147.0 and 0.162.0. A requirement is a
+cause that matches a template whole, each template taken from a recorded
+output."""
 
 from __future__ import annotations
 
@@ -28,8 +28,7 @@ from tests import guard
 
 OUTPUTS = json.loads((Path(__file__).parent / "fixtures" / "collector-outputs.json").read_text())["cases"]
 VERSIONS = ("0.147.0", "0.162.0")
-# What only Linux prints, recorded in the image on every offered version
-# (D13b Task 7; rulings 34 and 41).
+# What only Linux prints, recorded in the image on every offered version.
 LINUX_OUTPUTS = json.loads((Path(__file__).parent / "fixtures" / "collector-outputs-linux.json").read_text())["cases"]
 
 
@@ -162,8 +161,8 @@ def test_validate_stage_keeps_every_line_whatever_its_order(version: str) -> Non
 @pytest.mark.parametrize("version", VERSIONS)
 def test_build_stage_reports_only_the_collectors_first_failure(version: str) -> None:
     """Two broken receivers; the collector stops at the first it builds
-    (which one varies from run to run: the preflight saw syslog first on
-    0.147.0, this recording filelog), so the answer holds one of them."""
+    (which one varies from run to run: one run saw syslog first on 0.147.0,
+    this recording filelog), so the answer holds one of them."""
     errors = _errors("two-build", version)
 
     assert len(errors) == 1
@@ -182,7 +181,7 @@ def test_build_stage_reports_only_the_collectors_first_failure(version: str) -> 
 
 def test_unmarshal_joins_one_components_causes() -> None:
     """Two invalid keys in one Datadog exporter: one error for the component
-    (0.147.0; 0.162.0 accepts any unknown key there, Preflight ruling 8)."""
+    (0.147.0; 0.162.0 accepts any unknown key there)."""
     assert _errors("dd-unknown", "0.147.0") == [
         (
             "'logs' has invalid keys: zzz_nor_this; 'config.Config' has invalid keys: zzz_not_a_key",
@@ -245,7 +244,7 @@ def test_every_recorded_failure_parses_to_at_least_one_error_or_requirement() ->
 
 
 # ---------------------------------------------------------------------------
-# Decision 7's fix: a line that carries an error is never a requirement
+# A line that carries an error is never a requirement
 # ---------------------------------------------------------------------------
 
 
@@ -328,7 +327,7 @@ def test_the_truncation_marker_is_not_an_error() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Decision 10's fix: the component path keeps `/name`, hyphens and dots
+# The component path keeps `/name`, hyphens and dots
 # ---------------------------------------------------------------------------
 
 
@@ -358,15 +357,15 @@ def test_classify_cause_keeps_the_component_path() -> None:
 
 
 # ---------------------------------------------------------------------------
-# D13b ruling 25: a requirement pattern recognises only the collector's own
-# phrasing, never text it echoes from the configuration
+# A requirement pattern recognizes only the collector's own phrasing, never
+# text it echoes from the configuration
 # ---------------------------------------------------------------------------
 
 # Recorded outputs (both versions print the same) whose requirement phrasing
-# sits where the collector echoes the text. Each was a requirement that hid
-# the error before the fix, so the text answered valid.
+# sits where the collector echoes the text. Each, read as a requirement,
+# would hide the error, so the text would answer valid.
 ECHOED_ERRORS: dict[str, list[tuple[str, str | None]]] = {
-    # The reviewer's probe: a receiver key literally named like a cause.
+    # A receiver key literally named like a cause.
     "echo-invalid-key": [("'otlpreceiver.Config' has invalid keys: envvar \"X\" is not set", "receivers::otlp")],
     "echo-invalid-key-stat": [
         ("'otlpreceiver.Config' has invalid keys: stat /y: no such file or directory", "receivers::otlp")
@@ -450,7 +449,7 @@ def test_a_component_is_a_requirement_only_when_every_cause_line_is_one() -> Non
 
 
 # ---------------------------------------------------------------------------
-# D13b ruling 34: requirements by template, each from a recorded output
+# Requirements by template, each from a recorded output
 # ---------------------------------------------------------------------------
 
 # Every recorded requirement output: (category, title, componentPath), the
@@ -543,8 +542,7 @@ def test_every_linux_recording_reads_as_recorded(case: str) -> None:
 
 # The Linux recordings that stay errors: kubeletstats' own TLS files
 # (`auth_type: tls`) aren't under a `tls:` key, so the text's TLS-files
-# requirement doesn't see them, and no template takes them (D13b Task 7: a
-# question for the controller).
+# requirement doesn't see them, and no template takes them.
 LINUX_RECORDED_ERRORS: dict[str, dict] = {
     "linux-kubeletstats-tls-files": {
         "message": 'failed to create "kubeletstats" receiver for data type "metrics": cert path '
@@ -590,7 +588,7 @@ def test_the_root_path_template_takes_only_the_whole_recorded_phrasing(cause: st
 
 
 def test_a_root_path_phrase_the_text_holds_is_an_error() -> None:
-    """Ruling 29's guard holds for the new template: a key the collector
+    """The submitted-text guard holds for this template: a key the collector
     echoes, spelled as the cause, is the text's own words."""
     text = f"receivers:\n  hostmetrics:\n    '{ROOT_PATH_CAUSE}': 1\n"
     stderr = f"Error: receivers::hostmetrics: {ROOT_PATH_CAUSE}\n"
@@ -601,12 +599,12 @@ def test_a_root_path_phrase_the_text_holds_is_an_error() -> None:
     assert parsed.errors == [{"message": ROOT_PATH_CAUSE, "componentPath": "receivers::hostmetrics"}]
 
 
-# The review of 207bc02's bypasses, recorded on both real collectors: the
-# collector's own substitution (`$${y}` printed as `${y}`, `${env:Y}` and a
-# neutralised `${file:}` printed as the validator's placeholder), and texts
-# PyYAML refused that the collector reads (a second document, a `=` or
-# date-like value) with the phrase spelt by a YAML escape. Each answered
-# valid before; each is the collector's error, with or without the text.
+# Bypasses, recorded on both real collectors: the collector's own
+# substitution (`$${y}` printed as `${y}`, `${env:Y}` and a neutralized
+# `${file:}` printed as the validator's placeholder), and texts PyYAML
+# refused that the collector reads (a second document, a `=` or date-like
+# value) with the phrase spelt by a YAML escape. Each would answer valid
+# unguarded; each is the collector's error, with or without the text.
 BYPASSES = sorted(case for case in OUTPUTS if case.startswith("bypass-"))
 
 
@@ -625,9 +623,8 @@ def test_the_bypasses_are_recorded() -> None:
 
 
 # Requirement phrasings that no recorded output matches don't fire from
-# the output: each is an error. D13b Task
-# 7 recorded the image's Linux outputs; only hostmetrics' root_path printed
-# one (the host_filesystem template, below).
+# the output: each is an error. Of the image's recorded Linux outputs, only
+# hostmetrics' root_path printed one (the host_filesystem template, below).
 DROPPED_PHRASINGS = [
     # k8s_in_cluster: no in-cluster configuration (the service sets the variables).
     "error creating client: unable to load k8s config, KUBERNETES_SERVICE_HOST and KUBERNETES_SERVICE_PORT "
@@ -644,7 +641,8 @@ DROPPED_PHRASINGS = [
     # env_var: an unset variable, without k8sattributes' lead.
     'envvar "MY_TOKEN" is not set',
     'failed to resolve: environment variable "API_KEY" not found',
-    # tls_files: `validate` never loads TLS files (Preflight ruling 2 reads them from the text).
+    # tls_files: `validate` never loads TLS files (the service reads them
+    # from the text).
     'failed to create "otlp" receiver: failed to load TLS config: open /etc/tls/a.crt: no such file or directory',
     # missing_path: no component prints a bare stat as its whole cause.
     "stat /data/queue: no such file or directory",
@@ -695,13 +693,13 @@ def test_a_cause_whose_quotes_are_left_open_is_an_error(monkeypatch: pytest.Monk
 
 
 # ---------------------------------------------------------------------------
-# D13b ruling 29: a phrase the submitted text holds is never a requirement
+# A phrase the submitted text holds is never a requirement
 # ---------------------------------------------------------------------------
 
-# The reviewer's bypasses, recorded on both real collectors: a key or value
-# that closes the collector's unescaped '…' early, or one it echoes
-# unquoted. Each answered valid (a requirement hid the only error) before the
-# fix; each message is the collector's own, the path its component.
+# Bypasses, recorded on both real collectors: a key or value that closes the
+# collector's unescaped '…' early, or one it echoes unquoted. Each would
+# answer valid (a requirement hiding the only error) unguarded; each message
+# is the collector's own, the path its component.
 SUBMITTED_ECHOES: dict[str, tuple[str, str]] = {
     "echo-headers-key-stat": (
         "'[x': stat /y: no such file or directory]' expected type 'configopaque.String', got unconvertible "
@@ -763,9 +761,9 @@ def test_a_requirement_phrase_the_submitted_text_holds_stays_an_error(case: str,
 @pytest.mark.parametrize("version", VERSIONS)
 @pytest.mark.parametrize("case", sorted(SUBMITTED_ECHOES))
 def test_the_templates_alone_make_these_echoes_errors(case: str, version: str) -> None:
-    """Ruling 34: without the submitted text (ruling 29's guard), the
-    quote rules alone read each of these as a requirement that hid the
-    error; no template matches any of them whole."""
+    """Without the submitted text (the guard above), the quote rules alone
+    read each of these as a requirement that hid the error; no template
+    matches any of them whole."""
     parsed = parse_stderr(OUTPUTS[case]["runs"][version]["stderr"])
 
     assert parsed.errors == [{"message": SUBMITTED_ECHOES[case][0], "componentPath": SUBMITTED_ECHOES[case][1]}]
@@ -815,7 +813,7 @@ _Y_ESCAPED = _Y_CAUSE.replace("/y", "\\x2fy")
     [
         # A decoded key: the raw text never holds the cause, its decoding does.
         (f'exporters:\n  otlp_http:\n    headers:\n      "{_Y_ESCAPED}": 1\n', None),
-        # ... in a text PyYAML refused before ruling 35 (a date-like value).
+        # ... in a text with a date-like value, which plain PyYAML refuses.
         (
             f'exporters:\n  otlp_http:\n    headers:\n      "{_Y_ESCAPED}": 1\n'
             "      h: 2001-13-45\n",
@@ -837,8 +835,8 @@ def test_the_submitted_texts_keys_values_and_raw_words_count(text: str, requirem
 
 
 # ---------------------------------------------------------------------------
-# D13b ruling 28: classifying is linear in the output (operation counts, not
-# time: every Python line the classifier runs is counted)
+# Classifying is linear in the output (operation counts, not time: every
+# Python line the classifier runs is counted)
 # ---------------------------------------------------------------------------
 
 
@@ -865,7 +863,7 @@ def _lines_run(function, *args) -> int:
 
 
 def _quoted_encoding_message(units: int) -> str:
-    """The reviewer's probe, recorded (`echo-encoding-quotes`): filelog's
+    """A probe, recorded (`echo-encoding-quotes`): filelog's
     `unsupported encoding '<value>'` echoes the value in unescaped '…'; a
     value of repeated `': 'b` gives a span and a cause start every 5
     characters. Scaled from the recorded output."""
@@ -960,7 +958,7 @@ def _count_template_attempts(monkeypatch: pytest.MonkeyPatch) -> list[str]:
 
 # The old validate-line expression, `(?:::\S+?)*` before `: `, backtracked
 # exponentially on a line of `::a` groups with no `: ` (22 groups: 0.5 s,
-# each one more doubling it): run where a hang can be stopped (ruling 36).
+# each one more doubling it): run where a hang can be stopped.
 _LONG_PATH_LINE = (
     "import json\n"
     "from app import stderr\n"

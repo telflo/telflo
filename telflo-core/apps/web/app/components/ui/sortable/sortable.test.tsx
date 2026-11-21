@@ -4,9 +4,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SortableHandle, SortableItem, SortableList, sortableId } from "./index.js";
 
 /*
- * Keyboard reordering in jsdom (Preflight ruling 15): dnd-kit measures each
- * item's rectangle, and jsdom's are all zero, so rows are laid out here,
- * 40 px apart. The pointer path runs in the browsers (Task 10).
+ * Keyboard reordering in jsdom: dnd-kit measures each item's rectangle, and
+ * jsdom's are all zero, so rows are laid out here, 40 px apart. The pointer
+ * path runs in the browsers.
  */
 
 const ROW_HEIGHT = 40;
@@ -80,7 +80,7 @@ async function press(element: Element, key: string, code = key) {
   });
 }
 
-describe("Sortable (decision 9)", () => {
+describe("Sortable", () => {
   it("reorders by keyboard: Space, ArrowDown twice, Space calls back with (from, to)", async () => {
     const onReorder = vi.fn();
     render(<List onReorder={onReorder} />);

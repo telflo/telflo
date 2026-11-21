@@ -20,11 +20,10 @@ import {
   UserFeedbackPageSchema,
 } from "./product-admin.js";
 
-// The product-admin contracts (D29 decisions 28, 31 to 34): each schema's
-// accepted and refused shapes, the bounds (the table's check: 1 to 5,000
-// characters after trimming), and the error codes, unique across the
-// package. Values are made-up fixtures (@example.com); nothing here is a
-// person's.
+// The product-admin contracts: each schema's accepted and refused shapes, the
+// bounds (the table's check: 1 to 5,000 characters after trimming), and the
+// error codes, unique across the package. Values are made-up fixtures
+// (@example.com); nothing here is a person's.
 
 const ID = "0190a1b2-c3d4-7e5f-8a9b-0c1d2e3f4a70";
 const NOW = "2026-10-26T10:00:00.000Z";
@@ -114,7 +113,7 @@ describe("the feedback", () => {
   });
 });
 
-describe("the site's settings (D36-1 decision 51)", () => {
+describe("the site's settings", () => {
   it("are organizationCreation, everyone or product-admins, required, with no other key", () => {
     for (const value of ["everyone", "product-admins"]) {
       expect(ProductAdminSettingsSchema.parse({ organizationCreation: value })).toEqual({ organizationCreation: value });
@@ -128,7 +127,7 @@ describe("the site's settings (D36-1 decision 51)", () => {
 });
 
 describe("the error codes", () => {
-  it("names the product-admin and feedback codes, each unique across every list the package exports (Ruling 258's user_delete_busy included)", () => {
+  it("names the product-admin and feedback codes, each unique across every list the package exports, user_delete_busy included", () => {
     expect(PRODUCT_ADMIN_ERROR_CODES).toEqual([
       "product_admin_target_not_found",
       "product_admin_not_found",

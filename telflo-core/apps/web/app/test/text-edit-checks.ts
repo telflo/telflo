@@ -8,10 +8,10 @@ import type { ParsedText } from "../lib/graph/parse.js";
 import type { Graph } from "../lib/graph/types.js";
 
 /*
- * Checks the text-edit tests share (D9a Task 4): reading a text, copying a
- * model, a line diff, and an oracle for "every line outside the edit is
- * byte for byte the same" that doesn't use the editor's own idea of where
- * an entry ends.
+ * Checks the text-edit tests share: reading a text, copying a model, a
+ * line diff, and an oracle for "every line outside the edit is byte for
+ * byte the same" that doesn't use the editor's own idea of where an entry
+ * ends.
  */
 
 export interface ReadText {
@@ -110,16 +110,15 @@ function reordered(before: readonly unknown[], after: readonly unknown[]): boole
  * section, each removed pipeline and changed list, `service.extensions`
  * when it changes, the keys of containers that were or become empty, a
  * changed flow mapping's line (it holds its entries on one line), and an
- * alias or merge whose anchor's owner changes (it may get a copy, ruling
- * 8): one whose anchor stands on those lines or holds them, unless the
- * change only reorders the list holding the anchored item, which keeps the
- * anchor's value (ruling 32; a copy an item moved past needs is on the
- * list's lines already). An entry's lines are found by indentation alone:
- * its key's line and every line after it that is blank or indented deeper
- * (or a sequence item at its column), and a flow collection's to its
- * closing bracket's. `written`: components a change was
- * written to, even when their value ends as it was (an item moved and moved
- * back).
+ * alias or merge whose anchor's owner changes (it may get a copy): one
+ * whose anchor stands on those lines or holds them, unless the change only
+ * reorders the list holding the anchored item, which keeps the anchor's
+ * value (a copy an item moved past needs is on the list's lines already).
+ * An entry's lines are found by indentation alone: its key's line and every
+ * line after it that is blank or indented deeper (or a sequence item at its
+ * column), and a flow collection's to its closing bracket's. `written`:
+ * components a change was written to, even when their value ends as it was
+ * (an item moved and moved back).
  */
 export function touchableLines(
   before: string,
@@ -152,7 +151,7 @@ export function touchableLines(
     for (let line = keyLine; line <= last; line++) touched.add(line);
   };
   const keyLine = (pair: Pair) => lineOf((pair.key as { range: [number, number, number] }).range[0]);
-  /** An entry's lines: its region, and a flow collection's lines to its closing bracket (one at the key's column too, D9d Ruling 38). */
+  /** An entry's lines: its region, and a flow collection's lines to its closing bracket (one at the key's column too). */
   const entryRegion = (pair: Pair) => {
     region(keyLine(pair));
     const value = pair.value;

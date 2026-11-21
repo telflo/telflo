@@ -3,14 +3,14 @@ import { useOperatorId } from "../operator-ids.js";
 import { FieldSelector } from "../shared/FieldSelector.js";
 
 /*
- * The `sanitize_utf8` operator's form (ADR 0018), over the card's scope (D9c
- * decisions 2 and 8). Ids are the card's (`op-<index>-sanitize-utf8-…`).
+ * The `sanitize_utf8` operator's form, over the card's scope. Ids are the
+ * card's (`op-<index>-sanitize-utf8-…`).
  *
- * Changed (D9b decision 3): an unset Field shows the collector's `body`
+ * An unset Field shows the collector's `body`
  * (`transformer/sanitizeutf8/transformer.go:37`) as its placeholder and
- * "Default body", never as a value it doesn't write.
- * The example's code is the escape text `\uFFFD` (JSX text, so the six
- * characters), then the character itself in brackets (D9c Ruling 70).
+ * "Default body", never as a value it doesn't write. The example's code is
+ * the escape text `\uFFFD` (JSX text, so the six characters), then the
+ * character itself in brackets.
  */
 
 export function SanitizeUtf8Form() {

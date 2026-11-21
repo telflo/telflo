@@ -36,53 +36,50 @@ import { clearStagedEdit, readStagedEdit, type ReadStagedEdit } from "~/lib/play
 import { findDistribution, useCollectorDistributions } from "~/lib/stores/collector-catalogue-store.js";
 
 /*
- * The playground's handoff (D31-1 decisions 4, 27, 36, 37 and 41; Preflight
- * rulings 4 and 15): saving or clearing the playground's edit, on the
+ * The playground's handoff: saving or clearing the playground's edit, on the
  * signed-in configurations page (`/app`). The playground editor's and the
  * blank public editor's Save staged an edit in this browser
  * (`lib/playground/staged-edit.ts`); here, signed in, the person decides what
  * becomes of it:
  * - it opens only with a staged edit (`readStagedEdit`, which ignores and
  *   removes one older than 7 days, unreadable, or refused by the create's
- *   schema) and only once the current terms are accepted (the layout's
- *   terms dialog first; `useTermsRequired`). What it shows and sends is a
- *   snapshot read at its opening, never re-read meanwhile (D17c-1 Ruling
- *   66): a Save in another tab changes nothing here;
+ *   schema) and only once the current terms are accepted (the layout's terms
+ *   dialog first; `useTermsRequired`). What it shows and sends is a snapshot
+ *   read at its opening, never re-read meanwhile: a Save in another tab
+ *   changes nothing here;
  * - "Save your playground configuration?": the name, editable under the
  *   create's rules (trimmed, 1 to 200 characters), and a note of its pin;
  *   **Save** creates the configuration and its version 1 in the current
  *   organization with the four content fields and both pin fields
- *   (`createConfigurationFromContent`, D12's create-from-a-flow path
+ *   (`createConfigurationFromContent`, the create-from-a-flow path
  *   generalized; no flow's slug), removes the staged edit and opens the
- *   editor on it. Nothing is sent before that click (decision 41);
+ *   editor on it. Nothing is sent before that click;
  * - **Discard** asks once, "Discard your playground configuration?", and
  *   removes it; Cancel there goes back. Closing the dialog otherwise
  *   (Escape, the close button) keeps it, asked again on the next visit;
  * - a refusal keeps the staged edit (but a 401 `unauthenticated`, which
- *   signs out and removes it) and says why: a pin the catalogue no
- *   longer offers moves to the distribution's default, which a sentence
- *   says (as a flow's copy does: `flowCopyPin`), before Save and after a
- *   400 `collector_version_unknown`; a 403 `terms_acceptance_required` (or
- *   a 404 `organization_not_found`) closes it and revalidates the layout,
+ *   signs out and removes it) and says why: a pin the catalog no longer
+ *   offers moves to the distribution's default, which a sentence says (as
+ *   a flow's copy does: `flowCopyPin`), before Save and after a 400
+ *   `collector_version_unknown`; a 403 `terms_acceptance_required` (or a
+ *   404 `organization_not_found`) closes it and revalidates the layout,
  *   and it opens again once the terms are accepted (or in the session's
  *   organization); anything else says the configurations' refusal words
  *   (`configurationRefusalMessage`).
- * The invariant (Ruling 296): a staged edit becomes AT MOST ONE
- * configuration, and only the snapshot's edit is ever removed. Save first
- * checks the staged edit is still the snapshot's (by `savedAt`): one saved,
- * discarded or replaced in another tab since closes the dialog and sends
- * nothing. A create that succeeds removes the edit at once, even when the
- * page has gone or switched organization meanwhile; while it is under way
- * an organization switch opens no second dialog. Save and Discard remove
- * the edit only while it is still the snapshot's.
- * `config_created` is captured as the create dialog does, with no
- * properties.
+ * The invariant: a staged edit becomes AT MOST ONE configuration, and only
+ * the snapshot's edit is ever removed. Save first checks the staged edit is
+ * still the snapshot's (by `savedAt`): one saved, discarded or replaced in
+ * another tab since closes the dialog and sends nothing. A create that
+ * succeeds removes the edit at once, even when the page has gone or
+ * switched organization meanwhile; while it is under way an organization
+ * switch opens no second dialog. Save and Discard remove the edit only
+ * while it is still the snapshot's. `config_created` is captured as the
+ * create dialog does, with no properties.
  *
- * The name and the text are configuration text (ADR 0024, decision 39):
- * the name field is inside `ph-no-capture`, its value only as the input's;
- * the text is never shown. Neither reaches an attribute, a toast, the
- * page's title or a URL: every word here is fixed, and the refusal's is the
- * API's fixed message.
+ * The name and the text are configuration text: the name field is inside
+ * `ph-no-capture`, its value only as the input's; the text is never shown.
+ * Neither reaches an attribute, a toast, the page's title or a URL: every
+ * word here is fixed, and the refusal's is the API's fixed message.
  */
 
 export const PLAYGROUND_SAVE_TITLE = "Save your playground configuration?";
@@ -101,7 +98,7 @@ export function playgroundPinMovedSentence(pin: FlowCopyPin): string | null {
   return `Your playground configuration was built for collector v${pin.movedFrom}, which is no longer offered; it will use v${pin.version}.`;
 }
 
-/** The distribution's default version (else its first), when the catalogue lists it and it differs from `version`; else null. */
+/** The distribution's default version (else its first), when the catalog lists it and it differs from `version`; else null. */
 function defaultInstead(
   distributions: readonly CollectorDistribution[] | null,
   distribution: string,
@@ -139,7 +136,7 @@ export function PlaygroundSaveDialog({ organizationId }: { organizationId: strin
   // closes (keeping it) while they aren't.
   useEffect(() => {
     // A create under way, sent before the organization changed, settles
-    // first: its success removes the edit, its failure looks again (Ruling 296).
+    // first: its success removes the edit, its failure looks again.
     if (organizationId === "" || termsRequired || savingRef.current) {
       setSnapshot(null);
       return;
@@ -176,7 +173,7 @@ export function PlaygroundSaveDialog({ organizationId }: { organizationId: strin
   const save = async () => {
     const trimmed = name.trim();
     if (savingRef.current || !trimmed) return;
-    // Ruling 296: a staged edit becomes at most one configuration. One saved,
+    // A staged edit becomes at most one configuration. One saved,
     // discarded or replaced in another tab since the opening sends nothing.
     if (!isStillStaged()) {
       setSnapshot(null);
@@ -218,8 +215,8 @@ export function PlaygroundSaveDialog({ organizationId }: { organizationId: strin
       return;
     }
     // Created: the edit is removed at once, even if the page has gone or moved
-    // to another organization meanwhile, so it is never offered again (Ruling
-    // 296). Only the snapshot's: one staged since in another tab stays.
+    // to another organization meanwhile, so it is never offered again. Only
+    // the snapshot's: one staged since in another tab stays.
     if (isStillStaged()) clearStagedEdit();
     // Still busy: the editor replaces this page, and with it the dialog.
     if (!isStillCurrent(sentIn)) {
@@ -232,7 +229,7 @@ export function PlaygroundSaveDialog({ organizationId }: { organizationId: strin
   };
 
   const discard = () => {
-    // Only the snapshot's edit: one staged since in another tab stays (Ruling 296).
+    // Only the snapshot's edit: one staged since in another tab stays.
     if (isStillStaged()) clearStagedEdit();
     setSnapshot(null);
   };

@@ -33,41 +33,39 @@ import type { PublicApiArea } from "../area.js";
 import { collectorVersionRetired, configurationInvalid } from "../shared-errors.js";
 
 /*
- * The public surface's configurations, their versions and publishing (D25
- * decision 17's routes 4–12; decisions 18, 19, 20 and 31; Preflight rulings
- * 6, 16 and 17), registered into the `/api/public/v1` plugin (routes.ts),
- * so each runs the token check, the per-token limit and its access check
- * before anything else. Each goes through the configurations' shared
- * services (decision 15) as the token's user in its organization
- * (`apiActorOf`), so it sees what that user may see: published
- * configurations and the user's own drafts, never another member's (D11b
- * decision 1). Versions are addressed by number (`versionIdOf`). Ids are
- * plain strings, put through `canonicalIdOf` by the service, so a malformed
- * one is the resource's 404; a version number that isn't a plain positive
- * integer is 400. Its OpenAPI fragment is `openapi/configurations.yaml`.
+ * The public surface's configurations, their versions and publishing,
+ * registered into the `/api/public/v1` plugin (routes.ts), so each runs the
+ * token check, the per-token limit and its access check before anything
+ * else. Each goes through the configurations' shared services as the
+ * token's user in its organization (`apiActorOf`), so it sees what that
+ * user may see: published configurations and the user's own drafts, never
+ * another member's. Versions are addressed by number (`versionIdOf`). Ids
+ * are plain strings, put through `canonicalIdOf` by the service, so a
+ * malformed one is the resource's 404; a version number that isn't a plain
+ * positive integer is 400. Its OpenAPI fragment is
+ * `openapi/configurations.yaml`.
  *
  * The YAML and a label go only into a reply's body, never a log line, an
- * error's message or an audit row (ADR 0024); a name and a description
- * likewise, but for the services' own audit rows, which record them by D7's
- * design (`configuration.created` the name, `configuration.updated` the
- * changed fields' `{ from, to }`). Every reply is `no-store`: it holds the
+ * error's message or an audit row; a name and a description likewise, but
+ * for the services' own audit rows, which record them by design
+ * (`configuration.created` the name, `configuration.updated` the changed
+ * fields' `{ from, to }`). Every reply is `no-store`: it holds the
  * organization's configuration text.
  */
 
 const NO_STORE = "no-store";
 
 /**
- * The configuration and version writes' body limit (Preflight ruling 17):
- * the gateway's on the same paths. 262,144 characters of YAML are at most
- * 1.5 MiB once JSON escapes them (D8 decision 7); the public surface carries
- * no graph.
+ * The configuration and version writes' body limit: the gateway's on the
+ * same paths. 262,144 characters of YAML are at most 1.5 MiB once JSON
+ * escapes them; the public surface carries no graph.
  */
 const CONTENT_BODY_LIMIT = 2 * 1024 * 1024;
 
 /** Any string: the service answers one that isn't a canonical UUID with 404 configuration_not_found. */
 const ConfigurationParamsSchema = z.object({ configurationId: z.string() });
 
-/** And a version's number, a plain positive integer, else 400 (Preflight ruling 16). */
+/** And a version's number, a plain positive integer, else 400. */
 const VersionParamsSchema = z.object({ configurationId: z.string(), versionNumber: PublicVersionNumberSchema });
 
 /** Every route's refusals: the token's 401, a personal token's organization (400, 403), the 404s and the per-token limit. */
@@ -101,7 +99,7 @@ const publishErrorResponses = { ...readErrorResponses, 409: ErrorResponseSchema,
 
 /**
  * A `cursor` the list couldn't have made: the public surface's one bad
- * cursor (D25 Ruling 187), the fleets lists' 400 with its details
+ * cursor, the fleets lists' 400 with its details
  * `[{ path: ["cursor"], message }]`. The browser's list keeps its own.
  */
 function assertListCursor(cursor: string | undefined): void {
@@ -154,10 +152,9 @@ export const registerConfigurationPublicRoutes: PublicApiArea = (api, { deps }) 
   const { service, publishing, validation } = deps.services.configurations;
   const typed = api.withTypeProvider<ZodTypeProvider>();
 
-  // Route 4: a page of what the token's user can see, most recently updated
-  // first (decision 19: the browser list's cursor), each with its latest
-  // version's number and pin and its highest published number, read by one
-  // statement (Preflight ruling 6).
+  // A page of what the token's user can see, most recently updated first (the
+  // browser list's cursor), each with its latest version's number and pin and
+  // its highest published number, read by one statement.
   typed.get(
     "/configurations",
     {
@@ -179,9 +176,9 @@ export const registerConfigurationPublicRoutes: PublicApiArea = (api, { deps }) 
     },
   );
 
-  // Route 6: the configuration and its version 1 in one transaction (the
-  // service's create), holding the text as given with an empty graph, at
-  // the distribution named or the catalogue's default (decision 31).
+  // The configuration and its version 1 in one transaction (the service's
+  // create), holding the text as given with an empty graph, at the
+  // distribution named or the catalog's default.
   typed.post(
     "/configurations",
     {
@@ -207,7 +204,7 @@ export const registerConfigurationPublicRoutes: PublicApiArea = (api, { deps }) 
     },
   );
 
-  // Route 5: one configuration, with its latest version's text.
+  // One configuration, with its latest version's text.
   typed.get(
     "/configurations/:configurationId",
     {
@@ -225,7 +222,7 @@ export const registerConfigurationPublicRoutes: PublicApiArea = (api, { deps }) 
     },
   );
 
-  // Route 7: the name, the description (null clears it), both or neither.
+  // The name, the description (null clears it), both or neither.
   typed.patch(
     "/configurations/:configurationId",
     {
@@ -249,7 +246,7 @@ export const registerConfigurationPublicRoutes: PublicApiArea = (api, { deps }) 
     },
   );
 
-  // Route 8: every version, highest first; small and bounded, so one page (decision 19).
+  // Every version, highest first; small and bounded, so one page.
   typed.get(
     "/configurations/:configurationId/versions",
     {
@@ -266,8 +263,8 @@ export const registerConfigurationPublicRoutes: PublicApiArea = (api, { deps }) 
     },
   );
 
-  // Route 9: the next version, from the latest (its pin, suites and
-  // validation pipelines), holding the text as given (decision 31).
+  // The next version, from the latest (its pin, suites and validation
+  // pipelines), holding the text as given.
   typed.post(
     "/configurations/:configurationId/versions",
     {
@@ -290,7 +287,7 @@ export const registerConfigurationPublicRoutes: PublicApiArea = (api, { deps }) 
     },
   );
 
-  // Route 10: one version by its number, with its text.
+  // One version by its number, with its text.
   typed.get(
     "/configurations/:configurationId/versions/:versionNumber",
     {
@@ -310,15 +307,15 @@ export const registerConfigurationPublicRoutes: PublicApiArea = (api, { deps }) 
     },
   );
 
-  // Route 11: a draft's text and pin merged over it, the stored graph kept
-  // (decision 31), in one transaction under the configuration's lock
-  // (`patchVersion`), so no check-then-update race can arise.
+  // A draft's text and pin merged over it, the stored graph kept, in one
+  // transaction under the configuration's lock (`patchVersion`), so no
+  // check-then-update race can arise.
   // With `?validate=true` the merged text is validated first through the
   // validation service and its limit (`validateVersion`, as the editor's
   // check): invalid is 422 `configuration_invalid`, a retired pin 400
   // `collector_version_retired`, and nothing is saved; a save landing
   // between the validation and the write is 409
-  // `configuration_version_changed` (Ruling 165).
+  // `configuration_version_changed`.
   typed.patch(
     "/configurations/:configurationId/versions/:versionNumber",
     {
@@ -337,8 +334,8 @@ export const registerConfigurationPublicRoutes: PublicApiArea = (api, { deps }) 
       const { configurationId, versionNumber } = request.params;
       const { yaml, collectorVersion } = request.body;
       const versionId = await service.versionIdOf(actor, organizationId, configurationId, versionNumber);
-      // The save the validation read (Ruling 165): the PATCH writes only over
-      // it, so the text validated is the text saved.
+      // The save the validation read: the PATCH writes only over it, so the
+      // text validated is the text saved.
       let validatedAt: Date | undefined;
       if (request.query.validate) {
         const { version } = await service.getVersion(actor, organizationId, configurationId, versionId);
@@ -363,12 +360,12 @@ export const registerConfigurationPublicRoutes: PublicApiArea = (api, { deps }) 
     },
   );
 
-  // Route 12: D11b's publish, with no `expectedUpdatedAt` (the caller has no
-  // tab: what is saved is published). It reads first: a published version
-  // answers 200 with the configuration unchanged, its published time never
-  // restamped; a concurrent publish's 409 is caught and the configuration
-  // re-read. An empty text keeps 409 `configuration_version_empty`. The
-  // answer is the configuration.
+  // The publishing service's publish, with no `expectedUpdatedAt` (the caller
+  // has no tab: what is saved is published). It reads first: a published
+  // version answers 200 with the configuration unchanged, its published time
+  // never restamped; a concurrent publish's 409 is caught and the
+  // configuration re-read. An empty text keeps 409
+  // `configuration_version_empty`. The answer is the configuration.
   typed.post(
     "/configurations/:configurationId/versions/:versionNumber/publish",
     {

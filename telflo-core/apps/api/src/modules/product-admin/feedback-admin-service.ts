@@ -9,18 +9,17 @@ import { feedbackAuthorDeleted, feedbackNotFound, productAdminRequired } from ".
 import type { FeedbackHandling, ISystemRepository, ProductAdminActor } from "./repositories/system-repository.js";
 
 /*
- * User Feedback for product admins (D29 decisions 6, 33, 34 and 37), on
- * the SystemRepository (every read and write audited there, but the count:
- * decision 20's named exception).
+ * User Feedback for product admins, on the SystemRepository (every read and
+ * write audited there but the pending count, a number with no personal
+ * data).
  *
  * - The list: the pending items, newest first, 25 a page, by an opaque
  *   cursor (a bad one 400 `invalid_request`).
  * - Acknowledge marks the item handled, then, after the response, emails
- *   the reply to the sender (mark, then email). The
- *   reply is never stored, logged or audited; a failed send is logged with
- *   the item's id and fixed words only, never the error (an SMTP or
- *   SendGrid error can quote the recipient: Preflight ruling 11), and the
- *   item stays handled.
+ *   the reply to the sender (mark, then email). The reply is never stored,
+ *   logged or audited; a failed send is logged with the item's id and
+ *   fixed words only, never the error (an SMTP or SendGrid error can quote
+ *   the recipient), and the item stays handled.
  * - Dismiss marks it handled; no email.
  * - Either: a path id that isn't a canonical UUID, or an item missing or
  *   handled already, is 404 `feedback_not_found`; a caller who lost the
@@ -70,7 +69,7 @@ export function createFeedbackAdminService(deps: FeedbackAdminServiceDependencie
   return {
     async list(actor, cursor) {
       const after = cursor === undefined ? undefined : decodeCursor(cursor);
-      // The repository reads one more than a page (whether another follows) and audits the rows returned (Ruling 264).
+      // The repository reads one more than a page (whether another follows) and audits the rows returned.
       const { rows: page, hasMore } = await system.listFeedback(actor, { after, pageSize: USER_FEEDBACK_PAGE_SIZE });
       const last = page.at(-1);
       return {

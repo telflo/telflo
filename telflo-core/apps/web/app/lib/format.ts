@@ -26,7 +26,7 @@ export function formatDateTime(iso: string | null): string {
 /**
  * As formatDateTime, to the second ("Oct 9, 2026, 7:58:30 AM"): for a name
  * that must tell apart two times in one minute (an install link's, by its
- * creation: D17c-2 Ruling 39). "—" for none, or for one that isn't a time.
+ * creation). "—" for none, or for one that isn't a time.
  */
 export function formatDateTimeToTheSecond(iso: string | null): string {
   if (!iso) return "—";
@@ -51,16 +51,15 @@ const DAY_S = 24 * HOUR_S;
 
 /**
  * How long ago an ISO timestamp was, by the largest unit that fits ("5
- * seconds ago", "3 minutes ago", "2 days ago"): the fleet list's Last Seen
- * (D17a decision 22, Preflight ruling 12). `Intl.RelativeTimeFormat`, en-US,
- * `numeric: "always"`, which reads the same in Chromium, Firefox and WebKit
- * (no date-fns, decision 5). Each unit is floored: seconds under a minute,
- * minutes under an hour, hours under a day, days under 30, months (30 days
- * each, at most 11) under 365 days, then years of 365 days. A time after
- * `now` (a clock running behind the server's) is "0 seconds ago". The
- * elapsed count is passed negated, so 0 is `-0`, which reads "0 seconds
- * ago" (a plain 0 would read "in 0 seconds"). "—" for none, or for a string
- * that isn't a time.
+ * seconds ago", "3 minutes ago", "2 days ago"): the fleet list's Last Seen.
+ * `Intl.RelativeTimeFormat`, en-US, `numeric: "always"`, which reads the same
+ * in Chromium, Firefox and WebKit (no date-fns). Each unit is floored:
+ * seconds under a minute, minutes under an hour, hours under a day, days
+ * under 30, months (30 days each, at most 11) under 365 days, then years of
+ * 365 days. A time after `now` (a clock running behind the server's) is "0
+ * seconds ago". The elapsed count is passed negated, so 0 is `-0`, which
+ * reads "0 seconds ago" (a plain 0 would read "in 0 seconds"). "—" for none,
+ * or for a string that isn't a time.
  */
 export function formatRelativeTime(iso: string | null, now: number): string {
   if (!iso) return "—";
@@ -77,14 +76,14 @@ export function formatRelativeTime(iso: string | null, now: number): string {
 }
 
 /**
- * How long until an ISO timestamp, by the largest unit that fits ("in 5
- * days", "in 3 hours"): the Tokens tab's rotate-before-expiry banner (D17b-2
- * decision 28; Preflight ruling 13), where `formatRelativeTime` would clamp
- * a future time to "0 seconds ago". Its twin for the future: the same
- * `Intl.RelativeTimeFormat` (en-US, `numeric: "always"`), the same units,
- * each floored (5 days and 23 hours is "in 5 days"). A time at or before
- * `now` (a clock running ahead of the server's) is "in 0 seconds". "—" for
- * none, or for a string that isn't a time.
+ * How long until an ISO timestamp, by the largest unit that fits ("in 5 days",
+ * "in 3 hours"): the Tokens tab's rotate-before-expiry banner, where
+ * `formatRelativeTime` would clamp a future time to "0 seconds ago". Its twin
+ * for the future: the same `Intl.RelativeTimeFormat` (en-US,
+ * `numeric: "always"`), the same units, each floored (5 days and 23 hours is
+ * "in 5 days"). A time at or before `now` (a clock running ahead of the
+ * server's) is "in 0 seconds". "—" for none, or for a string that isn't a
+ * time.
  */
 export function formatRelativeFuture(iso: string | null, now: number): string {
   if (!iso) return "—";

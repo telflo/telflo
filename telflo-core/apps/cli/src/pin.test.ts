@@ -62,7 +62,7 @@ describe("describePin", () => {
     expect(describePin({ distribution: "otelcol-contrib", collectorVersion: "0.120.0" })).toBe("otelcol-contrib 0.120.0");
   });
 
-  it("strips control characters from the server's strings (Ruling 242)", () => {
+  it("strips control characters from the server's strings", () => {
     expect(describePin({ distribution: "otel\u001b]0;x\u0007col", collectorVersion: "0.1\u001b[2J20.0" })).toBe("otel]0;xcol 0.1[2J20.0");
   });
 });

@@ -229,7 +229,7 @@ telflo test --spec test.yaml --config <id>                  # a stored version (
 ```
 
 The run uses a real collector in Telflo's sandbox. Assert classes of
-behaviour, not the sample's literals. When the rules pass, `--save` puts
+behavior, not the sample's literals. When the rules pass, `--save` puts
 them in the version's Validation tab (`telflo test --spec test.yaml --config
 <id> --save`); rules people wrote there are kept. `--saved` runs what is
 saved.

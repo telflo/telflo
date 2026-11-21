@@ -1,14 +1,14 @@
 /*
- * Where a request goes, as the public surface's guards read it (D25
- * Ruling 173): ONE normalizer for the request log (request-log.ts) and the
- * request-time verification (modules/public-api/route-guard.ts), so the
- * two can never disagree about whether a request is under
- * `/api/public/v1`. Spellings keep coming (dot segments, encoded and
- * doubly encoded letters, `;`-parameters, characters that change length in
- * lower case, absolute-form request lines), so the class is ruled by an
- * allowlist: a request this puts under the prefix is logged by its matched
- * route's pattern only (or a fixed `[unmatched]`), and is answered only by
- * a verified route or the public plugin's own 404.
+ * Where a request goes, as the public surface's guards read it: ONE
+ * normalizer for the request log (request-log.ts) and the request-time
+ * verification (modules/public-api/route-guard.ts), so the two can never
+ * disagree about whether a request is under `/api/public/v1`. Spellings
+ * keep coming (dot segments, encoded and doubly encoded letters,
+ * `;`-parameters, characters that change length in lower case,
+ * absolute-form request lines), so the class is ruled by an allowlist: a
+ * request this puts under the prefix is logged by its matched route's
+ * pattern only (or a fixed `[unmatched]`), and is answered only by a
+ * verified route or the public plugin's own 404.
  */
 
 /** The prefix, with a segment boundary, case aside. Tested on a normalized path only, never sliced. */

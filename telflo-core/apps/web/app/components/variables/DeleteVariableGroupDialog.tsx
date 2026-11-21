@@ -31,15 +31,14 @@ import { VariableGroupInUseList } from "./InUseLists.js";
 import { handleSharedWriteFailure } from "./write-failures.js";
 
 /*
- * A variable group's delete (D20 decision 6; Q102; ADR 0018): a
- * confirmation with a fixed title ("Delete variable group", never the name)
- * and the opamp-server's guard: while a collector group or a collector uses
- * it, 409 `variable_group_in_use` lists the collector groups, at most 100,
- * then "… and N more collector groups", and the collectors it is pinned on;
- * nothing is deleted or unbound (a Parity Note). The group's name is shown
- * inside `ph-no-capture`. "Variable group deleted" toasts a success; a group
- * already gone counts as deleted; an unknown outcome as `write-failures.ts`
- * says.
+ * A variable group's delete: a confirmation with a fixed title ("Delete
+ * variable group", never the name) and the opamp-server's guard: while a
+ * collector group or a collector uses it, 409 `variable_group_in_use` lists
+ * the collector groups, at most 100, then "… and N more collector groups",
+ * and the collectors it is pinned on; nothing is deleted or unbound. The
+ * group's name is shown inside `ph-no-capture`. "Variable group deleted"
+ * toasts a success; a group already gone counts as deleted; an unknown
+ * outcome as `write-failures.ts` says.
  */
 
 export interface DeleteVariableGroupDialogProps {
@@ -79,7 +78,7 @@ function DeleteVariableGroupSession({
     if (!deletingRef.current) onOpenChange(false);
   };
 
-  // Deleted (or found gone): the fleet screens' shared names forget it (D20 final review side 2, Minor 1).
+  // Deleted (or found gone): the fleet screens' shared names forget it.
   const gone = () => {
     if (variableGroup !== null) noteVariableGroupName(organizationId, variableGroup.id, null);
     onChanged();

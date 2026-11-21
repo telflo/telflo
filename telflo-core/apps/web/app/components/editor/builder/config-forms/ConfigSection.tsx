@@ -4,9 +4,8 @@ import { useEffect, useState, type ReactNode } from "react";
 import { cn } from "~/lib/utils.js";
 
 /*
- * A form's collapsible section (ADR 0018; D9a Preflight ruling 19). D9a's
- * Configuration tab uses it for the collapsed "Advanced" section; D9b's
- * forms use the rest.
+ * A form's collapsible section. The Configuration tab uses it for the
+ * collapsed "Advanced" section; the component forms use the rest.
  */
 
 interface ConfigSectionProps {

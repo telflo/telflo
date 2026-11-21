@@ -1,5 +1,5 @@
 // truncate keeps a snippet within 200 bytes, its "…" included, on a rune
-// boundary (D15a plan Preflight ruling 5).
+// boundary.
 
 package ottlassert
 

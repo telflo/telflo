@@ -23,19 +23,17 @@ import type { PublicApiArea } from "../area.js";
 import { hasPipelineKey } from "../yaml-pipelines.js";
 
 /*
- * The public surface's validation pipelines of a configuration's version
- * (D25 decision 17's routes 13 and 14; decisions 18, 19, 20 and 32;
- * Preflight ruling 8), registered into the `/api/public/v1` plugin
- * (routes.ts), so each runs the token check, the per-token limit and its
- * access check first. Both go through the shared validation pipelines
- * service (decision 15) as the token's user in its organization
- * (`apiActorOf`): a version's pipelines follow its configuration's
- * visibility (D15a decision 12), so another member's draft's, another
+ * The public surface's validation pipelines of a configuration's version,
+ * registered into the `/api/public/v1` plugin (routes.ts), so each runs the
+ * token check, the per-token limit and its access check first. Both go
+ * through the shared validation pipelines service as the token's user in
+ * its organization (`apiActorOf`): a version's pipelines follow its
+ * configuration's visibility, so another member's draft's, another
  * organization's and a malformed id's are the configurations' 404s. The
  * version is named by its number (`versionIdOf`). Its OpenAPI fragment is
  * `openapi/validation-pipelines.yaml`.
  *
- * Route 14's pipeline is a collector pipeline's name, which holds `/`
+ * The PUT's pipeline is a collector pipeline's name, which holds `/`
  * (`traces/otlp`): the route is a wildcard after `/validation-pipelines/`,
  * its value Fastify's one decoding of the path (`%2F` is `/`; `%252F` stays
  * `%2F`), never decoded again here. Its checks, in order: 1 to 200
@@ -48,7 +46,7 @@ import { hasPipelineKey } from "../yaml-pipelines.js";
  *
  * A pipeline's name, a rule's text and the evaluator's words go only into a
  * reply's body (`no-store`), never a log line, an error's message or an
- * audit row (ADR 0024; decision 20).
+ * audit row.
  */
 
 const NO_STORE = "no-store";
@@ -131,8 +129,8 @@ export const registerValidationPipelinePublicRoutes: PublicApiArea = (api, { dep
   const { service } = deps.services.validationPipelines;
   const typed = api.withTypeProvider<ZodTypeProvider>();
 
-  // Route 13: every validation pipeline the caller can see on the version,
-  // oldest first, each with its rules in position order; one page (decision 19).
+  // Every validation pipeline the caller can see on the version, oldest
+  // first, each with its rules in position order; one page.
   typed.get(
     "/configurations/:configurationId/versions/:versionNumber/validation-pipelines",
     {
@@ -154,11 +152,10 @@ export const registerValidationPipelinePublicRoutes: PublicApiArea = (api, { dep
     },
   );
 
-  // Route 14: the rules the public API owns on the version's pipeline for
-  // the name in the path, replaced; a person's kept (decision 32). Allowed
-  // on a published version, as the Validation tab's saves are. The global
-  // 1 MiB body limit (Preflight ruling 17's "everything else"): 20 rules at
-  // their maxima are about 500 KB of UTF-8 as sent. JSON's escapes grow
+  // The rules the public API owns on the version's pipeline for the name
+  // in the path, replaced; a person's kept. Allowed on a published version,
+  // as the Validation tab's saves are. The global 1 MiB body limit: 20 rules
+  // at their maxima are about 500 KB of UTF-8 as sent. JSON's escapes grow
   // them: a text or regex rule whose pattern, name and description are all
   // astral characters escaped as `\uXXXX\uXXXX` (Python's json default) is
   // about 50 KB, so 20 come to about 0.95 MiB; a distinct rule's two texts

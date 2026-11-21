@@ -1,15 +1,15 @@
 """Run INSIDE the running tester's container (scripts/check-container.sh pipes
-it to `python -`): checks that the container is locked down as D14a's spec
-decision 5 and Preflight ruling 4 say, from where a run's collector sits.
+it to `python -`): checks that the container is locked down, from where a
+run's collector sits.
 
 - It runs as uid 10001, not root.
 - No Linux capabilities (compose's `cap_drop: [ALL]`: the bounding set is
   empty, not only the effective one) and no privilege gained through exec
   (`no-new-privileges`), for this process, PID 1 (tini) and the service's
-  process alike (D14a Ruling 30).
+  process alike.
 - The root filesystem is read-only (mounted `ro`; writing to /, /app and
   /opt fails with EROFS), while /tmp and the home directory are writable
-  tmpfs mounted `noexec` (Ruling 33), and the collectors and kwok under /opt
+  tmpfs mounted `noexec`, and the collectors and kwok under /opt
   are root's and unwritable.
 - No route out: external names don't resolve, and external addresses don't
   answer (each connection attempt fails or times out).
@@ -70,7 +70,7 @@ def write_allowed(directory: str) -> tuple[bool, str]:
 def mount_fields(mountpoint: str) -> list[str]:
     """The mount at ``mountpoint`` that is in effect: the LAST matching line
     of /proc/self/mounts (a later mount over the same point hides the
-    earlier ones; Ruling 34's nit)."""
+    earlier ones)."""
     found: list[str] = []
     for line in Path("/proc/self/mounts").read_text().splitlines():
         fields = line.split()
@@ -92,7 +92,7 @@ def mount_type(mountpoint: str) -> str:
 # --- the user -----------------------------------------------------------------
 check("runs as uid 10001", os.getuid() == 10001 and os.geteuid() == 10001, f"uid {os.getuid()}")
 
-# --- capabilities and no-new-privileges (Ruling 30) ----------------------------
+# --- capabilities and no-new-privileges ----------------------------
 CAPABILITY_SETS = ("CapInh", "CapPrm", "CapEff", "CapBnd", "CapAmb")
 
 
@@ -129,7 +129,7 @@ for directory in ("/tmp", home):
     allowed, why = write_allowed(directory)
     options = mount_options(directory)
     check(f"{directory} is a writable tmpfs", allowed and bool(options), why or "not a mount point")
-    # Ruling 33: nothing a run writes there can be executed.
+    # Nothing a run writes there can be executed.
     check(
         f"{directory} is a tmpfs mounted noexec",
         mount_type(directory) == "tmpfs" and "noexec" in options,

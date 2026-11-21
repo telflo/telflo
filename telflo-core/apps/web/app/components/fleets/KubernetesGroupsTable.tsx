@@ -14,44 +14,40 @@ import { INSTALL_NEEDS_VERSION, installDisabledReason, isUnassigned, PublishedVe
 import { VariableGroupLink } from "./VariableGroupLink.js";
 
 /*
- * A Kubernetes fleet's groups (D17d-1 decisions 6 and 24; Preflight rulings
- * 23, 24, 34 and 35) as plain table markup with the fleet screens' classes
- * (D17b-2's `GroupsTable`). Per the D17d-1 Parity Notes:
+ * A Kubernetes fleet's groups as plain table markup with the fleet screens'
+ * classes (`GroupsTable`'s). Its details:
  *
  * - The rows (`kubernetesGroupRows`): the Agent (the fleet's Default group),
  *   the Cluster (its group, or none before its first Assign), then the
  *   gateway pools in the API's order. A row's role is the contracts'
  *   `collectorGroupRole` (never the stored `kubernetes.role`), so settings
  *   Telflo can't read never hide one.
- * - Columns: **Group**, one column (Ruling 66, the owner's Q49: separate Role
- *   and Group columns read as a group within a group): the role's badge and
- *   its help popover (its trigger's label fixed words "What is an Agent?",
- *   "What is a Cluster?", "What is a Gateway?", since `HelpPopover` puts it
- *   in an `aria-label` and a `title`; the Cluster's text says the chart's
+ * - Columns: **Group**, one column (separate Role and Group columns would
+ *   read as a group within a group): the role's badge and its help popover
+ *   (its trigger's label fixed words "What is an Agent?", "What is a
+ *   Cluster?", "What is a Gateway?", since `HelpPopover` puts it in an
+ *   `aria-label` and a `title`; the Cluster's text says the chart's
  *   StatefulSet), then a gateway's name (the Agent and the Cluster their
- *   badge alone), **Namespace**, **Published version** (D17b-2's cell;
+ *   badge alone), **Namespace**, **Published version** (`GroupsTable`'s cell;
  *   "Nothing assigned" for the Cluster before its group exists), **Variable
- *   group** (D20 default 25: the group's variable group, else "Organization
- *   values", opening each variable's value: `VariableGroupLink`), **Volumes**
- *   (a count), **Replicas** (a gateway's, "—" otherwise), **More** (the row's
- *   details), and the row's actions: **Assign** (nothing assigned, or no
- *   group yet) or **Edit**, and **Delete** on a gateway only (decision 6: the
- *   Agent and the Cluster are never deleted). Settings none saved, or Telflo
- *   can't read, show "—".
- * - D17d-2 (decision 23; Preflight rulings 26 and 28): a row's **Install**
- *   (an active fleet's: `onInstall`), before Assign or Edit as a server
- *   fleet's (`RowInstallButton`), opening the Helm install dialog for the
- *   row's group, named "Install {name}"; disabled with its reason
- *   (`kubernetesInstallDisabledReason`): nothing assigned or the Cluster
- *   before its group exists ("Assign a published version first."), a
+ *   group** (the group's variable group, else "Organization values", opening
+ *   each variable's value: `VariableGroupLink`), **Volumes** (a count),
+ *   **Replicas** (a gateway's, "—" otherwise), **More** (the row's details),
+ *   and the row's actions: **Assign** (nothing assigned, or no group yet) or
+ *   **Edit**, and **Delete** on a gateway only (the Agent and the Cluster are
+ *   never deleted). Settings none saved, or Telflo can't read, show "—".
+ * - A row's **Install** (an active fleet's: `onInstall`), before Assign or
+ *   Edit as a server fleet's (`RowInstallButton`), opening the Helm install
+ *   dialog for the row's group, named "Install {name}"; disabled with its
+ *   reason (`kubernetesInstallDisabledReason`): nothing assigned or the
+ *   Cluster before its group exists ("Assign a published version first."), a
  *   deleted configuration's version, settings Telflo can't read (a gateway
- *   whose name isn't one among them, as the facts' 409 says: Ruling 44).
+ *   whose name isn't one among them, as the facts' 409 says).
  * - "More about {name}", `Assign {name}`, `Edit {name}` and `Delete {name}`
  *   (the name Agent, Cluster or the gateway's) through `aria-labelledby`
- *   pointing at hidden text (D17a's `FleetRowActions` pattern): the ids hold
- *   the table's `useId` and the group's id or the Cluster's role, never a
- *   name. A gateway's name and a namespace are text in the masked shell only
- *   (D17d-1's paragraph of ADR 0024).
+ *   pointing at hidden text (`FleetRowActions`'s pattern): the ids hold the
+ *   table's `useId` and the group's id or the Cluster's role, never a name.
+ *   A gateway's name and a namespace are text in the masked shell only.
  */
 
 export const KUBERNETES_ROLE_HELP: Record<KubernetesRole, string> = {
@@ -79,15 +75,14 @@ const DASH = <span className="text-muted-foreground">—</span>;
 export type KubernetesRowAction = "more" | "edit" | "delete";
 
 /**
- * Why a row's group has no Helm install, or null when it has one (D17d-2
- * decision 23; Preflight rulings 3 and 26): the Cluster before its group
- * exists and a group with nothing assigned need a published version, a
- * deleted configuration's version another one (the server group's words),
- * and settings the platform can't read (unreadable, a stored role that
- * isn't the row's, a Cluster or a gateway without any, a gateway whose name
- * fails `gatewayNameProblem`: written around the platform) the facts' 409
- * words (`helmFactsOf`'s). The Helm dialog's Group select and the row's
- * Install.
+ * Why a row's group has no Helm install, or null when it has one: the
+ * Cluster before its group exists and a group with nothing assigned need a
+ * published version, a deleted configuration's version another one (the
+ * server group's words), and settings the platform can't read (unreadable,
+ * a stored role that isn't the row's, a Cluster or a gateway without any, a
+ * gateway whose name fails `gatewayNameProblem`: written around the
+ * platform) the facts' 409 words (`helmFactsOf`'s). The Helm dialog's Group
+ * select and the row's Install.
  */
 export function kubernetesInstallDisabledReason(row: KubernetesGroupRow): string | null {
   if (row.group === null) return INSTALL_NEEDS_VERSION;

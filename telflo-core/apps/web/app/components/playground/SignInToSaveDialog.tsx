@@ -22,13 +22,12 @@ export const SIGN_IN_TO_SAVE_TEXT =
 export const SIGN_IN_TO_SAVE_LOGIN_PATH = "/login?redirectTo=%2Fapp";
 
 /*
- * The sign-in-to-save dialog (D31-1 decision 4, Ruling 278): the
- * playground's Save, for a visitor who isn't signed in. The edit is already
- * staged (`useStagePlaygroundSave`); Sign in goes to `/login` with
- * `/app` as where to go after (the handoff dialog opens there), Create
- * free account to `/register`, Cancel closes it. While registration isn't
- * open (D36-1 decision 23, Ruling 352) there is no account to create: the
- * one way on is "Sign in to save", the same sign-in. Fixed words only.
+ * The sign-in-to-save dialog: the playground's Save, for a visitor who
+ * isn't signed in. The edit is already staged (`useStagePlaygroundSave`);
+ * Sign in goes to `/login` with `/app` as where to go after (the handoff
+ * dialog opens there), Create free account to `/register`, Cancel closes
+ * it. While registration isn't open there is no account to create: the one
+ * way on is "Sign in to save", the same sign-in. Fixed words only.
  */
 export function SignInToSaveDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const signUp = useSignUpPath();

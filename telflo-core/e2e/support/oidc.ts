@@ -1,9 +1,10 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { E2E_OIDC_ISSUER } from "./environment.js";
 
-// Driving the fake OpenID Provider's sign-in form (start-fake-oidc-provider.ts),
-// which stands behind the Google button in the browser tests. Each test types
-// its own email, so parallel tests never share an identity (D2c Ruling 4).
+// Driving the fake OpenID Provider's sign-in form
+// (start-fake-oidc-provider.ts), which stands behind the Google button in the
+// browser tests. Each test types its own email, so parallel tests never share
+// an identity.
 
 export interface ProviderIdentity {
   email: string;
@@ -25,13 +26,13 @@ export async function clickGoogle(page: Page): Promise<void> {
 }
 
 /**
- * Starts linking Google from Settings › Account (D21 decision 38): "Link
- * Google", the password prompt when the account has a password (its
- * current password, then "Continue"), and the fake provider's form, where
- * the browser lands from the link start's authorization URL. The test then
- * signs in at the provider (`signInAtProvider`) and comes back to
- * `/settings/account`. `beforeContinue` runs once the password is typed,
- * before "Continue" (a check of the typed field).
+ * Starts linking Google from Settings › Account: "Link Google", the
+ * password prompt when the account has a password (its current password,
+ * then "Continue"), and the fake provider's form, where the browser lands
+ * from the link start's authorization URL. The test then signs in at the
+ * provider (`signInAtProvider`) and comes back to `/settings/account`.
+ * `beforeContinue` runs once the password is typed, before "Continue" (a
+ * check of the typed field).
  */
 export async function startLinkingGoogle(
   page: Page,

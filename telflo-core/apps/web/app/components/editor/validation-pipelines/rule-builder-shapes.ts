@@ -3,30 +3,25 @@ import type { OttlContext, OttlQuantifier, TestRunSignal, ValidationRuleCount, V
 /*
  * The canonical OTTL shapes the rule editor's builder modes (Record count,
  * Record attribute) save, and their recognition when a rule is edited, so a
- * builder's rule reopens in its builder (D15a decision 18), byte for byte.
+ * builder's rule reopens in its builder, byte for byte.
  *
  * These exact strings are load-bearing two ways here: the ottl-evaluator runs
  * them, and recognizeBuilderShapes parses them back into the builder's
- * fields. Change them only in lockstep. (No migration converts the retired
- * record_count and record_attribute rows: the retired kinds are gone,
- * decision 12.)
+ * fields. Change them only in lockstep.
  *
- * Differences (the Parity Notes): the types are the platform's contracts'
- * (`ValidationRuleOttl`, `ValidationRuleCount`); the builder's scope and
- * operator are this file's own, not a retired `record_attribute` rule
- * type's;
- * the editor recognizes a rule through recognizeBuilderRule, which also
- * checks its context (new, D15a Ruling 45).
+ * The types are the platform's contracts' (`ValidationRuleOttl`,
+ * `ValidationRuleCount`); the builder's scope and operator are this file's
+ * own; the editor recognizes a rule through recognizeBuilderRule, which also
+ * checks its context.
  *
- * D15b (plan Preflight rulings 10 and 11; a Parity Note each): the string
- * escaping is ottlStringLiteral's. Escaping only `\` and `"` would put a
- * control character into the literal raw, and writing numbers with `String`
- * would give `NaN`, `1e+21`, a double 5.0 as `5`; Compare's prefill writes
- * its values with this file's number writers. An unescape turning every
+ * The string escaping is ottlStringLiteral's. Escaping only `\` and `"` would
+ * put a control character into the literal raw, and writing numbers with
+ * `String` would give `NaN`, `1e+21`, a double 5.0 as `5`; Compare's prefill
+ * writes its values with this file's number writers. An unescape turning every
  * `\x` into `x` would reopen a builder's `attributes["a\nb"]` with the key
  * `anb`, and a plain Save would rewrite the condition: unescapeOttlString
- * decodes exactly the escapes the writer writes, and recognition answers
- * null (OTTL mode, the rule as written) on any other.
+ * decodes exactly the escapes the writer writes, and recognition answers null
+ * (OTTL mode, the rule as written) on any other.
  */
 
 /** Where the attribute builder looks: the resource's, the scope's, or each record's attributes. */
@@ -36,12 +31,12 @@ export type AttributeScope = "resource" | "scope" | "record";
 export type AttributeOperator = "exists" | "equals" | "contains" | "matches_regex" | "gt" | "gte" | "lt" | "lte";
 
 /*
- * What an OTTL string literal escapes (Preflight ruling 10): `\`, `"`, and
- * every character that is invisible or breaks a line: the C0 controls, DEL,
- * the C1 controls (U+0080-U+009F), and U+2028 and U+2029. OTTL unquotes as
- * Go does (strconv.UnquoteChar), so `\n`, `\r`, `\t` and `\uXXXX` all read
- * back as the character. Backspace is `\u0008`, never `\b`: the evaluator
- * refuses a single-escaped `\b` in OTTL (pkg/ottlassert/escapes.go).
+ * What an OTTL string literal escapes: `\`, `"`, and every character that
+ * is invisible or breaks a line: the C0 controls, DEL, the C1 controls
+ * (U+0080-U+009F), and U+2028 and U+2029. OTTL unquotes as Go does
+ * (strconv.UnquoteChar), so `\n`, `\r`, `\t` and `\uXXXX` all read back as
+ * the character. Backspace is `\u0008`, never `\b`: the evaluator refuses a
+ * single-escaped `\b` in OTTL (pkg/ottlassert/escapes.go).
  */
 function ottlEscaped(code: number): boolean {
   return code < 0x20 || (code >= 0x7f && code <= 0x9f) || code === 0x2028 || code === 0x2029 || code === 0x5c || code === 0x22;
@@ -91,8 +86,8 @@ export function escapeOttlString(value: string): string {
 }
 
 /**
- * `value` as an OTTL string literal, quoted and escaped (Preflight ruling
- * 10); null when it isn't well-formed UTF-16, which no literal can carry.
+ * `value` as an OTTL string literal, quoted and escaped; null when it isn't
+ * well-formed UTF-16, which no literal can carry.
  */
 export function ottlStringLiteral(value: string): string | null {
   return isWellFormedText(value) ? `"${escapeOttlString(value)}"` : null;
@@ -103,10 +98,10 @@ const OTTL_UNESCAPED: Readonly<Record<string, string>> = { "\\": "\\", '"': '"',
 
 /**
  * The inside of an OTTL string literal decoded: exactly `\\`, `\"`, `\n`,
- * `\r`, `\t` and `\uXXXX` (Preflight ruling 11). Null on any other escape
- * (`\b`, `\x41`, an octal, …), which OTTL would read but the builder can't
- * write back as it was, and on a decoding that isn't well-formed UTF-16:
- * recognition then answers null, and the rule opens in OTTL mode as written.
+ * `\r`, `\t` and `\uXXXX`. Null on any other escape (`\b`, `\x41`, an octal,
+ * …), which OTTL would read but the builder can't write back as it was, and
+ * on a decoding that isn't well-formed UTF-16: recognition then answers
+ * null, and the rule opens in OTTL mode as written.
  */
 export function unescapeOttlString(value: string): string | null {
   let decoded = "";
@@ -137,10 +132,9 @@ export function escapeRegexChars(value: string): string {
 const OTTL_INT_MAX = 9223372036854775807n;
 
 /**
- * An integer as an OTTL literal: its digits, exactly (the owner, Preflight
- * ruling 10), for anything from -9223372036854775807 to
- * 9223372036854775807; null otherwise (-9223372036854775808 included, which
- * OTTL can't parse).
+ * An integer as an OTTL literal: its digits, exactly, for anything from
+ * -9223372036854775807 to 9223372036854775807; null otherwise
+ * (-9223372036854775808 included, which OTTL can't parse).
  */
 export function ottlIntegerLiteral(value: bigint): string | null {
   return value >= -OTTL_INT_MAX && value <= OTTL_INT_MAX ? value.toString() : null;
@@ -148,11 +142,10 @@ export function ottlIntegerLiteral(value: bigint): string | null {
 
 /**
  * A double as an OTTL literal, always with its decimal point so OTTL reads a
- * float (Preflight ruling 10): an integral value below 1e21 gets `.0` (`5.0`;
- * -0 is `0.0`), any other is `String(v)` with an exponent expanded to plain
- * decimals (OTTL's lexer reads neither `5e0` nor `1e21`), the shortest digits
- * that read back as `value`. Null for NaN and ±Infinity, which OTTL has no
- * literal for.
+ * float: an integral value below 1e21 gets `.0` (`5.0`; -0 is `0.0`), any
+ * other is `String(v)` with an exponent expanded to plain decimals (OTTL's
+ * lexer reads neither `5e0` nor `1e21`), the shortest digits that read back
+ * as `value`. Null for NaN and ±Infinity, which OTTL has no literal for.
  */
 export function ottlDoubleLiteral(value: number): string | null {
   if (!Number.isFinite(value)) return null;
@@ -234,7 +227,7 @@ function scopeFromContext(context: OttlContext): AttributeScope {
  * unrecognized (composed conditions, row-filtered distinct, ne-count record
  * totals) opens in OTTL mode — the builder is one-way sugar beyond its own
  * grammar. So does a key or value holding an escape the builder doesn't
- * write (unescapeOttlString's null, D15b Preflight ruling 11).
+ * write (unescapeOttlString's null).
  */
 export function recognizeBuilderShapes(o: ValidationRuleOttl): RecognizedBuilder | null {
   const condition = (o.condition ?? "").trim();
@@ -334,11 +327,11 @@ function builderContext(recognized: RecognizedBuilder, signal: TestRunSignal): O
 /**
  * recognizeBuilderShapes for a rule of a `signal` pipeline: a builder's shape
  * only when that builder would save the rule on its stored context, so a
- * rule's context never changes silently (D15a Ruling 45). Otherwise null, and
- * the rule opens in OTTL mode, its context kept: a traces `spanevent` rule,
- * a metrics `metric` one, a count of `resource`s. New (a Parity Note): the
- * builder's Save would rewrite the context (spanevent to span, metric to
- * datapoint, resource to the record context).
+ * rule's context never changes silently. Otherwise null, and the rule opens
+ * in OTTL mode, its context kept: a traces `spanevent` rule, a metrics
+ * `metric` one, a count of `resource`s. Otherwise the builder's Save would
+ * rewrite the context (spanevent to span, metric to datapoint, resource to
+ * the record context).
  */
 export function recognizeBuilderRule(o: ValidationRuleOttl, signal: TestRunSignal): RecognizedBuilder | null {
   const recognized = recognizeBuilderShapes(o);

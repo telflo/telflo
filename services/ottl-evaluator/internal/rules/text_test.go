@@ -1,7 +1,6 @@
-// New in D15a Task 2: text rules' whitespace tolerance (spec decision 8;
-// plan Preflight ruling 6), each failure detail's shape, the snippets' caps
-// and a match's record (Preflight ruling 5). D15a Task 3's follow-up (the
-// controller's Ruling 34) adds TestRecordMismatchListsTheMissesItCounts.
+// Text rules' whitespace tolerance, each failure detail's shape, the
+// snippets' caps, a match's record, and the misses a mismatch's record
+// lists (TestRecordMismatchListsTheMissesItCounts).
 
 package rules
 
@@ -85,9 +84,9 @@ func TestMatchesAreLeftmostAndNonOverlapping(t *testing.T) {
 	}
 }
 
-// New in D15a's final fix wave (Ruling 55): a not-contains regex whose only
-// matches are empty fails with no detail to show, so its advisory says why,
-// counting them and never quoting what it searched.
+// A not-contains regex whose only matches are empty fails with no detail to
+// show, so its advisory says why, counting them and never quoting what it
+// searched.
 func TestOnlyEmptyMatchesFailWithAnAdvisory(t *testing.T) {
 	const secret = "token=hunter2"
 	cases := []struct {

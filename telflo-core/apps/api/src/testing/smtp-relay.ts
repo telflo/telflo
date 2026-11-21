@@ -6,12 +6,11 @@ import { join } from "node:path";
 import tls from "node:tls";
 
 /**
- * An in-process SMTP relay for the mail tests (D36-1 decision 40, Preflight
- * ruling 29): node:net and node:tls only, no SMTP package. It offers
- * STARTTLS (`starttls`), opens TLS from the start (`implicit`), or never
- * offers STARTTLS (`plain`, the relay a `starttls` client must refuse). With
- * a login, AUTH PLAIN and LOGIN are offered and accepted only after TLS, and
- * MAIL before a login answers 530.
+ * An in-process SMTP relay for the mail tests: node:net and node:tls only, no
+ * SMTP package. It offers STARTTLS (`starttls`), opens TLS from the start
+ * (`implicit`), or never offers STARTTLS (`plain`, the relay a `starttls`
+ * client must refuse). With a login, AUTH PLAIN and LOGIN are offered and
+ * accepted only after TLS, and MAIL before a login answers 530.
  *
  * It records what it received with booleans and the envelope, never the
  * login's values.

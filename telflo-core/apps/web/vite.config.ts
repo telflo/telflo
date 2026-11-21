@@ -21,7 +21,7 @@ export default defineConfig({
   // The scanner doesn't follow `new Worker(new URL(…))`, so Monaco's worker
   // files are entries of their own: without them, the first editor opened
   // finds monaco-editor's and monaco-yaml's worker modules, re-optimizes and
-  // reloads every page (D8 Preflight ruling 2).
+  // reloads every page.
   optimizeDeps: {
     entries: ["app/root.tsx", "app/routes/**/*.tsx", "app/lib/editor/*.worker.ts", "!app/**/*.test.tsx"],
   },
@@ -36,7 +36,7 @@ export default defineConfig({
     strictPort: true,
     // The browser calls the API same-origin (see app/lib/api-client.ts), so
     // in development this server forwards /api to the API process, exactly
-    // as the gateway does in the container stack (ADR 0017).
+    // as the gateway does in the container stack.
     proxy: { "/api": `http://localhost:${process.env.TELFLO_API_PORT ?? "8080"}` },
   },
 });

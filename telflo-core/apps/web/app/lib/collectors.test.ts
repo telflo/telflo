@@ -166,7 +166,7 @@ async function loaded(page: CollectorsPage = collectorsPage(manyCollectors(50), 
   return { ...hook, served };
 }
 
-describe("useCollectorsPage (D17b-1 decisions 2, 21 and 29, Preflight ruling 9)", () => {
+describe("useCollectorsPage", () => {
   it("reads page 1 of the active organization's fleet and its groups under one hang guard: 50, newest first, nothing asked", async () => {
     const served = serve();
     const { result } = render();
@@ -374,7 +374,7 @@ describe("useCollectorsPage (D17b-1 decisions 2, 21 and 29, Preflight ruling 9)"
     expect(result.current).toMatchObject({ collectors: manyCollectors(49, 52), hasNext: false, pageIndex: 1, groups: renamedGroups });
   });
 
-  // The review of 32f39ff: the tab's focus return tells rows from a read begun after a write by the read's number.
+  // The tab's focus return tells rows from a read begun after a write by the read's number.
   it("numbers its rows by the read they came from, a person's or a poll's, and gives the latest read begun", async () => {
     const { result, served } = await loaded();
     const first = result.current.rowsRead;
@@ -487,7 +487,7 @@ describe("useCollectorsPage (D17b-1 decisions 2, 21 and 29, Preflight ruling 9)"
     expect(result.current.collectors).toEqual(manyCollectors(1, 400));
   });
 
-  // Task 3 review: another fleet (the route's fleetId changed) is a start over, as an organization switch is.
+  // Another fleet (the route's fleetId changed) is a start over, as an organization switch is.
   it("drops the old fleet's read on a switch to another fleet, never renders its rows, and starts at page 1 with no groups", async () => {
     const OTHER_FLEET_ID = "c0d1e2f3-a4b5-4c6d-8e7f-a0b1c2d3e4f5";
     const served = serve();
@@ -804,7 +804,7 @@ describe("useCollectorsPage (D17b-1 decisions 2, 21 and 29, Preflight ruling 9)"
       expect(result.current).toMatchObject({ pageIndex: 0, collectors: manyCollectors(4) });
     });
 
-    // Task 3 review: the step-back's own read is superseded like any other.
+    // The step-back's own read is superseded like any other.
     it("drops a poll's step-back read superseded by a person's read: its late answer changes nothing", async () => {
       const { result, served } = await onThirdPage();
       await advance(FLEETS_POLL_INTERVAL_MS);
@@ -824,7 +824,7 @@ describe("useCollectorsPage (D17b-1 decisions 2, 21 and 29, Preflight ruling 9)"
       expect(result.current.query.q).toBe("web");
     });
 
-    // Task 3 review: the stack is cut back to the page stepped back to, so Next reads that page's fresh cursor.
+    // The stack is cut back to the page stepped back to, so Next reads that page's fresh cursor.
     it("reads the stepped-back page's own next cursor on Next", async () => {
       const { result, served } = await onThirdPage();
       await advance(FLEETS_POLL_INTERVAL_MS);
@@ -980,7 +980,7 @@ describe("useCollectorsPage (D17b-1 decisions 2, 21 and 29, Preflight ruling 9)"
     expect(served.pages).toHaveLength(1);
   });
 
-  // Task 3 review, Nit: the terms branch of the start leaves no person's read under way.
+  // The terms branch of the start leaves no person's read under way.
   it("has no person's read under way once the terms need accepting, even with one begun before", async () => {
     const served = serve();
     const { result, rerender } = render();

@@ -2,10 +2,9 @@ import { EventEmitter } from "node:events";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { installShutdownHandlers, SHUTDOWN_GRACE_MS } from "./shutdown.js";
 
-// The API's shutdown (D14a Preflight ruling 7): SIGTERM and SIGINT close the
-// server and exit, with a hard exit after about 8 s, inside compose's 10 s.
-// A process stand-in carries the signals; fake timers stand in for the
-// grace period.
+// The API's shutdown: SIGTERM and SIGINT close the server and exit, with a
+// hard exit after about 8 s, inside compose's 10 s. A process stand-in
+// carries the signals; fake timers stand in for the grace period.
 
 function harness(close: () => Promise<void>) {
   const signals = new EventEmitter();
@@ -64,7 +63,7 @@ describe("the API's shutdown", () => {
     expect(exits).toEqual([1]);
   });
 
-  it("SIGTERM twice: the second finds the handler (no default kill) and changes nothing (Ruling 41)", async () => {
+  it("SIGTERM twice: the second finds the handler (no default kill) and changes nothing", async () => {
     let closes = 0;
     let finish = (): void => undefined;
     const { signals, exits } = harness(() => {

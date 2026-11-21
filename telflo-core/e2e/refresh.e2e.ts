@@ -3,10 +3,10 @@ import { REFRESH_COOKIE_NAME } from "../apps/api/src/modules/sessions/cookies.js
 import { findSessions, revokeSessions, seedUser, type SeededUser } from "./support/database.js";
 import { expireAccessToken, signInThroughApi, waitForHydration } from "./support/session.js";
 
-// Refresh on page load and navigation (D2b decision 4): a server loader
-// can't refresh, so the layout renders a placeholder and its client loader
-// refreshes through the browser client, on hydration and on every client-side
-// navigation. One refresh per expiry, in every tab.
+// Refresh on page load and navigation: a server loader can't refresh, so the
+// layout renders a placeholder and its client loader refreshes through the
+// browser client, on hydration and on every client-side navigation. One
+// refresh per expiry, in every tab.
 
 const PASSWORD = "correct horse battery staple";
 const REFRESH_PATH = "/api/v1/auth/refresh";
@@ -47,8 +47,8 @@ async function expectSignedIn(page: Page, user: SeededUser): Promise<void> {
 async function openSignedIn(page: Page, user: SeededUser): Promise<void> {
   // /app lists the organization's configurations after it loads. Wait for that
   // request too: a test that then revokes the session would otherwise race it,
-  // and its 401 sends the page to /login under the test's own reload (PR #13's
-  // CI: "page.reload: net::ERR_ABORTED").
+  // and its 401 sends the page to /login under the test's own reload
+  // ("page.reload: net::ERR_ABORTED").
   // In development React's StrictMode runs the list's effect twice, so /app
   // sends that read twice at once: wait for every one, not only the first.
   const reads: Request[] = [];
@@ -104,13 +104,13 @@ test("a client-side navigation after the access token expires refreshes once and
 
   await expireAccessToken(context);
   const refreshes = countRefreshes(page);
-  // Its response, not only its request: the /me read below needs the
-  // rotated cookies the response sets (D14b Ruling 48; waiting for the
-  // request let that read race the refresh and meet a 401).
+  // Its response, not only its request: the /me read below needs the rotated
+  // cookies the response sets (waiting for the request let that read race the
+  // refresh and meet a 401).
   const refreshed = page.waitForResponse((response) => isRefresh(response.request()));
   // A link to the page already open. The layout revalidates on every
-  // navigation (its shouldRevalidate, Ruling 10; a same-URL link would
-  // anyway, Preflight ruling 3), so its client loader runs.
+  // navigation (its shouldRevalidate; a same-URL link would anyway), so its
+  // client loader runs.
   await page.getByRole("link", { name: "Configurations" }).click();
   const refresh = await refreshed;
   expect(refresh.status()).toBe(200);

@@ -16,10 +16,9 @@ import { useEditorStore } from "~/lib/stores/editor-store.js";
 import { builderStore, componentNamed, openText } from "~/test/builder-store.js";
 
 /*
- * The shared sections (D9b Task 4): what each toggle writes (its change,
- * as one undo entry; decision 4), what they show (decision 3), the
- * TLS variants (Preflight ruling 4), the headers' rename (decision 4), and
- * privacy (decision 10).
+ * The shared sections: what each toggle writes (its change, as one undo
+ * entry), what they show, the TLS variants, the headers' rename, and
+ * privacy.
  */
 
 const TEXT = `receivers:
@@ -126,7 +125,7 @@ async function toggleWrites(name: string, expected: string, change: ValueChange)
   expect(text()).toBe(before);
 }
 
-describe("each toggle writes its change, as one entry (decision 4)", () => {
+describe("each toggle writes its change, as one entry", () => {
   it("TLS on writes min 1.2 and max 1.3 as the block; off removes the block", async () => {
     renderIn("receivers.otlp", <TLSConfigSection path={["protocols", "grpc", "tls"]} protocolLabel="gRPC" variant="server" />);
     expect(box("Enable TLS for gRPC")).not.toBeChecked();
@@ -167,7 +166,7 @@ describe("each toggle writes its change, as one entry (decision 4)", () => {
     );
   });
 
-  it("CORS Max Age unset shows the collector's default, 0: no header sent (v0.162.0; Ruling 75)", () => {
+  it("CORS Max Age unset shows the collector's default, 0: no header sent (v0.162.0)", () => {
     const withoutMaxAge = TEXT.replace("          max_age: 600\n", "");
     renderIn("receivers.otlp", <CORSConfigSection path={["protocols", "http", "cors"]} />, withoutMaxAge);
     expect(field("Max Age")).toHaveValue("");
@@ -236,7 +235,7 @@ describe("each toggle writes its change, as one entry (decision 4)", () => {
   });
 });
 
-describe("what the sections show (decisions 3 and 4)", () => {
+describe("what the sections show", () => {
   it("Retry shows on for a block without enabled, its unset fields as placeholders and hints", () => {
     renderIn("exporters.otlp", <RetryConfigSection path={["retry_on_failure"]} />);
     expect(box("Enable Retry on Failure")).toBeChecked();
@@ -325,7 +324,7 @@ describe("what the sections show (decisions 3 and 4)", () => {
   });
 });
 
-describe("the TLS variants (Preflight ruling 4)", () => {
+describe("the TLS variants", () => {
   it("the client variant says Customize, with its hint, and has no Client CA fields", async () => {
     const user = userEvent.setup();
     renderIn("exporters.otlp/tls", <TLSConfigSection path={["tls"]} protocolLabel="OTLP gRPC" variant="client" />);
@@ -378,7 +377,7 @@ describe("the TLS variants (Preflight ruling 4)", () => {
   });
 });
 
-describe("headers (decision 4)", () => {
+describe("headers", () => {
   it("a rename keeps focus while typing, commits once on Enter, and keeps the header's place and comment", async () => {
     const user = userEvent.setup();
     const calls = spyWrites();
@@ -439,7 +438,7 @@ describe("headers (decision 4)", () => {
     expect(screen.queryByText(HEADER_EXISTS_MESSAGE)).toBeNull();
   });
 
-  it("two refused renames show a message under each row; each follows its row and clears with its own typing (D9c final review M3)", async () => {
+  it("two refused renames show a message under each row; each follows its row and clears with its own typing", async () => {
     const user = userEvent.setup();
     const calls = spyWrites();
     renderIn("exporters.otlp", <HeadersConfigSection path={["headers"]} />);
@@ -473,7 +472,7 @@ describe("headers (decision 4)", () => {
     expect(messageUnder(first)).not.toBeNull();
   });
 
-  it("a refused row's message goes when its name changes from outside, and shows again when undo brings the name back (D9b's rule)", async () => {
+  it("a refused row's message goes when its name changes from outside, and shows again when undo brings the name back", async () => {
     const user = userEvent.setup();
     renderIn("exporters.otlp", <HeadersConfigSection path={["headers"]} />);
     /** Each row's name, with "!" when the message is under it. */
@@ -493,13 +492,13 @@ describe("headers (decision 4)", () => {
     act(() => void builderStore().apply());
     expect(rows()).toBe("X-Zed,X-Second,X-Third!");
 
-    // Undo brings X-First back: the row has the name it was refused on again, so its message shows, as D9b's.
+    // Undo brings X-First back: the row has the name it was refused on again, so its message shows.
     act(() => void builderStore().undo());
     expect(text()).toBe(TEXT);
     expect(rows()).toBe("X-First!,X-Second,X-Third!");
   });
 
-  it("a renamed name is trimmed, and a clash is checked once trimmed (Ruling 76)", async () => {
+  it("a renamed name is trimmed, and a clash is checked once trimmed", async () => {
     const user = userEvent.setup();
     const calls = spyWrites();
     renderIn("exporters.otlp", <HeadersConfigSection path={["headers"]} />);
@@ -644,7 +643,7 @@ describe("a disabled form", () => {
   });
 });
 
-describe("privacy (decision 10)", () => {
+describe("privacy", () => {
   it("no attribute in the sections holds a value, and none sits inside a <form>", async () => {
     const user = userEvent.setup();
     const MARK = "MARKER";

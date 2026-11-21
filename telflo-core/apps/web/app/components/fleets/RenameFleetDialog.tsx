@@ -22,16 +22,15 @@ import { FLEET_WRITE_TIMEOUT_MS, fleetFieldProblemsOf, fleetRefusalMessage, isFl
 import { useOpeningKey } from "~/lib/hooks/use-opening-key.js";
 
 /*
- * "Rename fleet" (D17a decisions 3, 25 and 28; Preflight rulings 14 and 15).
- * The dialog is the create dialogs' (their Name field, its helper and
- * `DialogErrorAlert`), with D7's `DeleteConfigurationDialog` pattern for a
- * write under way:
+ * "Rename fleet". The dialog is the create dialogs' (their Name field, its
+ * helper and `DialogErrorAlert`), with `DeleteConfigurationDialog`'s pattern
+ * for a write under way:
  *
  * - The Name opens holding the fleet's label. It is trimmed before it is
- *   sent (decision 12); a trimmed Name equal to the label closes the dialog
- *   with no request, until an answer leaves a rename unknown (a 503, a 5xx,
- *   no connection, the hang guard): the fleet may then have the other name,
- *   so the label is sent again (a rename is idempotent), and closing the
+ *   sent; a trimmed Name equal to the label closes the dialog with no
+ *   request, until an answer leaves a rename unknown (a 503, a 5xx, no
+ *   connection, the hang guard): the fleet may then have the other name, so
+ *   the label is sent again (a rename is idempotent), and closing the
  *   dialog (Cancel, Escape, an outside click, the X) reloads (`onRenamed`),
  *   as the create's, archive's and delete's do after one. One the contract
  *   still refuses (`FleetLabelSchema`) shows its words under the field,
@@ -55,9 +54,8 @@ import { useOpeningKey } from "~/lib/hooks/use-opening-key.js";
  *
  * The label is text, and the Name input's value: React writes a controlled
  * input's `value` attribute, so while the dialog is open that attribute
- * holds the label (Preflight ruling 15's one exception; replay's
- * `maskAllInputs` masks it). No other attribute, and no toast but the API's
- * own message, holds it.
+ * holds the label (the one exception; replay's `maskAllInputs` masks it).
+ * No other attribute, and no toast but the API's own message, holds it.
  */
 
 export const RENAME_FAILED_MESSAGE = "Failed to rename fleet";
@@ -73,7 +71,7 @@ export interface RenameFleetDialogProps {
   organizationId: string;
   /** After a rename, a 404 for the fleet, or closing after an unknown outcome: the list reloads, or the page reads the fleet again. */
   onRenamed: () => void;
-  /** Where the focus goes once the dialog has closed (Radix's `onCloseAutoFocus`): the page gives it back to the opener (D14b Ruling 46). */
+  /** Where the focus goes once the dialog has closed (Radix's `onCloseAutoFocus`): the page gives it back to the opener. */
   onCloseAutoFocus?: ((event: Event) => void) | undefined;
 }
 

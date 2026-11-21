@@ -2,11 +2,11 @@ import type { FlowLintCode, FlowLintFinding, FlowLintResponse, FlowLintSeverity 
 import { isScalar, parseDocument, visit } from "yaml";
 
 /*
- * The flows' security lint (D12 decision 6, Preflight ruling 3): 11 rules
- * and 3 malformed-input codes, each with a fixed code, severity, message,
- * path (a secret's and a TLS setting's start with `.`) and destination
- * string. Advisory: the admin dialog's "Run security check" lists the
- * findings, and nothing is gated on them.
+ * The flows' security lint: 11 rules and 3 malformed-input codes, each
+ * with a fixed code, severity, message, path (a secret's and a TLS
+ * setting's start with `.`) and destination string. Advisory: the admin
+ * dialog's "Run security check" lists the findings, and nothing is gated
+ * on them.
  *
  * What the lint can and cannot do: it
  * catches the accidental case (a real endpoint left in, an API key in a
@@ -15,7 +15,7 @@ import { isScalar, parseDocument, visit } from "yaml";
  * load-balancing resolver, and no static check enumerates those. The
  * destinations make the data path visible.
  *
- * The text is read as the collector reads it (Ruling 3): the `yaml` package's
+ * The text is read as the collector reads it: the `yaml` package's
  * YAML 1.2 core schema with the platform's options, not PyYAML's 1.1. The
  * accepted differences from a YAML 1.1 reading, each tested: `yes` and `on` are
  * strings, not booleans; `0o755` and `1e3` are numbers; `2024-01-01`,
@@ -39,8 +39,8 @@ import { isScalar, parseDocument, visit } from "yaml";
  * counts any Unicode letter or number as a word character.
  *
  * The findings' messages and paths and the destinations are configuration
- * text (ADR 0024): they quote keys, values and the parser's messages, so
- * neither they nor the text ever reach a log line.
+ * text: they quote keys, values and the parser's messages, so neither they nor
+ * the text ever reach a log line.
  */
 
 // ---------------------------------------------------------------------------
@@ -174,8 +174,8 @@ const ENV_REF_RE = pythonRegExp(String.raw`\$\{env:(?P<name>[A-Za-z_][A-Za-z0-9_
  * Telflo-scoped tokens: they resolve against the publishing organization, so
  * a flow carrying one is broken for every other organization that imports
  * it. The `${org:NAME}` form shares confmap's `$$` parity (checked through
- * liveProviderSchemes). The legacy `$orgvar:NAME` form is plain text since
- * D20 (decision 16): nothing fills it in, so it is no token.
+ * liveProviderSchemes). The legacy `$orgvar:NAME` form is plain text:
+ * nothing fills it in, so it is no token.
  */
 const ORG_TOKEN_RE = pythonRegExp(String.raw`\$\{org:[A-Za-z_][A-Za-z0-9_]*\}`, { global: true });
 
@@ -327,7 +327,7 @@ function literalDefaults(value: string): string[] {
 // ---------------------------------------------------------------------------
 
 /**
- * Ruling 3's reading, the platform's (apps/web/app/lib/graph/parse.ts's
+ * The collector's reading, the platform's (apps/web/app/lib/graph/parse.ts's
  * PARSE_OPTIONS without `keepSourceTokens`, which only the graph needs): the
  * API can't import the web, so this is its own copy. `logLevel: "error"`
  * keeps the parser from passing a warning, which can quote the text, to
@@ -365,7 +365,7 @@ const codePointName = (character: string) => `#x${(character.codePointAt(0) as n
 
 /**
  * A key the core schema reads as null, a boolean or a number, kept as
- * written for a path (Ruling 3: `~:` is `~`, not Python's `None`). Each is
+ * written for a path (`~:` is `~`, not Python's `None`). Each is
  * its own object, so `1:` and `'1':` stay two keys.
  */
 class KeyAsWritten {
@@ -586,7 +586,7 @@ function checkSecrets(section: unknown, sectionName: string, add: Add): void {
       (key.toLowerCase() === "key" && SECRET_PARENTS.has(parent));
     if (!looksSecret) return;
 
-    // Fully parameterised, the `Bearer ${env:TOKEN}` form included.
+    // Fully parameterized, the `Bearer ${env:TOKEN}` form included.
     const residue = credentialResidue(value);
     if (!residue) return;
 

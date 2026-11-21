@@ -22,24 +22,23 @@ import {
 } from "./support/service-accounts.js";
 import { signInThroughApi, switchOrganizationThroughApi, waitForHydration } from "./support/session.js";
 
-// Settings › Service Accounts and the public surface's /whoami (D22 decision
-// 53; Preflight rulings 22, 27 and 32), in the browser, against the E2E API.
-// Each test works in an organization of its own (a new user's, or a new
-// group's), so tests and browsers run in parallel.
+// Settings › Service Accounts and the public surface's /whoami, in the
+// browser, against the E2E API. Each test works in an organization of its own
+// (a new user's, or a new group's), so tests and browsers run in parallel.
 //
-// A `tf_` token is a secret (decision 48). Every token here is built by the
-// API at run time and read from the create's reply (`page.waitForResponse`,
-// or `page.request`'s for a token the test isn't about), never written in
-// this file. No assertion prints one: a token is never given to `hasText`
-// or `getByText` (Playwright prints them), and anything that could hold a
+// A `tf_` token is a secret. Every token here is built by the API at run
+// time and read from the create's reply (`page.waitForResponse`, or
+// `page.request`'s for a token the test isn't about), never written in this
+// file. No assertion prints one: a token is never given to `hasText` or
+// `getByText` (Playwright prints them), and anything that could hold a
 // token or its prefix (a reply's body, the page, URLs, toasts, storage) is
-// checked with booleans before it is compared (Ruling 99). A failed run's
-// trace holds the reply, and so an e2e-only token: the recorded residue.
+// checked with booleans before it is compared. A failed run's trace holds
+// the reply, and so an e2e-only token: the recorded residue.
 //
 // A service account's name and address, and a token's name, are
-// organization content (decision 49): visible text inside the masked shell
-// only, never in an attribute, a URL, a toast, the page's title or browser
-// storage. The tests use canary names and look for them there.
+// organization content: visible text inside the masked shell only, never
+// in an attribute, a URL, a toast, the page's title or browser storage.
+// The tests use canary names and look for them there.
 
 const PASSWORD = "correct horse battery staple";
 const ACCOUNT_PATH = "/api/v1/organizations/[^/]+/service-accounts";
@@ -94,7 +93,7 @@ function revealDialog(page: Page): Locator {
   return page.getByRole("dialog", { name: "Copy your token" });
 }
 
-/** A token's prefix: its first 11 characters (decision 7). */
+/** A token's prefix: its first 11 characters. */
 function prefixOf(token: string): string {
   return token.slice(0, 11);
 }
@@ -123,7 +122,7 @@ async function createTokenOnPage(
   expect(API_TOKEN_PATTERN.test(token), "the reply carries a tf_ token").toBe(true);
   await expect(dialog).toBeHidden();
   await expect(revealDialog(page)).toBeVisible();
-  // Its words by an element of their own: a matcher on the dialog would print its text, the token's too (Ruling 102).
+  // Its words by an element of their own: a matcher on the dialog would print its text, the token's too.
   await expect(revealDialog(page).getByText(REVEAL_WORDS, { exact: true })).toBeVisible();
   return token;
 }
@@ -142,7 +141,7 @@ async function expectTokenGone(page: Page, token: string): Promise<void> {
 /**
  * Copies the token with the reveal's button: the button says "Copied" in
  * every browser; in Chromium the clipboard, granted, is read back and
- * compared as a boolean (Preflight ruling 27).
+ * compared as a boolean.
  */
 async function copyToken(page: Page, browserName: string, token: string): Promise<void> {
   if (browserName === "chromium") await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
@@ -157,7 +156,7 @@ async function copyToken(page: Page, browserName: string, token: string): Promis
   await expect(page.getByText("Failed to copy to clipboard")).toHaveCount(0);
 }
 
-/** An answer's text holds neither the token nor its prefix: checked before anything compares the answer (Ruling 99). */
+/** An answer's text holds neither the token nor its prefix: checked before anything compares the answer. */
 function expectNoTokenIn(answer: WhoAmIAnswer, tokens: string[]): void {
   for (const token of tokens) {
     expect(answer.text.includes(token.slice(3)), "the answer holds a token").toBe(false);
@@ -173,7 +172,7 @@ function expectWhoAmI(answer: WhoAmIAnswer, token: string, expected: { organizat
   expect(answer.body).toEqual({ ...expected, kind: "service_account" });
 }
 
-/** `/whoami` refused `token` with the one 401 (decision 34). */
+/** `/whoami` refused `token` with the one 401. */
 function expectRefused(answer: WhoAmIAnswer, token: string): void {
   expectNoTokenIn(answer, [token]);
   expect(answer.status).toBe(401);
@@ -282,7 +281,7 @@ test("the round trip: create an account, rename it, a write token shown once and
   await expect(renameDialog).toBeHidden();
   await expect(page.getByText("Service account renamed", { exact: true })).toBeVisible();
   await expect(page.getByText(renamed, { exact: true })).toBeVisible();
-  // The address is kept (decision 29).
+  // The address is kept.
   await expect(page.getByText(address, { exact: true })).toBeVisible();
 
   // A write token with an expiry: shown once, inside ph-no-capture, copied.
@@ -299,7 +298,7 @@ test("the round trip: create an account, rename it, a write token shown once and
   const firstRowText = (await firstRow.textContent()) ?? "";
   expect(firstRowText.includes(`${prefixOf(first)}…`), "the row shows the token's prefix").toBe(true);
   expect(firstRowText.includes(first.slice(11)), "the row holds more than the prefix").toBe(false);
-  // The row holds the prefix: its cells are matched by their own words, which prints none of it (Ruling 102).
+  // The row holds the prefix: its cells are matched by their own words, which prints none of it.
   await expect(firstRow.locator("td").nth(2).getByText("Read & Write", { exact: true })).toBeVisible();
   await expect(firstRow.locator("td").nth(3).getByText(/^[A-Z][a-z]{2} \d{1,2}, \d{4}$/)).toBeVisible();
   await expect(firstRow.getByText("Expired")).toHaveCount(0);
@@ -365,11 +364,11 @@ test("the reveal closed by Escape, an outside click or its X: the token leaves t
   await open(page, `/settings/service-accounts/${account.id}`);
   await expect(page.getByText("No tokens yet.")).toBeVisible();
 
-  // The guard (Ruling 104): from the create's click until the test closes
-  // the reveal, any read of the token list fails the test, not a count taken
-  // at one moment. It is recorded as a soft failure as it is routed (the
-  // request still goes on, so the page behaves as it would), and the list of
-  // such reads, fixed words only, is checked once the reveal has closed.
+  // The guard: from the create's click until the test closes the reveal, any
+  // read of the token list fails the test, not a count taken at one moment.
+  // It is recorded as a soft failure as it is routed (the request still goes
+  // on, so the page behaves as it would), and the list of such reads, fixed
+  // words only, is checked once the reveal has closed.
   let guarding: string | null = null;
   const readsWhileOpen: string[] = [];
   await page.route(
@@ -423,7 +422,7 @@ test("a token expired in the database shows Expired and answers 401", async ({ p
   await open(page, `/settings/service-accounts/${account.id}`);
   const row = tokenRow(page, name);
   await expect(row.getByText("Expired", { exact: true })).toBeVisible();
-  // Expired but not revoked: still listed and counted (decision 26).
+  // Expired but not revoked: still listed and counted.
   await expect(page.locator("dd").filter({ hasText: /^1$/ })).toHaveCount(1);
   expectRefused(await whoami(playwright, token), token);
   await expectTokenGone(page, token);
@@ -442,7 +441,7 @@ test("typing the name deletes the account: its token answers 401, and its config
     access: "write",
     expiresInDays: null,
   });
-  // Published: an admin sees no other member's draft (D11b decision 1).
+  // Published: an admin sees no other member's draft.
   const configurationName = `Made by the account ${unique()}`;
   await seedConfiguration({ organizationId: admin.organizationId, createdByUserId: account.id, name: configurationName, published: true });
 

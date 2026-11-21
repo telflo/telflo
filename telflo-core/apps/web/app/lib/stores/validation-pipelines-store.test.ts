@@ -13,26 +13,24 @@ import {
 } from "./validation-pipelines-store.js";
 
 /*
- * The Validation subtab's store (D15a Preflight ruling 26). The first six
- * are the slice's basics, on the platform's API (the rule's place is the
- * API's; a validation pipeline is created by its YAML pipeline's name
- * alone); the rest: answers for another
- * version, another organization or after signing out dropped, a read never overwriting a write,
- * failures' words, and a delete of one already gone; Ruling 57's: a rule's
- * change or delete held until it answers, and a 404 that isn't the
- * validation pipeline's or rule's dropping nothing; Ruling 59's: a rule
- * write answered after the version was left and come back to showing (the
- * review's probe), a rule's delete answered "validation pipeline not found"
- * dropping the pipeline, and a refused change releasing its rule; Ruling
- * 61's: such a late answer read again rather than placed, a teammate's later
- * change kept (probe F), a create and a delete converging, the hold
- * released as the read again answers or fails, and nothing read for a
- * pipeline no longer listed (probe G).
+ * The Validation subtab's store. The first six are the slice's basics, on the
+ * platform's API (the rule's place is the API's; a validation pipeline is
+ * created by its YAML pipeline's name alone); the rest: answers for another
+ * version, another organization or after signing out dropped, a read never
+ * overwriting a write, failures' words, and a delete of one already gone; then
+ * a rule's change or delete held until it answers, and a 404 that isn't the
+ * validation pipeline's or rule's dropping nothing; a rule write answered
+ * after the version was left and come back to showing, a rule's delete
+ * answered "validation pipeline not found" dropping the pipeline, and a
+ * refused change releasing its rule; and such a late answer read again rather
+ * than placed, a teammate's later change kept, a create and a delete
+ * converging, the hold released as the read again answers or fails, and
+ * nothing read for a pipeline no longer listed.
  */
 
 const TARGET = { organizationId: GROUP_ID, configurationId: MINE.id, versionId: VERSION_ID };
 const OTHER = { ...TARGET, versionId: "0199c000-0000-7000-8000-000000000002" };
-/** The same configuration and version ids under another organization: another target (Ruling 45). */
+/** The same configuration and version ids under another organization: another target. */
 const OTHER_ORGANIZATION = { ...TARGET, organizationId: "00000000-0000-4000-8000-0000000000aa" };
 const VP = validationPipelineFixture();
 const RULE = validationRuleFixture({ position: 3 });
@@ -187,7 +185,7 @@ describe("the pipelines' reads", () => {
     expect(store().pipelines).toEqual([VP]);
   });
 
-  it("drop answers for an organization left since, its configuration and version ids alike (Ruling 45)", async () => {
+  it("drop answers for an organization left since, its configuration and version ids alike", async () => {
     vi.spyOn(apiClient, "getValidationPipelines")
       .mockResolvedValueOnce({ validationPipelines: [VP] })
       .mockResolvedValueOnce({ validationPipelines: [] });
@@ -313,7 +311,7 @@ describe("a pipeline's rules", () => {
     expect(store().pipelines).toEqual([]);
   });
 
-  it("drop a rule a teammate deleted when its change is answered 404, and its pipeline when the pipeline is gone; the refusal still answered (Ruling 56)", async () => {
+  it("drop a rule a teammate deleted when its change is answered 404, and its pipeline when the pipeline is gone; the refusal still answered", async () => {
     const second = validationRuleFixture({ id: "0199f400-0000-7000-8000-000000000002", position: 4 });
     const other = validationPipelineFixture({ id: "0199f300-0000-7000-8000-000000000002", pipeline: "traces", signal: "traces" });
     vi.spyOn(apiClient, "getValidationPipelines").mockResolvedValue({ validationPipelines: [VP, other] });
@@ -340,7 +338,7 @@ describe("a pipeline's rules", () => {
     expect(store().rulesByPipeline[VP.id]).toBeUndefined();
   });
 
-  it("drop a pipeline a teammate deleted when a rule's create is answered 404; a pipeline's create answered 404 reads the list again (Ruling 56)", async () => {
+  it("drop a pipeline a teammate deleted when a rule's create is answered 404; a pipeline's create answered 404 reads the list again", async () => {
     const read = vi.spyOn(apiClient, "getValidationPipelines").mockResolvedValue({ validationPipelines: [VP] });
     vi.spyOn(apiClient, "getValidationRules").mockResolvedValue({ rules: [] });
     await store().loadPipelines(TARGET);
@@ -366,7 +364,7 @@ describe("a pipeline's rules", () => {
   });
 });
 
-describe("Ruling 57", () => {
+describe("a rule's change or delete held, and a 404 that drops nothing", () => {
   it("drops nothing on a 404 that isn't the validation pipeline's or rule's (the configuration's, the organization's), the refusal still answered", async () => {
     vi.spyOn(apiClient, "getValidationPipelines").mockResolvedValue({ validationPipelines: [VP] });
     vi.spyOn(apiClient, "getValidationRules").mockResolvedValue({ rules: [RULE] });
@@ -437,7 +435,7 @@ describe("Ruling 57", () => {
   });
 });
 
-describe("Ruling 59", () => {
+describe("a rule write answered late, or for a pipeline gone", () => {
   const change = { kind: "not_contains_text", target: "output", pattern: "zq-new" } as const;
 
   /** TARGET's pipeline and its rules read, then another version's, mid-write, and TARGET's again: the store holds TARGET anew. */
@@ -446,7 +444,7 @@ describe("Ruling 59", () => {
     await store().loadPipelines(TARGET);
   }
 
-  it("shows a change answered after the version was left and come back to mid-save by reading the rules again, over a read taken before it; released only after (the review's probe)", async () => {
+  it("shows a change answered after the version was left and come back to mid-save by reading the rules again, over a read taken before it; released only after", async () => {
     vi.spyOn(apiClient, "getValidationPipelines").mockResolvedValue({ validationPipelines: [VP] });
     const read = vi.spyOn(apiClient, "getValidationRules").mockResolvedValue({ rules: [RULE] });
     await store().loadPipelines(TARGET);
@@ -564,7 +562,7 @@ describe("Ruling 59", () => {
   });
 });
 
-describe("Ruling 61: a rule write answered after its version was left and come back to is read again, not placed", () => {
+describe("a rule write answered after its version was left and come back to is read again, not placed", () => {
   const change = { kind: "not_contains_text", target: "output", pattern: "zq-mine" } as const;
   const SECOND = validationRuleFixture({ id: "0199f400-0000-7000-8000-000000000002", position: 4, pattern: "zq-second" });
 
@@ -577,7 +575,7 @@ describe("Ruling 61: a rule write answered after its version was left and come b
   /** Settles what the store has under way (its answers are all resolved promises here). */
   const settled = () => new Promise((settle) => setTimeout(settle, 0));
 
-  it("keeps a teammate's later change over mine answered late (probe F): the store and what Edit opens on are what the API holds", async () => {
+  it("keeps a teammate's later change over mine answered late: the store and what Edit opens on are what the API holds", async () => {
     vi.spyOn(apiClient, "getValidationPipelines").mockResolvedValue({ validationPipelines: [VP] });
     const read = vi.spyOn(apiClient, "getValidationRules").mockResolvedValue({ rules: [RULE] });
     await store().loadPipelines(TARGET);
@@ -678,7 +676,7 @@ describe("Ruling 61: a rule write answered after its version was left and come b
     expect(store().rulesErrorByPipeline[VP.id]).toBe(RULES_LOAD_FAILED_MESSAGE);
   });
 
-  it("reads nothing for a pipeline no longer listed (probe G): no request, no error kept for it, the rule released", async () => {
+  it("reads nothing for a pipeline no longer listed: no request, no error kept for it, the rule released", async () => {
     const pipelines = vi.spyOn(apiClient, "getValidationPipelines").mockResolvedValue({ validationPipelines: [VP] });
     const read = vi.spyOn(apiClient, "getValidationRules").mockResolvedValue({ rules: [RULE] });
     await store().loadPipelines(TARGET);

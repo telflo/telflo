@@ -4,11 +4,11 @@ import { createOrganizationScope, type ScopedInsertable } from "../../../tenancy
 import { visibleTo, type ConfigurationCreator, type ConfigurationViewerContext } from "./configuration-repository.js";
 
 /*
- * The versions of the context's organization's configurations (D8 decision
- * 3): each holds a configuration's YAML. Through the organization scope, with
- * row-level security on configuration_versions (migration 1700000000016)
- * behind it: the transaction must carry a database context naming the same
- * organization, or the policies show and admit nothing.
+ * The versions of the context's organization's configurations: each holds a
+ * configuration's YAML. Through the organization scope, with row-level
+ * security on configuration_versions (migration 1700000000016) behind it: the
+ * transaction must carry a database context naming the same organization, or
+ * the policies show and admit nothing.
  *
  * A version has no deletion of its own, so it is reachable only through a
  * live configuration: every read and the save join `configurations` on
@@ -17,69 +17,67 @@ import { visibleTo, type ConfigurationCreator, type ConfigurationViewerContext }
  * configuration's versions; the repository does.
  *
  * Every read and write also needs the configuration to be one the viewer
- * can see (D11b decision 1): theirs, or published. Within a visible
- * configuration every version is visible, drafts included. The rule is the
- * configuration repository's (`visibleTo`), which the policies apply too
- * (migration 1700000000021), so another member's draft's versions are as
- * absent as an unknown configuration's.
+ * can see: theirs, or published. Within a visible configuration every
+ * version is visible, drafts included. The rule is the configuration
+ * repository's (`visibleTo`), which the policies apply too (migration
+ * 1700000000021), so another member's draft's versions are as absent as an
+ * unknown configuration's.
  *
  * Every version carries its creator's email, by the rule a configuration's
- * creator follows (configuration-repository.ts): a left join to `users`,
- * with no `users.deleted_at` filter, so a soft-deleted creator keeps their
- * email and a hard-deleted one leaves `createdBy` null (D10 Preflight ruling
- * 13). A version's publisher (D11b decision 10) follows the same rule. A
- * write returns its row through a common table expression, `written`,
- * joined to `users` by a plain read that locks nothing there.
+ * creator follows (configuration-repository.ts): a left join to `users`, with
+ * no `users.deleted_at` filter, so a soft-deleted creator keeps their email
+ * and a hard-deleted one leaves `createdBy` null. A version's publisher
+ * follows the same rule. A write returns its row through a common table
+ * expression, `written`, joined to `users` by a plain read that locks nothing
+ * there.
  *
- * Every version carries whether the catalogue has deprecated its collector
- * version since (D13a decision 4), and the catalogue's note: an inner join
- * to the global `collector_versions` (no organization, no row-level
- * security; the API's role reads it), which the pin's foreign key
- * guarantees a row for.
+ * Every version carries whether the catalog has deprecated its collector
+ * version since, and the catalog's note: an inner join to the global
+ * `collector_versions` (no organization, no row-level security; the API's
+ * role reads it), which the pin's foreign key guarantees a row for.
  *
  * Every timestamp comes from the caller, as `at`, never from SQL `now()`, as
- * the configurations' do (D7 decision 4). The YAML is private: nothing here
- * logs it, nor the graph (D9a decision 6), whose nodes carry copies of it.
- * Labels are the user's text (ADR 0024): nothing here logs them either.
+ * the configurations' do. The YAML is private: nothing here logs it, nor
+ * the graph, whose nodes carry copies of it. Labels are the user's text:
+ * nothing here logs them either.
  */
 
 /**
- * A version as the picker lists it (D10 decision 4): no content. Each field
- * is also a `ConfigurationVersion`'s.
+ * A version as the picker lists it: no content. Each field is also a
+ * `ConfigurationVersion`'s.
  */
 export interface ConfigurationVersionSummary {
   id: string;
-  /** From 1, the highest of the configuration's plus one when created (D10 decision 5). */
+  /** From 1, the highest of the configuration's plus one when created. */
   versionNumber: number;
-  /** 1 to 80 characters, or null for an unnamed version, shown as "Version N" (D10 decision 3). */
+  /** 1 to 80 characters, or null for an unnamed version, shown as "Version N". */
   label: string | null;
   /** Null when the creator's account is hard-deleted, or the version was made with no creator. */
   createdBy: ConfigurationCreator | null;
   createdAt: Date;
-  /** The last save; a rename doesn't move it (D10 decision 6). */
+  /** The last save; a rename doesn't move it. */
   updatedAt: Date;
   /**
-   * When it was published, from the API's clock; null on a draft (D11b
-   * decision 10). A published version can't be changed.
+   * When it was published, from the API's clock; null on a draft. A published
+   * version can't be changed.
    */
   publishedAt: Date | null;
   /**
-   * Who published it, by `createdBy`'s rule (D10 Preflight ruling 13): null on
-   * a draft, and once the publisher's account is hard-deleted; a
-   * soft-deleted one keeps their email.
+   * Who published it, by `createdBy`'s rule: null on a draft, and once the
+   * publisher's account is hard-deleted; a soft-deleted one keeps their
+   * email.
    */
   publishedBy: ConfigurationCreator | null;
-  /** The configuration's distribution (D13a decision 5). */
+  /** The configuration's distribution. */
   collectorDistribution: string;
   /**
-   * The collector version it is pinned to (D13a decision 8), a version of
-   * `collectorDistribution` in the catalogue, possibly deprecated since
-   * (decision 4).
+   * The collector version it is pinned to, a version of
+   * `collectorDistribution` in the catalog, possibly deprecated since.
    */
   collectorVersion: string;
-  /** Whether the catalogue has deprecated `collectorVersion` since it was pinned (D13a decision 4). */
+  /** Whether the catalog has deprecated `collectorVersion` since it was pinned. */
   collectorVersionDeprecated: boolean;
-  /** The catalogue's note on why, the deprecated pin's tooltip; null unless deprecated (Preflight ruling 15). */
+  /** The catalog's note on why, the deprecated pin's tooltip; null unless deprecated. */
   collectorVersionDeprecatedNote: string | null;
 }
 
@@ -89,33 +87,32 @@ export interface ConfigurationVersion extends ConfigurationVersionSummary {
   /** Exactly as it was sent: nothing trims or normalizes it. */
   yamlContent: string;
   /**
-   * The builder's layout (D9a decision 6), `[]` until a save writes it.
-   * Anything JSON at this layer: the contract shapes it, and the editor reads
-   * what it can. jsonb doesn't keep key order, so compare it as JSON.
+   * The builder's layout, `[]` until a save writes it. Anything JSON at this
+   * layer: the contract shapes it, and the editor reads what it can. jsonb
+   * doesn't keep key order, so compare it as JSON.
    */
   nodes: unknown[];
   edges: unknown[];
   pipelines: unknown[];
 }
 
-/** A version's three graph columns (D9a decision 6), written together. */
+/** A version's three graph columns, written together. */
 export interface StoredGraph {
   nodes: unknown[];
   edges: unknown[];
   pipelines: unknown[];
 }
 
-/** A version's content: the text and the graph, written together (D9a decision 6). */
+/** A version's content: the text and the graph, written together. */
 export interface SaveConfigurationVersionInput extends StoredGraph {
   yamlContent: string;
 }
 
 /**
- * What a save writes: the content, and the collector version (D13a decision
- * 8) when given, a version of the configuration's distribution in the
- * catalogue (23503 otherwise); left out, the stored one stays. The service
- * decides it: the one stored, or a change it has checked the catalogue
- * offers (Preflight ruling 13).
+ * What a save writes: the content, and the collector version when given, a
+ * version of the configuration's distribution in the catalog (23503
+ * otherwise); left out, the stored one stays. The service decides it: the one
+ * stored, or a change it has checked the catalog offers.
  */
 export interface SavedConfigurationVersion extends SaveConfigurationVersionInput {
   collectorVersion?: string | undefined;
@@ -127,7 +124,7 @@ const CHECK_VIOLATION = "23514";
 /**
  * The graph columns' checks (migration 1700000000017): each an array, and at
  * most 4 MiB as `jsonb::text`, the backstop behind the contract's 1 MiB of
- * JSON (D9a Preflight ruling 3).
+ * JSON.
  */
 const STORED_GRAPH_CHECKS: ReadonlySet<string> = new Set(
   ["nodes", "edges", "pipelines"].flatMap((column) => [
@@ -165,26 +162,24 @@ export interface CreateConfigurationVersionInput {
   configurationId: string;
   versionNumber: number;
   /**
-   * The version's name: the starter's "Initial version" (D10 decision 14).
-   * Left out, or null, the version is unnamed.
+   * The version's name: the starter's "Initial version". Left out, or null,
+   * the version is unnamed.
    */
   label?: string | null;
-  /** Within decision 7's limit already: the contract does it, and the table refuses anything else. */
+  /** Within its limit already: the contract does it, and the table refuses anything else. */
   yamlContent: string;
   /**
-   * The builder's graph (D9a decision 6), written only when given: a
-   * configuration created from a flow (D12 Preflight ruling 7). Left out,
-   * the insert names no graph column and the table's `[]` stands. A column
-   * the table's checks refuse fails with 23514
-   * (`isStoredGraphCheckViolation`).
+   * The builder's graph, written only when given: a configuration created
+   * from a flow. Left out, the insert names no graph column and the
+   * table's `[]` stands. A column the table's checks refuse fails with
+   * 23514 (`isStoredGraphCheckViolation`).
    */
   graph?: StoredGraph | undefined;
   createdByUserId: string;
   /**
-   * Its pin (D13a decisions 8 and 9): the configuration's distribution and
-   * a version of it in the catalogue (23503 otherwise). A configuration's
-   * first version gets the distribution's default, or the version its
-   * create named (D12 decision 12).
+   * Its pin: the configuration's distribution and a version of it in the
+   * catalog (23503 otherwise). A configuration's first version gets the
+   * distribution's default, or the version its create named.
    */
   collectorDistribution: string;
   collectorVersion: string;
@@ -192,7 +187,7 @@ export interface CreateConfigurationVersionInput {
   at: Date;
 }
 
-/** What `createNext` writes: the next number is the repository's to take (D10 decision 5). */
+/** What `createNext` writes: the next number is the repository's to take. */
 export interface CreateNextConfigurationVersionInput extends SaveConfigurationVersionInput {
   /** A configuration of the context's organization, which the caller holds `for update`. */
   configurationId: string;
@@ -201,7 +196,7 @@ export interface CreateNextConfigurationVersionInput extends SaveConfigurationVe
   createdByUserId: string;
   /**
    * Its pin: the configuration's distribution and its source version's
-   * collector version (D13a decision 9).
+   * collector version.
    */
   collectorDistribution: string;
   collectorVersion: string;
@@ -209,7 +204,7 @@ export interface CreateNextConfigurationVersionInput extends SaveConfigurationVe
   at: Date;
 }
 
-/** What a publish's record writes (D11b decisions 9 and 10, Preflight ruling 8). */
+/** What a publish's record writes. */
 export interface RecordPublishInput {
   /** The snapshot's `publishedAt`: the same clock read, so the two are equal to the millisecond. */
   publishedAt: Date;
@@ -219,20 +214,20 @@ export interface RecordPublishInput {
   publishedByUserId: string;
   /** The YAML the snapshot holds: the record writes only if the version still holds exactly this. */
   yamlContent: string;
-  /** The label the snapshot holds (null for none): the record writes only if the version still has it (Ruling 29). */
+  /** The label the snapshot holds (null for none): the record writes only if the version still has it. */
   label: string | null;
   /**
-   * The collector version the snapshot holds (D13a decision 7): the record
-   * writes only if the version is still pinned to it (D13a Preflight ruling
-   * 3). The distribution needs no guard: a configuration's is fixed (the
-   * database refuses a change, decision 5), and its versions share it.
+   * The collector version the snapshot holds: the record writes only if
+   * the version is still pinned to it. The distribution needs no guard: a
+   * configuration's is fixed (the database refuses a change), and its
+   * versions share it.
    */
   collectorVersion: string;
 }
 
 /**
- * What the public API's configurations answer of their versions (D25
- * decision 31, Preflight ruling 6), read for many configurations at once.
+ * What the public API's configurations answer of their versions, read for many
+ * configurations at once.
  */
 export interface ConfigurationVersionFacts {
   /** The latest version: the highest number. */
@@ -246,9 +241,9 @@ export interface ConfigurationVersionFacts {
 
 export interface IConfigurationVersionRepository {
   /**
-   * The version the editor opens (decision 4): the live configuration's
-   * version with the highest number. Undefined when the configuration is
-   * deleted, isn't the context's organization's, or has no version.
+   * The version the editor opens: the live configuration's version with the
+   * highest number. Undefined when the configuration is deleted, isn't the
+   * context's organization's, or has no version.
    */
   findOpened(configurationId: string): Promise<ConfigurationVersion | undefined>;
   /** That version, only if it belongs to that live configuration; undefined otherwise. */
@@ -257,66 +252,65 @@ export interface IConfigurationVersionRepository {
    * That version's summary, without its content, only if it belongs to that
    * live configuration; undefined otherwise. For a check under the
    * configuration's lock that needs no YAML or graph (a create's source, a
-   * rename's old label; D10 Ruling 41): those can be megabytes.
+   * rename's old label): those can be megabytes.
    */
   findSummary(configurationId: string, versionId: string): Promise<ConfigurationVersionSummary | undefined>;
   /**
-   * The id of the live configuration's version numbered `versionNumber`
-   * (D25 Preflight ruling 6: the public API addresses versions by number);
-   * undefined when there is none, or the configuration is deleted, isn't
-   * the context's organization's, or isn't one the viewer can see.
+   * The id of the live configuration's version numbered `versionNumber` (the
+   * public API addresses versions by number); undefined when there is none,
+   * or the configuration is deleted, isn't the context's organization's, or
+   * isn't one the viewer can see.
    */
   findIdByNumber(configurationId: string, versionNumber: number): Promise<string | undefined>;
   /**
    * For each live configuration of `configurationIds` the viewer can see,
    * its latest version's id, number and collector version and its highest
-   * published number (D25 Preflight ruling 6), in one statement: no read
-   * per configuration. A configuration it can't see, or a deleted one, is
-   * absent from the map. No content is read.
+   * published number, in one statement: no read per configuration. A
+   * configuration it can't see, or a deleted one, is absent from the map.
+   * No content is read.
    */
   listFacts(configurationIds: readonly string[]): Promise<Map<string, ConfigurationVersionFacts>>;
   /**
    * Every version of the live configuration, highest number first, without
-   * content (D10 decision 4): no YAML or layout column is read. Only the
-   * published ones when `publishedOnly` (D17b-1 decision 31). Empty when the
-   * configuration is deleted or isn't the context's organization's.
+   * content: no YAML or layout column is read. Only the published ones
+   * when `publishedOnly`. Empty when the configuration is deleted or isn't
+   * the context's organization's.
    */
   listSummaries(configurationId: string, options?: { publishedOnly?: boolean }): Promise<ConfigurationVersionSummary[]>;
   /**
    * A new version, created and updated `at`, its graph the one given, else
-   * the table's `[]` (D9a decision 6: it is laid out on open). It doesn't
-   * check that the configuration is live: the caller has just created it,
-   * or holds its lock.
+   * the table's `[]` (it is laid out on open). It doesn't check that the
+   * configuration is live: the caller has just created it, or holds its
+   * lock.
    */
   create(input: CreateConfigurationVersionInput): Promise<ConfigurationVersion>;
   /**
-   * The live configuration's next version (D10 decision 5): numbered the
-   * highest of its versions plus one, with the content and label given,
-   * created and updated `at`. Undefined, writing nothing, when the
-   * configuration is deleted or isn't the context's organization's. A read of
-   * the highest number, then the insert (D10 Preflight ruling 12): the
-   * caller holds the configuration `for update`, so no other create comes
-   * between them, and the unique constraint is the backstop. A graph column
-   * the table's checks refuse fails with 23514 (`isStoredGraphCheckViolation`).
+   * The live configuration's next version: numbered the highest of its
+   * versions plus one, with the content and label given, created and updated
+   * `at`. Undefined, writing nothing, when the configuration is deleted or
+   * isn't the context's organization's. A read of the highest number, then the
+   * insert: the caller holds the configuration `for update`, so no other
+   * create comes between them, and the unique constraint is the backstop. A
+   * graph column the table's checks refuse fails with 23514
+   * (`isStoredGraphCheckViolation`).
    */
   createNext(input: CreateNextConfigurationVersionInput): Promise<ConfigurationVersion | undefined>;
   /**
-   * Sets only the label of that version of a live configuration (D10
-   * decision 6: not `updated_at`), and returns its summary; undefined when
-   * there is none, it belongs to another configuration, or the
-   * configuration is deleted. The caller holds the configuration's lock.
+   * Sets only the label of that version of a live configuration (not
+   * `updated_at`), and returns its summary; undefined when there is none, it
+   * belongs to another configuration, or the configuration is deleted. The
+   * caller holds the configuration's lock.
    */
   rename(configurationId: string, versionId: string, label: string): Promise<ConfigurationVersionSummary | undefined>;
   /**
-   * Sets the YAML, the graph, the collector version (D13a decision 8) and
-   * `updated_at` to `at` on that version of a live configuration, and
-   * returns the version as it now is; undefined when there is none, it
-   * belongs to another configuration, or the configuration is deleted. It
-   * writes even when nothing changes (decision 5). The caller
-   * holds the configuration's lock (decision 6), and passes an `at` past the
-   * version's `updated_at` (D11b Ruling 33: the service's saveVersion). A
-   * graph column the table's checks refuse fails with 23514
-   * (`isStoredGraphCheckViolation`).
+   * Sets the YAML, the graph, the collector version and `updated_at` to
+   * `at` on that version of a live configuration, and returns the version
+   * as it now is; undefined when there is none, it belongs to another
+   * configuration, or the configuration is deleted. It writes even when
+   * nothing changes. The caller holds the configuration's lock, and
+   * passes an `at` past the version's `updated_at` (as the service's
+   * saveVersion does). A graph column the table's checks refuse fails
+   * with 23514 (`isStoredGraphCheckViolation`).
    */
   save(
     configurationId: string,
@@ -325,16 +319,15 @@ export interface IConfigurationVersionRepository {
     at: Date,
   ): Promise<ConfigurationVersion | undefined>;
   /**
-   * Records a publish on that version of a live configuration the viewer
-   * can see (D11b decisions 9 and 10), in one statement, and returns its
-   * summary as it now is. It writes only a draft (`published_at is null`)
-   * whose YAML is still exactly `input.yamlContent`, whose label is still
-   * `input.label` and whose collector version is still
-   * `input.collectorVersion`, what the snapshot holds (Preflight ruling 8,
-   * Ruling 29, D13a Preflight ruling 3); otherwise it writes nothing and
-   * answers undefined, and the caller re-reads to say why. Neither `updated_at`
-   * moves: the version's is its last save (D10), and the configuration's
-   * is the caller's to touch. The caller holds the configuration's lock.
+   * Records a publish on that version of a live configuration the viewer can
+   * see, in one statement, and returns its summary as it now is. It writes
+   * only a draft (`published_at is null`) whose YAML is still exactly
+   * `input.yamlContent`, whose label is still `input.label` and whose
+   * collector version is still `input.collectorVersion`, what the snapshot
+   * holds; otherwise it writes nothing and answers undefined, and the caller
+   * re-reads to say why. Neither `updated_at` moves: the version's is its last
+   * save, and the configuration's is the caller's to touch. The caller holds
+   * the configuration's lock.
    *
    * The only code that writes the three publish columns (a source scan,
    * publish-columns-source.test.ts, keeps it so).
@@ -345,12 +338,12 @@ export interface IConfigurationVersionRepository {
     input: RecordPublishInput,
   ): Promise<ConfigurationVersionSummary | undefined>;
   /**
-   * Whether a version of the context's organization records `publicationId`
-   * (D11b Ruling 29): asked before the snapshot of a publish whose record
-   * failed is removed, since a record whose commit's answer was lost may
-   * have committed. Any configuration, live or deleted, and past the
-   * viewer's filter: row-level security can't hide a recorded one anyway,
-   * since its configuration is then published.
+   * Whether a version of the context's organization records `publicationId`:
+   * asked before the snapshot of a publish whose record failed is removed,
+   * since a record whose commit's answer was lost may have committed. Any
+   * configuration, live or deleted, and past the viewer's filter: row-level
+   * security can't hide a recorded one anyway, since its configuration is
+   * then published.
    */
   isPublicationRecorded(publicationId: string): Promise<boolean>;
 }
@@ -400,7 +393,7 @@ function toConfigurationVersionSummary(row: SummaryRow): ConfigurationVersionSum
     collectorDistribution: row.collector_distribution,
     collectorVersion: row.collector_version,
     collectorVersionDeprecated: row.collector_version_deprecated,
-    // The note is the deprecation's: a version the catalogue offers has none to show.
+    // The note is the deprecation's: a version the catalog offers has none to show.
     collectorVersionDeprecatedNote: row.collector_version_deprecated ? row.collector_version_deprecated_note : null,
   };
 }
@@ -431,9 +424,8 @@ const summaryColumns = [
 ] as const;
 
 /**
- * What a read joins: the creator's and the publisher's emails (D10 Preflight
- * ruling 13's rule for both), and whether the catalogue deprecated the pin
- * (`pins`, D13a decision 4).
+ * What a read joins: the creator's and the publisher's emails (by the same
+ * rule for both), and whether the catalog deprecated the pin (`pins`).
  */
 const emails = [
   "creators.email as creator_email",
@@ -493,9 +485,8 @@ export function createConfigurationVersionRepository(
   const viewer = context.userId;
 
   /**
-   * The graph's columns as written (D9a Preflight ruling 12): JSON text, since
-   * node-postgres would send an array as a Postgres array literal, which jsonb
-   * refuses (22P02).
+   * The graph's columns as written: JSON text, since node-postgres would send
+   * an array as a Postgres array literal, which jsonb refuses (22P02).
    */
   const graphColumns = ({ nodes, edges, pipelines }: StoredGraph) => ({
     nodes: JSON.stringify(nodes),
@@ -517,7 +508,7 @@ export function createConfigurationVersionRepository(
    * join is on both columns of the composite foreign key, so the
    * configuration it finds is the version's own, in the same organization
    * the scope filters the version to. The joins to `users` are left joins
-   * with no `deleted_at` filter (D10 Preflight ruling 13).
+   * with no `deleted_at` filter.
    */
   const ofLiveConfigurations = () =>
     scope
@@ -540,7 +531,7 @@ export function createConfigurationVersionRepository(
   /**
    * The context's organization's versions of the live configurations the
    * viewer can see, as `ofLiveConfigurations` without its joins to `users`
-   * and the catalogue: for reads that need none of their columns.
+   * and the catalog: for reads that need none of their columns.
    */
   const ofLiveConfigurationsOnly = () =>
     scope
@@ -577,13 +568,13 @@ export function createConfigurationVersionRepository(
 
   // An update joined to its configuration (`update … from`), so a deleted
   // configuration's version is not written. The joined row isn't locked:
-  // the caller already holds the configuration `for update` (decision 6).
+  // the caller already holds the configuration `for update`.
   // Neither key column of the configuration's or the users' foreign keys
   // changes, so no check of theirs runs and nothing on `users` or
   // `configurations` is locked by one; the creator's email is a plain read
   // of the written row's. A changed collector version runs its foreign
-  // key's check, which takes `key share` on that catalogue row: only the
-  // migration step writes the catalogue (D13a).
+  // key's check, which takes `key share` on that catalog row: only the
+  // migration step writes the catalog.
   async function save(
     configurationId: string,
     versionId: string,
@@ -725,11 +716,10 @@ export function createConfigurationVersionRepository(
       });
     },
 
-    // `scope.insertInto` takes plain values only, so the number is read
-    // first, through the scope and only for a live configuration (no row
-    // otherwise, where a bare aggregate would answer 0), then inserted (D10
-    // Preflight ruling 12). The caller's lock on the configuration keeps
-    // another create from coming between the two.
+    // `scope.insertInto` takes plain values only, so the number is read first,
+    // through the scope and only for a live configuration (no row otherwise,
+    // where a bare aggregate would answer 0), then inserted. The caller's lock
+    // on the configuration keeps another create from coming between the two.
     async createNext({
       configurationId,
       label,
@@ -809,12 +799,11 @@ export function createConfigurationVersionRepository(
     // publish columns. `published_by_user_id`'s foreign key takes `key
     // share` on the caller's account, which only a key change or a delete
     // of it waits for. The guards make the statement the whole check: a
-    // concurrent publish that recorded first leaves `published_at` set
-    // (D11b decision 9), and a save or a rename since the snapshot was taken
-    // leaves other text, another label or another collector version
-    // (Preflight ruling 8, Ruling 29, D13a Preflight ruling 3); either way
-    // no row is written. The label's guard is `is not distinct from`, so an
-    // unnamed version (null) matches only null.
+    // concurrent publish that recorded first leaves `published_at` set, and
+    // a save or a rename since the snapshot was taken leaves other text,
+    // another label or another collector version; either way no row is
+    // written. The label's guard is `is not distinct from`, so an unnamed
+    // version (null) matches only null.
     //
     // Its row lock: setting `publication_id`, which has a unique constraint,
     // makes this update take FOR UPDATE on the version's row, not the FOR NO
@@ -822,12 +811,12 @@ export function createConfigurationVersionRepository(
     // unique index as part of a key). FOR UPDATE conflicts with KEY SHARE,
     // which a foreign key's check takes on the row it references. Nothing
     // references configuration_versions today, and every writer of it holds
-    // the configuration's lock first (D10's lock order), so nothing waits on
+    // the configuration's lock first (the lock order), so nothing waits on
     // it. A future foreign key to configuration_versions whose writes don't
     // take the configuration's lock first would wait on a record in
     // progress, for as long as the record's transaction runs. (Fleets don't
     // add one: they live in the opamp-server and name a published version by
-    // its publication id, ADR 0026, D16a.)
+    // its publication id.)
     async recordPublish(
       configurationId: string,
       versionId: string,

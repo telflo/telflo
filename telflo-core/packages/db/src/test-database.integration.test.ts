@@ -36,7 +36,7 @@ describe("prepareTestDatabase", () => {
     }
   });
 
-  it("creates a missing database, applies every migration, syncs the committed collector catalogue and provisions the API's role, and is a no-op when run again", async () => {
+  it("creates a missing database, applies every migration, syncs the committed collector catalog and provisions the API's role, and is a no-op when run again", async () => {
     const name = `telflo_prepare_${randomUUID().replaceAll("-", "")}_test`;
     const url = new URL(process.env.TELFLO_MIGRATION_DATABASE_URL!);
     url.pathname = `/${name}`;
@@ -58,7 +58,7 @@ describe("prepareTestDatabase", () => {
         expect(applied.rows.map((row) => row.name)).toEqual(migrations);
         const users = await sql<{ count: number }>`select count(*)::int as count from users`.execute(asApplication);
         expect(users.rows[0]?.count).toBe(0);
-        // The committed catalogue, every version of it, readable by the API's role (D13a Preflight ruling 9).
+        // The committed catalog, every version of it, readable by the API's role.
         const catalogue = validateCollectorCatalogue(await readCollectorCatalogueFiles());
         const versions = await asApplication
           .selectFrom("collector_versions")
@@ -82,11 +82,11 @@ describe("prepareTestDatabase", () => {
     // `drop database` waits for a checkpoint (wait event CheckpointDone), which
     // fsyncs every file the whole run has written since the last one: each
     // truncateAll gives every table and index a new file. Late in a full run
-    // on Docker's VM disk that took over 3 s (D7 task 2), past vitest's 5 s
-    // default with the rest of the test.
+    // on Docker's VM disk that took over 3 s, past vitest's 5 s default with
+    // the rest of the test.
   }, THROWAWAY_DATABASE_DROP_TIMEOUT);
 
-  it("refuses an invalid collector catalogue before it creates or migrates the database (D13a Ruling 38)", async () => {
+  it("refuses an invalid collector catalog before it creates or migrates the database", async () => {
     const name = `telflo_prepare_${randomUUID().replaceAll("-", "")}_test`;
     const url = new URL(process.env.TELFLO_MIGRATION_DATABASE_URL!);
     url.pathname = `/${name}`;
@@ -106,7 +106,7 @@ describe("prepareTestDatabase", () => {
     }
   }, THROWAWAY_DATABASE_DROP_TIMEOUT);
 
-  it("removes the catalogue rows a test marked as its own before the sync, so a killed run's fixtures don't stop the next run; an unmarked row is still refused (D25 Ruling 179)", async () => {
+  it("removes the catalog rows a test marked as its own before the sync, so a killed run's fixtures don't stop the next run; an unmarked row is still refused", async () => {
     const ownerUrl = process.env.TELFLO_MIGRATION_DATABASE_URL!;
     const applicationUrl = process.env.TELFLO_DATABASE_URL!;
     const id = `prepare-fixture-${randomUUID().slice(0, 8)}`;

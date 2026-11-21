@@ -16,9 +16,8 @@ import { signInThroughApi } from "./support/session.js";
 import { ADMIN_NAV_ITEMS, adminNavItems, productAdminSession } from "./support/test-templates-page.js";
 import { toastWith } from "./support/test-suites-page.js";
 
-// The library (D23-2 decisions 5, 53, 54 and 63; Preflight rulings 21 and
-// 22), in the browser: product admin's Library tab (its place in the nav,
-// the dialog's checks, add, edit and delete), and the members' /library
+// The library, in the browser: product admin's Library tab (its place in the
+// nav, the dialog's checks, add, edit and delete), and the members' /library
 // (the sidebar's Learning, the search, Download, and Copy curl, whose link
 // downloads the file with no session).
 //
@@ -29,22 +28,22 @@ import { toastWith } from "./support/test-suites-page.js";
 // owner when it ends, however it ends (`libraryFiles`). Each admin is a
 // fresh user, made one by the README's SQL.
 //
-// The library link is a secret (decisions 4 and 59): it is never printed.
-// The trace is off (it records the link's `201` body). The clipboard is
-// read in a page of its own, never the app's (Chromium and Firefox
-// `readText()`, WebKit a paste into a textarea), and the command is checked
-// by a boolean against its shape. The link is fetched with Node's `fetch`
-// (Playwright's request errors quote the URL; Node's don't), its failure
-// rethrown with fixed words, and its bytes compared with `Buffer.equals`.
-// No assertion holds the command, the link or its body as a value, and none
-// that can fail runs while a page that holds or may hold the link is open:
-// after Copy curl, every check on the page is taken as a boolean, the reader
-// page is closed as soon as it is read, and the page goes to about:blank
-// (in a finally, so also when a read throws) before the first assertion
-// (Rulings 144 and 147). That boolean-first rule IS the guard: a failed
-// assertion's error-context.md holds the open page's ARIA snapshot, and a
-// failed locator assertion carries a snapshot of its own whatever the
-// environment says, so no switch of Playwright's stands in for it.
+// The library link is a secret: it is never printed. The trace is off (it
+// records the link's `201` body). The clipboard is read in a page of its
+// own, never the app's (Chromium and Firefox `readText()`, WebKit a paste
+// into a textarea), and the command is checked by a boolean against its
+// shape. The link is fetched with Node's `fetch` (Playwright's request
+// errors quote the URL; Node's don't), its failure rethrown with fixed
+// words, and its bytes compared with `Buffer.equals`. No assertion holds the
+// command, the link or its body as a value, and none that can fail runs
+// while a page that holds or may hold the link is open: after Copy curl,
+// every check on the page is taken as a boolean, the reader page is closed
+// as soon as it is read, and the page goes to about:blank (in a finally, so
+// also when a read throws) before the first assertion. That boolean-first
+// rule IS the guard: a failed assertion's error-context.md holds the open
+// page's ARIA snapshot, and a failed locator assertion carries a snapshot of
+// its own whatever the environment says, so no switch of Playwright's stands
+// in for it.
 
 // What the page must never hold, named here, away from the assertions: a
 // failed assertion's report quotes the lines around it, and these words
@@ -153,9 +152,9 @@ async function openLibraryFromSidebar(page: Page): Promise<void> {
 }
 
 /**
- * The clipboard's text, read in a page of its own (Preflight ruling 21),
- * never the app's: Chromium and Firefox `readText()`, WebKit (or a refusal)
- * a paste into the reader's textarea. Never printed by the caller.
+ * The clipboard's text, read in a page of its own, never the app's:
+ * Chromium and Firefox `readText()`, WebKit (or a refusal) a paste into the
+ * reader's textarea. Never printed by the caller.
  */
 async function clipboardText(context: BrowserContext, browserName: string): Promise<string> {
   const reader = await context.newPage();
@@ -181,7 +180,7 @@ function escaped(text: string): string {
   return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-test("a product admin's nav lists Library fourth, after User Feedback (D29 decision 36); a library file is added (after each check's words), edited and deleted", async ({
+test("a product admin's nav lists Library fourth, after User Feedback; a library file is added (after each check's words), edited and deleted", async ({
   page,
   libraryFiles,
 }) => {
@@ -334,7 +333,7 @@ test("Copy curl puts `curl -fL '<link>' -o '<name>'` on the clipboard under the 
 
   // From the click on, the page may hold the link (it must not, but a break could put it there): every
   // check is taken as a boolean while it is open, and nothing that can fail runs until it is gone
-  // (Rulings 144 and 147: a failed assertion's error-context.md would hold the page's ARIA snapshot).
+  // (a failed assertion's error-context.md would hold the page's ARIA snapshot).
   let copiedShown = false;
   let copyFailed = true;
   let pageHoldsIt = true;
@@ -364,7 +363,7 @@ test("Copy curl puts `curl -fL '<link>' -o '<name>'` on the clipboard under the 
   expect(storageHoldsIt, "browser storage holds no link").toBe(false);
   expect(copiedShown, "the row says Copied").toBe(true);
   expect(copyFailed, "no copy failure toasted").toBe(false);
-  // The command's shape, checked by a boolean: the page's own origin (Q162), single quotes (Q160).
+  // The command's shape, checked by a boolean: the page's own origin, single quotes.
   const shape = new RegExp(
     `^${COMMAND_START} '(${escaped(E2E_WEB_URL)}${LINK_PATH})' -o '${escaped(entry.file.name)}'$`,
   );

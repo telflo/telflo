@@ -5,25 +5,24 @@ import { createOrganizationScope } from "../../../tenancy/organization-scope.js"
 import { visibleTo } from "../../configurations/repositories/configuration-repository.js";
 
 /*
- * A configuration version's validation pipelines (D15a decisions 12 and 17;
- * Preflight rulings 16, 19 and 24), through the organization scope, as the
- * context's user sees them: a pipeline is visible exactly when its
- * configuration is (their own draft, or a published one), by the
+ * A configuration version's validation pipelines, through the organization
+ * scope, as the context's user sees them: a pipeline is visible exactly when
+ * its configuration is (their own draft, or a published one), by the
  * configurations' own rule (`visibleTo`), which is migration 030's select
  * policy (021's childVisible). A deleted configuration's are hidden, as its
  * suites are. Row-level security stands behind it, so the transaction must
  * carry a database context naming the same organization and user.
  *
- * A pipeline is created and deleted, never changed (Preflight ruling 16).
- * Every write here is made under the configuration's lock (the service's
- * lockAsMember, then lockedConfiguration), so a read made under it holds
- * until the transaction ends.
+ * A pipeline is created and deleted, never changed. Every write here is made
+ * under the configuration's lock (the service's lockAsMember, then
+ * lockedConfiguration), so a read made under it holds until the transaction
+ * ends.
  */
 
 /** Whom the repository reads for: the organization, and the viewer whose drafts' pipelines it shows. An `AuthContext` is one. */
 export type ValidationPipelineViewerContext = Pick<AuthContext, "organizationId" | "userId">;
 
-/** A validation pipeline. Its pipeline name is configuration text (ADR 0024). */
+/** A validation pipeline. Its pipeline name is configuration text. */
 export interface ValidationPipeline {
   id: string;
   configurationId: string;
@@ -50,14 +49,14 @@ export interface CreateValidationPipelineInput {
   at: Date;
 }
 
-/** What a version copy wrote (Preflight ruling 24): counts only. */
+/** What a version copy wrote: counts only. */
 export interface CopiedValidationPipelines {
   pipelines: number;
   rules: number;
 }
 
 export interface IValidationPipelineRepository {
-  /** The version's pipelines the viewer can see, oldest first (created_at, then id). No cap (decision 28). */
+  /** The version's pipelines the viewer can see, oldest first (created_at, then id). No cap. */
   listForVersion(configurationId: string, versionId: string): Promise<ValidationPipeline[]>;
   /** A pipeline the viewer can see, by id alone; undefined otherwise. */
   find(id: string): Promise<ValidationPipeline | undefined>;
@@ -75,16 +74,16 @@ export interface IValidationPipelineRepository {
   /** Deletes a visible pipeline (its rules go with it, fk_validation_rules_validation_pipeline). False when there is none. */
   remove(id: string): Promise<boolean>;
   /**
-   * A new version's copy of its source's validation pipelines and rules
-   * (D15a decision 17, Preflight ruling 24), in one statement, as the
-   * context's user under row-level security: every pipeline of
-   * `fromVersionId` the viewer can see, in its (created_at, id) order, each
-   * under a new uuidv7(), whether or not its name is still in the text; then
-   * their rules in (the pipeline's place, position) order, each keeping its
-   * position and its owner (`is_api_owned`, D25 decision 32: the public
-   * API's next PUT on the new version replaces the copies of its rules). The copies' creator is the context's user and their times
-   * `at`, the version's; both versions are the configuration's. Run it under
-   * the configuration's lock (createVersion's). Counts only.
+   * A new version's copy of its source's validation pipelines and rules, in
+   * one statement, as the context's user under row-level security: every
+   * pipeline of `fromVersionId` the viewer can see, in its (created_at, id)
+   * order, each under a new uuidv7(), whether or not its name is still in the
+   * text; then their rules in (the pipeline's place, position) order, each
+   * keeping its position and its owner (`is_api_owned`: the public API's next
+   * PUT on the new version replaces the copies of its rules). The copies'
+   * creator is the context's user and their times `at`, the version's; both
+   * versions are the configuration's. Run it under the configuration's lock
+   * (createVersion's). Counts only.
    */
   copyToVersion(
     configurationId: string,

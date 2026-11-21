@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# rehearse.sh: the release, rehearsed on this machine before any tag (D36-2
-# decision 103; Q294: an end-to-end test anyone can re-run from a clean
-# checkout with one command, docs/releasing.md "Rehearse a release on your
-# machine"): the scripts the two workflows call, in their order, on the local
-# Docker engine with the private tools (decision 110), a throwaway
-# registry:2 on 127.0.0.1 standing in for GHCR. Nothing reaches GitHub or
-# GHCR: no push but to that registry, no login, no GitHub Release.
+# rehearse.sh: the release, rehearsed on this machine before any tag (an
+# end-to-end test anyone can re-run from a clean checkout with one command;
+# docs/releasing.md "Rehearse a release on your machine"): the scripts the two
+# workflows call, in their order, on the local Docker engine with the private
+# tools, a throwaway registry:2 on 127.0.0.1 standing in for GHCR. Nothing
+# reaches GitHub or GHCR: no push but to that registry, no login, no GitHub
+# Release.
 #
 #   scripts/release/rehearse.sh --version <x.y.z> --work <dir> [--no-attest] [--keep]
 #                               [--allow-battery] [--port-base <n>]
@@ -20,7 +20,7 @@
 #             digest only; one already local isn't pulled again);
 # then the steps (the first failure stops the run; the end still runs):
 #   collector.yml: steps.sh builder (telflo-release, as its build job), then
-#   for every version the catalogue offers:
+#   for every version the catalog offers:
 #     build-collector-image.sh <v> --build-oci, load-images.sh --image
 #     collector, steps.sh collector-test, --push-oci to the registry,
 #     pull-back.sh --image collector --no-chart; then steps.sh chart-if-new
@@ -42,7 +42,7 @@
 #               workflows name linux/amd64, the runner's), then steps.sh
 #               stack-smoke (oss), archive-smoke and kind-smoke, as
 #               release.yml calls them (each smoke's output through
-#               redact.sh: decision 84, Ruling 408)
+#               redact.sh)
 #     publish   --push-oci, --push-package, pull-back.sh,
 #               verify-collector-artifacts.sh, all against the registry, and
 #               release-notes.sh into <work>/release-notes.md (no Release)
@@ -52,8 +52,8 @@
 # test's setting only); a --version that isn't x.y.z; a --work that isn't
 # absolute, isn't new or empty, or is inside this tree; a --registry that
 # isn't a loopback one (ghcr.io included: never a push target here); a
-# --port-base whose ports (below) include one of the owner's stack or dev
-# servers (50080, 51025, 51234, 51235, 53000, 55432, 58025, 8080); a
+# --port-base whose ports (below) include one of a developer's own stack or
+# dev servers (50080, 51025, 51234, 51235, 53000, 55432, 58025, 8080); a
 # COMPOSE_PROJECT_NAME naming one of OWNER_PROJECTS (below). Refused
 # next (exit 1): --version not HEAD's charts/telflo/Chart.yaml version and
 # appVersion. --dry-run stops here: it prints the checks, the prep and the
@@ -72,7 +72,7 @@
 # Docker's disk under 25 GB free fails after the registry image's pull (the
 # runner's largest job needs 18 GB, the kind smoke's; here every job's
 # images, the builder's cache and a kind node add up to about 20 GB, and 5 GB
-# more keeps Docker's disk, which the owner's own stack shares, from
+# more keeps Docker's disk, which a developer's own stack shares, from
 # filling); an image the smokes run by tag that isn't local fails (never
 # pulled or re-tagged here: postgres:18, axllent/mailpit:v1.31,
 # nginx:1.27-alpine at the chart's digest, ghcr.io/telflo/opamp-server at the
@@ -103,9 +103,9 @@
 # TELFLO_REHEARSE_KUBECONFIG (tests only, refused with CI set) names the
 # file in their place.
 #
-# A running rehearsal is marked (Ruling 399): right after its checks it makes
-# the volume telflo-rehearse-run, and starts its registry, labelled with its
-# work folder, its pid and that process's start time
+# A running rehearsal is marked: right after its checks it makes the volume
+# telflo-rehearse-run, and starts its registry, labeled with its work
+# folder, its pid and that process's start time
 # (telflo.rehearse.work/.pid/.started). While that process runs, another
 # rehearsal refuses to start and --cleanup refuses to remove anything (exit
 # 2); a finishing run leaves alone any object whose labels name another
@@ -234,7 +234,7 @@ try_remove() { # <what> <command...>: <what> recorded as removed, or named
   shift
   if "$@" >/dev/null 2>&1; then removed+=("$what"); else note "couldn't remove $what"; fi
 }
-# A run's own objects carry labels naming it (Ruling 399): the marker volume
+# A run's own objects carry labels naming it: the marker volume
 # telflo-rehearse-run and the registry it starts. The smokes' (Compose
 # projects, the kind cluster) carry none: they are known by name only.
 LABEL_WORK=telflo.rehearse.work
@@ -381,12 +381,12 @@ PORTS=""
 for offset in 1 2 3 4 5 6 7 8 9 10 11 100 101 102 110 111 112 120; do PORTS="$PORTS $((port_base + offset))"; done
 for p in $PORTS; do
   for owner in $OWNER_PORTS; do
-    [ "$p" != "$owner" ] || refuse "--port-base $port_base puts a rehearsal port on $p, one the owner's stack or dev servers use: name another"
+    [ "$p" != "$owner" ] || refuse "--port-base $port_base puts a rehearsal port on $p, one a developer's own development stack or dev servers use: name another"
   done
 done
 for p in $OWNER_PROJECTS; do
   [ "${COMPOSE_PROJECT_NAME:-}" != "$p" ] \
-    || refuse "COMPOSE_PROJECT_NAME is $p, the owner's: unset it (the rehearsal's compose calls name their own telflo-rehearse-* projects)"
+    || refuse "COMPOSE_PROJECT_NAME is $p, a developer's own development stack's: unset it (the rehearsal's compose calls name their own telflo-rehearse-* projects)"
 done
 # The kubeconfig guarded (never read here but by its hash and kubectl's current-context).
 if [ -n "${TELFLO_REHEARSE_KUBECONFIG+set}" ]; then
@@ -437,7 +437,7 @@ for v in $offered; do
 done
 add collector-chart "$B" scripts/release/steps.sh chart-if-new --out "$W/collector-chart" --registry "$reg"
 # verify-tag runs from the throwaway clone (no .tools/ of its own): this step alone is
-# told where the checked tools are (never exported to the steps: Ruling 403).
+# told where the checked tools are (never exported to the steps).
 add version-tag env "TELFLO_TOOLS_DIR=$ROOT/.tools" "$B" "$W/clone/scripts/release/verify-tag.sh" "v$version" --registry "$reg" --expect "$commit"
 add version-collectors "$B" scripts/release/verify-collector-artifacts.sh --registry "$reg"
 add version-collector-archive "$B" scripts/release/steps.sh collector-archive --out "$W/collector" --registry "$reg"
@@ -745,9 +745,9 @@ finish() {
 trap finish EXIT
 trap 'exit 130' INT TERM HUP
 
-# The marker: a volume labelled with this run's work folder, pid and start,
+# The marker: a volume labeled with this run's work folder, pid and start,
 # so another run refuses to start and --cleanup refuses to remove anything
-# while this one runs (Ruling 399).
+# while this one runs.
 docker volume create "${OWN_LABELS[@]}" "$MARKER" >/dev/null || { log "$PROGRAM: FAIL: the marker volume $MARKER couldn't be made"; exit 1; }
 [ "$(live_holder "$(labels_of volume "$MARKER")")" = "$W $$" ] \
   || { log "$PROGRAM: FAIL: the volume $MARKER names another run (one that started at the same moment?): nothing done"; exit 1; }

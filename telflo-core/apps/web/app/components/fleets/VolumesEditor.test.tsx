@@ -18,11 +18,10 @@ import {
 } from "./VolumesEditor.js";
 
 /*
- * A Kubernetes group's volumes editor (D17d-1 decision 24; Preflight rulings
- * 11 and 33): its recipes (the list, the safe paths only) and its warnings,
- * on D17c-1's `MountsEditor.test.tsx` patterns: the rows, the focus, the
- * problems under each field, and where a path may be in the document. The
- * rules' words are the contracts' (`settingsProblemsOf` in
+ * A Kubernetes group's volumes editor: its recipes (the list, the safe paths
+ * only) and its warnings, on `MountsEditor.test.tsx`'s patterns: the rows,
+ * the focus, the problems under each field, and where a path may be in the
+ * document. The rules' words are the contracts' (`settingsProblemsOf` in
  * `KubernetesGroupDialog.test.tsx`).
  */
 
@@ -61,7 +60,7 @@ const mountPaths = () => screen.queryAllByRole("textbox", { name: "Mount path" }
 const types = () => screen.queryAllByRole("combobox", { name: "Type" });
 const readOnlies = () => screen.queryAllByRole("checkbox", { name: "Read-only" });
 const recipesToggle = () => screen.getByRole("button", { name: VOLUME_RECIPES_LABEL });
-/** Opens the recipes' disclosure (closed at each opening: Ruling 67). */
+/** Opens the recipes' disclosure (closed at each opening). */
 const openRecipes = () => fireEvent.click(recipesToggle());
 const recipes = () => within(screen.getByRole("group", { name: VOLUME_RECIPES_LABEL })).getAllByRole("button");
 const recipe = (path: string) => recipes().find((each) => each.querySelector("span")?.textContent === path)!;
@@ -75,7 +74,7 @@ describe("volumesOf", () => {
   });
 });
 
-describe("VolumesEditor's rows (decision 24)", () => {
+describe("VolumesEditor's rows", () => {
   it('shows no row, "Volumes", Add volume and the recipes for a group with none', () => {
     renderEditor();
     expect(screen.getByRole("group", { name: "Volumes" })).toBeInTheDocument();
@@ -170,8 +169,8 @@ describe("VolumesEditor's rows (decision 24)", () => {
 });
 
 // The recipes and their prefill, as one-click rows.
-describe("VolumesEditor's recipes (Preflight ruling 33)", () => {
-  // Ruling 67 (the owner's request): GroupDialog's Mounts disclosure pattern.
+describe("VolumesEditor's recipes", () => {
+  // GroupDialog's Mounts disclosure pattern.
   it('keeps the recipes in a disclosure "Common Volume Paths", closed by default, opened and closed by its button', async () => {
     const { user } = renderEditor();
     expect(VOLUME_RECIPES_LABEL).toBe("Common Volume Paths");
@@ -212,7 +211,7 @@ describe("VolumesEditor's recipes (Preflight ruling 33)", () => {
     expect(paths).toContain("/var/log/journal");
   });
 
-  // Ruling 65 (the owner's Q48): the mount no row lists, said where the Agent's volumes are.
+  // The mount no row lists, said where the Agent's volumes are.
   it.each(["node", "cluster", "gateway"] as const)("says the Agent's chart mounts the node's /var/log/pods itself on the Agent only: the %s role", (role) => {
     renderEditor([{ ...VAR_LOG_APP }], { role });
     const volumes = screen.getByRole("group", { name: "Volumes" });
@@ -257,7 +256,7 @@ describe("VolumesEditor's recipes (Preflight ruling 33)", () => {
 });
 
 // The warnings (`isRiskyHostPath`, the read-write banner): never blocks.
-describe("VolumesEditor's warnings (Preflight ruling 33)", () => {
+describe("VolumesEditor's warnings", () => {
   it.each(["/", "/etc", "/etc/ssh", "/root", "/var/lib/kubelet", "/var/lib/kubelet/pods", "/var/run/docker.sock", "/run/containerd/containerd.sock", "//etc/"])(
     "warns of the sensitive host path %s, the path in the words",
     (path) => {
@@ -284,7 +283,7 @@ describe("VolumesEditor's warnings (Preflight ruling 33)", () => {
   });
 });
 
-// D17d-1's paragraph of ADR 0024: a volume's paths are configuration text.
+// A volume's paths are configuration text.
 describe("VolumesEditor's privacy", () => {
   it("keeps the paths inside ph-no-capture, in no attribute but their inputs' value, the risky-path warning too", async () => {
     const host = "/etc/canary-host-6a1e";

@@ -1,19 +1,18 @@
-"""Confmap provider neutralisation (D13b Preflight rulings 1 and 11):
-every non-`env` provider reference is replaced with a placeholder before the
-collector sees the text, with parity-aware escaping, and the caller refuses to run the collector if one
-survives. References are found on the decoded keys and values of a text
-PyYAML reads as one document and spliced out by node position (ruling 39);
-a text it can't read never reaches here, and there is no raw-text scan or
-fallback in the service (an earlier raw-text scan is kept in
-tests/verbatim.py for the tests that compare with it, ruling 44).
+"""Confmap provider neutralization: every non-`env` provider reference is
+replaced with a placeholder before the collector sees the text, with
+parity-aware escaping, and the caller refuses to run the collector if one
+survives. References are found on the decoded keys and values of a text PyYAML
+reads as one document and spliced out by node position; a text it can't read
+never reaches here, and there is no raw-text scan or fallback in the service
+(an earlier raw-text scan is kept in tests/verbatim.py for the tests that
+compare with it).
 
-Brace matching is linear (D13b ruling 37): scanning from each reference to
-its closing brace made a text of unbalanced `${a:` cost the square of its
-length (a 240 KB text ran for minutes). `_matching_braces` finds every
-brace's match in one pass, and `_neutralize_str` looks its references up
-there; the answers are the same as the scanning version's
-(tests/test_linear_scans.py runs it, kept in tests/verbatim.py, against
-these on random texts).
+Brace matching is linear: scanning from each reference to its closing brace
+made a text of unbalanced `${a:` cost the square of its length (a 240 KB text
+ran for minutes). `_matching_braces` finds every brace's match in one pass, and
+`_neutralize_str` looks its references up there; the answers are the same as
+the scanning version's (tests/test_linear_scans.py runs it, kept in
+tests/verbatim.py, against these on random texts).
 """
 
 from __future__ import annotations
@@ -24,7 +23,7 @@ import re
 from yaml.nodes import MappingNode, Node, ScalarNode, SequenceNode
 
 # The bounded loader, bound as `yaml`: every parse here goes through its
-# bounds (D13b ruling 24).
+# bounds.
 from app import bounded_yaml as yaml
 from app.placeholders import _infer_placeholder
 
@@ -55,14 +54,14 @@ from app.placeholders import _infer_placeholder
 _ALLOWED_CONFMAP_SCHEMES: frozenset[str] = frozenset({"env"})
 _SCHEME_CHARS_RE = re.compile(r"[A-Za-z][A-Za-z0-9._-]*")
 
-# Telflo-owned pseudo-schemes. These are NOT added to
-# _ALLOWED_CONFMAP_SCHEMES: `org` is not a registered confmap provider, so a
-# token that reached the collector would fail config load outright. They are
-# still neutralized like any other foreign scheme — the difference is purely in
-# reporting: a ${org:...} arriving here is reported as an unresolved
-# organization variable (since D20 the values are filled in before this runs,
-# so one left names a variable with no value), which beats the
-# component-level error the placeholder would otherwise produce.
+# Telflo-owned pseudo-schemes. These are NOT added to _ALLOWED_CONFMAP_SCHEMES:
+# `org` is not a registered confmap provider, so a token that reached the
+# collector would fail config load outright. They are still neutralized like
+# any other foreign scheme — the difference is purely in reporting: a
+# ${org:...} arriving here is reported as an unresolved organization variable
+# (the values are filled in before this runs, so one left names a variable with
+# no value), which beats the component-level error the placeholder would
+# otherwise produce.
 _TELFLO_SCHEMES: frozenset[str] = frozenset({"org"})
 
 
@@ -138,21 +137,21 @@ def _neutralize_str(value: str, placeholder: str) -> tuple[str, list[str]]:
 
 
 # ---------------------------------------------------------------------------
-# Neutralisation by splice (D13b ruling 39)
+# Neutralization by splice
 #
-# The escape bypass (the review of b25c81a): a YAML double-quoted escape
-# (`"\x24{file:…}"`, `"${file:…}"`, an escaped line break between `$` and
-# `{`) hides a live `${file:…}` from a raw-text scan, yet the collector
-# decodes the escape and expands the reference, and the file's contents come
-# back in the error. The re-dump bypass (M1): re-serialising the whole
-# document to carry a placeholder changed untouched scalars' types (an
-# unquoted date became a quoted string, YAML 1.1 `1:30` became 90, `on` became
-# true), so a text answered differently from how its raw form does.
+# The escape bypass: a YAML double-quoted escape (`"\x24{file:…}"`,
+# `"${file:…}"`, an escaped line break between `$` and `{`) hides a live
+# `${file:…}` from a raw-text scan, yet the collector decodes the escape and
+# expands the reference, and the file's contents come back in the error. The
+# re-dump bypass: re-serialising the whole document to carry a placeholder
+# changed untouched scalars' types (an unquoted date became a quoted string,
+# YAML 1.1 `1:30` became 90, `on` became true), so a text answered differently
+# from how its raw form does.
 #
 # The fix detects references on the DECODED keys and scalar values — PyYAML's
 # composed nodes, whose `.value` is what the collector's confmap layer reads —
-# and neutralises each by replacing EXACTLY that node's source span with a
-# double-quoted rendering of its neutralised value. Every other byte stays
+# and neutralizes each by replacing EXACTLY that node's source span with a
+# double-quoted rendering of its neutralized value. Every other byte stays
 # as sent: no whole-document re-dump, so nothing drifts. An alias (`*a`) is
 # not a node of its own in the composed tree (the composer shares the
 # anchored node), so the anchor's node is spliced once and the alias follows.
@@ -224,8 +223,8 @@ def apply_splices(text: str, splices: list[tuple[int, int, str]]) -> str:
 
 
 def _collect_provider_splices(text: str, root: Node) -> tuple[list[tuple[int, int, str]], list[str]]:
-    """Every splice that neutralises a live non-`env` reference in a decoded
-    key or scalar value under `root`, and the schemes neutralised. Splices are
+    """Every splice that neutralizes a live non-`env` reference in a decoded
+    key or scalar value under `root`, and the schemes neutralized. Splices are
     deduped by their start index, so a node reached through several aliases is
     spliced once; a container reached through several aliases is walked once."""
     splices: dict[int, tuple[int, int, str]] = {}
@@ -270,9 +269,9 @@ def _collect_provider_splices(text: str, root: Node) -> tuple[list[tuple[int, in
 def neutralize_providers(text: str, root: Node | None) -> tuple[str, list[str]]:
     """Replace every live non-`env` confmap reference in a decoded key or
     scalar value with a type-shaped placeholder, by splicing the node's source
-    span (D13b ruling 39). Returns `(rewritten_text, schemes_neutralized)`;
-    `root` is the composed document (`bounded_yaml.single_node`), or `None` for
-    an empty document (nothing to neutralise)."""
+    span. Returns `(rewritten_text, schemes_neutralized)`; `root` is the
+    composed document (`bounded_yaml.single_node`), or `None` for an empty
+    document (nothing to neutralize)."""
     if root is None:
         return text, []
     splices, schemes = _collect_provider_splices(text, root)
@@ -292,14 +291,13 @@ def live_nonenv_schemes(text: str, root: Node | None) -> list[str]:
 
 
 def _neutralize_disallowed_providers(yaml_content: str) -> tuple[str, list[str]]:
-    """Compose `yaml_content` and neutralise it (`neutralize_providers`) in
+    """Compose `yaml_content` and neutralize it (`neutralize_providers`) in
     one call; the tests' entry point (the runner composes once and calls
     `neutralize_providers` itself). Returns `(rewritten_yaml,
     schemes_neutralized)`.
 
     There is no raw-text fallback: a text PyYAML can't read as one document
-    raises `YAMLError` here, and the runner answers such a text invalid
-    before anything is neutralised (ruling 39(d)), so it never reaches the
-    collector. `TooDeep` / `TooManyAliases` propagate, as every parsing entry
-    point's do."""
+    raises `YAMLError` here, and the runner answers such a text invalid before
+    anything is neutralized, so it never reaches the collector. `TooDeep` /
+    `TooManyAliases` propagate, as every parsing entry point's do."""
     return neutralize_providers(yaml_content, yaml.single_node(yaml_content))

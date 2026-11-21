@@ -8,9 +8,9 @@ import {
 } from "./routing-connector.js";
 import type { OTelEdge, OTelNode, Pipeline } from "./types.js";
 
-// Layered re-layout of a parsed pipeline graph. A group is
-// found by its pipeline's opaque id (D9a decision 7), and a connector's edge
-// may end at a group (a connector in a pipeline with nothing else to join).
+// Layered re-layout of a parsed pipeline graph. A group is found by its
+// pipeline's opaque id, and a connector's edge may end at a group (a
+// connector in a pipeline with nothing else to join).
 //
 // parseYAMLToGraph builds nodes in YAML order with fixed arithmetic positions
 // (one row per pipeline, a fixed column pitch), which overlaps wide cards and

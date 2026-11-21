@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """Reads pip-licenses' JSON report of an environment holding exactly a lock's
-packages and decides whether each package's license is on the allowed list
-(ADR 0019, D13b Preflight ruling 12). `check-licenses.sh` runs it; it isn't
-meant to be run by hand.
+packages and decides whether each package's license is on the allowed list.
+`check-licenses.sh` runs it; it isn't meant to be run by hand.
 
     evaluate-licenses.py <policy.json> <report.json> <lock>
 
@@ -215,7 +214,7 @@ def normalise(name: str) -> str:
 
 def lock_names(lock: Path) -> set[str]:
     """The packages a pip-compile lock pins (`name==version`, or
-    `name @ url`), normalised."""
+    `name @ url`), normalized."""
     names = set()
     for line in lock.read_text(encoding="utf-8").splitlines():
         match = re.match(r"^([A-Za-z0-9][A-Za-z0-9._-]*)(\[[^\]]*\])?\s*(==|@)", line)
@@ -243,7 +242,7 @@ def main(argv: list[str]) -> int:
     if not all(isinstance(package, dict) and isinstance(package.get("Name"), str) for package in report):
         print("ERROR: pip-licenses' report has an entry without a package name", file=sys.stderr)
         return 2
-    # One entry per package: a second under the same name (as normalised)
+    # One entry per package: a second under the same name (as normalized)
     # would replace the first, which would then go unchecked.
     reported: dict[str, dict] = {}
     duplicated = set()
@@ -282,7 +281,7 @@ def main(argv: list[str]) -> int:
     if disallowed:
         print("")
         print(f"ERROR: {disallowed} package license(s) above are not on the allowed list in {policy_path}.")
-        print("Only a license that allows redistribution may be added to that list (ADR 0019).")
+        print("Only a license that allows redistribution may be added to that list.")
         return 1
     print(f"All {len(reported)} Python package licenses are allowed.")
     return 0

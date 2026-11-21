@@ -7,8 +7,8 @@ import { monacoYamlOptions } from "~/lib/editor/collector-schema.js";
 
 /*
  * monaco-yaml's own worker (yaml-language-server inside, as the editor
- * bundles it), run in Node over a collector schema (D13c Preflight ruling 9):
- * what the YAML tab would mark, complete and show on hover for a text.
+ * bundles it), run in Node over a collector schema: what the YAML tab would
+ * mark, complete and show on hover for a text.
  *
  * `vitest.config.ts` inlines `monaco-yaml/yaml.worker.js`, so its import of
  * `monaco-worker-manager/worker` reaches the mock below, whose `initialize`
@@ -17,11 +17,11 @@ import { monacoYamlOptions } from "~/lib/editor/collector-schema.js";
  * `createData`); the object it returns is the API the editor calls
  * (`doValidation`, `doComplete`, `doHover`), each taking a model's URI.
  *
- * The options are the editor's own (`monacoYamlOptions`, Ruling 26), and
- * the `createData` is what monaco-yaml makes of them: its own
+ * The options are the editor's own (`monacoYamlOptions`), and the
+ * `createData` is what monaco-yaml makes of them: its own
  * `configureMonacoYaml`, given a stand-in Monaco, merges them into its
- * defaults, and `getOptions()` hands over the result, so nothing here
- * copies either.
+ * defaults, and `getOptions()` hands over the result, so nothing here copies
+ * either.
  *
  * yaml-language-server keeps parsed documents at module level, by URI and
  * version, shared by every worker in the file: so every check gets a model
@@ -139,10 +139,10 @@ export interface SchemaWorker {
 }
 
 /**
- * A worker matching `schema` to every model, with the options the editor
- * gives monaco-yaml for it (`monacoYamlOptions`: completion and hover on, no
- * schema request, the schema's file name kept out of hover; D13c Preflight
- * rulings 12 and 13), as monaco-yaml passes them to its worker.
+ * A worker matching `schema` to every model, with the options the editor gives
+ * monaco-yaml for it (`monacoYamlOptions`: completion and hover on, no schema
+ * request, the schema's file name kept out of hover), as monaco-yaml passes
+ * them to its worker.
  */
 export async function schemaWorker(schema: unknown): Promise<SchemaWorker> {
   const factory = await workerFactory();

@@ -22,10 +22,10 @@ import { changeMemberRole } from "~/lib/api-client.js";
 import { isManagementLost, isRefusal, refusalMessage, useLeaveManagement } from "~/lib/organizations.js";
 
 /*
- * Changing a member's role (ADR 0018). It offers Admin and Contributor,
- * the only roles (D7 decision 2). A refusal toasts the API's message, and
- * anything else "Failed to update role"; a refusal saying the viewer is no
- * longer an admin here leaves the page for /app.
+ * Changing a member's role. It offers Admin and Contributor, the only
+ * roles. A refusal toasts the API's message, and anything else "Failed to
+ * update role"; a refusal saying the viewer is no longer an admin here
+ * leaves the page for /app.
  */
 
 interface ChangeRoleDialogProps {

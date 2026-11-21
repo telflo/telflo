@@ -1,12 +1,11 @@
-// Go 1.26.9, since pkg/ottl has needed Go 1.26 since v0.160.0 (D15a
-// Preflight rulings 1 and 2). pkg/ottl follows the catalogue's default
-// collector version: pkg/ottlassert's TestOTTLVersionIsTheCatalogueDefault
-// fails when they differ. Build with GOTOOLCHAIN=local.
+// Go 1.26.9, since pkg/ottl has needed Go 1.26 since v0.160.0. pkg/ottl
+// follows the catalog's default collector version: pkg/ottlassert's
+// TestOTTLVersionIsTheCatalogueDefault fails when they differ. Build with
+// GOTOOLCHAIN=local.
 //
-// D15a Task 2 added github.com/getkin/kin-openapi v0.149.0 (MIT; the
-// controller's Ruling 30), for internal/server's OpenAPI conformance test
-// only: no file but a test imports it, so it is never in the binary
-// (TestKinOpenAPIIsATestOnlyDependency).
+// github.com/getkin/kin-openapi v0.149.0 (MIT) is for internal/server's
+// OpenAPI conformance test only: no file but a test imports it, so it is
+// never in the binary (TestKinOpenAPIIsATestOnlyDependency).
 
 module github.com/telflo/ottl-evaluator
 

@@ -20,38 +20,33 @@ interface ValidationPipelinesPanelProps {
 }
 
 /**
- * The Testing tab's Validation subtab (D15a decisions 12, 13 and 18;
- * Preflight rulings 26 and 27): its help, words, empty state and
- * confirmation. The version open in the
- * editor's validation pipelines, one per YAML pipeline, each a
- * ValidationPipelineCard holding its rules; "+ Pipeline" creates one
- * (ValidationPipelineEditorDialog). Pipelines and rules can be created,
- * edited and deleted on any version, published or not, by anyone who can see
- * the configuration (decision 13).
+ * The Testing tab's Validation subtab: its help, words, empty state and
+ * confirmation. The version open in the editor's validation pipelines, one
+ * per YAML pipeline, each a ValidationPipelineCard holding its rules; "+
+ * Pipeline" creates one (ValidationPipelineEditorDialog). Pipelines and
+ * rules can be created, edited and deleted on any version, published or not,
+ * by anyone who can see the configuration.
  *
- * Differences (the Parity Notes):
  * - the pipelines are read each time the subtab shows and when the version
- *   changes (Preflight ruling 26), not once a version; a failed read shows
- *   inline with Retry ("Failed to load validation pipelines", or the API's
- *   words for a refusal), not a toast with no read again; it is announced
+ *   changes; a failed read shows inline with Retry ("Failed to load
+ *   validation pipelines", or the API's words for a refusal); it is announced
  *   (`role="alert"`), as a card's is;
- * - the whole panel is blocked from replay (`ph-no-capture`, Preflight ruling
- *   27): pipeline names and every rule's name, description, pattern and
- *   OTTL are configuration text (ADR 0024); its dialogs, being portals, each
- *   carry the class too;
+ * - the whole panel is blocked from replay (`ph-no-capture`): pipeline names
+ *   and every rule's name, description, pattern and OTTL are configuration
+ *   text; its dialogs, being portals, each carry the class too;
  * - closing "New validation pipeline" gives the focus back to "+ Pipeline";
  *   a validation pipeline deleted gives it to the next card's header, else
  *   the previous one's, else "+ Pipeline"; a confirmation closed without a
  *   delete gives it back to the card's Delete, not to the page; a card gone
  *   under its own rule editor or confirmation (its pipeline "not found", a
- *   teammate's delete) gives it to "+ Pipeline" (Rulings 57, 59); a card gone
- *   under its pipeline's delete confirmation, to the card now at its place,
- *   else the one before, else "+ Pipeline" (Ruling 61);
+ *   teammate's delete) gives it to "+ Pipeline"; a card gone under its
+ *   pipeline's delete confirmation, to the card now at its place, else the
+ *   one before, else "+ Pipeline";
  * - while any of its dialogs shows, the tab knows (`onDialogShown`): a Play
  *   all under way doesn't switch to Tests and tear the dialog away;
- * - in the playground (D31-1 decisions 24 and 31), + Pipeline opens the
- *   sign-up prompt at its button (`useLockedAction`), as every card's
- *   change does; the pipelines and their rules read from the sample;
+ * - in the playground, + Pipeline opens the sign-up prompt at its button
+ *   (`useLockedAction`), as every card's change does; the pipelines and their
+ *   rules read from the sample;
  * - nothing here sends an analytics event.
  */
 export function ValidationPipelinesPanel({ onDialogShown }: ValidationPipelinesPanelProps) {
@@ -112,7 +107,7 @@ export function ValidationPipelinesPanel({ onDialogShown }: ValidationPipelinesP
    * that opened it, while it is there (the confirmation has no Radix
    * trigger, so Radix's own return would leave it on the page's body); its
    * card gone meanwhile (its pipeline "not found" under an abandoned rule
-   * save, a teammate's delete), as after a delete (D15a Ruling 61).
+   * save, a teammate's delete), as after a delete.
    */
   const focusAfterDelete = (event: Event) => {
     const opener = deleteOpener.current;

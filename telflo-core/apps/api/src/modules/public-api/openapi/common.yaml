@@ -1,7 +1,7 @@
-# The public surface's shared components (D25 decision 49, Ruling 160): the
-# security schemes, the error envelope, a validation error's item and the
-# list shape, the refusals every route shares, and GET /health. Each area's
-# fragment (<area>.yaml) refers to them by $ref. Assembled by document.ts.
+# The public surface's shared components: the security schemes, the error
+# envelope, a validation error's item and the list shape, the refusals every
+# route shares, and GET /health. Each area's fragment (<area>.yaml) refers to
+# them by $ref. Assembled by document.ts.
 paths:
   /health:
     get:

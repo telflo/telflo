@@ -2,12 +2,11 @@ import { SERVICE_ACCOUNT_ERROR_MESSAGES, type ServiceAccountErrorCode } from "@t
 import { AppError } from "../../errors.js";
 
 /*
- * The refusals of the service-account and token routes (D22 decisions 26
- * to 31), each under its contract code, in the contracts' words, which the
- * web shows as they are. Fixed words only: an account's name and address,
- * and a token's name, token and prefix, never go in an error (decisions 48
- * and 49). A contributor's refusal
- * and another organization's id are the organizations module's
+ * The refusals of the service-account and token routes, each under its
+ * contract code, in the contracts' words, which the web shows as they are.
+ * Fixed words only: an account's name and address, and a token's name, token
+ * and prefix, never go in an error. A contributor's refusal and another
+ * organization's id are the organizations module's
  * (`organizationAdminRequired`, `organizationNotFound`).
  */
 
@@ -25,12 +24,12 @@ export function serviceAccountNameTaken(): AppError {
   return serviceAccountError("service_account_name_taken", 409);
 }
 
-/** The organization already has 100 live accounts (decision 8). */
+/** The organization already has 100 live accounts. */
 export function serviceAccountLimitReached(): AppError {
   return serviceAccountError("service_account_limit_reached", 409);
 }
 
-/** An unknown token, another account's and one already revoked, alike (decision 31). */
+/** An unknown token, another account's and one already revoked, alike. */
 export function apiTokenNotFound(): AppError {
   return serviceAccountError("api_token_not_found", 404);
 }
@@ -40,7 +39,7 @@ export function apiTokenNameTaken(): AppError {
   return serviceAccountError("api_token_name_taken", 409);
 }
 
-/** The account already has 20 live tokens (decision 8): the owner's words. */
+/** The account already has 20 live tokens. */
 export function apiTokenLimitReached(): AppError {
   return serviceAccountError("api_token_limit_reached", 409);
 }

@@ -9,12 +9,11 @@ import { useEditorStore } from "~/lib/stores/editor-store.js";
 import { builderStore, componentNamed, openText } from "~/test/builder-store.js";
 
 /*
- * Held rows in the Configuration tab (D9c Task 1; Preflight ruling 8): a
- * held row's typing is written when the form goes (another node selected),
- * and an empty one is the form's local state, gone with it; the tab's form
- * is keyed by the load and the node, so a configuration loaded with the
- * same node ids doesn't keep one. The filelog receiver is given a form with
- * a held-row list here (its own lands in D9c Task 8).
+ * Held rows in the Configuration tab: a held row's typing is written when
+ * the form goes (another node selected), and an empty one is the form's
+ * local state, gone with it; the tab's form is keyed by the load and the
+ * node, so a configuration loaded with the same node ids doesn't keep one.
+ * The filelog receiver is given a form with a stand-in held-row list here.
  */
 
 vi.mock("./config-forms/registry.js", async (importOriginal) => {
@@ -67,7 +66,7 @@ const rows = () => screen.queryAllByPlaceholderText("e.g. default") as HTMLInput
 const namespaces = () =>
   (parseYaml(builderStore().text) as { receivers: { filelog: { namespaces: string[] } } }).receivers.filelog.namespaces;
 
-describe("held rows in the Configuration tab (Preflight ruling 8)", () => {
+describe("held rows in the Configuration tab", () => {
   it("typing in a held row, then selecting another node, writes the item", () => {
     openText(TEXT);
     render(<ConfigurationPanel />);

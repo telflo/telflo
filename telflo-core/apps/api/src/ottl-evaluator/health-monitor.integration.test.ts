@@ -11,13 +11,13 @@ import {
   readOttlEvaluatorDownSince,
 } from "./health-monitor.js";
 
-// The OTTL evaluator's health monitor against the real row (D15a decision
-// 15, Preflight ruling 23; migration 030's ottl_evaluator_state and
-// ottl_evaluator_mark): the client of the OpenAPI-checked fake asks its
-// health, and each change goes through withDispatcherContext to the one row
-// every API process reads, which queuing reads (isOttlEvaluatorKnownDown).
-// Checks run one at a time (checkOnce), so nothing waits on a clock;
-// health-monitor.test.ts has the timer's tests.
+// The OTTL evaluator's health monitor against the real row (migration 030's
+// ottl_evaluator_state and ottl_evaluator_mark): the client of the
+// OpenAPI-checked fake asks its health, and each change goes through
+// withDispatcherContext to the one row every API process reads, which
+// queuing reads (isOttlEvaluatorKnownDown). Checks run one at a time
+// (checkOnce), so nothing waits on a clock; health-monitor.test.ts has the
+// timer's tests.
 
 const evaluator = useFakeOttlEvaluator();
 

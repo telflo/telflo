@@ -1,25 +1,23 @@
 """OTLP-replay strategy: replace all user receivers with a sandbox OTLP/HTTP
 listener, then HTTP-POST the user's fixture (OTLP-JSON) to it.
 
-D14a Task 4; Preflight rulings 1, 2, 5:
-
 - **The input arrives as bytes** (the staged ``input.raw``), never decoded
   first, so ``_decode_fixture``'s UTF-16 handling is reachable.
-- **The replay's 30 s total budget** (ruling 2): each POST has 5 s at
-  most, and once the budget is spent the remaining payloads aren't sent; the
-  hold still runs, and the ``[replay]`` block says "N of M payloads not
-  sent: the replay's 30 s budget ran out". Both are hard bounds (Ruling 29):
-  every POST is awaited under ``asyncio.wait_for(min(what is left of the
-  budget, 5 s))``, since httpx's own timeouts bound each read, not the
-  request, and a receiver answering a byte at a time would outlast them. A
-  POST that runs out its 5 s is a rejection ("no answer within 5 s"); one
-  the budget's end cuts short counts as not sent.
+- **The replay's 30 s total budget**: each POST has 5 s at most, and once the
+  budget is spent the remaining payloads aren't sent; the hold still runs,
+  and the ``[replay]`` block says "N of M payloads not sent: the replay's
+  30 s budget ran out". Both are hard bounds: every POST is awaited under
+  ``asyncio.wait_for(min(what is left of the budget, 5 s))``, since httpx's
+  own timeouts bound each read, not the request, and a receiver answering a
+  byte at a time would outlast them. A POST that runs out its 5 s is a
+  rejection ("no answer within 5 s"); one the budget's end cuts short counts
+  as not sent.
 - The strategy is split into its phases (`app/executors/base.py`): the
   collector is spawned, stopped and read by `app/run.py`.
 - The informer wait verifies the cluster with its certificates
   (`_shared._wait_for_pod_listable`).
-- ``httpx2`` replaces ``httpx`` (Preflight ruling 19), imported as
-  ``httpx``; the client ignores proxy variables (``trust_env=False``).
+- ``httpx2`` replaces ``httpx``, imported as ``httpx``; the client ignores
+  proxy variables (``trust_env=False``).
 - ``_decode_fixture`` replaces what it can't decode after a BOM, so a
   malformed UTF-8 or UTF-16 file that begins with one never raises.
 
@@ -276,7 +274,7 @@ async def _replay_file(
                 content=payload.encode("utf-8", "replace"),
                 headers={"Content-Type": "application/json"},
             )
-            # A hard bound on this POST (Ruling 29): its own 5 s, or what is
+            # A hard bound on this POST: its own 5 s, or what is
             # left of the budget when that is less.
             budget_bound = remaining <= post_timeout_seconds
             try:

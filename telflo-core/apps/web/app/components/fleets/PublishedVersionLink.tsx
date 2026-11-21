@@ -4,10 +4,9 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "~/comp
 
 /*
  * A published version as "{configurationName} @v{n}", linked to the
- * editor's version (D17c-1 decisions 7, 23 and 46; Preflight ruling 32):
- * one component for the Groups tab's Published version, the Collectors
- * grid's Version and the details' Target Version and Effective Version
- * (and the group's details).
+ * editor's version: one component for the Groups tab's Published
+ * version, the Collectors grid's Version and the details' Target Version
+ * and Effective Version (and the group's details).
  *
  * - The name is a span of its own, then a real " " and `@v{n}`, so the
  *   link's text and accessible name are "{configurationName} @v{n}" in every
@@ -15,12 +14,11 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "~/comp
  * - In a table (`variant="table"`) the name is an inline-block `truncate`
  *   span at most 16rem wide, and the link is a tooltip's trigger always
  *   (hover and keyboard focus): the full "{configurationName} @v{n}", then
- *   `meaning` as its second line when given (the grid's D16c Ruling 21
- *   meaning: one tooltip per cell). In a dialog (`variant="dialog"`) the
- *   whole name shows, wrapping, with no tooltip.
- * - Text only (ADR 0024; D17b-1 decision 32): no `title`, no `aria-label`,
- *   no attribute holds the name. The tooltip's portal is in the signed-in
- *   shell's body, ph-mask.
+ *   `meaning` as its second line when given (one tooltip per cell). In a
+ *   dialog (`variant="dialog"`) the whole name shows, wrapping, with no
+ *   tooltip.
+ * - Text only: no `title`, no `aria-label`, no attribute holds the name.
+ *   The tooltip's portal is in the signed-in shell's body, ph-mask.
  */
 
 export interface PublishedVersionLinkProps {

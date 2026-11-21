@@ -4,12 +4,12 @@ import { collectorReadsAsOther } from "./collector-scalars.js";
 
 /*
  * Which plain scalars the collector's yaml.v3 (go.yaml.in/yaml/v3 v3.0.5,
- * resolve.go) reads as something other than a string (D9c Rulings 69 and
- * 77). Each case below is what a decode with v3.0.5 gives (the review's
- * probe over 145,897 strings found no string this misses after Ruling 77).
+ * resolve.go) reads as something other than a string. Each case below is
+ * what a decode with v3.0.5 gives (a probe over 145,897 strings found no
+ * string this misses).
  */
 
-describe("collectorReadsAsOther (Rulings 69 and 77)", () => {
+describe("collectorReadsAsOther", () => {
   it.each([
     // Integers: underscores, bases, signs (resolve.go:191-258).
     "1_000",

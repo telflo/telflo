@@ -4,10 +4,10 @@ import { describe, expect, it } from "vitest";
 import { auditUserAgent } from "./audit-user-agent.js";
 
 /*
- * The User-Agent as the platform stores it (D25 Ruling 186): "[redacted]"
- * when it may hold a tf_, tll_ or tqd_ credential in any spelling the request
- * log recognizes; otherwise as sent. Credentials are built at run time and
- * compared as booleans.
+ * The User-Agent as the platform stores it: "[redacted]" when it may hold a
+ * tf_, tll_ or tqd_ credential in any spelling the request log recognizes;
+ * otherwise as sent. Credentials are built at run time and compared as
+ * booleans.
  */
 
 const requestWith = (userAgent: string | undefined) =>
@@ -15,7 +15,7 @@ const requestWith = (userAgent: string | undefined) =>
 
 const body = () => randomBytes(32).toString("base64url");
 
-describe("auditUserAgent (D25 Ruling 186)", () => {
+describe("auditUserAgent", () => {
   it.each([
     ["a tf_ token", () => `ci-runner tf_${body()}`],
     ["a tf_ token in upper case", () => `ci-runner TF_${body()}`],

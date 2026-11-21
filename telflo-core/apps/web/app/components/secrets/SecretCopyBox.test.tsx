@@ -21,7 +21,7 @@ function attributeValues(): string[] {
   );
 }
 
-describe("SecretCopyBox (D17a Preflight ruling 13)", () => {
+describe("SecretCopyBox", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
   });
@@ -47,7 +47,7 @@ describe("SecretCopyBox (D17a Preflight ruling 13)", () => {
     expect(attributeValues().some((value) => value.includes(BEARER))).toBe(false);
   });
 
-  it("keeps no line breaks of its own by default; multiline keeps the secret's and copies them as shown (D17c-1 Preflight ruling 25)", async () => {
+  it("keeps no line breaks of its own by default; multiline keeps the secret's and copies them as shown", async () => {
     const { rerender } = render(<SecretCopyBox secret={BEARER} copyLabel="Copy default token" />);
     expect(screen.getByText(BEARER)).not.toHaveClass("whitespace-pre-wrap");
 
@@ -67,7 +67,7 @@ describe("SecretCopyBox (D17a Preflight ruling 13)", () => {
   });
 
   it("copies the secret, reads Copied for 2 s, then Copy again", async () => {
-    // The 2 s are D17a Preflight ruling 13's: a change to the constant fails here, not only the timing below.
+    // The 2 s are fixed: a change to the constant fails here, not only the timing below.
     expect(COPIED_FOR_MS).toBe(2_000);
     vi.useFakeTimers();
     const writeText = vi.fn(() => Promise.resolve());

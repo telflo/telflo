@@ -19,15 +19,14 @@ import { createApiTokenRepository } from "../service-accounts/repositories/api-t
 import { apiTokenHash } from "../service-accounts/tokens.js";
 
 /*
- * The token check and GET /api/public/v1/whoami (D22 decisions 11 and 33 to
- * 39), through the real server, as the API's own role. A token is a secret
- * like a bearer (decision 48): every token here is built at run time (by
- * the API's create or by addApiToken), and the canaries (booleans with
- * fixed labels) run before any comparison of a reply, a log line or a row
- * that could hold one (Ruling 99), so a failure prints none.
+ * The token check and GET /api/public/v1/whoami, through the real server,
+ * as the API's own role. A token is a secret like a bearer: every token
+ * here is built at run time (by the API's create or by addApiToken), and
+ * the canaries (booleans with fixed labels) run before any comparison of a
+ * reply, a log line or a row that could hold one, so a failure prints none.
  */
 
-// The opamp-server every server needs (D11b decision 8): this file's own fake.
+// The opamp-server every server needs: this file's own fake.
 const opamp = useFakeOpampServer();
 
 const csrfHeaders = { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE };
@@ -43,7 +42,7 @@ function cookieValue(response: LightMyRequestResponse, name: string): string {
   return line.slice(name.length + 1, line.indexOf(";"));
 }
 
-describe("the token check and GET /api/public/v1/whoami (D22 decisions 33 to 39)", () => {
+describe("the token check and GET /api/public/v1/whoami", () => {
   let settings: AppSettings;
   /** The server's connection, as the API's own role. */
   let db: Kysely<Database>;
@@ -115,7 +114,7 @@ describe("the token check and GET /api/public/v1/whoami (D22 decisions 33 to 39)
       payload: { organizationId: group.id },
     });
     expect(switched.statusCode).toBe(200);
-    // A no-op when the sign-in already landed there (D36-1 decision 56): no new cookie, the token sent stands.
+    // A no-op when the sign-in already landed there: no new cookie, the token sent stands.
     return { user: account.user, group, access: (switched.headers["set-cookie"] === undefined ? cookieValue(signIn, "telflo_access") : cookieValue(switched, "telflo_access")) };
   };
 
@@ -236,7 +235,7 @@ describe("the token check and GET /api/public/v1/whoami (D22 decisions 33 to 39)
     });
   });
 
-  describe("the one refusal (decision 34)", () => {
+  describe("the one refusal", () => {
     it("every refusal answers the same 401 body and WWW-Authenticate: Bearer: no header, another scheme, a malformed token, an unknown token, a revoked one, an expired one, a deleted account's, a removed membership's, a deleted organization's", async () => {
       const refusals: [string, () => Promise<LightMyRequestResponse>][] = [];
       const unknown = `tf_${randomBytes(32).toString("base64url")}`;
@@ -290,8 +289,8 @@ describe("the token check and GET /api/public/v1/whoami (D22 decisions 33 to 39)
         refusals.push(["a removed membership's token", () => whoami(`Bearer ${token}`)]);
       }
       {
-        // The organization alone deleted, by the owner: D5's delete would soft-delete the
-        // account too (decision 21), so the account holds a membership elsewhere and stays live.
+        // The organization alone deleted, by the owner: the organization's delete would soft-delete
+        // the account too, so the account holds a membership elsewhere and stays live.
         const { admin, serviceAccountId, token } = await liveToken();
         await addMembership(ownerDb, { userId: serviceAccountId, role: "contributor" });
         await ownerDb.updateTable("organizations").set({ deleted_at: clock }).where("id", "=", admin.group.id).execute();
@@ -316,7 +315,7 @@ describe("the token check and GET /api/public/v1/whoami (D22 decisions 33 to 39)
     });
   });
 
-  describe('"Last used" (decision 38)', () => {
+  describe('"Last used"', () => {
     it("the first check sets last_used_at, a second within the minute doesn't write, one after the minute does", async () => {
       const { id, token } = await liveToken();
       expect(await lastUsedAt(id)).toBeNull();
@@ -366,7 +365,7 @@ describe("the token check and GET /api/public/v1/whoami (D22 decisions 33 to 39)
       expect((await lastUsedAt(id))?.getTime()).toBe(at.getTime());
     });
 
-    it("never stamps a revoked token (Preflight ruling 5)", async () => {
+    it("never stamps a revoked token", async () => {
       const admin = await adminOfGroup();
       const { user } = await addServiceAccount(ownerDb, { organizationId: admin.group.id, createdAt: new Date(clock.getTime() - 120_000) });
       const { apiToken } = await addApiToken(ownerDb, {
@@ -385,7 +384,7 @@ describe("the token check and GET /api/public/v1/whoami (D22 decisions 33 to 39)
     });
   });
 
-  describe("the token in logs (decision 48)", () => {
+  describe("the token in logs", () => {
     it("no log line of a check, a success or a refusal holds the token, nor the 404's reply for a path holding one", async () => {
       const { admin, serviceAccountId, id, token } = await liveToken();
       logLines = [];
@@ -394,7 +393,7 @@ describe("the token check and GET /api/public/v1/whoami (D22 decisions 33 to 39)
         await whoami(`Basic ${token}`),
         await whoami(`Bearer ${token}x`),
         await server.inject({ method: "GET", url: `/api/public/v1/${token}` }),
-        // With the token as its bearer too (Ruling 163): the plugin's 404, after the check, holding neither.
+        // With the token as its bearer too: the plugin's 404, after the check, holding neither.
         await server.inject({ method: "GET", url: `/api/public/v1/${token}`, headers: { authorization: `Bearer ${token}` } }),
         await server.inject({ method: "GET", url: `${WHOAMI}?token=${token}`, headers: { authorization: `Bearer ${token}` } }),
       ];
@@ -408,7 +407,7 @@ describe("the token check and GET /api/public/v1/whoami (D22 decisions 33 to 39)
       expect(logLines.length).toBeGreaterThan(0);
       expect(holdsToken(logLines.join("\n"), token)).toBe(false);
       expect(replies.some((reply) => holdsToken(reply.body, token))).toBe(false);
-      // A path holding the token, with no Authorization, is the one 401 since D25 (decision 16): the plugin's 404 answers after the check.
+      // A path holding the token, with no Authorization, is the one 401: the plugin's 404 answers after the check.
       expect(replies.map((reply) => reply.statusCode)).toEqual([200, 401, 401, 401, 404, 200, 401]);
     });
   });

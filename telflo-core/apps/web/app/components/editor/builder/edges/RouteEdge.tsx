@@ -3,12 +3,12 @@ import { BaseEdge, EdgeLabelRenderer, getBezierPath, type EdgeProps } from "@xyf
 import type { OTelEdge } from "~/lib/graph/types.js";
 
 /**
- * A route edge: the derived, read-only edge from a routing or
- * failover connector to a pipeline it targets, dashed in the connector
- * colour, with a chip saying why ("2 routes + default", "priority 1").
- * Never stored: the canvas builds these from the connector's config on
- * every render (`buildRouteEdges`). The chip is text, with fixed words and
- * numbers only.
+ * A route edge: the derived, read-only edge from a routing or failover
+ * connector to a pipeline it targets, dashed in the connector color, with
+ * a chip saying why ("2 routes + default", "priority 1"). Never stored:
+ * the canvas builds these from the connector's config on every render
+ * (`buildRouteEdges`). The chip is text, with fixed words and numbers
+ * only.
  */
 export function RouteEdge({
   id,

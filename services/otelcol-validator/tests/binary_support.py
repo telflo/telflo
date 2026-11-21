@@ -1,14 +1,13 @@
 """What the binary tests share (marked `binary`, run inside the image with
-`pytest -m binary`): where the collectors and the catalogue are, which
-versions the catalogue offers, and running a check on one of them.
+`pytest -m binary`): where the collectors and the catalog are, which
+versions the catalog offers, and running a check on one of them.
 
 An offered version the image doesn't hold is skipped, unless the image was
-built to hold it (D13b ruling 53): the `test` target sets
-`OTELCOL_EXPECTED_VERSIONS` to its `OTELCOL_VERSIONS` build argument (`all`,
-`default` or a comma-separated list), and a version it names that isn't held
-fails the test instead, so a build that silently baked fewer collectors
-can't pass by skipping them. Run outside the image (no variable), every
-version not held is skipped.
+built to hold it: the `test` target sets `OTELCOL_EXPECTED_VERSIONS` to its
+`OTELCOL_VERSIONS` build argument (`all`, `default` or a comma-separated
+list), and a version it names that isn't held fails the test instead, so a
+build that silently baked fewer collectors can't pass by skipping them. Run
+outside the image (no variable), every version not held is skipped.
 """
 
 from __future__ import annotations
@@ -37,7 +36,7 @@ def version_key(version: str) -> tuple[int, ...]:
 
 
 def _default_version(catalog_dir: Path = CATALOG_DIR) -> str:
-    """The catalogue's default version of the distribution among its offered
+    """The catalog's default version of the distribution among its offered
     rows, as the image's download script picks it (never a deprecated row;
     catalog.py reads no default: the service never needs one)."""
     for path in sorted(catalog_dir.glob("*.json")):
@@ -72,7 +71,7 @@ def held(version: str) -> bool:
 
 def binary_for(version: str) -> Path:
     """The version's collector; a version not held fails the test when the
-    image was built to hold it (ruling 53), and is skipped otherwise."""
+    image was built to hold it, and is skipped otherwise."""
     binary = binary_path(BINARY_DIR, version)
     if not binary.is_file():
         if version in expected_versions():
@@ -83,7 +82,7 @@ def binary_for(version: str) -> Path:
 
 async def check(version: str, text: str) -> ValidationResult:
     """The service's own check of `text` (placeholders, Datadog's hostname,
-    the text's requirements, the rerun: Preflight ruling 9)."""
+    the text's requirements, the rerun)."""
     return await run_validation(
         binary_for(version), text, slots=asyncio.Semaphore(1), slot_wait_seconds=5.0, timeout_seconds=30
     )

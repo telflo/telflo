@@ -21,11 +21,11 @@ interface FixtureMismatchDialogProps {
 
 /**
  * The warning before a run whose input doesn't suit the target pipeline's
- * receiver (D14a decision 17; `lib/test-runs/fixture-shape.ts`). "Run Anyway"
- * queues the run; Cancel (or closing) queues nothing. The tester attaches the
- * same advisory to the run's results. Where the focus goes as it closes is
- * the caller's (`onCloseAutoFocus`, D14b Rulings 46 and 50): with no Radix
- * trigger, Radix's own handling would leave it on the body.
+ * receiver (`lib/test-runs/fixture-shape.ts`). "Run Anyway" queues the run;
+ * Cancel (or closing) queues nothing. The tester attaches the same advisory
+ * to the run's results. Where the focus goes as it closes is the caller's
+ * (`onCloseAutoFocus`): with no Radix trigger, Radix's own handling would
+ * leave it on the body.
  *
  * The advisory's message is the module's fixed wording, naming signals and a
  * receiver kind only, never the input or the text.

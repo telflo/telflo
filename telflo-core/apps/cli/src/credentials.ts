@@ -1,11 +1,8 @@
 /*
- * The credentials file (D27 decisions 9 and 14, Preflight ruling 12):
- * `$TELFLO_CLI_CONFIG_DIR/credentials.json`, else
+ * The credentials file: `$TELFLO_CLI_CONFIG_DIR/credentials.json`, else
  * `$XDG_CONFIG_HOME/telflo/credentials.json`, else
- * `~/.config/telflo/credentials.json`. The older Telflo CLI's `~/.telflo` is
- * never read, nor `TELFLO_CONFIG_DIR`: the older CLI reads that variable and
- * names its file `credentials.json` too, so the two CLIs would share one
- * file (Ruling 232).
+ * `~/.config/telflo/credentials.json`. Neither `~/.telflo` nor
+ * `TELFLO_CONFIG_DIR` is ever read.
  *
  * - JSON `{ version: 1, server, token, kind, tokenName, organizationId }`;
  *   no expiry (`/whoami` carries none).
@@ -73,7 +70,7 @@ function nonEmpty(value: string | undefined): string | undefined {
   return value === undefined || value === "" ? undefined : value;
 }
 
-/** The folder the file lives in (decision 9). */
+/** The folder the file lives in. */
 export function configDir(env: NodeJS.ProcessEnv = process.env): string {
   const explicit = nonEmpty(env.TELFLO_CLI_CONFIG_DIR);
   if (explicit !== undefined) return explicit;
@@ -176,9 +173,9 @@ export function loadCredentials(env: NodeJS.ProcessEnv = process.env): Credentia
 }
 
 /**
- * The stored server only, for `login`'s default (decision 12): undefined
- * when there is no file or it is refused (nothing is read from a file
- * others can reach; login then writes a new one).
+ * The stored server only, for `login`'s default: undefined when there is no
+ * file or it is refused (nothing is read from a file others can reach; login
+ * then writes a new one).
  */
 export function storedServer(env: NodeJS.ProcessEnv = process.env): string | undefined {
   try {
@@ -188,7 +185,7 @@ export function storedServer(env: NodeJS.ProcessEnv = process.env): string | und
   }
 }
 
-/** Writes the file atomically, mode 0600 in a 0700 folder (decision 14). */
+/** Writes the file atomically, mode 0600 in a 0700 folder. */
 export function saveCredentials(credentials: Credentials, env: NodeJS.ProcessEnv = process.env): void {
   if (!isCredentials(credentials)) throw new ExitError("The CLI refused to store an incomplete login.", EXIT.API);
   const dir = configDir(env);

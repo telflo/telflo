@@ -1,7 +1,7 @@
 # shellcheck shell=bash
 # image-id.sh: the kind smoke's step-4 check that an image loaded into the
-# node is the host's (D36-2 Ruling 394). Sourced by scripts/smoke-kind.sh
-# (and its test), never run.
+# node is the host's. Sourced by scripts/smoke-kind.sh (and its test), never
+# run.
 #
 #   smoke_kind_image_ids <image> <node container> <store>
 #       sets SK_HOST_ID and SK_NODE_ID and returns 0 when they are equal and

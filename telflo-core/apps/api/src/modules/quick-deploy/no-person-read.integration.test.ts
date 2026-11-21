@@ -7,7 +7,7 @@ import { withDatabaseContext, withOrganizationContext } from "../../database/con
 import { createPublishedVersionRepository } from "../configurations/repositories/published-version-repository.js";
 import { createCollectorCatalogueRepository } from "../collector-catalogue/repositories/collector-catalogue-repository.js";
 
-/* D17c-2 Preflight ruling 9 (preflight A, item 4): the install's read with no person, as the public download makes it. */
+/* The install's read with no person, as the public download makes it. */
 describe("an install's read with no person (the public download)", () => {
   let databases: TestDatabases;
   let db: Kysely<Database>;
@@ -42,7 +42,7 @@ describe("an install's read with no person (the public download)", () => {
     return { userId: person.user.id, organizationId, publicationId, otherOrganizationId: otherGroup.organization.id };
   };
 
-  it("finds the group's published version and its catalogue state in the link's organization, with no viewer", async () => {
+  it("finds the group's published version and its catalog state in the link's organization, with no viewer", async () => {
     const { organizationId, publicationId } = await seed();
     const read = await withOrganizationContext(db, organizationId, async (transaction) => {
       const version = await createPublishedVersionRepository(transaction, { organizationId, userId: null }).findForInstall(publicationId);

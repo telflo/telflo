@@ -37,7 +37,7 @@ export type CreateSessionResponse = z.infer<typeof CreateSessionResponseSchema>;
 
 /**
  * An organization as its member sees it: its type, its logo's id (null for
- * none; D23-2 decision 40), and the member's role in it.
+ * none), and the member's role in it.
  */
 export const ActiveOrganizationSchema = z
   .object({
@@ -54,31 +54,30 @@ export type ActiveOrganization = z.infer<typeof ActiveOrganizationSchema>;
 /**
  * `GET /api/v1/auth/me`. `organizations` lists every organization the user
  * belongs to, each with its type and the user's role, the same shape as the
- * active one (D5 decision 7). D1b's invariant means it is never empty in
+ * active one. An invariant the database keeps means it is never empty in
  * practice, but the contract does not enforce that: it describes the wire
  * shape, and the invariant belongs to the database.
  *
  * `termsAcceptanceRequired` is true when the site asks for Terms (the API's
- * TELFLO_TERMS_VERSION setting, D36-1 decision 32) and the user's accepted
- * terms version isn't that one, and the web app then blocks the signed-in
- * shell with the terms dialog (D2c decision 6).
+ * TELFLO_TERMS_VERSION setting) and the user's accepted terms version isn't
+ * that one, and the web app then blocks the signed-in shell with the terms
+ * dialog.
  *
  * `isProductAdmin` is the user row's `is_product_admin` as this request's
- * session check read it (D12 decision 3): an operator's SQL sets and clears
- * it, and the answer follows on the next request. It sits beside
+ * session check read it: an operator's SQL sets and clears it, and the
+ * answer follows on the next request. It sits beside
  * `termsAcceptanceRequired`, not in `user`: like that flag it is a fact the
- * API reads about the user on this request, and `SessionUserSchema` is
- * also sign-in's and refresh's answer, which don't carry it.
+ * API reads about the user on this request, and `SessionUserSchema` is also
+ * sign-in's and refresh's answer, which don't carry it.
  *
- * `mayCreateOrganizations` is whether "Create Organization" is offered
- * (D36-1 decision 51): true while the site lets everyone create one (the
- * product-admin switch off), or when the user is a product admin as this
- * request read it. The create itself checks again.
+ * `mayCreateOrganizations` is whether "Create Organization" is offered: true
+ * while the site lets everyone create one (the product-admin switch off), or
+ * when the user is a product admin as this request read it. The create itself
+ * checks again.
  *
- * `preferences` is the person's theme and editor and email preferences,
- * every key filled in (the defaults when nothing is saved): one
- * primary-key read more per `/me` (D21 decision 20). The signed-in pages
- * render the stored theme from it.
+ * `preferences` is the person's theme and editor and email preferences, every
+ * key filled in (the defaults when nothing is saved): one primary-key read
+ * more per `/me`. The signed-in pages render the stored theme from it.
  */
 export const CurrentUserResponseSchema = z
   .object({
@@ -96,7 +95,7 @@ export type CurrentUserResponse = z.infer<typeof CurrentUserResponseSchema>;
 
 /**
  * `PUT /api/v1/auth/sessions/current/organization`: makes another of the
- * user's organizations the session's active one (D5 decision 10).
+ * user's organizations the session's active one.
  */
 export const SwitchOrganizationRequestSchema = z.object({ organizationId: z.string().uuid() }).strict();
 
@@ -117,9 +116,8 @@ export const OidcProviderSchema = z
 export type OidcProvider = z.infer<typeof OidcProviderSchema>;
 
 /**
- * `GET /api/v1/auth/oidc-providers`: the configured federated providers
- * (D2c decision 2). Empty when none is configured, and the sign-in buttons
- * don't render.
+ * `GET /api/v1/auth/oidc-providers`: the configured federated providers.
+ * Empty when none is configured, and the sign-in buttons don't render.
  */
 export const OidcProvidersResponseSchema = z
   .object({ providers: z.array(OidcProviderSchema) })
@@ -130,16 +128,15 @@ export type OidcProvidersResponse = z.infer<typeof OidcProvidersResponseSchema>;
 /**
  * The codes a federated sign-in puts in `/login?error=…` when it fails. The
  * callback is a navigation, not a fetch, so it reports failure in the URL
- * rather than in the error envelope (D2c decision 4):
- * - `oauth_failed`: cancelled, a missing or wrong flow cookie, a failed
+ * rather than in the error envelope:
+ * - `oauth_failed`: canceled, a missing or wrong flow cookie, a failed
  *   exchange or validation, or an account that can't be signed in to;
  * - `oauth_email_unverified`: the provider's email isn't verified, or the
  *   provider isn't authoritative for it, so nothing was linked or created;
  * - `oauth_email_reserved`: the provider's email is at the service accounts'
- *   domain (D22 decision 24), so nothing was linked or created;
+ *   domain, so nothing was linked or created;
  * - `registration_not_open`: no account holds the provider's email and the
- *   site's registration isn't open (D36-1 decision 35), so nothing was
- *   created.
+ *   site's registration isn't open, so nothing was created.
  */
 export const OIDC_QUERY_ERROR_CODES = [
   "oauth_failed",
@@ -151,9 +148,8 @@ export const OIDC_QUERY_ERROR_CODES = [
 export type OidcQueryErrorCode = (typeof OIDC_QUERY_ERROR_CODES)[number];
 
 /**
- * The codes a link started from Settings puts in
- * `/settings/account?link=…` when its callback ends (D21 decision 38). Fixed
- * words, no personal data in the URL:
+ * The codes a link started from Settings puts in `/settings/account?link=…`
+ * when its callback ends. Fixed words, no personal data in the URL:
  * - `linked`: linked, or already linked to this account (a double submit);
  * - `identity_in_use`: the provider's account is linked to another account;
  * - `identity_exists`: this account already has an identity at the provider;

@@ -50,7 +50,7 @@ const TemplateParamsSchema = z.object({ templateId: z.string() });
 
 const TEMPLATES_ROUTE = "/api/v1/test-templates";
 
-/** A template's names go only into a response body (ADR 0024). */
+/** A template's names go only into a response body. */
 function toResponseBody(template: TestTemplate): TestTemplateResponseBody {
   return {
     id: template.id,
@@ -78,9 +78,9 @@ function writerOf(request: FastifyRequest): TestTemplateWriter {
 }
 
 /**
- * Streams a template's bytes as D14a's file reads do: bytes, never sniffed,
- * a download under a generic name (the template's own is configuration
- * text), never cached.
+ * Streams a template's bytes as a test file's reads do: bytes, never
+ * sniffed, a download under a generic name (the template's own is
+ * configuration text), never cached.
  */
 async function sendBytes(
   reply: FastifyReply,
@@ -108,34 +108,31 @@ async function sendBytes(
 }
 
 /**
- * The test templates endpoints (D14b decisions 3, 13 and 14; details 19 to
- * 21; Preflight rulings 11, 22 and 24):
+ * The test templates endpoints:
  *
  *   * `GET /api/v1/test-templates`: the live templates, newest first, at
  *     most 1,000, for a member with the current terms, and for a product
  *     admin with or without them (the admin page's list, as flows').
  *   * `GET /api/v1/test-templates/:templateId/file` and `…/file/head` (the
  *     first 64 KiB): a live template's bytes, for a member with the current
- *     terms, as D14a's file reads. Both are counted, the whole file too
- *     (D14b Ruling 36: a template is global, readable by every member, and
- *     ruling 24 covers writes, not reads), on the uploads' limiter
- *     (testFileUploadsPerUser, 30 a minute) in a per-person budget of
- *     their own (`user:<id>`): a global route has no organization (ruling
- *     22), so a person's uploads in an organization neither spend it nor
- *     are spent by it. A read is counted before the template is looked up,
- *     so a 404 is counted too (D14b Ruling 41).
+ *     terms, as a test file's reads. Both are counted, the whole file too (a
+ *     template is global, readable by every member; only its writes go
+ *     uncounted), on the uploads' limiter (testFileUploadsPerUser, 30 a
+ *     minute) in a per-person budget of their own (`user:<id>`): a global
+ *     route has no organization, so a person's uploads in an organization
+ *     neither spend it nor are spent by it. A read is counted before the
+ *     template is looked up, so a 404 is counted too.
  *   * `POST /api/v1/test-templates` (multipart), `PATCH` and `DELETE
  *     /api/v1/test-templates/:templateId`: a product admin only (403
  *     `product_admin_required`), without the terms, as flows' writes; each
- *     audited in no organization, with ids only; not rate limited (ruling
- *     24, D2c decision 7).
+ *     audited in no organization, with ids only; not rate limited.
  *
  * The upload is in its own encapsulated plugin, the only one here with
  * @fastify/multipart registered: its parser reads nothing, so the body is
  * read in the handler, after `authenticate` and `requireProductAdmin`.
  *
- * Templates are global (ADR 0008): every read and write goes through the
- * API's role with no database context and no row-level security.
+ * Templates are global: every read and write goes through the API's role with
+ * no database context and no row-level security.
  */
 export function registerTestTemplatesRoutes(
   server: FastifyInstance,
@@ -262,8 +259,7 @@ export function registerTestTemplatesRoutes(
   );
 
   // A template's bytes, whole: counted as the head is, on the uploads'
-  // limiter, in the person's own budget for templates (D14b Rulings 36
-  // and 41; ruling 24 covers writes).
+  // limiter, in the person's own budget for templates.
   typed.get(
     `${TEMPLATES_ROUTE}/:templateId/file`,
     // No response schema: the answer is a stream, and a refusal the envelope.
@@ -275,9 +271,8 @@ export function registerTestTemplatesRoutes(
   );
 
   // The first 64 KiB (the run dialog's fixture-shape check), as a test
-  // file's head (D14a Ruling 43): counted on the uploads' limiter in a
-  // per-person budget of its own, since a global route has no organization
-  // (ruling 22; D14b Ruling 41).
+  // file's head: counted on the uploads' limiter in a per-person budget of
+  // its own, since a global route has no organization.
   typed.get(
     `${TEMPLATES_ROUTE}/:templateId/file/head`,
     // No response schema: the answer is a stream, and a refusal the envelope.

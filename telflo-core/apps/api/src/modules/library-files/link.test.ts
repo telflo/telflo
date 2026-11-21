@@ -5,11 +5,11 @@ import type { LibraryLinkSigningKeys } from "../../settings.js";
 import { createLibraryLinks, hmacLibraryLinkTag, LIBRARY_LINK_PREFIX, libraryLinkPath, type LibraryLinkTagger } from "./link.js";
 
 /*
- * The library link (D23-2 decision 45; Preflight ruling 9). Every link here
- * is signed with a key built at run time, so it is a secret (decision 59):
- * each assertion on a link is a boolean (`test`, `===`, `includes`), never
- * toEqual or toContain on it, and no failure prints one. A check's result
- * holds the file's id and the expiry only, so it is compared directly.
+ * The library link. Every link here is signed with a key built at run
+ * time, so it is a secret: each assertion on a link is a boolean (`test`,
+ * `===`, `includes`), never toEqual or toContain on it, and no failure
+ * prints one. A check's result holds the file's id and the expiry only, so
+ * it is compared directly.
  */
 
 /** A key as an operator would set one: 43 base64url characters, its UTF-8 bytes. Never printed. */
@@ -33,7 +33,7 @@ function countingTagger(): { tagOf: LibraryLinkTagger; calls: () => number } {
   };
 }
 
-describe("the library link (D23-2 decision 45)", () => {
+describe("the library link", () => {
   const current = newKey();
   const previousOne = newKey();
   const previousTwo = newKey();
@@ -97,7 +97,7 @@ describe("the library link (D23-2 decision 45)", () => {
     expect(createLibraryLinks(keys).check(link, new Date(EXPIRY * 1000 + 1))).toEqual({ kind: "invalid" });
   });
 
-  it("is invalid with ANY one of its characters changed to any other of the alphabet, the prefix's included (the canonical re-encode: Preflight ruling 9)", () => {
+  it("is invalid with ANY one of its characters changed to any other of the alphabet, the prefix's included (the canonical re-encode)", () => {
     const links = createLibraryLinks(keys);
     const link = links.sign(FILE_ID, NOW);
     let tried = 0;

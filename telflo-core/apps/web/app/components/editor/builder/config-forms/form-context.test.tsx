@@ -30,8 +30,8 @@ import { builderStore, componentNamed, openText } from "~/test/builder-store.js"
 import { hasHeldEdits } from "~/test/held-edits.js";
 
 /*
- * The form hook and the fields (D9b Task 3): what each field shows of the
- * text (decision 3), and how typing is written (decision 2).
+ * The form hook and the fields: what each field shows of the text, and how
+ * typing is written.
  */
 
 const TEXT = `# Fields over a component's value.
@@ -139,7 +139,7 @@ function pause(ms = FIELD_WRITE_DELAY_MS) {
   act(() => vi.advanceTimersByTime(ms));
 }
 
-describe("what a field shows (decision 3)", () => {
+describe("what a field shows", () => {
   it("shows plain non-strings as written and strings as their value", () => {
     renderDebug(
       <>
@@ -269,7 +269,7 @@ describe("what a field shows (decision 3)", () => {
   });
 });
 
-describe("how typing is written (decision 2)", () => {
+describe("how typing is written", () => {
   it("writes once, 300 ms after the last keystroke, only that key's line", () => {
     vi.useFakeTimers();
     const calls = spyWrites();
@@ -376,7 +376,7 @@ describe("how typing is written (decision 2)", () => {
     fireEvent.blur(field("Sampling Initial"));
     expect(debugValue().sampling_initial).toBe("12 # not a comment");
 
-    // A number field asks for a number only (D9c Preflight ruling 2): a boolean or a collection typed is a string.
+    // A number field asks for a number only: a boolean or a collection typed is a string.
     for (const typed of ["True", "[1]"]) {
       fireEvent.change(field("Sampling Initial"), { target: { value: typed } });
       fireEvent.blur(field("Sampling Initial"));
@@ -475,7 +475,7 @@ describe("how typing is written (decision 2)", () => {
     expect(hasHeldEdits()).toBe(false);
   });
 
-  it("a change the text edits refuse toasts D9a's message, and the field shows the text", () => {
+  it("a change the text edits refuse toasts the can't-edit message, and the field shows the text", () => {
     vi.useFakeTimers();
     renderDebug(<TextField path={["items", 5]} id="far-item" label="Far item" />);
     fireEvent.change(field("Far item"), { target: { value: "x" } });
@@ -683,7 +683,7 @@ describe("a form that can't write", () => {
   });
 });
 
-describe("privacy (decision 10)", () => {
+describe("privacy", () => {
   it("no field puts a value into an attribute, and none sits inside a <form>", async () => {
     const user = userEvent.setup();
     const MARK = "MARKER";
@@ -766,7 +766,7 @@ function Dialog({ open, onDraft }: { open: boolean; onDraft: (draft: TelemetryDr
   );
 }
 
-describe("the Self-monitoring dialog's draft (decision 7)", () => {
+describe("the Self-monitoring dialog's draft", () => {
   function renderDialog(yamlContent = TELEMETRY, open = true) {
     openText(yamlContent);
     let draft: TelemetryDraft | undefined;
@@ -832,7 +832,7 @@ describe("the Self-monitoring dialog's draft (decision 7)", () => {
     expect(draft().changes).toHaveLength(1);
   });
 
-  it("closed, keeps the draft until the body unmounts but takes no write; its latest changes are read through its ref (Rulings 71, 73, 80)", () => {
+  it("closed, keeps the draft until the body unmounts but takes no write; its latest changes are read through its ref", () => {
     const { draft, rerender } = renderDialog();
     act(() => void draft().set(["logs", "level"], "debug"));
     const open = draft();
@@ -868,7 +868,7 @@ describe("the Self-monitoring dialog's draft (decision 7)", () => {
     expect(closed.draft().read(["logs", "level"])).toEqual({ kind: "absent", value: undefined });
   });
 
-  it("refuses a change the text edits can't write, with D9a's toast, and is read-only while locked", () => {
+  it("refuses a change the text edits can't write, with the can't-edit toast, and is read-only while locked", () => {
     const { draft } = renderDialog();
     expect(draft().apply([{ path: ["logs"], moveTo: 0 }])).toBe("refused");
     expect(toast.error).toHaveBeenCalledWith(CANT_EDIT_ON_CANVAS_MESSAGE);

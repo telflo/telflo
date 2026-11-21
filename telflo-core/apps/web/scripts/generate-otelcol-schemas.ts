@@ -6,21 +6,21 @@ import { fileURLToPath } from "node:url";
 import { parse as parseYaml } from "yaml";
 
 /*
- * One JSON Schema per offered collector version, for the YAML tab's Monaco
- * (D13c decision 1), generated from upstream's own component schemas:
+ * One JSON Schema per offered collector version, for the YAML tab's Monaco,
+ * generated from upstream's own component schemas:
  *
  *   npm run generate:otelcol-schemas --workspace=@telflo/web
  *
- * For each distribution and offered version in `otelcol-schemas/inputs.json`
- * (Preflight ruling 2), the script fetches, by sparse shallow clone, the
+ * For each distribution and offered version in `otelcol-schemas/inputs.json`,
+ * the script fetches, by sparse shallow clone, the
  * `config.schema.yaml` and `metadata.yaml` files of contrib and core at the
  * version's tags and the release manifest, refuses a checkout whose HEAD
  * isn't the pinned commit, and writes
- * `public/schemas/<distribution>/v<version>.json`, committed (decision 6).
+ * `public/schemas/<distribution>/v<version>.json`, committed.
  * Nothing else reaches the network: CI, the tests and the build read the
  * committed files. The same inputs always give the same bytes.
  *
- * What a schema says (decisions 5-10, Preflight rulings 4, 5 and 8):
+ * What a schema says:
  * - each section offers the components the manifest builds, under the type
  *   names their `metadata.yaml` gives (`properties`); an instance id
  *   (`otlp/2`) and every `deprecated_type` alias are accepted through
@@ -31,7 +31,7 @@ import { parse as parseYaml } from "yaml";
  *   to a definition it never wrote, a Go type it only names), what it
  *   describes wrongly, and a key the collector reads by hand that upstream
  *   omits (a key the collector only ignores stays flagged), each listed with its
- *   reason in `otelcol-schemas/open-parts.json` (decision 4). A new dangling
+ *   reason in `otelcol-schemas/open-parts.json`. A new dangling
  *   reference, a component upstream describes no settings of that neither
  *   list names, or an entry no longer used, stops the run;
  * - a section upstream marks `x-optional` (a configoptional.Optional, whose
@@ -48,7 +48,7 @@ import { parse as parseYaml } from "yaml";
  *   list of strings, an integer for a duration. Scalars aren't nullable
  *   (completion would offer null for every value);
  * - the service section and the components that take no settings are
- *   written by hand (`otelcol-schemas/hand-written.json`, decision 9), a
+ *   written by hand (`otelcol-schemas/hand-written.json`), a
  *   component without settings closed: an empty map, null or a reference.
  *
  * The run writes nothing until every version is generated, and then each
@@ -112,7 +112,7 @@ export interface SchemaInputs {
 }
 
 /**
- * An entry of `otelcol-schemas/open-parts.json` (decision 4): a definition
+ * An entry of `otelcol-schemas/open-parts.json`: a definition
  * (`core/config/confighttp.client_config`: the repository, the package's
  * path, a `.`, the definition's name; a name ending in `*` names every
  * definition of that file whose name starts with what precedes it; the
@@ -220,11 +220,11 @@ export class SchemaGenerationError extends Error {
 export const REFERENCE_PATTERN = "\\$\\{";
 
 /**
- * What a wrong value is told, by the type it should have been (Preflight
- * ruling 8): a scalar's or a list's `errorMessage`, which the language
- * service shows for a string without `${` and for a value of another type
- * alike; a map's `patternErrorMessage`, as a map's `errorMessage` would
- * replace "Property x is not allowed." too.
+ * What a wrong value is told, by the type it should have been: a scalar's
+ * or a list's `errorMessage`, which the language service shows for a string
+ * without `${` and for a value of another type alike; a map's
+ * `patternErrorMessage`, as a map's `errorMessage` would replace "Property x
+ * is not allowed." too.
  */
 export const VALUE_MESSAGES = {
   integer: "Expected an integer or a ${…} reference.",
@@ -372,7 +372,7 @@ function escapeRegExp(text: string): string {
   return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-/** The flattened object an upstream node describes (Preflight ruling 4). */
+/** The flattened object an upstream node describes. */
 interface ObjectView {
   properties: Record<string, Schema>;
   map: Schema | undefined;
@@ -447,7 +447,7 @@ class Generation {
   }
 
   /**
-   * A `$ref` as upstream writes it (Preflight ruling 4), from a file of
+   * A `$ref` as upstream writes it, from a file of
    * `at`: a bare `<def>` (the same file), `./<rel>.<def>` (relative to the
    * file's package), `/<pkg>.<def>` (the file's repository) or
    * `<module>/<pkg>.<def>` (contrib's or core's module), split at the last
@@ -537,8 +537,8 @@ class Generation {
 
   /**
    * What to do about a problem an entry would answer, but for its versions:
-   * extend them (Preflight ruling 6's open parts end at the newest offered
-   * version when upstream changed under them); `otherwise` when no entry
+   * extend them (an open part ends at the newest offered version when
+   * upstream changed under it); `otherwise` when no entry
    * limited to other versions names it.
    */
   private advice<T extends { versions?: string[] }>(entries: readonly T[], names: (entry: T) => boolean, otherwise: string): string {
@@ -945,7 +945,7 @@ class Generation {
   /**
    * A component upstream describes no settings of (no schema, or one that
    * describes none): no settings (hand-written, closed), or open when listed.
-   * Every component accepts null and a reference (Preflight ruling 8).
+   * Every component accepts null and a reference.
    */
   private componentWithoutSchema(kind: ComponentKind, type: string, alias: string | undefined, address: string, why: string) {
     const component = `${kind}/${type}`;
@@ -1175,7 +1175,7 @@ function pruneDefinitions(schema: Schema): void {
   for (const name of Object.keys($defs)) if (!reached.has(name)) delete $defs[name];
 }
 
-/** The schema's `$comment`: its sources, their commits and their license (decision 14, Preflight ruling 16). */
+/** The schema's `$comment`: its sources, their commits and their license. */
 function sourcesComment(request: SchemaRequest): string {
   const sources = request.inputs.versions[request.version]!;
   const at = (source: PinnedSource) => `${source.repository} ${source.tag} (commit ${source.commit})`;
@@ -1216,7 +1216,7 @@ export function readInputs(): { inputs: SchemaInputs; openParts: OpenPart[]; cap
   };
 }
 
-/** The versions a catalogue file offers (not deprecated), as it lists them. */
+/** The versions a catalog file offers (not deprecated), as it lists them. */
 export function offeredVersions(catalogueFile: unknown): string[] {
   const versions = isRecord(catalogueFile) && Array.isArray(catalogueFile.versions) ? catalogueFile.versions : [];
   return versions.filter((entry) => isRecord(entry) && !entry.deprecated).map((entry) => String((entry as Record<string, unknown>).version));
@@ -1302,7 +1302,7 @@ async function main(): Promise<void> {
   } finally {
     for (const { file } of schemas) rmSync(temporary(file), { force: true });
   }
-  // A retired version's schema goes (decision 2).
+  // A retired version's schema goes.
   for (const [distribution, offered] of offeredBy) {
     for (const name of readdirSync(path.join(PUBLIC_SCHEMAS, distribution))) {
       if (/\.json\.\d+\.tmp$/.test(name)) {

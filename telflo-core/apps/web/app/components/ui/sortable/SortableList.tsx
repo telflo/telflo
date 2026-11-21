@@ -15,9 +15,8 @@ import { useId, useState } from "react";
 import { sortableId, type SortableListProps } from "./types.js";
 
 /*
- * A sortable list (ADR 0018): pointer (8 px before a drag starts) and
- * keyboard (Space, arrows, Space) reordering, with an overlay while dragging.
- * Changed (D9b decision 9; Preflight rulings 2 and 15): ids are
+ * A sortable list: pointer (8 px before a drag starts) and keyboard (Space,
+ * arrows, Space) reordering, with an overlay while dragging. Its ids are
  * `<list>-<index>` strings (so the overlay check never reads index 0 as
  * none), and a drop calls `onReorder(from, to)`, not the list rearranged.
  * dnd-kit's live region and instructions render inline, inside the list's own

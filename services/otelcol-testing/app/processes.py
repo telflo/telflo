@@ -1,5 +1,5 @@
-"""Subprocesses, as the validator runs them (D13b rulings 26, 27 and 33;
-`services/otelcol-validator/app/runner.py`), shared by the service's half
+"""Subprocesses, as the validator runs them
+(`services/otelcol-validator/app/runner.py`), shared by the service's half
 (a run's child process) and the child's (the collector).
 
 - **Pipes are read as their data arrives and never paused** (`Pipes`): each
@@ -84,9 +84,9 @@ async def stop(transport: asyncio.SubprocessTransport, pipes: Pipes) -> None:
         transport.kill()
     except ProcessLookupError:
         pass  # it exited on its own meanwhile
-    # Shielded: a reap cancelled while it waits must not cancel the shared
+    # Shielded: a reap canceled while it waits must not cancel the shared
     # futures, or a later reap of the same process would never close the
-    # transport (the validator's review of b25c81a, m1).
+    # transport.
     await asyncio.shield(pipes.exited)
     stdin = transport.get_pipe_transport(0)
     if isinstance(stdin, asyncio.WriteTransport) and (not stdin.is_closing() or stdin.get_write_buffer_size()):
@@ -116,7 +116,7 @@ def exit_code(returncode: int) -> int:
 def complete_lines(output: bytes) -> bytes:
     """`output` up to and including its last line break: a cut output's
     partial last line dropped (nothing when no line was complete), so a cut
-    never leaves part of a path the scrub can no longer recognise."""
+    never leaves part of a path the scrub can no longer recognize."""
     return output[: output.rfind(b"\n") + 1]
 
 

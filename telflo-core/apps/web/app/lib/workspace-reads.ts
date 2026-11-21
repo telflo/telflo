@@ -2,9 +2,8 @@ import * as api from "~/lib/api-client.js";
 
 /*
  * The one seam between the platform's screens and the playground's sample
- * workspace (D31-1 decision 23, Preflight ruling 8). Every reused reader
- * asks `readsFor(organizationId)` for its reads instead of importing them
- * from the API client:
+ * workspace. Every reused reader asks `readsFor(organizationId)` for its
+ * reads instead of importing them from the API client:
  * - for any organization but the sample's, the answer is the API client's
  *   module namespace itself, its functions looked up at each call, so a
  *   signed-in page reads exactly as before (and a test's
@@ -16,12 +15,12 @@ import * as api from "~/lib/api-client.js";
  * A pure function of the id: safe on the server, and a poll re-reads the
  * sample, which is rebuilt with times relative to now on every call.
  *
- * The names below are every reader the playground's reused screens call
- * (Preflight ruling 8's table): the stores take the id from the editor
- * store, which the playground loads with the sample's id; the hooks take it
- * from `useCurrentUser()`, which inside the playground answers the sample's
- * visitor first. A screen switching a reader replaces `getX(orgId, …)` by
- * `readsFor(orgId).getX(orgId, …)`; this module never changes for it.
+ * The names below are every reader the playground's reused screens call: the
+ * stores take the id from the editor store, which the playground loads with
+ * the sample's id; the hooks take it from `useCurrentUser()`, which inside
+ * the playground answers the sample's visitor first. A screen switching a
+ * reader replaces `getX(orgId, …)` by `readsFor(orgId).getX(orgId, …)`; this
+ * module never changes for it.
  */
 
 /** The sample workspace's organization: a canonical lowercase UUID (v4-shaped) no real organization has. */
@@ -36,10 +35,10 @@ export const CONFIGURATION_READ_NAMES = [
 ] as const;
 
 /**
- * The Testing tab's reads (Task 2's sample): the testing store's files,
- * heads, templates, runs and a run's detail; a run's input and output
- * (`TestRunResults`, open to be read); the suites store's; the validation
- * pipelines store's (and `TestRunResults`' pipelines read).
+ * The Testing tab's reads: the testing store's files, heads, templates,
+ * runs and a run's detail; a run's input and output (`TestRunResults`,
+ * open to be read); the suites store's; the validation pipelines store's
+ * (and `TestRunResults`' pipelines read).
  */
 export const TESTING_READ_NAMES = [
   "getTestFiles",
@@ -55,8 +54,8 @@ export const TESTING_READ_NAMES = [
 ] as const;
 
 /**
- * Fleet management's reads (Task 3's sample): `lib/fleets.ts`' list and a
- * fleet, `lib/collectors.ts`' collectors and groups, `lib/groups.ts`',
+ * Fleet management's reads: `lib/fleets.ts`' list and a fleet,
+ * `lib/collectors.ts`' collectors and groups, `lib/groups.ts`',
  * `lib/tokens.ts`' tokens, their events and install links, and
  * `CollectorDetailsDialog`'s collector, its errors and the tokens.
  */

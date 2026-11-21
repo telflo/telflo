@@ -15,8 +15,8 @@ import {
 
 /**
  * The repositories a write uses, bound to one transaction: the flows, the
- * collector catalogue (a flow's pin is checked against it), and the audit
- * trail. All three are global (ADR 0008): no database context is needed.
+ * collector catalog (a flow's pin is checked against it), and the audit
+ * trail. All three are global: no database context is needed.
  */
 export interface FlowTransaction {
   flows: IFlowRepository;
@@ -39,7 +39,7 @@ export interface FlowServiceDependencies {
   now: () => Date;
 }
 
-/** Who reads: whether they are a product admin, as the session check read it on this request (D12 decision 3). */
+/** Who reads: whether they are a product admin, as the session check read it on this request. */
 export interface FlowReader {
   isProductAdmin: boolean;
 }
@@ -59,34 +59,34 @@ export type CreateFlowInput = FlowFields;
 export type UpdateFlowInput = { [Field in keyof FlowFields]?: FlowFields[Field] | undefined };
 
 export interface IFlowService {
-  /** Every published flow's card (D12 decision 10, Preflight ruling 6): what a signed-out visitor may see. */
+  /** Every published flow's card: what a signed-out visitor may see. */
   listShowcase(): Promise<FlowCard[]>;
   /** Every flow the reader may see, in full: the published ones, and the hidden ones too for a product admin. */
   list(reader: FlowReader): Promise<Flow[]>;
   /** The flow with this slug; 404 `flow_not_found` for none, and for a hidden one but to a product admin. */
   get(reader: FlowReader, slug: string): Promise<Flow>;
   /**
-   * A new flow from the admin dialog's fields (D12 decision 11), its source
-   * `telflo` and no author link.
-   * The pin must be offered: a distribution the catalogue doesn't have is
-   * 400 `collector_distribution_unknown`, a version it doesn't offer
-   * (unknown or deprecated) 400 `collector_version_unknown`. A slug another
-   * flow has is 409 `flow_slug_taken`. Nothing is written on a refusal.
+   * A new flow from the admin dialog's fields, its source `telflo` and no
+   * author link. The pin must be offered: a distribution the catalog
+   * doesn't have is 400 `collector_distribution_unknown`, a version it
+   * doesn't offer (unknown or deprecated) 400 `collector_version_unknown`.
+   * A slug another flow has is 409 `flow_slug_taken`. Nothing is written on
+   * a refusal.
    */
   create(writer: FlowWriter, input: CreateFlowInput): Promise<Flow>;
   /**
-   * Changes the fields given that differ from the flow's. None given, or
-   * none different, writes and audits nothing, and answers the flow as it
-   * is. A pin left as it is stays, even if deprecated since (D12 Preflight
-   * ruling 19; the configurations' `collectorVersionFor` rule); a changed one
-   * must be offered, as a create's. 404 `flow_not_found` for an id no flow
-   * has; 409 `flow_slug_taken` for a slug another flow has.
+   * Changes the fields given that differ from the flow's. None given, or none
+   * different, writes and audits nothing, and answers the flow as it is. A pin
+   * left as it is stays, even if deprecated since (the configurations'
+   * `collectorVersionFor` rule); a changed one must be offered, as a create's.
+   * 404 `flow_not_found` for an id no flow has; 409 `flow_slug_taken` for a
+   * slug another flow has.
    */
   update(writer: FlowWriter, id: string, changes: UpdateFlowInput): Promise<Flow>;
   /**
-   * Deletes it for good (D12 decision 2). Configurations created from it
-   * keep their copy and their `source_flow_slug` (no foreign key). 404
-   * `flow_not_found` for an id no flow has.
+   * Deletes it for good. Configurations created from it keep their copy and
+   * their `source_flow_slug` (no foreign key). 404 `flow_not_found` for an id
+   * no flow has.
    */
   remove(writer: FlowWriter, id: string): Promise<void>;
 }
@@ -120,10 +120,10 @@ function isSlug(slug: string): boolean {
 }
 
 /**
- * An audit row about `flow` (D12 decision 11): global, so in no
- * organization. The metadata names the slug and, for a change, the fields
- * changed; never the YAML nor the description, nor any field's value but
- * the slug's and `published`'s.
+ * An audit row about `flow`: global, so in no organization. The metadata
+ * names the slug and, for a change, the fields changed; never the YAML
+ * nor the description, nor any field's value but the slug's and
+ * `published`'s.
  */
 function auditEvent(writer: FlowWriter, flow: Flow, action: string, metadata: Record<string, unknown>): AuditEvent {
   return {
@@ -139,10 +139,9 @@ function auditEvent(writer: FlowWriter, flow: Flow, action: string, metadata: Re
 }
 
 /**
- * The checks a pin a write sets must pass (D12 decision 11): the
- * distribution is the catalogue's (by the create's rule for a
- * configuration: one with a default version to offer), and it offers the
- * version (not deprecated).
+ * The checks a pin a write sets must pass: the distribution is the
+ * catalog's (by the create's rule for a configuration: one with a default
+ * version to offer), and it offers the version (not deprecated).
  */
 async function assertOfferedPin(transaction: FlowTransaction, distribution: string, version: string): Promise<void> {
   if (!(await transaction.catalogue.findDistributionDefault(distribution))) throw collectorDistributionUnknown();
@@ -160,9 +159,9 @@ async function refusingTakenSlug<Result>(write: () => Promise<Result>): Promise<
 }
 
 /**
- * D12 decisions 2, 10 and 11. Whether the caller may write is decided
- * before the service is reached (`requireProductAdmin`); whether they may
- * see a hidden flow is the reader's flag.
+ * The flows. Whether the caller may write is decided before the service
+ * is reached (`requireProductAdmin`); whether they may see a hidden flow
+ * is the reader's flag.
  */
 export function createFlowService(deps: FlowServiceDependencies): IFlowService {
   const { flows, withTransaction, now } = deps;
@@ -209,7 +208,7 @@ export function createFlowService(deps: FlowServiceDependencies): IFlowService {
           const changedFields = FIELDS.filter((field) => field in to);
           if (changedFields.length === 0) return current;
           // The pin as it will be: kept as it is, even if deprecated since; a
-          // change must name one the catalogue offers.
+          // change must name one the catalog offers.
           const distribution = to.collectorDistribution ?? current.collectorDistribution;
           const version = to.collectorVersion ?? current.collectorVersion;
           if (distribution !== current.collectorDistribution || version !== current.collectorVersion) {

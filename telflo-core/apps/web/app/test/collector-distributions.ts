@@ -3,14 +3,14 @@ import { CATALOGUE_RENAMED_TYPES } from "~/lib/collector/renamed-types.js";
 import { useCollectorCatalogueStore } from "~/lib/stores/collector-catalogue-store.js";
 
 /*
- * The collector catalogue as the API answers it (D13a decision 11), for the
- * web's tests: Contrib, the catalogue's one distribution and its default,
- * offering three versions, newest first, 0.162.0 the default with its
- * catalogue description. 0.155.0 is a version it no longer offers
- * (deprecated), which a pin can still name, with its note. A second
- * distribution, with no mark of its own, is a fixture only: every picker is
- * built for several (decision 1). Contrib carries the catalogue's renames,
- * as the API serves them (D13b decision 6); the fixture distribution none.
+ * The collector catalog as the API answers it, for the web's tests:
+ * Contrib, the catalog's one distribution and its default, offering three
+ * versions, newest first, 0.162.0 the default with its catalog
+ * description. 0.155.0 is a version it no longer offers (deprecated), which
+ * a pin can still name, with its note. A second distribution, with no mark
+ * of its own, is a fixture only: every picker is built for several. Contrib
+ * carries the catalog's renames, as the API serves them; the fixture
+ * distribution none.
  */
 
 export const CONTRIB_ID = "otelcol-contrib";
@@ -18,7 +18,7 @@ export const CONTRIB_LABEL = "OpenTelemetry Collector Contrib";
 export const CONTRIB_DESCRIPTION =
   "The full upstream component catalog. Pick this unless your collectors run a specific vendor build.";
 
-/** A version the catalogue offers, `v{version}` its label. */
+/** A version the catalog offers, `v{version}` its label. */
 export function offer(version: string, overrides: Partial<CollectorVersionOffer> = {}): CollectorVersionOffer {
   return {
     version,
@@ -45,7 +45,7 @@ export const CONTRIB: CollectorDistribution = {
   renamedTypes: [...(CATALOGUE_RENAMED_TYPES[CONTRIB_ID] ?? [])],
 };
 
-/** A pin the catalogue retired, as a version summary carries it. */
+/** A pin the catalog retired, as a version summary carries it. */
 export const RETIRED_VERSION = "0.155.0";
 export const RETIRED_NOTE = "Retired: upgrade to 0.162.0.";
 
@@ -60,10 +60,10 @@ export const ACME: CollectorDistribution = {
   renamedTypes: [],
 };
 
-/** The catalogue as read: Contrib alone, as the committed catalogue is. */
+/** The catalog as read: Contrib alone, as the committed catalog is. */
 export const CATALOGUE: CollectorDistribution[] = [CONTRIB];
 
-/** Puts `distributions` in the catalogue store, read. */
+/** Puts `distributions` in the catalog store, read. */
 export function seedCatalogue(distributions: CollectorDistribution[] = CATALOGUE): void {
   useCollectorCatalogueStore.setState({ distributions, status: "loaded" });
 }

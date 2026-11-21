@@ -2,11 +2,11 @@ import { PERSONAL_API_TOKEN_ERROR_MESSAGES, type AccountErrorCode, type Personal
 import { AppError } from "../../errors.js";
 
 /*
- * The refusals of the account's own routes (D21 decision 21), each under its
- * contract code with the table's status and fixed message, word for word.
- * No message ever names an email, a provider's email, an address, a user
- * agent or a password (decision 45). Not 401 for a wrong current password:
- * the web client treats a 401 as about the session.
+ * The refusals of the account's own routes, each under its contract code
+ * with a fixed status and message, word for word. No message ever names an
+ * email, a provider's email, an address, a user agent or a password. Not 401
+ * for a wrong current password: the web client treats a 401 as about the
+ * session.
  */
 
 function accountError(code: AccountErrorCode, message: string, statusCode: number): AppError {
@@ -58,8 +58,8 @@ export function providerUnavailable(): AppError {
 }
 
 /*
- * A person's own API tokens' refusals (D25 decision 28; Preflight ruling
- * 14): D22's `api_token_*` codes with a person's words
+ * A person's own API tokens' refusals: the service-account tokens'
+ * `api_token_*` codes with a person's words
  * (PERSONAL_API_TOKEN_ERROR_MESSAGES). Never a token, its prefix or its name.
  */
 

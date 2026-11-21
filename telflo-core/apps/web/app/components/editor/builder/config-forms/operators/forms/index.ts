@@ -29,10 +29,10 @@ import { UnquoteOperatorForm } from "./UnquoteOperatorForm.js";
 import { UriParserForm } from "./UriParserForm.js";
 
 /*
- * The operator cards' type forms, by type (D9c plan Tasks 6 and 7). A card
- * shows its common fields, then the form for its type, when there is one.
+ * The operator cards' type forms, by type. A card shows its common
+ * fields, then the form for its type, when there is one.
  *
- * The contract a type form follows (Task 5's plug-in point):
+ * The contract a type form follows:
  * - It takes no props. It reads and writes through `useForm()`, which the
  *   card scopes to its item (`FormScope` at `operators.<index>`), so its
  *   paths are the operator's own keys (`["parse_from"]`,
@@ -40,11 +40,11 @@ import { UriParserForm } from "./UriParserForm.js";
  *   stay in the text. It never writes on render or on mount.
  * - Every id it gives is per card: `useOperatorId()("json-parse-from")` is
  *   `op-<index>-json-parse-from`. No id, placeholder or other attribute
- *   holds a value from the text (decision 10).
+ *   holds a value from the text.
  * - Its local UI state (a custom-layout toggle, a pattern switch before a
- *   regex is typed) lives in the form's own components: the card is keyed
- *   by its item, so the state follows the card when it moves (Preflight
- *   ruling 25). It goes when the card collapses.
+ *   regex is typed) lives in the form's own components: the card is keyed by
+ *   its item, so the state follows the card when it moves. It goes when the
+ *   card collapses.
  * - The shared pieces take the card's scope: `FieldSelector({path, id,
  *   rootable?})`, `TimestampConfigSection()` (the parser's `timestamp`
  *   block), `SeverityConfigSection()` (its `severity` block), and, for the
@@ -53,13 +53,13 @@ import { UriParserForm } from "./UriParserForm.js";
  *   presets and switch are `LAYOUT_PRESETS` and `layoutAfterSwitch` in
  *   `operator-catalog.ts`, read and written by `useLayoutControl`
  *   (`TimestampConfigSection.tsx`); `TextField`'s and `CheckboxField`'s
- *   `excludes` write decision 7's exclusive pairs.
+ *   `excludes` write the exclusive pairs.
  *
- * Task 6 adds the 12 parsers, Task 7 the 14 transformers and flow
- * operators: every one of the 26 has its form.
+ * Every one of the 26 operators has its form: the 12 parsers and the 14
+ * transformers and flow operators.
  */
 export const OPERATOR_FORMS: Record<OperatorType, ComponentType> = {
-  // Parsers (Task 6)
+  // Parsers
   json_parser: JsonParserForm,
   regex_parser: RegexParserForm,
   csv_parser: CsvParserForm,
@@ -67,13 +67,13 @@ export const OPERATOR_FORMS: Record<OperatorType, ComponentType> = {
   syslog_parser: SyslogParserForm,
   json_array_parser: JsonArrayParserForm,
   container: ContainerOperatorForm,
-  // Field parsers (Task 6)
+  // Field parsers
   severity_parser: SeverityParserForm,
   time_parser: TimeParserForm,
   trace_parser: TraceParserForm,
   uri_parser: UriParserForm,
   scope_name_parser: ScopeNameParserForm,
-  // Transform (Task 7)
+  // Transform
   add: AddOperatorForm,
   copy: CopyOperatorForm,
   move: MoveOperatorForm,
@@ -84,7 +84,7 @@ export const OPERATOR_FORMS: Record<OperatorType, ComponentType> = {
   regex_replace: RegexReplaceForm,
   sanitize_utf8: SanitizeUtf8Form,
   assign_keys: AssignKeysForm,
-  // Flow (Task 7)
+  // Flow
   filter: FilterOperatorForm,
   router: RouterOperatorForm,
   recombine: RecombineOperatorForm,

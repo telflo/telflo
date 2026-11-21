@@ -15,9 +15,9 @@ import { ALREADY_DELETED_WORDS, BulkProgress, BulkResults, NOT_ATTEMPTED_WORDS, 
 import { GROUPS_UNREADABLE_WORDS } from "./EditCollectorDialog.js";
 
 /*
- * "Move collectors" (D17b-1 decisions 12 and 27; Preflight ruling 13): a
- * Select of the fleet's groups (their ids its values, never names), then each
- * selected collector's `PATCH {groupId}`, one at a time (`runPacedWrites`):
+ * "Move collectors": a Select of the fleet's groups (their ids its values,
+ * never names), then each selected collector's `PATCH {groupId}`, one at a
+ * time (`runPacedWrites`):
  *
  * - "Moving {i} of {n}…" with Stop ("Stopping…": the request in flight
  *   finishes, the rest aren't sent); a 429 waits out its `Retry-After`
@@ -34,10 +34,9 @@ import { GROUPS_UNREADABLE_WORDS } from "./EditCollectorDialog.js";
  * - While it runs the dialog can't be closed: no Cancel, no X, Escape and
  *   outside clicks do nothing. After it, one Close (no X beside it); closed
  *   after a run, the grid reloads its page and the fleet (`onChanged`).
- * On a Kubernetes-supervisor fleet (D17d-1 decision 23; Preflight ruling
- * 25) the Select names the Agent and the Cluster by their roles, then the
- * gateways (`groupLabel`, `groupsInFleetOrder`).
- * Names are text only, in the masked shell (decision 32).
+ * On a Kubernetes-supervisor fleet the Select names the Agent and the Cluster
+ * by their roles, then the gateways (`groupLabel`, `groupsInFleetOrder`).
+ * Names are text only, in the masked shell.
  */
 
 export const MOVE_COLLECTOR_FAILED_MESSAGE = "Failed to move collector";
@@ -78,7 +77,7 @@ export interface BulkMoveDialogProps {
   fleetType?: FleetType;
   /** Closed after a run: the grid reloads its page and the fleet. */
   onChanged: () => void;
-  /** Where the focus goes once the dialog has closed (Radix's `onCloseAutoFocus`): the host gives it back to the opener (D14b Ruling 46). */
+  /** Where the focus goes once the dialog has closed (Radix's `onCloseAutoFocus`): the host gives it back to the opener. */
   onCloseAutoFocus?: ((event: Event) => void) | undefined;
 }
 

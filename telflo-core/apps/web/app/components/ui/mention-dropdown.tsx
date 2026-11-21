@@ -4,10 +4,9 @@ import * as React from "react";
 import { cn } from "~/lib/utils.js";
 
 /*
- * The rows of VaultAwareInput's `$` picker (ADR 0018). Rows are text; nothing
- * a row shows is an attribute (D9b decision 10; D20 decision 39). A row is a
- * variable's name over its description (D20 Q81: one name and a description);
- * a row with no description shows the name alone.
+ * The rows of VaultAwareInput's `$` picker. Rows are text; nothing a row
+ * shows is an attribute. A row is a variable's name over its description; a
+ * row with no description shows the name alone.
  */
 
 interface MentionItem {

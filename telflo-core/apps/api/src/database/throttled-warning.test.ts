@@ -1,9 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createThrottledWarning, THROTTLED_WARNING_INTERVAL_MS } from "./throttled-warning.js";
 
-// A repeated database call's warning (D14a Ruling 40): the first failure,
-// then at most one a minute while they last, then one recovery line. Fake
-// timers move the clock.
+// A repeated database call's warning: the first failure, then at most one a
+// minute while they last, then one recovery line. Fake timers move the clock.
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ["Date"] });

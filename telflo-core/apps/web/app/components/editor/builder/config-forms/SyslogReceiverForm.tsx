@@ -26,12 +26,11 @@ import type { ValueChange } from "~/lib/graph/text-edits.js";
 import type { ValueView } from "~/lib/graph/value-view.js";
 
 /*
- * The syslog receiver's form (ADR 0018), over the form's
- * fields (D9c decision 2, D9b's contract): each field writes its
- * own key. Collector claims cite contrib v0.162.0 (`pkg/stanza/operator/`
- * unless named).
+ * The syslog receiver's form, over the form's fields: each field writes
+ * its own key. Collector claims cite contrib v0.162.0
+ * (`pkg/stanza/operator/` unless named).
  *
- * The transport (D9c Preflight rulings 7 and 21):
+ * The transport:
  * - It is read from the text, never kept apart from it (a copy
  *   would go stale after a YAML edit, and could write `tcp:` beside a
  *   `udp` block): TCP while a `tcp` key is there, else UDP while a `udp` key
@@ -40,93 +39,89 @@ import type { ValueView } from "~/lib/graph/value-view.js";
  *   `input/syslog/config.go:118`).
  *   With both, TCP shows: the collector builds TCP and ignores UDP
  *   (`config.go:64-88`; `receiver/syslogreceiver/syslog.go:70-74`).
- * - Switching renames the block in place (D9b's OpAMP transport, its Ruling
- *   61), so it keeps its keys, their order and comments: `listen_address`,
+ * - Switching renames the block in place (as the OpAMP extension's transport
+ *   switch), so it keeps its keys, their order and comments: `listen_address`,
  *   `encoding`, `add_attributes`, `multiline`, the whitespace keys, and
  *   anything else. The receiver decodes strictly (`syslog.go:64-76`, core's
- *   `ErrorUnused`), so the rename drops what the other transport can't
- *   take: going to UDP, TCP's `tls`, `max_log_size`, `auth`,
- *   `max_connections` and `connection_idle_timeout` (`input/tcp/config.go:66-79`
- *   against `input/udp/config.go:69-77`); going to TCP, UDP's `async`.
- *   With no block, the pick writes the seed: TCP `{listen_address:
- *   0.0.0.0:54526, max_log_size: 1048576}`, UDP `{listen_address:
- *   0.0.0.0:54526}`. One change, one undo entry.
- * - Decision 7 (one change, with a toast saying what changed; D9d decision
- *   7): going to UDP also removes `enable_octet_counting` (unless
- *   `false`) and `non_transparent_framing_trailer` (`input/syslog/config.go:96-99`
- *   refuses either with UDP), with "Removed settings UDP can't take. Undo
- *   to restore them.", which also says the TCP-only keys went; they stay
- *   gone on a switch back (Ruling 88). With both blocks, switching to UDP
- *   removes the TCP block, "Removed the TCP block: the collector uses TCP
- *   when both are set." Going to TCP drops only `async`, silently, as the
- *   OpAMP switch drops `polling_interval`.
+ *   `ErrorUnused`), so the rename drops what the other transport can't take:
+ *   going to UDP, TCP's `tls`, `max_log_size`, `auth`, `max_connections` and
+ *   `connection_idle_timeout` (`input/tcp/config.go:66-79` against
+ *   `input/udp/config.go:69-77`); going to TCP, UDP's `async`. With no block,
+ *   the pick writes the seed: TCP
+ *   `{listen_address: 0.0.0.0:54526, max_log_size: 1048576}`, UDP
+ *   `{listen_address: 0.0.0.0:54526}`. One change, one undo entry.
+ * - Adjustments (one change, with a toast saying what changed): going to UDP
+ *   also removes `enable_octet_counting` (unless `false`) and
+ *   `non_transparent_framing_trailer` (`input/syslog/config.go:96-99` refuses
+ *   either with UDP), with "Removed settings UDP can't take. Undo to restore
+ *   them.", which also says the TCP-only keys went; they stay gone on a switch
+ *   back. With both blocks, switching to UDP removes the TCP block, "Removed
+ *   the TCP block: the collector uses TCP when both are set." Going to TCP
+ *   drops only `async`, silently, as the OpAMP switch drops
+ *   `polling_interval`.
  *
- * Fixed (D9c decisions 3, 4, 6 and 7):
+ * The fields:
  * - Listen Address has no default (it is required, `input/tcp/config.go:103-105`,
  *   `input/udp/config.go:86-88`): marked required, with the example
  *   "e.g. 0.0.0.0:54526" as its placeholder, not a value.
- * - Protocol offers the collector's three, `none` added as "None (message
- *   kept as-is)" (decision 6; `parser/syslog/config.go:19-24, 81-85`; Task
- *   6's label). It is required (`config.go:82-83`): unset checks none and
- *   shows no hint. Switching to RFC 3164
- *   or none removes `non_transparent_framing_trailer` (`config.go:88-91`),
- *   with Task 6's toast "Removed the framing trailer: it's only used with
- *   RFC 5424." The protocol is compared lower-cased, as the collector reads
- *   it (`config.go:64`).
- * - Enable Octet Counting shows for any protocol on TCP (D9c Ruling 62: the
- *   parser frames every protocol by octet count, `parser/syslog/parser.go:169-173,
- *   199-209`). Ticking it removes
- *   the framing trailer (`config.go:86-87`), with "Removed the framing
- *   trailer: it can't be used with octet counting." (Ruling 61).
+ * - Protocol offers the collector's three, `none` added as "None (message kept
+ *   as-is)" (`parser/syslog/config.go:19-24, 81-85`). It is required
+ *   (`config.go:82-83`): unset checks none and shows no hint. Switching to RFC
+ *   3164 or none removes `non_transparent_framing_trailer`
+ *   (`config.go:88-91`), with the toast "Removed the framing trailer: it's
+ *   only used with RFC 5424." The protocol is compared lower-cased, as the
+ *   collector reads it (`config.go:64`).
+ * - Enable Octet Counting shows for any protocol on TCP (the parser frames
+ *   every protocol by octet count,
+ *   `parser/syslog/parser.go:169-173, 199-209`). Ticking it removes the
+ *   framing trailer (`config.go:86-87`), with "Removed the framing trailer: it
+ *   can't be used with octet counting."
  * - Framing Trailer's None removes the key (never `''`, which
  *   `config.go:92-95` refuses).
  * - UDP's async fields show unset while there is no `async` block (the
  *   collector reads synchronously until one exists, `input/udp/config.go:62-66,
  *   112-145`), with "Off until one is set; then Default 1 / 1 / 100";
  *   with the block, "Default 1", "Default 1", "Default 100".
- * - Encoding is a native select; a value outside its list shows
- *   as written, an extra option whose `value` attribute is a fixed token
- *   (decision 10), not the value.
- *   Unset shows UTF-8, the collector's default (`input/tcp/config.go:54`,
- *   `input/udp/config.go:47`). Framing Trailer likewise.
- * - The numbers are D9b's number fields (a number or a reference as typed,
- *   `1MiB` for Max Log Size, a `helper.ByteSize`; clearing removes the key,
- *   never writing `NaN`, YAML `null`). Max Log Size and Max
- *   Octets show their defaults (1 MiB, `input/tcp/config.go:36, 94-97`;
- *   8192, the README) as placeholders and hints; Timezone shows UTC
+ * - Encoding is a native select; a value outside its list shows as
+ *   written, an extra option whose `value` attribute is a fixed token,
+ *   not the value. Unset shows UTF-8, the collector's default
+ *   (`input/tcp/config.go:54`, `input/udp/config.go:47`). Framing Trailer
+ *   likewise.
+ * - The numbers are number fields (a number or a reference as typed, `1MiB`
+ *   for Max Log Size, a `helper.ByteSize`; clearing removes the key, never
+ *   writing `NaN`, YAML `null`). Max Log Size and Max Octets show their
+ *   defaults (1 MiB, `input/tcp/config.go:36, 94-97`; 8192, the README) as
+ *   placeholders and hints; Timezone shows UTC
  *   (`parser/syslog/config.go:98-100`).
- * - TLS is the shared server section under `tcp.tls` (D9b's
- *   `TLSConfigSection`); UDP shows a "TCP only"
- *   alert; a TCP block that isn't a mapping shows decision 3's hint there
- *   (Ruling 76).
- * - Ruling 74: Protocol matches in any case, as the collector reads it
+ * - TLS is the shared server section under `tcp.tls` (`TLSConfigSection`); UDP
+ *   shows a "TCP only" alert; a TCP block that isn't a mapping shows
+ *   `UNSHOWABLE_VALUE_MESSAGE` there.
+ * - Protocol matches in any case, as the collector reads it
  *   (`protocol: RFC5424` shows RFC 5424 checked; a choice writes lower
  *   case). Clearing UDP's last async key removes the `async` block, so the
  *   collector reads synchronously again and "Off until one is set" shows.
- * - Ruling 76: on UDP, Enable Octet Counting (unless `false`) and Framing
- *   Trailer show while set, so they can be removed (unticking removes the
- *   key there; None removes the trailer): UDP refuses both
+ * - On UDP, Enable Octet Counting (unless `false`) and Framing Trailer
+ *   show while set, so they can be removed (unticking removes the key
+ *   there; None removes the trailer): UDP refuses both
  *   (`input/syslog/config.go:96-99`).
- * - Copy (Ruling 72, decision 4): ASCII is "ASCII (read as UTF-8)", as
- *   filelog's: the collector decodes `ascii` as UTF-8
+ * - Copy: ASCII is "ASCII (read as UTF-8)", as filelog's: the collector
+ *   decodes `ascii` as UTF-8
  *   (`internal/coreinternal/textutils/encoding.go:23-24`).
- * - Retry on Failure is the stanza receivers' section (`StanzaRetrySection`,
- *   decision 9).
- * - The Operators section is the operator framework (Task 5) over
- *   `operators`, from syslog (decision 8).
+ * - Retry on Failure is the stanza receivers' section (`StanzaRetrySection`).
+ * - The Operators section is the operator framework over `operators`, from
+ *   syslog.
  *
- * Ids are fixed (`listen_address`, `encoding`, …; the
- * radios `transport-<index>`, `protocol-<index>`); no value reaches an
- * attribute (decision 10).
+ * Ids are fixed (`listen_address`, `encoding`, …; the radios
+ * `transport-<index>`, `protocol-<index>`); no value reaches an attribute.
  */
 
 type Transport = "tcp" | "udp";
 
-/** Toasted once a switch to UDP removed what UDP can't take (decision 7). */
+/** Toasted once a switch to UDP removed what UDP can't take. */
 export const REMOVED_FOR_UDP = "Removed settings UDP can't take. Undo to restore them.";
-/** Toasted once a switch to UDP removed the TCP block both were set with (decision 7). */
+/** Toasted once a switch to UDP removed the TCP block both were set with. */
 export const REMOVED_TCP_BLOCK = "Removed the TCP block: the collector uses TCP when both are set.";
-/** Under the async fields while there is no `async` block (decision 4). */
+/** Under the async fields while there is no `async` block. */
 export const ASYNC_OFF_HINT = "Off until one is set; then Default 1 / 1 / 100";
 
 /** TCP's keys UDP's block refuses (`input/tcp/config.go:66-79`, `input/udp/config.go:69-77`). */
@@ -185,7 +180,7 @@ export function transportOf(root: ValueView): { transport: Transport | null; bot
 
 /**
  * The changes that switch the text's transport to `next`, and the toast's
- * messages (decision 7): the block renamed in place without the keys the other
+ * messages: the block renamed in place without the keys the other
  * transport refuses; with both, the TCP block removed; with neither, the
  * seed; going to UDP, the parser's framing keys removed.
  */
@@ -239,7 +234,7 @@ export function SyslogReceiverForm() {
   const protocol = protocolOf(form.read(["protocol"]));
   const octetView = form.read(["enable_octet_counting"]);
   const octets = octetView.value === true;
-  // On UDP the collector refuses both framing keys (`input/syslog/config.go:96-99`): shown while set, so they can go (Ruling 76).
+  // On UDP the collector refuses both framing keys (`input/syslog/config.go:96-99`): shown while set, so they can go.
   const octetsOnUdp = transport === "udp" && octetView.kind !== "absent" && octetView.value !== false;
   const trailerOnUdp = transport === "udp" && form.read(["non_transparent_framing_trailer"]).kind !== "absent";
   const asyncSet = transport === "udp" && form.read(["udp", "async"]).kind !== "absent";
@@ -251,7 +246,7 @@ export function SyslogReceiverForm() {
     if (messages.length > 0) adjustments.note(messages, result);
   };
 
-  /** decision 7: a protocol other than RFC 5424 takes no framing trailer (`config.go:88-91`), in the same change. */
+  /** A protocol other than RFC 5424 takes no framing trailer (`config.go:88-91`), in the same change. */
   const switchProtocol = (next: string) => {
     const trailer = next !== "rfc5424" && form.read(["non_transparent_framing_trailer"]).kind !== "absent";
     const changes: ValueChange[] = [{ path: ["protocol"], value: next }];
@@ -260,7 +255,7 @@ export function SyslogReceiverForm() {
     if (trailer) adjustments.note([REMOVED_PARSER_TRAILER], result);
   };
 
-  /** decision 7: octet counting takes no framing trailer (`config.go:86-87`), in the same change; unticking writes false (removes it on UDP). */
+  /** Octet counting takes no framing trailer (`config.go:86-87`), in the same change; unticking writes false (removes it on UDP). */
   const toggleOctets = (on: boolean) => {
     if (!on && transport === "udp") {
       form.remove(["enable_octet_counting"]);
@@ -475,10 +470,10 @@ export function SyslogReceiverForm() {
 
 /**
  * UDP's async fields, under `async`. Clearing the block's last key removes
- * the block (D9c Ruling 74): the collector reads asynchronously while an
- * `async` block exists, whatever it holds (`input/udp/config.go:112-145`),
- * so an emptied `async: {}` would keep it on. A pruning `FormScope` (D9d
- * decision 12, which generalized this block's own source).
+ * the block: the collector reads asynchronously while an `async` block
+ * exists, whatever it holds (`input/udp/config.go:112-145`), so an emptied
+ * `async: {}` would keep it on. A pruning `FormScope` removes the block
+ * when its last key is cleared.
  */
 function AsyncFields({ set }: { set: boolean }) {
   return (
@@ -501,10 +496,9 @@ const NO_TRANSPORT: FormSource = formSource(
 );
 
 /**
- * The transport's fields: under its block (keyed by the transport, as
- * OpAMP's: a switch addresses another block), disabled and empty with
- * neither, and in place of them decision 3's hint when the block isn't a
- * mapping.
+ * The transport's fields: under its block (keyed by the transport, as OpAMP's:
+ * a switch addresses another block), disabled and empty with neither, and in
+ * place of them `UNSHOWABLE_VALUE_MESSAGE` when the block isn't a mapping.
  */
 function TransportScope({ transport, showable, children }: { transport: Transport | null; showable: boolean; children: ReactNode }) {
   if (transport === null) return <FormProvider form={NO_TRANSPORT}>{children}</FormProvider>;

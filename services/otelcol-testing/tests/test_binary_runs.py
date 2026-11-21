@@ -1,14 +1,13 @@
-"""Runs on the real collectors (marked `binary`; D14a Task 5, Preflight
-ruling 6's binary tests 1, 2, 4 and 7 to 11), on every offered version the
-image holds, through the service with its own run child, under `--network
-none` (CI's otelcol-testing job): OTLP replay for each signal, filelog's
-pull under either of its names (`file_log`, Ruling 49) (and the collector's "Everything is ready" line, which filelog's
-readiness waits for, on each version), syslog's push, a collector that
-fails to start, a fully rejected replay, a UTF-16 input, the 10 MiB output
-cap (R-006), and a run killed at a lowered deadline leaving no process and
-no workspace behind.
+"""Runs on the real collectors (marked `binary`), on every offered version
+the image holds, through the service with its own run child, under
+`--network none` (CI's otelcol-testing job): OTLP replay for each signal,
+filelog's pull under either of its names (`file_log` too) (and the
+collector's "Everything is ready" line, which filelog's readiness waits for,
+on each version), syslog's push, a collector that fails to start, a fully
+rejected replay, a UTF-16 input, the 10 MiB output cap (R-006), and a run
+killed at a lowered deadline leaving no process and no workspace behind.
 
-kwok's tests are test_binary_kwok.py's, the neutraliser's canaries
+kwok's tests are test_binary_kwok.py's, the neutralizer's canaries
 test_binary_canaries.py's, the image's own checks test_binary_image.py's.
 """
 
@@ -206,7 +205,7 @@ service:
 @pytest.mark.parametrize("spelling", ["filelog", "file_log"])
 def test_a_filelog_pull_runs_the_operators_on_each_line(client: TestClient, version: str, spelling: str) -> None:
     """Either name of the receiver: `file_log` from collector 0.149.0, which
-    every offered version reads, and `filelog`, deprecated (Ruling 49)."""
+    every offered version reads, and `filelog`, deprecated."""
     answer = run(client, version, FILELOG_TEXT.replace("filelog", spelling), b"INFO order placed\nWARN payment declined\n")
 
     assert answer["status"] == "succeeded", answer.get("error")
@@ -438,7 +437,7 @@ def test_a_run_killed_at_its_deadline_leaves_no_collector_and_no_workspace(versi
 
 
 # ---------------------------------------------------------------------------
-# Ruling 28: the service detectors stripped, geoip refused
+# The service detectors stripped, geoip refused
 # ---------------------------------------------------------------------------
 
 SERVICE_DETECTORS = """\
@@ -493,7 +492,7 @@ def test_a_geoip_processor_is_refused_on_every_version(client: TestClient, versi
     assert answer["timings"]["readyMs"] is None
 
 
-# Ruling 31: a processor setting that names a file is refused (C-006).
+# A processor setting that names a file is refused (C-006).
 @pytest.mark.parametrize("version", OFFERED)
 def test_a_processor_setting_that_names_a_file_is_refused_on_every_version(client: TestClient, version: str) -> None:
     text = SERVICE_DETECTORS.replace(
@@ -512,7 +511,7 @@ def test_a_processor_setting_that_names_a_file_is_refused_on_every_version(clien
     assert "/run/secrets" not in json.dumps(answer)
 
 
-# Ruling 33: schema and remotetap refused outright (C-005).
+# Schema and remotetap refused outright (C-005).
 @pytest.mark.parametrize("version", OFFERED)
 @pytest.mark.parametrize(
     "processor",

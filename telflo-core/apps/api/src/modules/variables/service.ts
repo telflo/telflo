@@ -42,26 +42,23 @@ import {
 } from "./errors.js";
 
 /*
- * The organization's variables and variable groups through the platform
- * (D20 decisions 1, 6, 14, 15, 18, 21 and 37). The opamp-server holds them
- * (Q80): this service is its tenant router for the signed-in person's
- * active organization, as the fleets service is for fleets.
+ * The organization's variables and variable groups through the platform. The
+ * opamp-server holds them: this service is its tenant router for the signed-in
+ * person's active organization, as the fleets service is for fleets.
  *
- * Every operation, in order: the path's organization the session's active
- * one (else 404 `organization_not_found`, before anything else); each path
- * id a canonical UUID (else its 404, with no call); the person's
- * opamp-server budget (the fleet limiter's: one count and one in-flight
- * slot per request, released in a `finally`); the call; the audit row.
- * Every member may do all of it: no viewer role exists since migration
- * 1700000000014, so default 18's admins and contributors are every member
- * (Preflight rulings 25 and 46). The actor the opamp-server records as
- * `changedBy` (Q94) is the session's person, never the body's.
+ * Every operation, in order: the path's organization the session's active one
+ * (else 404 `organization_not_found`, before anything else); each path id a
+ * canonical UUID (else its 404, with no call); the person's opamp-server
+ * budget (the fleet limiter's: one count and one in-flight slot per request,
+ * released in a `finally`); the call; the audit row. Every member may do all
+ * of it: no viewer role exists since migration 1700000000014, so admins and
+ * contributors are every member. The actor the opamp-server records as
+ * `changedBy` is the session's person, never the body's.
  *
- * A create first registers the organization with the opamp-server under
- * its current name (D11a decision 20, as a fleet's create does), then
- * re-checks it `for share` once the create succeeded (D16b Preflight ruling
- * 13): one deleted meanwhile is deleted in the opamp-server again (its
- * delete hook) and answers 404 `organization_not_found`.
+ * A create first registers the organization with the opamp-server under its
+ * current name (as a fleet's create does), then re-checks it `for share` once
+ * the create succeeded: one deleted meanwhile is deleted in the opamp-server
+ * again (its delete hook) and answers 404 `organization_not_found`.
  *
  * Answers: the person's own refusals passed on (404 `variable_not_found`,
  * `variable_group_not_found`; 409 `variable_name_taken`,
@@ -69,34 +66,34 @@ import {
  * `variable_limit_reached`, `variable_group_limit_reached`,
  * `variable_conflict`, `variable_group_conflict`); an organization the
  * opamp-server doesn't know holds none (an empty list, a 404); every other
- * outcome one 503 `variables_unavailable` (decision 1), logged with ids and
- * the result's kind, a warning when the opamp-server couldn't be asked, an
+ * outcome one 503 `variables_unavailable`, logged with ids and the
+ * result's kind, a warning when the opamp-server couldn't be asked, an
  * error when it answered what the platform's checks should have prevented.
  * A 503 changes nothing on the platform's side; a write's can follow a
  * change the opamp-server made (a reply lost after its commit).
  *
- * The 409s' details (Preflight ruling 26): each publication id mapped to its
- * configuration and version by `publishedVersions.describe` (live
- * configurations the person can see), each fleet's label from `getFleet`
- * and its groups' names from `listCollectorGroups`, once per fleet named; a
- * lookup that fails or finds nothing leaves that name null, and the 409
- * stands. The totals pass through (Q102).
+ * The 409s' details: each publication id mapped to its configuration and
+ * version by `publishedVersions.describe` (live configurations the person
+ * can see), each fleet's label from `getFleet` and its groups' names from
+ * `listCollectorGroups`, once per fleet named; a lookup that fails or finds
+ * nothing leaves that name null, and the 409 stands. The totals pass
+ * through.
  *
- * Audit rows (decision 37; Q94), after the opamp-server's success, in their
- * own transaction (the fleets service's pattern), ids and field names only:
+ * Audit rows, after the opamp-server's success, in their own transaction
+ * (the fleets service's pattern), ids and field names only:
  * `organization_variable.created`, `.updated` (the fields sent) and
  * `.deleted`; `variable_group.created`, `.updated` (the fields sent) and
  * `.deleted`; `variable_group.override_set` on every successful PUT (the
- * platform can't tell a new override, a replace and the same value apart:
- * Preflight ruling 44) and `.override_reset` on every Reset (one of nothing
- * included). No row for a create's retry (`unchanged`). A failed row is an
- * error log with the ids; the change stands.
+ * platform can't tell a new override, a replace and the same value apart)
+ * and `.override_reset` on every Reset (one of nothing included). No row for
+ * a create's retry (`unchanged`). A failed row is an error log with the ids;
+ * the change stands.
  *
  * A variable's value, name and description, and a variable group's name
- * and description, are configuration text (Q88; decision 35): they reach
- * replies only, never a log line, an error's message, an audit row or a
- * URL. The drafts warning reads the variable's name from the opamp-server,
- * never from the request.
+ * and description, are configuration text: they reach replies only, never
+ * a log line, an error's message, an audit row or a URL. The drafts
+ * warning reads the variable's name from the opamp-server, never from the
+ * request.
  */
 
 /** The repositories a unit of work of the variables routes uses, bound to one transaction in the request's database context. */
@@ -106,7 +103,7 @@ export interface VariablesTransaction {
   audit: IAuditRepository;
   /** The in-use details' configuration and version of each publication id. */
   publishedVersions: Pick<IPublishedVersionRepository, "describe">;
-  /** Default 21's warning: the configurations whose current draft holds the reference. */
+  /** The drafts warning: the configurations whose current draft holds the reference. */
   drafts: IVariableDraftsRepository;
 }
 
@@ -122,9 +119,9 @@ export type WithVariablesTransaction = <Result>(
 export interface VariablesServiceDependencies {
   withTransaction: WithVariablesTransaction;
   opampServer: OpampServerClient;
-  /** The person's opamp-server budget, shared with the fleet routes (D16b Preflight ruling 12). */
+  /** The person's opamp-server budget, shared with the fleet routes. */
   limiter: FleetLimiter;
-  /** A create that finds its organization deleted runs its delete hook again (D16b Preflight ruling 13). */
+  /** A create that finds its organization deleted runs its delete hook again. */
   opampRegistration: Pick<OpampRegistration, "deleted">;
   log: Pick<FastifyBaseLogger, "warn" | "error">;
 }
@@ -137,7 +134,7 @@ export interface IVariablesService {
   createVariable(actor: Actor, organizationId: string, request: CreateOrganizationVariableRequest): Promise<CreateOutcome<OrganizationVariable>>;
   updateVariable(actor: Actor, organizationId: string, variableId: string, changes: UpdateOrganizationVariableRequest): Promise<OrganizationVariable>;
   deleteVariable(actor: Actor, organizationId: string, variableId: string): Promise<void>;
-  /** Default 21: the configurations, among those the person can see, whose current draft references the variable's name. */
+  /** The drafts warning: the configurations, among those the person can see, whose current draft references the variable's name. */
   variableDrafts(actor: Actor, organizationId: string, variableId: string): Promise<VariableDraftsResponse["configurations"]>;
   listVariableGroups(actor: Actor, organizationId: string): Promise<VariableGroup[]>;
   createVariableGroup(actor: Actor, organizationId: string, request: CreateVariableGroupRequest): Promise<CreateOutcome<VariableGroup>>;
@@ -220,7 +217,7 @@ function errorName(error: unknown): string {
   return error instanceof Error ? error.name : typeof error;
 }
 
-/** The most fleets a 409's names are looked up for at once (Ruling 71). */
+/** The most fleets a 409's names are looked up for at once. */
 export const NAME_LOOKUP_CONCURRENCY = 8;
 
 /** A variable's reference as a configuration writes it. */
@@ -320,7 +317,7 @@ export function createVariablesService(deps: VariablesServiceDependencies): IVar
     }
   }
 
-  /** The organization registered under its current name, before a create (D11a decision 20). */
+  /** The organization registered under its current name, before a create. */
   async function ensured(actor: Actor, ids: VariableIds): Promise<void> {
     // The name to register under, read committed (no lock across a call).
     const organization = await withTransaction(actor.context, (transaction) => transaction.organization.findActive());
@@ -342,9 +339,9 @@ export function createVariablesService(deps: VariablesServiceDependencies): IVar
   }
 
   /**
-   * A lookup for a 409's names (Preflight ruling 26): the answer, or
-   * undefined when the call fails or throws (logged with the ids and the
-   * kind, or the error's name), so the name stays null and the 409 stands.
+   * A lookup for a 409's names: the answer, or undefined when the call
+   * fails or throws (logged with the ids and the kind, or the error's
+   * name), so the name stays null and the 409 stands.
    */
   async function lookedUp<Result extends { kind: string }>(
     operation: string,
@@ -365,7 +362,7 @@ export function createVariablesService(deps: VariablesServiceDependencies): IVar
    * where a lookup failed or found none. At most NAME_LOOKUP_CONCURRENCY
    * fleets are looked up at once (a 409 may name up to 100), and none is
    * started after a lookup the opamp-server couldn't answer (unavailable,
-   * an undocumented answer, a throw: Ruling 71), so a server that is down
+   * an undocumented answer, a throw), so a server that is down
    * costs at most one round of calls; the names left are null and the 409
    * stands. A fleet or an organization it doesn't know is a name found
    * empty, never a failure.
@@ -415,7 +412,7 @@ export function createVariablesService(deps: VariablesServiceDependencies): IVar
     }));
   }
 
-  /** `variable_in_use`'s details with the platform's names (Preflight ruling 26): the totals passed through. */
+  /** `variable_in_use`'s details with the platform's names: the totals passed through. */
   async function inUseDetails(actor: Actor, ids: VariableIds, details: Opamp.VariableInUseDetails): Promise<VariableInUseDetails> {
     let versions = new Map<string, PublishedVersion>();
     const publicationIds = details.usedBy.map((use) => use.publicationId);
@@ -478,7 +475,7 @@ export function createVariablesService(deps: VariablesServiceDependencies): IVar
 
     async createVariable(actor, organizationId, request) {
       assertActiveOrganization(actor, organizationId);
-      // The browser's id makes a retry safe (Q93).
+      // The browser's id makes a retry safe.
       const ids: VariableIds = { organizationId: actor.context.organizationId, variableId: request.id.toLowerCase() };
       const variableId = request.id.toLowerCase();
       return admitted(actor, "write", async () => {
@@ -732,7 +729,7 @@ export function createVariablesService(deps: VariablesServiceDependencies): IVar
         );
         switch (result.kind) {
           case "set":
-            // Every successful PUT (Preflight ruling 44): new, replaced or the same value again.
+            // Every successful PUT: new, replaced or the same value again.
             await audit(actor, "variable_group.override_set", { type: "variable_group", id: variableGroupId }, { variableGroupId, variableId });
             return toOverride(result.override);
           case "variable_group_not_found":

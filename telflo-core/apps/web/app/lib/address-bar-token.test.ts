@@ -12,7 +12,7 @@ afterEach(() => {
   window.history.replaceState(null, "", "/");
 });
 
-describe("taking an emailed link's token out of the address bar (D4 Ruling 14)", () => {
+describe("taking an emailed link's token out of the address bar", () => {
   it("from a fragment: removes the whole fragment and keeps the query", () => {
     window.history.replaceState(null, "", "/reset-password?utm_source=mail#token=secret");
 

@@ -14,11 +14,11 @@ export default defineConfig({
     setupFiles: ["./vitest.setup.ts"],
     // A hang guard well above the setup's 5 s for each findBy/waitFor, so a
     // wait that fails after earlier steps reports Testing Library's error
-    // ("Unable to find …"), not vitest's "Test timed out in 5000ms" (D13c).
+    // ("Unable to find …"), not vitest's "Test timed out in 5000ms".
     testTimeout: 15_000,
     // monaco-yaml's bundled worker runs in the schema tests as the editor
-    // runs it (app/test/schema-worker.ts, D13c Preflight ruling 9). Inlined,
-    // it goes through Vite's module graph, so the test's mock of
+    // runs it (app/test/schema-worker.ts). Inlined, it goes through
+    // Vite's module graph, so the test's mock of
     // `monaco-worker-manager/worker` hands over its language service.
     // Only the worker file: the tests that mock `monaco-yaml` itself are
     // untouched.

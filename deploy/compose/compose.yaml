@@ -1,6 +1,6 @@
-# Telflo on one machine with Docker Compose (D36-2 decisions 88-92): the
-# same images, settings and defaults as the Helm chart (charts/telflo), for
-# trying Telflo or running it for a team on one host.
+# Telflo on one machine with Docker Compose: the same images, settings and
+# defaults as the Helm chart (charts/telflo), for trying Telflo or running
+# it for a team on one host.
 #
 #   ./setup.sh --public-url <origin> --agent-url <origin> --mailpit   (./setup.sh --help)
 #   docker compose up -d
@@ -158,7 +158,7 @@ services:
   # One-shot, on every start: the platform's migrations as its owner, then
   # the API's login role. A no-op when the schema is current.
   migrate:
-    image: ghcr.io/telflo/telflo/api:0.2.0
+    image: ghcr.io/telflo/telflo/api:0.2.1
     working_dir: /app/packages/db
     command: ["node", "dist/migrate.js"]
     environment:
@@ -211,7 +211,7 @@ services:
   # own validate. The API is its only caller. It reads its secret from its
   # environment.
   otelcol-validator:
-    image: ghcr.io/telflo/telflo/otelcol-validator:0.2.0
+    image: ghcr.io/telflo/telflo/otelcol-validator:0.2.1
     environment:
       OTELCOL_VALIDATOR_SECRET: "${TELFLO_OTELCOL_VALIDATOR_SECRET:?run ./setup.sh first}"
     healthcheck:
@@ -225,7 +225,7 @@ services:
   # its own network with no way out, a read-only root, no capabilities, its
   # secret only from a file. The API is its only caller.
   otelcol-testing:
-    image: ghcr.io/telflo/telflo/otelcol-testing:0.2.0
+    image: ghcr.io/telflo/telflo/otelcol-testing:0.2.1
     read_only: true
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
@@ -248,7 +248,7 @@ services:
   # tester, on its own network (not the tester's), memory and threads
   # bounded, its secret only from a file. The API is its only caller.
   ottl-evaluator:
-    image: ghcr.io/telflo/telflo/ottl-evaluator:0.2.0
+    image: ghcr.io/telflo/telflo/ottl-evaluator:0.2.1
     command: ["serve"]
     read_only: true
     cap_drop: [ALL]
@@ -271,7 +271,7 @@ services:
   # The API. telflo-admin, its operator's commands, runs in this container:
   # `docker compose exec -T api telflo-admin bootstrap ...`.
   api:
-    image: ghcr.io/telflo/telflo/api:0.2.0
+    image: ghcr.io/telflo/telflo/api:0.2.1
     environment: *telflo-api-environment
     volumes:
       - file-store:/var/lib/telflo/file-store
@@ -297,7 +297,7 @@ services:
     restart: unless-stopped
 
   web:
-    image: ghcr.io/telflo/telflo/web:0.2.0
+    image: ghcr.io/telflo/telflo/web:0.2.1
     # telflo-web is the gateway's upstream name, as telflo-api is the API's.
     networks:
       default: { aliases: [telflo-web] }

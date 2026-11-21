@@ -25,8 +25,8 @@ const PUBLISHING_UNAVAILABLE: ConfigurationErrorCode = "publishing_unavailable";
 
 /**
  * Whether a publish was refused for a reference no organization variable can
- * have (D20 Rulings 55 and 71): 400 `invalid_request`, its details naming
- * `yaml` (Ruling 31's shape: each detail's `instancePath`).
+ * have: 400 `invalid_request`, its details naming `yaml` (each detail's
+ * `instancePath`).
  */
 function isVariableReferenceTooLongRefusal(error: ApiError): boolean {
   return (
@@ -38,17 +38,16 @@ function isVariableReferenceTooLongRefusal(error: ApiError): boolean {
   );
 }
 
-/** Whether a publish was refused because the version was saved since the tab saw it, or meanwhile (Ruling 30). */
+/** Whether a publish was refused because the version was saved since the tab saw it, or meanwhile. */
 function isVersionChangedRefusal(error: unknown): boolean {
   return error instanceof ApiError && error.code === VERSION_CHANGED;
 }
 
 /**
- * What a publish's refusal toasts, by its code (Preflight rulings 8 and 15;
- * Ruling 31): never the server's message. A deleted configuration and another
- * organization get the save's own messages; a 403
- * `terms_acceptance_required` toasts nothing (null), since the terms dialog
- * opens, as for a save or a create. A text referencing an organization
+ * What a publish's refusal toasts, by its code: never the server's message. A
+ * deleted configuration and another organization get the save's own messages;
+ * a 403 `terms_acceptance_required` toasts nothing (null), since the terms
+ * dialog opens, as for a save or a create. A text referencing an organization
  * variable name over 128 characters says so, in the contracts' fixed words.
  * Exported for its tests.
  */
@@ -71,9 +70,8 @@ export function refusalMessage(error: unknown, versionNumber: number): string | 
 }
 
 /**
- * The toolbar's Publish (D11b decisions 5, 9, 11 and 13; Preflight rulings
- * 8, 9, 11 and 15). Resolves true once the open version is published and the
- * editor shows it so.
+ * The toolbar's Publish. Resolves true once the open version is published and
+ * the editor shows it so.
  *
  * - One publish at a time: the store says one is under way
  *   (`isPublishing`), set before any await, so a double click publishes
@@ -82,31 +80,30 @@ export function refusalMessage(error: unknown, versionNumber: number): string | 
  *   already published.
  * - Every edit a field holds is written first (held-edits), as a save does;
  *   a flush that throws publishes nothing.
- * - With unsaved changes it saves first, through the editor's one save
- *   (decision 5); a save that fails has said why (the save's own messages)
- *   and nothing is published. Then, if the saved text is empty, it says "An
- *   empty version can't be published." and sends nothing (ruling 9).
+ * - With unsaved changes it saves first, through the editor's one save; a
+ *   save that fails has said why (the save's own messages) and nothing is
+ *   published. Then, if the saved text is empty, it says "An empty version
+ *   can't be published." and sends nothing.
  * - It publishes the open version, in the organization the configuration was
  *   loaded in, sending the version's `updatedAt` as the tab last loaded or
- *   saved it (`expectedUpdatedAt`; after a save first, the save's answer's;
- *   Ruling 30, the owner's), so the server publishes what this tab saved or
- *   showed, never a teammate's save it didn't see. On 200 the summary it
- *   answers replaces the open version's (no reload: the history and the
- *   canvas stay), which locks the editor, and it toasts "Configuration
- *   published successfully".
+ *   saved it (`expectedUpdatedAt`; after a save first, the save's answer's),
+ *   so the server publishes what this tab saved or showed, never a
+ *   teammate's save it didn't see. On 200 the summary it answers replaces
+ *   the open version's (no reload: the history and the canvas stay), which
+ *   locks the editor, and it toasts "Configuration published successfully".
  * - Each refusal toasts by its code: already published ("Version {N} is
- *   already published.", and the version is read again so the editor
- *   locks, showing the published content when it was clean: Ruling 35);
- *   changed ("This version changed while it was being
- *   published. Try again.", and the version is opened again, so the editor
- *   shows the newer saved text: Ruling 30's refuse, then reload); empty;
- *   a reference to an organization variable name over 128 characters (a
- *   400 naming `yaml`: the contracts' VARIABLE_REFERENCE_TOO_LONG_MESSAGE);
- *   unavailable; a deleted configuration and another organization the
- *   save's messages; anything else "An error occurred while publishing.". A
- *   403 `terms_acceptance_required` toasts nothing and revalidates the
- *   layout, whose terms dialog opens, and a 404 `organization_not_found`
- *   revalidates it too, as the editor's other writes do (Ruling 31).
+ *   already published.", and the version is read again so the editor locks,
+ *   showing the published content when it was clean); changed ("This
+ *   version changed while it was being published. Try again.", and the
+ *   version is opened again, so the editor shows the newer saved text:
+ *   refuse, then reload); empty; a reference to an organization variable
+ *   name over 128 characters (a 400 naming `yaml`: the contracts'
+ *   VARIABLE_REFERENCE_TOO_LONG_MESSAGE); unavailable; a deleted
+ *   configuration and another organization the save's messages; anything
+ *   else "An error occurred while publishing.". A 403
+ *   `terms_acceptance_required` toasts nothing and revalidates the layout,
+ *   whose terms dialog opens, and a 404 `organization_not_found`
+ *   revalidates it too, as the editor's other writes do.
  * - An answer for a load the editor no longer holds changes and toasts
  *   nothing (the save's `stillOpen` rule).
  */

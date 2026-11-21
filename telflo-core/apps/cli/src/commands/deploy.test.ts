@@ -6,7 +6,7 @@ import { deleteCredentials, saveCredentials } from "../credentials.js";
 import { NAME_NEEDED_MESSAGE, NODE_ROLE_ON_CREATE_MESSAGE, SEVERAL_SERVING_MESSAGE } from "../ops/deploy.js";
 import { positiveInteger, ROLE_ON_UPDATE_NOTE } from "./deploy.js";
 
-/* telflo deploy (D27 decisions 11 and 28): its flags, requests and output, against a stub fetch. */
+/* telflo deploy: its flags, requests and output, against a stub fetch. */
 
 const SERVER = "https://telflo.example";
 const ORG = "0b7e8a9c-1d2e-4f30-8a4b-5c6d7e8f9a0b";
@@ -88,7 +88,7 @@ describe("telflo deploy", () => {
     expect(created.code === 0 && created.stderr === "").toBe(true);
   });
 
-  it("with --json, the --role note is one JSON object on stderr; stdout the group (Ruling 249)", async () => {
+  it("with --json, the --role note is one JSON object on stderr; stdout the group", async () => {
     serve([groupOf(G1, CONFIG)]);
     const result = await runCli(["--json", "deploy", "--fleet", FLEET, "--config", CONFIG, "--role", "gateway"]);
     expect(result.code).toBe(0);
@@ -96,7 +96,7 @@ describe("telflo deploy", () => {
     expect(JSON.parse(result.stdout)).toMatchObject({ action: "updated", id: G1 });
   });
 
-  it("a new fleet's first deploy, neither --group nor --name: its unassigned Default group serves the version (Ruling 248)", async () => {
+  it("a new fleet's first deploy, neither --group nor --name: its unassigned Default group serves the version", async () => {
     serve([{ ...groupOf(G1, null, null), name: "Default", isDefault: true }], { ...groupOf(G1, CONFIG), name: "Default", isDefault: true });
     const result = await runCli(["deploy", "--fleet", FLEET, "--config", CONFIG]);
     expect(result.code).toBe(0);
@@ -154,7 +154,7 @@ describe("telflo deploy", () => {
     expect((await runCli(["deploy", "--fleet", FLEET, "--config", CONFIG, "--group", G1])).stdout === `Group ${G1} now serves.\n`).toBe(true);
   });
 
-  it("strips control characters from the reply's id (Ruling 237)", async () => {
+  it("strips control characters from the reply's id", async () => {
     serve([groupOf(G1, CONFIG)], { ...groupOf(G1, CONFIG), id: `\u001b[2J${G1}` });
     const result = await runCli(["deploy", "--fleet", FLEET, "--config", CONFIG]);
     expect(result.stdout === `Group [2J${G1} now serves v2.\n`).toBe(true);

@@ -18,16 +18,16 @@ import { builderStore, componentNamed, openText } from "~/test/builder-store.js"
 import { formControls } from "~/test/form-controls.js";
 
 /*
- * The operator framework (D9c Task 5; decision 8): the pipeline, its cards,
- * the Add Operator dialog, the FieldSelector and the severity and timestamp
- * sections, over the form contract. Driven as a person would (clicking,
- * typing, picking, dragging by pointer and by keyboard) on the logs corpus
- * (comments, an anchor, flow items, `0750`), and each change checked in the
- * text: the item's own lines, nothing else.
+ * The operator framework: the pipeline, its cards, the Add Operator dialog,
+ * the FieldSelector and the severity and timestamp sections, over the form
+ * contract. Driven as a person would (clicking, typing, picking, dragging by
+ * pointer and by keyboard) on the logs corpus (comments, an anchor, flow
+ * items, `0750`), and each change checked in the text: the item's own lines,
+ * nothing else.
  *
- * The JSON parser's cards hold its real form (Task 6), which holds the
- * shared pieces these tests drive (Parse From, a rootable Parse To, the
- * timestamp and severity sections); the parsers' own fields are
+ * The JSON parser's cards hold its real form, which holds the shared pieces
+ * these tests drive (Parse From, a rootable Parse To, the timestamp and
+ * severity sections); the parsers' own fields are
  * `forms/parser-forms.test.tsx`'s.
  *
  * Collector claims cite contrib v0.162.0 (`pkg/stanza/`).
@@ -53,7 +53,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-/** The info toasts shown so far: decision 7's adjustments toast their messages (Ruling 87). */
+/** The info toasts shown so far: the forms' adjustments toast their messages. */
 const infoToasts = () => vi.mocked(toast.info).mock.calls.map(([message]) => message);
 
 function ComponentForm({ nodeId, children }: { nodeId: string; children: ReactNode }) {
@@ -107,7 +107,7 @@ async function pickIn(user: UserEvent, trigger: HTMLElement, option: string) {
 /** The card whose field `id` is in it. */
 const cardOf = (id: string) => byId(id).closest(".rounded-lg.bg-card") as HTMLElement;
 
-// ── Sortable cards (D9b Preflight ruling 15) ──
+// ── Sortable cards ──
 
 const ROW_HEIGHT = 40;
 
@@ -245,12 +245,12 @@ const TWO_PARSERS = CORPUS.replace(MOVE_OP, `${MOVE_OP}      - type: json_parser
 const SYSLOG_END = "      max_elapsed_time: 10m\n";
 const withSyslog = (lines: string) => CORPUS.replace(SYSLOG_END, `${SYSLOG_END}${lines}`);
 
-// ── The list: add, remove, move by item (decision 8; D9b decision 2) ──
+// ── The list: add, remove, move by item ──
 
-describe("Add Operator appends the type's seed as one item (decisions 3 and 8)", () => {
+describe("Add Operator appends the type's seed as one item", () => {
   const escape = (label: string) => label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-  // Its own time limit (D9c Rulings 54 and 80).
+  // Its own time limit.
   it.each(OPERATORS.map((op) => [op.label, op.type] as const))("%s: its seed, at the list's end; nothing else changes", async (label, type) => {
     const user = renderPipeline();
     await user.click(screen.getByRole("button", { name: "Add Operator" }));
@@ -274,7 +274,7 @@ describe("Add Operator appends the type's seed as one item (decisions 3 and 8)",
     ["a missing key", CORPUS],
     ["operators: []", withSyslog("    operators: []\n")],
     ["a null operators:", withSyslog("    operators:\n")],
-  ])("into %s, in block style (D9b Ruling 85)", async (_name, base) => {
+  ])("into %s, in block style", async (_name, base) => {
     const user = renderPipeline(SYSLOG, base);
     expect(screen.getByText("No operators configured")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Add Operator" }));
@@ -283,8 +283,8 @@ describe("Add Operator appends the type's seed as one item (decisions 3 and 8)",
     expect(entries()).toBe(1);
   });
 
-  // Its own time limit (D9c Rulings 54 and 80).
-  it("the seeds decision 3 fixes are written as the collector takes them", async () => {
+  // Its own time limit.
+  it("the seeds are written as the collector takes them", async () => {
     const user = renderPipeline(SYSLOG);
     for (const label of ["Router", "Regex Replace", "Flatten", "Recombine", "JSON Array Parser"]) {
       await user.click(screen.getByRole("button", { name: "Add Operator" }));
@@ -317,7 +317,7 @@ describe("Add Operator appends the type's seed as one item (decisions 3 and 8)",
   }, 20_000);
 });
 
-describe("removing an operator removes its lines (decision 8)", () => {
+describe("removing an operator removes its lines", () => {
   it("the router's lines go; the others, their comments and their keys stay", async () => {
     const user = renderPipeline();
     await user.click(screen.getAllByRole("button", { name: "Remove operator" })[1]!);
@@ -327,7 +327,7 @@ describe("removing an operator removes its lines (decision 8)", () => {
     expect(text()).toBe(CORPUS);
   });
 
-  it("the comment above a removed item stays, as D9a removes an entry (Preflight ruling 24)", async () => {
+  it("the comment above a removed item stays", async () => {
     const user = renderPipeline();
     await user.click(screen.getAllByRole("button", { name: "Remove operator" })[0]!);
     expect(text()).toBe(CORPUS.replace(PARSE_OP, "      # parse the JSON body\n"));
@@ -360,7 +360,7 @@ describe("removing an operator removes its lines (decision 8)", () => {
   });
 });
 
-describe("moving an operator moves its lines, comments and keys no field shows (decision 8)", () => {
+describe("moving an operator moves its lines, comments and keys no field shows", () => {
   beforeEach(layOutRows);
 
   const SWAPPED = CORPUS.replace(PARSE_OP + ROUTER_OP, ROUTER_OP + PARSE_OP);
@@ -396,7 +396,7 @@ describe("moving an operator moves its lines, comments and keys no field shows (
   it.each([
     ["keyboard", (handle: HTMLElement) => dragByKeyboard(handle, 1)],
     ["pointer", (handle: HTMLElement) => dragByPointer(handle, 1)],
-  ] as const)("by %s: a collapsed card stays collapsed where it goes, and after the move's undo and redo (Ruling 35)", async (_how, drag) => {
+  ] as const)("by %s: a collapsed card stays collapsed where it goes, and after the move's undo and redo", async (_how, drag) => {
     const user = renderPipeline();
     await user.click(screen.getAllByRole("button", { name: "Collapse operator" })[0]!);
     expect(byId("op-0-id")).toBeNull();
@@ -417,7 +417,7 @@ describe("moving an operator moves its lines, comments and keys no field shows (
     expect(byId("op-0-id")).toHaveAttribute("placeholder", "router");
   });
 
-  it("a card's own state follows it: the timestamp's Custom... toggle (Preflight ruling 25)", async () => {
+  it("a card's own state follows it: the timestamp's Custom... toggle", async () => {
     const user = renderPipeline();
     await pickIn(user, byId("op-0-ts-layout-preset"), "Custom...");
     expect(byId("op-0-ts-layout-custom")).toHaveValue("%Y-%m-%d %H:%M:%S");
@@ -452,7 +452,7 @@ describe("moving an operator moves its lines, comments and keys no field shows (
   });
 });
 
-// ── The cards (decision 8; Preflight rulings 9 and 20) ──
+// ── The cards ──
 
 describe("each card's common fields write the operator's own keys", () => {
   it("Operator ID writes id in place; its placeholder is the type; cleared, the key goes", async () => {
@@ -466,7 +466,7 @@ describe("each card's common fields write the operator's own keys", () => {
     expect(text()).toBe(CORPUS.replace("        id: parse\n", ""));
   });
 
-  it("On Error offers the collector's four; unset shows Default send; a pick writes on_error (decisions 3 and 6)", async () => {
+  it("On Error offers the collector's four; unset shows Default send; a pick writes on_error", async () => {
     const user = renderPipeline();
     expect(byId("op-0-on-error")).toHaveTextContent("Send (continue)");
     expect(hintIn(cardOf("op-0-id"), "Error handling behavior. · Default send")).toBeInTheDocument();
@@ -499,7 +499,7 @@ describe("each card's common fields write the operator's own keys", () => {
     expect(text().replace(/^ {8}if: .*\n/m, "")).toBe(CORPUS);
   });
 
-  it("a router shows neither On Error nor Condition (decision 4)", () => {
+  it("a router shows neither On Error nor Condition", () => {
     renderPipeline();
     expect(byId("op-1-id")).toHaveAttribute("placeholder", "router");
     expect(byId("op-1-on-error")).toBeNull();
@@ -515,7 +515,7 @@ describe("each card's common fields write the operator's own keys", () => {
   });
 });
 
-describe("items the catalog doesn't know (Preflight rulings 9 and 20)", () => {
+describe("items the catalog doesn't know", () => {
   it("a type outside the 26: its common fields, Unknown operator type, the ID placeholder Operator ID", () => {
     renderPipeline(JOURNALD);
     expect(byId("op-2-id")).toHaveValue("dropped");
@@ -552,7 +552,7 @@ describe("items the catalog doesn't know (Preflight rulings 9 and 20)", () => {
   });
 });
 
-describe("the pipeline's chrome (decision 4)", () => {
+describe("the pipeline's chrome", () => {
   it.each([
     [FILELOG, "from file"],
     [JOURNALD, "from journal"],
@@ -580,10 +580,10 @@ describe("the pipeline's chrome (decision 4)", () => {
   });
 });
 
-// ── Ids per card (decision 8) ──
+// ── Ids per card ──
 
-describe("every id is the card's own (decision 8)", () => {
-  it("the JSON parser's cards hold its real form (Task 6)", () => {
+describe("every id is the card's own", () => {
+  it("the JSON parser's cards hold its real form", () => {
     expect(OPERATOR_FORMS.json_parser).toBe(JsonParserForm);
   });
 
@@ -610,7 +610,7 @@ describe("every id is the card's own (decision 8)", () => {
     expect(operatorsOf(text())[4]!.timestamp).toEqual({ parse_from: "attributes.timestamp", layout: "%Y-%m-%d %H:%M:%S", layout_type: "strptime" });
     expect(operatorsOf(text())[0]!.timestamp).toEqual(operatorsOf(CORPUS)[0]!.timestamp);
 
-    // The JSON parser's own box (Task 6's form): its label ticks its own card's.
+    // The JSON parser's own box (its form's): its label ticks its own card's.
     await user.click(screen.getAllByText("Parse integers as int64 (instead of float64)")[1]!);
     expect(operatorsOf(text())[4]!.parse_ints).toBe(true);
     expect(operatorsOf(text())[0]!.parse_ints).toBeUndefined();
@@ -619,7 +619,7 @@ describe("every id is the card's own (decision 8)", () => {
   });
 });
 
-// ── FieldSelector (decisions 3 and 8; Preflight ruling 17) ──
+// ── FieldSelector ──
 
 describe("FieldSelector's fixes", () => {
   it("a body suffix is shown and editable", async () => {
@@ -685,7 +685,7 @@ describe("FieldSelector's fixes", () => {
     expect(operatorsOf(text())[4]).toEqual({ type: "json_parser", parse_from: "attributes.msg" });
   });
 
-  it("a bracketed suffix reads back as written and is joined without a dot (Preflight ruling 17)", async () => {
+  it("a bracketed suffix reads back as written and is joined without a dot", async () => {
     const user = renderPipeline(JOURNALD);
     expect(byId("op-1-json-parse-from")).toHaveTextContent("body");
     expect(byId("op-1-json-parse-from-suffix")).toHaveValue('["message.json"]');
@@ -700,7 +700,7 @@ describe("FieldSelector's fixes", () => {
     expect(byId("op-0-ts-parse-from-custom")).toHaveValue('attributes.["time"]');
   });
 
-  it("a suffix with a dot shows the bracket hint (decision 8)", async () => {
+  it("a suffix with a dot shows the bracket hint", async () => {
     const user = renderPipeline();
     expect(screen.queryByText(BRACKET_HINT)).toBeNull();
     await user.clear(byId("op-0-ts-parse-from-suffix"));
@@ -715,7 +715,7 @@ describe("FieldSelector's fixes", () => {
   });
 });
 
-// ── The severity section (decision 8; Preflight ruling 26) ──
+// ── The severity section ──
 
 describe("the severity section", () => {
   it("ticking writes its block; unticking removes it", async () => {
@@ -727,7 +727,7 @@ describe("the severity section", () => {
     expect(text()).not.toContain("        severity:\n          parse_from: attributes.level\n      - type: router");
   });
 
-  it("an unset Preset shows the collector's default; otel shows as written (Ruling 31)", async () => {
+  it("an unset Preset shows the collector's default; otel shows as written", async () => {
     renderPipeline(JOURNALD);
     expect(byId("op-1-sev-preset")).toHaveTextContent("otel");
     cleanup();
@@ -765,7 +765,7 @@ describe("the severity section", () => {
     ["a number", "            error: 5\n"],
     ["a range", "            error: {min: 3, max: 5}\n"],
     ["two spellings of a level", "            warn: w\n"],
-  ])("a mapping with %s is read-only with the hint (decision 8)", (_name, line) => {
+  ])("a mapping with %s is read-only with the hint", (_name, line) => {
     renderPipeline(JOURNALD, CORPUS.replace("            error: 5xx\n", `            error: 5xx\n${line}`.replace(/^( {12}error: 5xx\n)( {12}error: .*\n)$/, "$2")));
     expect(byId("op-1-sev-mapping-trace")).toBeDisabled();
     expect(byId("op-1-sev-custom-mapping")).toBeDisabled();
@@ -789,7 +789,7 @@ describe("the severity section", () => {
   });
 });
 
-// ── The timestamp section (decision 7; Preflight rulings 14 and 15) ──
+// ── The timestamp section ──
 
 describe("the timestamp section", () => {
   it("ticking writes its block; unticking removes it", async () => {
@@ -808,7 +808,7 @@ describe("the timestamp section", () => {
   it("switching Layout Type sets the new type's first preset, in one change, toasted once, with no inline alert", async () => {
     const user = renderPipeline();
     await pickIn(user, byId("op-0-ts-layout-type"), "Epoch (Unix timestamp)");
-    // The layout keeps its quoting (D9a decision 4).
+    // The layout keeps its quoting.
     expect(text()).toBe(CORPUS.replace("          layout_type: strptime\n          layout: '%Y-%m-%d %H:%M:%S'\n", "          layout_type: epoch\n          layout: 's'\n"));
     expect(entries()).toBe(1);
     expect(infoToasts()).toEqual(["Layout set to the first epoch preset."]);
@@ -821,7 +821,7 @@ describe("the timestamp section", () => {
     expect(entries()).toBe(0);
 
     // Switched again, it toasts again; the operator's next change toasts nothing more (Timezone is hidden under
-    // epoch, final review M2, so Parse From is the change).
+    // epoch, so Parse From is the change).
     // (The undo toasted its own message between them.)
     const adjusted = () => infoToasts().filter((message) => message === "Layout set to the first epoch preset.");
     await pickIn(user, byId("op-0-ts-layout-type"), "Epoch (Unix timestamp)");
@@ -843,7 +843,7 @@ describe("the timestamp section", () => {
     expect(entries()).toBe(0);
   });
 
-  it("a custom layout is kept across a switch, with no toast (Preflight ruling 14)", async () => {
+  it("a custom layout is kept across a switch, with no toast", async () => {
     const base = CORPUS.replace("          layout: '%Y-%m-%d %H:%M:%S'\n", "          layout: '%d.%m.%Y %H:%M'\n");
     const user = renderPipeline(FILELOG, base);
     expect(byId("op-0-ts-layout-custom")).toHaveValue("%d.%m.%Y %H:%M");
@@ -853,7 +853,7 @@ describe("the timestamp section", () => {
     expect(entries()).toBe(1);
   });
 
-  it("each layout type offers its own presets: strptime's first labelled with what it writes, Go layouts, epoch's s and s.us", async () => {
+  it("each layout type offers its own presets: strptime's first labeled with what it writes, Go layouts, epoch's s and s.us", async () => {
     const user = renderPipeline();
     expect(byId("op-0-ts-layout-preset")).toHaveTextContent("%Y-%m-%d %H:%M:%S");
     await user.click(byId("op-0-ts-layout-preset"));
@@ -895,7 +895,7 @@ describe("the timestamp section", () => {
     expect(byId("op-0-ts-layout-preset")).toHaveTextContent("%Y-%m-%d %H:%M:%S");
   });
 
-  it("clearing the custom layout removes the key, as time_parser's (D9b's rule; Ruling 63; final review M1)", async () => {
+  it("clearing the custom layout removes the key, as time_parser's", async () => {
     const base = CORPUS.replace("          layout: '%Y-%m-%d %H:%M:%S'\n", "          layout: '%d.%m.%Y'\n");
     const user = renderPipeline(FILELOG, base);
     await retypeInto(user, byId("op-0-ts-layout-custom"), "");
@@ -908,7 +908,7 @@ describe("the timestamp section", () => {
     expect(operatorsOf(text())[0]!.timestamp).toMatchObject({ layout: "%H:%M" });
   });
 
-  it("Timezone is hidden under epoch, as time_parser's; a location in the text stays through an edit (time.go:114-117; final review M2)", async () => {
+  it("Timezone is hidden under epoch, as time_parser's; a location in the text stays through an edit (time.go:114-117)", async () => {
     const base = CORPUS.replace("          layout: s.us\n", "          layout: s.us\n          location: UTC\n");
     const user = renderPipeline(JOURNALD, base);
     expect(byId("op-1-ts-location")).toBeNull();
@@ -920,7 +920,7 @@ describe("the timestamp section", () => {
   });
 });
 
-// ── The Add Operator dialog (Preflight ruling 19) ──
+// ── The Add Operator dialog ──
 
 describe("the Add Operator dialog", () => {
   it("lists the four categories and 26 types, each with its icon", async () => {
@@ -966,7 +966,7 @@ describe("the Add Operator dialog", () => {
   });
 });
 
-// ── Opening writes nothing (D9b decision 2) ──
+// ── Opening writes nothing ──
 
 describe("opening and expanding every card writes nothing", () => {
   /** What each pipeline's cards show once expanded, at least: their text fields, every control, and a field each text shows. */
@@ -974,7 +974,7 @@ describe("opening and expanding every card writes nothing", () => {
     [FILELOG]: { textboxes: 33, all: 56, field: "op-0-json-parse-from" },
     [JOURNALD]: { textboxes: 20, all: 39, field: "op-0-regex-pattern" },
   };
-  // Each with its own time limit (D9c Rulings 54 and 80).
+  // Each with its own time limit.
   it.each([
     [FILELOG, "LF"],
     [FILELOG, "CRLF"],
@@ -990,7 +990,7 @@ describe("opening and expanding every card writes nothing", () => {
       for (const button of collapse) await user.click(button);
       expect(screen.queryAllByRole("textbox")).toHaveLength(0);
       for (const button of screen.queryAllByRole("button", { name: "Expand operator" })) await user.click(button);
-      // Expanded, the cards show their fields (D9c final review M6).
+      // Expanded, the cards show their fields.
       const { textboxes, all } = formControls();
       expect(screen.queryAllByRole("button", { name: "Expand operator" })).toHaveLength(0);
       expect(textboxes.length).toBeGreaterThanOrEqual(OPENED[key]!.textboxes);
@@ -1008,12 +1008,12 @@ describe("opening and expanding every card writes nothing", () => {
   );
 });
 
-// ── Privacy (decision 10; Preflight ruling 9) ──
+// ── Privacy ──
 
-describe("privacy (decision 10)", () => {
+describe("privacy", () => {
   beforeEach(layOutRows);
 
-  // Its own time limit (D9c Rulings 54 and 80).
+  // Its own time limit.
   it("puts no config value in any attribute: every card expanded, the menus open, a drag in progress, the dialog open", async () => {
     const MARK = "zq-mark";
     const base = [
@@ -1100,13 +1100,13 @@ describe("privacy (decision 10)", () => {
   }, 20_000);
 });
 
-// ── The review's fixes (D9c Rulings 55-57) ──
+// ── Cards keyed by item, and more of FieldSelector ──
 
 /** Waits past the fields' 300 ms pause, so what was typed is written. */
 const pause = () => act(async () => void (await new Promise((resolve) => setTimeout(resolve, 350))));
 
-describe("cards keep their items when two read alike (Ruling 55)", () => {
-  // Its own time limit (D9c Rulings 54 and 80).
+describe("cards keep their items when two read alike", () => {
+  // Its own time limit.
   it("two JSON parsers added from the dialog: slow typing in the first card's Parse From suffix stays in the first", async () => {
     const user = renderPipeline(SYSLOG);
     for (let i = 0; i < 2; i++) {
@@ -1136,7 +1136,7 @@ describe("cards keep their items when two read alike (Ruling 55)", () => {
   });
 });
 
-describe("a list with a commented-out item after its last (Rulings 56 and 64)", () => {
+describe("a list with a commented-out item after its last", () => {
   beforeEach(layOutRows);
 
   const NOOP = "      - type: noop\n";
@@ -1162,7 +1162,7 @@ describe("a list with a commented-out item after its last (Rulings 56 and 64)", 
   });
 });
 
-describe("FieldSelector: the review's fixes (Ruling 57)", () => {
+describe("FieldSelector: prefixes, the bracket hint and Custom...", () => {
   const BRACKETED = CORPUS.replace("          parse_from: attributes.time\n", '          parse_from: attributes.["time"]\n');
 
   it("picking a prefix for a custom path that starts with one replaces it, never doubling it", async () => {
@@ -1211,7 +1211,7 @@ describe("FieldSelector: the review's fixes (Ruling 57)", () => {
   });
 });
 
-describe("cards matched in order after a move's undo (Ruling 65)", () => {
+describe("cards matched in order after a move's undo", () => {
   beforeEach(layOutRows);
 
   it("[noop, noop, add]: the add card moved to the top and undone, each card has its state back", async () => {

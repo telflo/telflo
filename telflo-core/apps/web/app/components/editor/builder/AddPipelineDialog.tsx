@@ -10,14 +10,14 @@ import { extractSignalType } from "~/lib/graph/parse.js";
 import { useEditorStore } from "~/lib/stores/editor-store.js";
 
 /*
- * The Add New Pipeline dialog (ADR 0018; D9a decision 15): the name is
- * lowercased as it's typed and trimmed on submit, then refused when empty,
- * not `traces`, `metrics` or `logs` with an optional `/<name>`, or already
- * used. The store adds the pipeline to the text, empty, with the first unused
- * colour, as one undo entry.
+ * The Add New Pipeline dialog: the name is lowercased as it's typed and
+ * trimmed on submit, then refused when empty, not `traces`, `metrics` or
+ * `logs` with an optional `/<name>`, or already used. The store adds the
+ * pipeline to the text, empty, with the first unused color, as one undo
+ * entry.
  *
- * The pipeline's id is opaque (`pipeline_<n>`, decision 7), never built
- * from the name. The name is shown as text only.
+ * The pipeline's id is opaque (`pipeline_<n>`), never built from the name.
+ * The name is shown as text only.
  */
 
 export const PIPELINE_NAME_PATTERN = /^(traces|metrics|logs)(?:\/[a-z0-9-]+)?$/;
@@ -77,7 +77,7 @@ export function AddPipelineDialog({ open, onOpenChange }: AddPipelineDialogProps
             <Label htmlFor="pipeline-name">Pipeline Name</Label>
             <Input
               id="pipeline-name"
-              // A pipeline's name is configuration text: replay never records the field (Ruling 301).
+              // A pipeline's name is configuration text: replay never records the field.
               className="ph-no-capture"
               placeholder="traces/production"
               value={pipelineName}

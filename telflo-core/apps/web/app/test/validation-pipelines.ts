@@ -2,10 +2,9 @@ import type { ValidationPipeline, ValidationRule } from "@telflo/contracts";
 import { MEMBER_ID, MINE, VERSION_ID } from "./configurations.js";
 
 /*
- * Validation pipelines and rules as the API answers them (D15a detail 24),
- * for the Validation subtab's tests. Names, descriptions, patterns and OTTL
- * carrying `zq` are the private-text markers the attribute scans look for
- * (ADR 0024).
+ * Validation pipelines and rules as the API answers them, for the
+ * Validation subtab's tests. Names, descriptions, patterns and OTTL
+ * carrying `zq` are the private-text markers the attribute scans look for.
  */
 
 /** The logs pipeline's validation pipeline on MINE's version 1, created by the member at noon UTC; any field overridden. */

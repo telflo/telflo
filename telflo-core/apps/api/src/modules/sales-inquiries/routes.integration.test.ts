@@ -14,7 +14,7 @@ import { UNCALLED_OTELCOL_VALIDATOR } from "../../testing/otelcol-validator.js";
 import { UNCALLED_FILE_STORE } from "../../testing/file-store.js";
 import { UNCALLED_TESTING } from "../../testing/otelcol-testing.js";
 
-// The opamp-server every server needs (D11b decision 8): this file's own fake.
+// The opamp-server every server needs: this file's own fake.
 const opamp = useFakeOpampServer();
 
 const csrfHeaders = { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE };
@@ -52,7 +52,7 @@ function withLogLevel<Result>(level: string, build: () => Result): Result {
   }
 }
 
-describe("POST /api/v1/sales-inquiries (D4 decision 4)", () => {
+describe("POST /api/v1/sales-inquiries", () => {
   let settings: AppSettings;
   /** The server's connection, as the API's own role. */
   let db: Kysely<Database>;
@@ -86,7 +86,7 @@ describe("POST /api/v1/sales-inquiries (D4 decision 4)", () => {
   };
 
   beforeAll(async () => {
-    // The route switched on, with its address (D36-1 decision 25: there is no default address).
+    // The route switched on, with its address (there is no default address).
     settings = loadSettings({ ...process.env, TELFLO_SALES_INQUIRY: "true", TELFLO_SALES_INQUIRY_TO: "inquiries@telflo.test" });
     databases = openTestDatabases();
     ({ db, ownerDb } = databases);
@@ -282,12 +282,12 @@ describe("POST /api/v1/sales-inquiries (D4 decision 4)", () => {
     expect(response.body).not.toContain("relay");
   });
 
-  it("names no address in its failure message (D36-1 decision 25)", () => {
+  it("names no address in its failure message", () => {
     expect(SALES_INQUIRY_FAILED_MESSAGE).toBe("Your message couldn't be sent. Please try again later.");
     expect(SALES_INQUIRY_FAILED_MESSAGE.includes("@")).toBe(false);
   });
 
-  describe("switched off, TELFLO_SALES_INQUIRY's default (D36-1 decision 25, Preflight ruling 17)", () => {
+  describe("switched off, TELFLO_SALES_INQUIRY's default", () => {
     const switchedOff = () =>
       serverWith({
         // The default settings: no switch, no address.

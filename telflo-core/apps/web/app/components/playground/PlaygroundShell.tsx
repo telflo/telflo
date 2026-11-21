@@ -20,15 +20,13 @@ function stripIsActive(pathname: string, path: string): boolean {
 }
 
 /*
- * `PlaygroundShell` (ADR 0018; D31-1 decisions 9, 13, 16 and
- * 26): the signed-in shell's frame with no account behind it. The sidebar,
- * then the banner across the top, a strip of the live pages below `md`
- * (the sidebar is hidden there), and the page. The shell is a playground
- * surface (`usePlaygroundSurface`): `tf-app ph-mask` on its root and
- * `<body>`, autocapture masked, as AppLayout. Links inside reused
- * components go to the playground's pages (`PlaygroundLinkScope`). The
- * Toaster is root's. The provider (lock, visitor, dialogs) is the layout
- * route's, around it.
+ * `PlaygroundShell`: the signed-in shell's frame with no account behind it.
+ * The sidebar, then the banner across the top, a strip of the live pages below
+ * `md` (the sidebar is hidden there), and the page. The shell is a playground
+ * surface (`usePlaygroundSurface`): `tf-app ph-mask` on its root and `<body>`,
+ * autocapture masked, as AppLayout. Links inside reused components go to the
+ * playground's pages (`PlaygroundLinkScope`). The Toaster is root's. The
+ * provider (lock, visitor, dialogs) is the layout route's, around it.
  */
 export function PlaygroundShell({ children, onTakeTour }: { children: ReactNode; onTakeTour?: (() => void) | undefined }) {
   const location = useLocation();

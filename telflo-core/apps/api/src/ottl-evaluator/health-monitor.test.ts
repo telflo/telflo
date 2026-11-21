@@ -7,14 +7,13 @@ import {
   type OttlEvaluatorHealthMonitor,
 } from "./health-monitor.js";
 
-// The OTTL evaluator's health monitor (D15a decision 15, Preflight ruling
-// 23): the tester's monitor, a second instance (createServiceHealthMonitor,
-// whose every rule otelcol-testing/health-monitor.test.ts tests), with fake
-// timers, a scripted check and the shared row held in memory, every write
-// recorded and counted: down at the second failed check in a row, not the
-// first; up at the first success; a write only when the row disagrees; its
-// own words in the log. health-monitor.integration.test.ts writes the real
-// row.
+// The OTTL evaluator's health monitor: the tester's monitor, a second instance
+// (createServiceHealthMonitor, whose every rule
+// otelcol-testing/health-monitor.test.ts tests), with fake timers, a scripted
+// check and the shared row held in memory, every write recorded and counted:
+// down at the second failed check in a row, not the first; up at the first
+// success; a write only when the row disagrees; its own words in the log.
+// health-monitor.integration.test.ts writes the real row.
 
 const UP: OttlEvaluatorHealthResult = { kind: "up", ottlVersion: "v0.162.0" };
 const DOWN: OttlEvaluatorHealthResult = { kind: "down", reason: "connection_refused" };
@@ -64,7 +63,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe("the OTTL evaluator's health monitor (Preflight ruling 23)", () => {
+describe("the OTTL evaluator's health monitor", () => {
   it("checks every 5 s, counting the evaluator down after 2 failed checks, as the tester's", () => {
     expect(OTTL_EVALUATOR_HEALTH_INTERVAL_MS).toBe(5_000);
     expect(OTTL_EVALUATOR_DOWN_AFTER_FAILURES).toBe(2);

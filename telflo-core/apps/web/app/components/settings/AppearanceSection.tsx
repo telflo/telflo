@@ -5,13 +5,12 @@ import { useSavePreference } from "~/lib/preferences.js";
 import { useCurrentUser } from "~/lib/use-current-user.js";
 
 /*
- * Settings › Appearance (ADR 0018; D21 decisions 24 and 30).
- * A choice is saved on its own (decision 33): the user store takes it at
- * once, so `<html>`'s class, the Toaster and every Monaco follow before the
- * API answers, and the signed-in layout remembers it for the auth screens
- * (Preflight ruling 48). Once the answer is taken, the signed-in layout is
- * revalidated (Preflight ruling 36). A failure restores the previous theme
- * and toasts "Failed to update preferences".
+ * Settings › Appearance. A choice is saved on its own: the user store takes
+ * it at once, so `<html>`'s class, the Toaster and every Monaco follow
+ * before the API answers, and the signed-in layout remembers it for the
+ * auth screens. Once the answer is taken, the signed-in layout is
+ * revalidated. A failure restores the previous theme and toasts "Failed to
+ * update preferences".
  */
 
 /* The three supported app themes. Swatch colors mirror each theme's app

@@ -3,8 +3,8 @@
  * API's envelope carries a Zod issue: its own `path`, its `params.issue`'s
  * (fastify-type-provider-zod's shape, and the fleet routes' own details,
  * `modules/fleets/errors.ts`), or its JSON pointer (`instancePath`). Undefined
- * when it names none. Lifted from `RuleEditorDialog.tsx` (D15a Ruling 56) for
- * the fleet dialogs (D17a Preflight ruling 15).
+ * when it names none. Lifted from `RuleEditorDialog.tsx` for the fleet
+ * dialogs.
  */
 export function issuePathOf(issue: object): string | undefined {
   const segments = (path: unknown): string | undefined =>

@@ -13,10 +13,9 @@ import { PlaygroundProvider } from "./provider.js";
 import { PLAYGROUND_THEME_KEY, readPlaygroundTheme } from "./theme.js";
 
 /*
- * The playground's theme (D31-1 decision 14, Ruling 277, Preflight ruling
- * 13): Light, Dark and Navy, Navy shown as Navy; the choice shows at once,
- * is kept as one word in the playground's own key and read on arrival;
- * the `telflo_theme` cookie is never written; Monaco follows it (the
+ * The playground's theme: Light, Dark and Navy, Navy shown as Navy; the choice
+ * shows at once, is kept as one word in the playground's own key and read on
+ * arrival; the `telflo_theme` cookie is never written; Monaco follows it (the
  * visitor's preferences come first in `useAppTheme` and
  * `useEditorPreferences`), never a signed-in visitor's own.
  */

@@ -240,7 +240,7 @@ gateway:
   extraRoutes: []
 
 # The collector validator (Deployment and Service otelcol-validator, port
-# 8001). Its image carries every collector version the catalogue offers.
+# 8001). Its image carries every collector version the catalog offers.
 otelcolValidator:
   image:
     registry: ""

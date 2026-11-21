@@ -105,7 +105,7 @@ async function heldDialog() {
   return screen.findByRole("alertdialog", { name: "Unsaved Changes" });
 }
 
-describe("useNavigationGuard (D8 decision 15)", () => {
+describe("useNavigationGuard", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     useEditorStore.setState(initialEditorState, true);
@@ -231,7 +231,7 @@ describe("useNavigationGuard (D8 decision 15)", () => {
     ]);
   });
 
-  it("stays held with the text and says nothing when the save didn't try, a create being under way (D10 Ruling 36); once it can, it saves and leaves", async () => {
+  it("stays held with the text and says nothing when the save didn't try, a create being under way; once it can, it saves and leaves", async () => {
     dirty();
     const save = vi.fn(async (): Promise<SaveResult> => ({ saved: false, busy: true }));
     const error = vi.spyOn(toast, "error");
@@ -286,7 +286,7 @@ describe("useNavigationGuard (D8 decision 15)", () => {
     expect(screen.queryByRole("alertdialog")).toBeNull();
   });
 
-  describe("at a version's address (D10 Ruling 27)", () => {
+  describe("at a version's address", () => {
     const HELD_VERSION = "0199c000-0000-7000-8000-000000000001";
     const OTHER_VERSION = "0199c000-0000-7000-8000-000000000003";
     const AT = `/editor/1/${HELD_VERSION}`;
@@ -341,7 +341,7 @@ describe("useNavigationGuard (D8 decision 15)", () => {
     expect(screen.queryByRole("alertdialog")).toBeNull();
   });
 
-  describe("an edit a field holds (ruling 36)", () => {
+  describe("an edit a field holds", () => {
     /** One line: an input holds no newline. */
     const HELD = "receivers: {} # held";
 

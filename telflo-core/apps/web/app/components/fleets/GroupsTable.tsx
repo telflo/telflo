@@ -9,58 +9,54 @@ import { PublishedVersionLink } from "./PublishedVersionLink.js";
 import { VariableGroupLink } from "./VariableGroupLink.js";
 
 /*
- * A server fleet's groups (D17b-2 decisions 23 and 34; Preflight rulings 11,
- * 14 and 15) as plain table markup with the fleet screens' classes
- * (`CollectorsTable`; no table component, decision 5). Per the D17b-2
- * Parity Notes:
+ * A server fleet's groups as plain table markup with the fleet screens'
+ * classes (`CollectorsTable`; no table component). Its details:
  *
  * - "Published version": "{configuration} @v{n}" linked to the editor's
  *   version (`PublishedVersionLink`: the name truncated at 16rem, the full
- *   text in a tooltip, D17c-1 decision 46), with no `title`; "Nothing
- *   assigned" (muted) for any group with none, its meaning as tooltip text on
- *   a focusable trigger and as screen-reader text (D17b-1 Preflight ruling
- *   10: a tooltip never shows on touch); "A deleted configuration's version"
- *   (muted) for an assignment whose version the platform no longer holds. No
- *   "Missing configuration" and no import hint (D16c).
- * - "Variable group" (D20 default 25): the group's variable group by name,
- *   else "Organization values", a button opening each variable's value and
- *   where it comes from (`VariableGroupLink`).
+ *   text in a tooltip), with no `title`; "Nothing assigned" (muted) for any
+ *   group with none, its meaning as tooltip text on a focusable trigger and
+ *   as screen-reader text (a tooltip never shows on touch); "A deleted
+ *   configuration's version" (muted) for an assignment whose version the
+ *   platform no longer holds. No "Missing configuration" and no import hint.
+ * - "Variable group": the group's variable group by name, else "Organization
+ *   values", a button opening each variable's value and where it comes from
+ *   (`VariableGroupLink`).
  * - "Install" (outline, TerminalSquare icon as the page's other install
- *   buttons; D17c-1 decision 44, Preflight rulings 22 and 33) before Assign
- *   or Edit, opening the install dialog for the group, named "Install into
- *   {name}" through `aria-labelledby`; disabled on a group without a
- *   published version: a focusable wrapper (`role="button"`, `aria-disabled`,
- *   named the same way; the inner button hidden from assistive technology)
- *   with its reason as a tooltip and as screen-reader text: "Assign a
- *   published version first." with nothing assigned, the facts' "…belongs to
- *   a deleted configuration. Assign another first." for a deleted
- *   configuration's version (Ruling 61; no `title` holds the reason or the
+ *   buttons) before Assign or Edit, opening the install dialog for the group,
+ *   named "Install into {name}" through `aria-labelledby`; disabled on a
+ *   group without a published version: a focusable wrapper (`role="button"`,
+ *   `aria-disabled`, named the same way; the inner button hidden from
+ *   assistive technology) with its reason as a tooltip and as screen-reader
+ *   text: "Assign a published version first." with nothing assigned, the
+ *   facts' "…belongs to a deleted configuration. Assign another first." for a
+ *   deleted configuration's version (no `title` holds the reason or the
  *   name). An archived fleet's rows have none (`onInstall` absent).
- * - The Default group carries a "Default" badge and has no Delete (decision
- *   14: the API refuses it too).
- * - "More" (a link-styled button, with no `title`) is named
- *   "More about {name}", and each row's Assign or Edit and Delete "Assign
- *   {name}", "Edit {name}" and "Delete {name}", through `aria-labelledby`
- *   pointing at hidden text (D17a's `FleetRowActions` pattern): the ids hold
- *   the table's `useId` and the group's id, never its name, which is text
- *   in the masked shell only (decision 34): no button has a `title`.
+ * - The Default group carries a "Default" badge and has no Delete (the API
+ *   refuses it too).
+ * - "More" (a link-styled button, with no `title`) is named "More about
+ *   {name}", and each row's Assign or Edit and Delete "Assign {name}", "Edit
+ *   {name}" and "Delete {name}", through `aria-labelledby` pointing at
+ *   hidden text (`FleetRowActions`'s pattern): the ids hold the table's
+ *   `useId` and the group's id, never its name, which is text in the masked
+ *   shell only: no button has a `title`.
  * - Assign (primary, nothing assigned) and Edit (outline, otherwise) are one
  *   button whose words and style follow the assignment, so the focus stays
  *   on it across an assignment's reload.
  * The rows are the API's order: Default first, then by name.
  */
 
-/** What "Nothing assigned" means for a group's collectors (decision 23): its tooltip (the group dialog's "Nothing assigned" hint has its own words: D17c-1 Ruling 72). */
+/** What "Nothing assigned" means for a group's collectors: its tooltip (the group dialog's "Nothing assigned" hint has its own words). */
 export const NOTHING_ASSIGNED_MEANING = "The group's collectors that aren't pinned show Nothing assigned and keep running what they have.";
 
 export const NOTHING_ASSIGNED_WORDS = "Nothing assigned";
 
-/** Why a group's Install is disabled (decision 44). */
+/** Why a group's Install is disabled. */
 export const INSTALL_NEEDS_VERSION = "Assign a published version first.";
-/** Why it is disabled for a deleted configuration's version (decision 44: no published version; Ruling 61): the facts' words. */
+/** Why it is disabled for a deleted configuration's version (no published version): the facts' words. */
 export const INSTALL_NEEDS_LIVE_VERSION = COLLECTOR_GROUP_ASSIGNMENT_DELETED_MESSAGE;
 
-/** Why a group's Install is disabled, or null when it isn't: it needs a published version (decision 44). */
+/** Why a group's Install is disabled, or null when it isn't: it needs a published version. */
 export function installDisabledReason(group: CollectorGroup): string | null {
   if (isUnassigned(group)) return INSTALL_NEEDS_VERSION;
   return group.assignedVersion === null ? INSTALL_NEEDS_LIVE_VERSION : null;
@@ -79,13 +75,12 @@ export function isUnassigned(group: CollectorGroup): boolean {
 }
 
 /**
- * A group's published version (decision 23): the link, "Nothing assigned"
- * with its meaning as a tooltip and screen-reader text, or the deleted
+ * A group's published version: the link, "Nothing assigned" with its
+ * meaning as a tooltip and screen-reader text, or the deleted
  * configuration's words. `withTooltip` false (the details) puts the meaning
  * under it as text instead, and shows the version's whole name with no
- * tooltip (D17c-1 Preflight ruling 32). A null group (a Kubernetes fleet's
- * Cluster before its first Assign: D17d-1 Preflight ruling 23) has nothing
- * assigned.
+ * tooltip. A null group (a Kubernetes fleet's Cluster before its first
+ * Assign) has nothing assigned.
  */
 export function PublishedVersionCell({ group, withTooltip = true }: { group: CollectorGroup | null; withTooltip?: boolean }) {
   const version = group?.assignedVersion ?? null;
@@ -117,13 +112,13 @@ export function PublishedVersionCell({ group, withTooltip = true }: { group: Col
 }
 
 /**
- * A row's "Install" (decision 44; D17d-2 Preflight ruling 28: a Kubernetes
- * fleet's rows too), named `label` ("Install into {name}", "Install
- * {name}") through `aria-labelledby` pointing at hidden text whose id is
- * `{rowId}-install` (never a name in an attribute). Disabled (`reason`
- * not null): a focusable wrapper (`role="button"`, `aria-disabled`, named
- * the same way; the inner button hidden from assistive technology) with the
- * reason as a tooltip and as screen-reader text.
+ * A row's "Install" (a Kubernetes fleet's rows too), named `label`
+ * ("Install into {name}", "Install {name}") through `aria-labelledby`
+ * pointing at hidden text whose id is `{rowId}-install` (never a name in an
+ * attribute). Disabled (`reason` not null): a focusable wrapper
+ * (`role="button"`, `aria-disabled`, named the same way; the inner button
+ * hidden from assistive technology) with the reason as a tooltip and as
+ * screen-reader text.
  */
 export function RowInstallButton({
   rowId,

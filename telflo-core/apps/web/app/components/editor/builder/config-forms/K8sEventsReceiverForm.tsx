@@ -5,22 +5,21 @@ import { InlineAlert } from "./InlineAlert.js";
 import { isTruthy } from "./shared/counts.js";
 
 /*
- * The Kubernetes events receiver's form (ADR 0018), over the form's fields
- * (D9c decision 2, D9b's contract): each field writes its own key.
+ * The Kubernetes events receiver's form, over the form's fields:
+ * each field writes its own key.
  *
- * - Fixed (D9c decisions 3 and 9): Add Namespace holds an empty row until
- *   something is typed in it (never writing `""`, which the receiver
- *   watches as every namespace, `receiver/k8seventsreceiver/receiver.go:
- *   200-203`, so `[default, ""]` would collect everything). A row emptied and
- *   left is removed.
- * - Unset shows the collector's default (D9b decision 3): Authentication
- *   Type `serviceAccount` (`factory.go:26-33`), in the placeholder and the
+ * - Add Namespace holds an empty row until something is typed in it
+ *   (never writing `""`, which the receiver watches as every namespace,
+ *   `receiver/k8seventsreceiver/receiver.go: 200-203`, so `[default, ""]`
+ *   would collect everything). A row emptied and left is removed.
+ * - Unset shows the collector's default: Authentication Type
+ *   `serviceAccount` (`factory.go:26-33`), in the placeholder and the
  *   "Default …" hint, never as the value.
- * - Copy (D9c decision 4, Appearance): the RBAC alert asks for get, list and
- *   watch on events only, the README's ClusterRole at v0.162.0
- *   (`README.md:167-186`), not the workload resources too.
+ * - Copy: the RBAC alert asks for get, list and watch on events only, the
+ *   README's ClusterRole at v0.162.0 (`README.md:167-186`), not the workload
+ *   resources too.
  *
- * Ids are fixed per field; no value reaches an attribute (decision 10).
+ * Ids are fixed per field; no value reaches an attribute.
  */
 
 const AUTH_TYPES = [

@@ -50,7 +50,7 @@ describe("organizationJsonLd", () => {
   });
 });
 
-describe("jsonLdScriptText (D4 Ruling 16)", () => {
+describe("jsonLdScriptText", () => {
   it("can't end its script early, whatever the public URL holds, and reads back as it was", () => {
     const jsonLd = organizationJsonLd("https://telflo.example/</script><script>alert(1)</script><!--");
     const markup = renderToStaticMarkup(

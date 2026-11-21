@@ -5,15 +5,6 @@ OpAMP supervisor (`opampsupervisor`, PID 1) running `otelcol-contrib`, from the
 platform's image `ghcr.io/telflo/telflo/collector`. It is published as
 `oci://ghcr.io/telflo/telflo/charts/supervisor-collector`.
 
-It replaces the earlier `telflo-supervisor-collector` chart, 0.3.5. Version
-0.1.0 changes:
-the Agent's and the Cluster's objects are named after the fleet
-(`fullnameOverride`); a checksum of the token Secret on every workload, so a
-new token rolls the pods; `collectorEnv`'s keys and every object name quoted;
-guards on `collectorGroupId`, a gateway's name and `fullnameOverride`; the
-image repository and `appVersion` the platform's. Everything else behaves as
-0.3.5 did (see "Limits").
-
 The platform's Install with Helm dialog writes the values file and the
 command, for example:
 
@@ -56,7 +47,7 @@ overwritten), and the platform's default chart version moves with it.
 | `nodeLogHostPath` | The node role's log directory, mounted read-only at `/var/log/pods`. Default `/var/log/pods`. |
 | `collectorEnv` | Variables the deployed configuration reads with `${env:NAME}`, as `NAME: value`. Kept in the Secret `<fullname>-collector-env`, given to the collector by `envFrom` (explicit variables, such as `OPAMP_*`, win); a `checksum/collector-env` annotation rolls the pods when a value changes. Every name is quoted, so any variable name arrives as written, a YAML word such as `ON`, `yes`, `null` or `~` included. |
 | `volumes` | Extra hostPath mounts for every role: `hostPath`, `hostPathType` (default `Directory`), `mountPath`, `readOnly` (default `true`; an explicit `false` stays writable). |
-| `clickhouse.*`, `collectorDataDir` | A ClickStack mode, kept as 0.3.5 had it and not used by the platform: with `clickhouse.endpoint` set, the pods run as uid 10001, get `CLICKHOUSE_*` and `OPAMP_SERVER_URL`, a `<fullname>-clickhouse` Secret (or `existingSecret`) and a durable `collectorDataDir` (a PVC, or the node's hostPath `/var/lib/telflo/collector/<fullname>`). |
+| `clickhouse.*`, `collectorDataDir` | A ClickStack mode, not used by the platform: with `clickhouse.endpoint` set, the pods run as uid 10001, get `CLICKHOUSE_*` and `OPAMP_SERVER_URL`, a `<fullname>-clickhouse` Secret (or `existingSecret`) and a durable `collectorDataDir` (a PVC, or the node's hostPath `/var/lib/telflo/collector/<fullname>`). |
 
 ## Guards
 
@@ -108,31 +99,36 @@ under Helm's YAML 1.1 parse instead of becoming `true` or null.
 
 Each workload's pod template carries `checksum/token`, the sha256 of the
 rendered token Secret (`secret.yaml`), always; and `checksum/collector-env`
-when `collectorEnv` is set, as in 0.3.5. A `helm upgrade` with a new token
-changes the annotation, so Kubernetes rolls the DaemonSet's or StatefulSet's
-pods, the ones the old token's revocation refused included: after a new
-default token, run each group's Install with Helm again and its pods restart
-with the new token. The checksum changes with the token Secret's text, which
-is the token and the Secret's name (the fullname); not with the endpoint,
-the image, `collectorEnv`, the namespace or the release. Each platform
-download seals the token afresh, so every Install with Helm again restarts
-the group's pods (a rolling restart), as a variable or version change does.
+when `collectorEnv` is set. A `helm upgrade` with a new token changes the
+annotation, so Kubernetes rolls the DaemonSet's or StatefulSet's pods, the
+ones the old token's revocation refused included: after a new default token,
+run each group's Install with Helm again and its pods restart with the new
+token. The checksum changes with the token Secret's text, which is the token
+and the Secret's name (the fullname); not with the endpoint, the image,
+`collectorEnv`, the namespace or the release. Each platform download seals the
+token afresh, so every Install with Helm again restarts the group's pods (a
+rolling restart), as a variable or version change does.
 
 The annotation is a hash of the sealed bearer, never the bearer; it is
 high-entropy, and readable by whoever can read the pods.
 
-The roll relies on there being no readiness probe (none in 0.3.5, none
-here): a pod the OpAMP server refuses keeps running (its supervisor retries)
-and stays Ready, so the roll replaces it. A future readiness probe that
-followed the OpAMP connection would leave refused pods unready, and a
-StatefulSet (the Cluster's, a gateway's) with the default `OrderedReady`
-management waits for every pod to be Ready before it replaces one: the roll
-that brings the new token would stall on the very pods it is meant to fix.
+The roll relies on there being no readiness probe (the chart has none): a pod
+the OpAMP server refuses keeps running (its supervisor retries) and stays
+Ready, so the roll replaces it. A future readiness probe that followed the
+OpAMP connection would leave refused pods unready, and a StatefulSet (the
+Cluster's, a gateway's) with the default `OrderedReady` management waits for
+every pod to be Ready before it replaces one: the roll that brings the new
+token would stall on the very pods it is meant to fix.
 
 ## Limits
 
 Recorded, not fixed in 0.1.0:
 
+- Upgrading a release of the `telflo-supervisor-collector` chart (0.3.x) to
+  this chart renames the Agent's and the Cluster's objects and moves the node
+  state, so the Agent enrolls again as a new collector (the old one goes
+  offline); an upgraded Cluster leaves its PVC `storage-telflo-cluster-0`
+  behind.
 - **One fleet per namespace.** The release names are fixed (`telflo-node`,
   `telflo-cluster`), so a second fleet's Agent or Cluster installed into the
   first's namespace upgrades the first's release (takes it over). Install
@@ -144,24 +140,20 @@ Recorded, not fixed in 0.1.0:
   (`a`–`f`): a gateway's name must start with one.
 - Two fleets whose ids share their first 8 characters collide on the
   ClusterRole (Helm refuses; about 2^-32 for random v4 ids).
-- Upgrading a 0.3.5 release to this chart renames the Agent's and the
-  Cluster's objects and moves the node state, so the Agent enrolls again as a
-  new collector (the old one goes offline); an upgraded 0.3.5 Cluster leaves
-  its PVC `storage-telflo-cluster-0` behind.
 - `HOST_IP` is the pod's IP (`status.podIP`), not the node's.
 - An extra volume is named by its mount path's slug, so two mount paths with
   one slug collide (the platform refuses those).
 - The ClickStack parts (`clickhouse.*`, `collectorDataDir`, uid 10001, the
-  node's `fix-storage-ownership` init container) are 0.3.5's, untested on a
-  real cluster.
+  node's `fix-storage-ownership` init container) are untested on a real
+  cluster.
 - `nodeSelector` and `tolerations` apply to the node role only; the Cluster
   and gateways have none.
 - No standard `app.kubernetes.io/*` labels; only `app: <fullname>`.
-- Some operator and ClickStack values are still written unquoted, as in
-  0.3.5: `clickhouse.passwordKey` (the ClickStack Secret's key and its
-  reference), `nodeLogHostPath` (the node's log hostPath) and
-  `collectorDataDir` inside the init container's `sh -c` command. The platform
-  never sets them; a YAML word or shell text there is the operator's.
+- Some operator and ClickStack values are written unquoted:
+  `clickhouse.passwordKey` (the ClickStack Secret's key and its reference),
+  `nodeLogHostPath` (the node's log hostPath) and `collectorDataDir` inside
+  the init container's `sh -c` command. The platform never sets them; a YAML
+  word or shell text there is the operator's.
 
 ## Tests
 
@@ -170,15 +162,15 @@ bash charts/supervisor-collector/tests/render-tests.sh
 ```
 
 Real `helm template` and `helm lint --strict` renders, offline (no registry,
-no cluster, no credentials; Helm's homes in a temporary directory): 0.3.5's
-eight cases; every guard alone with its message and no value in the output;
-the names with and without an override, two fleets' overrides disjoint, a
-gateway ignoring one; YAML-word names, `collectorEnv` keys and volume mount
-and host paths checked after a YAML 1.1 parse by Helm's own `fromYaml`;
+no cluster, no credentials; Helm's homes in a temporary directory): eight base
+cases (mounts' `readOnly`, `collectorEnv`, the token Secret, a render without
+values); every guard alone with its message and no value in the output; the
+names with and without an override, two fleets' overrides disjoint, a gateway
+ignoring one; YAML-word names, `collectorEnv` keys and volume mount and host
+paths checked after a YAML 1.1 parse by Helm's own `fromYaml`;
 `checksum/token` on every workload and `checksum/collector-env`; each pod's
 identity variables (`COLLECTOR_GROUP_ID`, `OPAMP_ENDPOINT`,
-`OPAMP_ALLOW_INSECURE_CONNECTIONS`, the token's reference,
-the field references, `HOST_IP` as kept), its mounts paired with its volumes
-and claims, and each ClusterRole's rules exactly; the image; `helm lint
---strict` for each role. `tests/` is left out of the
-package (`.helmignore`).
+`OPAMP_ALLOW_INSECURE_CONNECTIONS`, the token's reference, the field
+references, `HOST_IP` the pod's IP), its mounts paired with its volumes and
+claims, and each ClusterRole's rules exactly; the image; `helm lint --strict`
+for each role. `tests/` is left out of the package (`.helmignore`).

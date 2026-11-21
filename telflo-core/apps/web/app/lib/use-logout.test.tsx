@@ -4,8 +4,8 @@ import type * as ReactRouter from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 /*
- * Logout with a read still in flight (D12 Ruling 33). The client is the real
- * one, its session-ended handler the real default (goToLogin's hard load of
+ * Logout with a read still in flight. The client is the real one, its
+ * session-ended handler the real default (goToLogin's hard load of
  * `/login?redirectTo=…`), with axios answering through a fake API (as
  * api-client.test.ts does). Each test holds a read in flight, logs out, and
  * only then lets the read's 401 arrive: a stray answer from the session that
@@ -119,7 +119,7 @@ async function expectHandlerArmedAgain(client: Awaited<ReturnType<typeof load>>[
   });
 }
 
-describe("useLogout with a read in flight (D12 Ruling 33)", () => {
+describe("useLogout with a read in flight", () => {
   it("a stray 401 unauthenticated answering after the DELETE leaves Logout's /login and toast: no hard load to /login?redirectTo", async () => {
     const read = held();
     routes[ME] = read.route;
@@ -160,7 +160,7 @@ describe("useLogout with a read in flight (D12 Ruling 33)", () => {
   it("with nothing in flight, logs out as before, and a later ended session goes to /login?redirectTo", async () => {
     routes[LOGOUT] = () => ({ status: 204 });
     const { client, logout } = await load();
-    // A staged playground edit: signing out removes it (Q211, Ruling 317).
+    // A staged playground edit: signing out removes it.
     window.localStorage.setItem("telflo-playground-staged-edit", JSON.stringify({ version: 1 }));
 
     expect(await logout()).toBe(true);
@@ -172,7 +172,7 @@ describe("useLogout with a read in flight (D12 Ruling 33)", () => {
     await expectHandlerArmedAgain(client);
   });
 
-  it("forgets the Testing tab's files, heads, selection and runs (D14a Ruling 44; ADR 0024)", async () => {
+  it("forgets the Testing tab's files, heads, selection and runs", async () => {
     routes[LOGOUT] = () => ({ status: 204 });
     const { logout } = await load();
     // The module instance the hook resets (load() reset the registry, then imported it).
@@ -211,7 +211,7 @@ describe("useLogout with a read in flight (D12 Ruling 33)", () => {
     });
   });
 
-  it("forgets the Suites subtab's suites and definitions, their names and descriptions (D14b; ADR 0024)", async () => {
+  it("forgets the Suites subtab's suites and definitions, their names and descriptions", async () => {
     routes[LOGOUT] = () => ({ status: 204 });
     const { logout } = await load();
     // The module instance the hook resets (load() reset the registry, then imported it).
@@ -241,7 +241,7 @@ describe("useLogout with a read in flight (D12 Ruling 33)", () => {
     });
   });
 
-  it("forgets the Validation subtab's pipelines and rules, their names and text (D15a; ADR 0024)", async () => {
+  it("forgets the Validation subtab's pipelines and rules, their names and text", async () => {
     routes[LOGOUT] = () => ({ status: 204 });
     const { logout } = await load();
     // The module instance the hook resets (load() reset the registry, then imported it).
@@ -271,7 +271,7 @@ describe("useLogout with a read in flight (D12 Ruling 33)", () => {
     });
   });
 
-  it("forgets the organization's variables' names (D20; Q88), and a read of them in flight at the logout lands nowhere", async () => {
+  it("forgets the organization's variables' names, and a read of them in flight at the logout lands nowhere", async () => {
     const organizationId = "0190a8b0-0000-7000-8000-0000000000aa";
     const names = held();
     routes[`GET /api/v1/organizations/${organizationId}/variables`] = names.route;
@@ -303,7 +303,7 @@ describe("useLogout with a read in flight (D12 Ruling 33)", () => {
     expect(orgVariableNamesNow()).toEqual({ organizationId: null, status: "idle", names: [] });
   });
 
-  it("forgets the variable groups' names (D20 default 25; Q88), and a read of them in flight at the logout lands nowhere", async () => {
+  it("forgets the variable groups' names, and a read of them in flight at the logout lands nowhere", async () => {
     const organizationId = "0190a8b0-0000-7000-8000-0000000000aa";
     const known = "0190a8b0-0000-7000-8000-0000000000c1";
     const unknown = "0190a8b0-0000-7000-8000-0000000000c2";
@@ -338,7 +338,7 @@ describe("useLogout with a read in flight (D12 Ruling 33)", () => {
     expect(variableGroupNamesNow()).toEqual({ organizationId: null, status: "idle", names: new Map() });
   });
 
-  it("a failed DELETE keeps the session and says so, and the handler is armed again at once (D2a Parity Notes)", async () => {
+  it("a failed DELETE keeps the session and says so, and the handler is armed again at once", async () => {
     routes[LOGOUT] = () => SERVER_ERROR;
     const { client, logout } = await load();
 
@@ -353,7 +353,7 @@ describe("useLogout with a read in flight (D12 Ruling 33)", () => {
   });
 });
 
-describe("Logout's hang guard (D12 Ruling 39)", () => {
+describe("Logout's hang guard", () => {
   // Only the guard's timer is faked: nothing else here waits on one, and
   // expect.poll keeps the real timers.
   beforeEach(() => {

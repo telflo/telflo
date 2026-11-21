@@ -11,10 +11,10 @@ import { COPIED_GROUP_ID_MESSAGE, GroupDetailsDialog } from "./GroupDetailsDialo
 import { NOTHING_ASSIGNED_MEANING } from "./GroupsTable.js";
 
 /*
- * A group's details (D17b-2 decision 23): the dialog shows the row's
- * values and the collector group id, and the copy button copies it.
- * Its "no collector group record yet" case is a Kubernetes placeholder row's
- * (D17d's): a server fleet's group always has its id.
+ * A group's details: the dialog shows the row's values and the collector
+ * group id, and the copy button copies it. Its "no collector group record
+ * yet" case is a Kubernetes placeholder row's: a server fleet's group always
+ * has its id.
  */
 
 function renderDetails(group: CollectorGroup) {
@@ -28,20 +28,20 @@ describe("GroupDetailsDialog", () => {
     vi.restoreAllMocks();
   });
 
-  it("shows the group's name as its title, \"Group details\", and the rows Name, Published version, Variable group (D20) and Collector Group ID", async () => {
+  it("shows the group's name as its title, \"Group details\", and the rows Name, Published version, Variable group and Collector Group ID", async () => {
     renderDetails(gatewaysGroup());
     const dialog = await screen.findByRole("dialog", { name: "gateways" });
     expect(within(dialog).getByText("Group details")).toBeInTheDocument();
     expect(within(dialog).getByText("Name")).toBeInTheDocument();
     expect(within(dialog).getByText("Published version")).toBeInTheDocument();
     expect(within(dialog).getByRole("link", { name: "checkout-otel @v4" })).toHaveAttribute("href", `/editor/${CONFIGURATION_ID}/${VERSION_ID}`);
-    // D17c-1 Preflight ruling 32: in a dialog, the whole name, no tooltip.
+    // In a dialog, the whole name, no tooltip.
     expect(within(dialog).getByText("checkout-otel")).not.toHaveClass("truncate");
     expect(within(dialog).getByRole("link")).not.toHaveAttribute("data-state");
     expect(within(dialog).getByText("Collector Group ID")).toBeInTheDocument();
     expect(within(dialog).getByText(GATEWAYS_GROUP_ID)).toBeInTheDocument();
     expect(dialog).not.toHaveTextContent(/deploy group/i);
-    // D20 default 25: the group's variable group, none here.
+    // The group's variable group, none here.
     expect(within(dialog).getByText("Variable group")).toBeInTheDocument();
     expect(within(dialog).getByRole("button", { name: "Organization values" })).toBeInTheDocument();
     // No title on the id.
@@ -80,7 +80,7 @@ describe("GroupDetailsDialog", () => {
     expect(toastError).toHaveBeenCalledWith(COPY_FAILED_MESSAGE);
   });
 
-  it("holds no group or configuration name or version label in an attribute (decision 34)", async () => {
+  it("holds no group or configuration name or version label in an attribute", async () => {
     const name = "canary-group-c41e";
     const configurationName = "canary-configuration-9a0d";
     const label = "canary-label-2b77";

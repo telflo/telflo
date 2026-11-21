@@ -2,10 +2,9 @@ import type { FleetSummary } from "@telflo/contracts";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "~/components/ui/tooltip.js";
 
 /*
- * The fleet list's Online column (D17a decisions 9 and 18, Preflight ruling
- * 11): a tight stacked bar and "{online}/{total}" count, from the summary's
- * liveness counts as the server reckons them, never recomputed here. Per the
- * D17a Parity Notes:
+ * The fleet list's Online column: a tight stacked bar and "{online}/{total}"
+ * count, from the summary's liveness counts as the server reckons them,
+ * never recomputed here. Its details:
  * - four segments (online, warning, unknown, offline), and online means seen
  *   in the last minute;
  * - the legend says each window, as Radix tooltip content on a focusable

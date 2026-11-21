@@ -48,8 +48,8 @@ import {
 } from "~/test/fleets.js";
 import { HIDDEN, TAIL_SAMPLING } from "~/test/flows.js";
 
-// PostHog's reset when the session ends (D4 decision 8), watched at the
-// analytics module's boundary. The mock outlives loadClient's resetModules.
+// PostHog's reset when the session ends, watched at the analytics
+// module's boundary. The mock outlives loadClient's resetModules.
 const analytics = vi.hoisted(() => ({ signedOutLocally: vi.fn() }));
 vi.mock("~/lib/analytics.js", () => analytics);
 
@@ -462,7 +462,7 @@ const NAVY_PREFERENCES = {
   email: { productUpdates: false, productTips: true },
 } as const;
 
-describe("getPreferences and updatePreferences (D21 decisions 20 and 33)", () => {
+describe("getPreferences and updatePreferences", () => {
   it("gets the preferences with credentials and no CSRF header, and parses them", async () => {
     serve({ [PREFERENCES_GET]: () => ({ status: 200, body: NAVY_PREFERENCES }) });
     expect(await client.getPreferences()).toEqual(NAVY_PREFERENCES);
@@ -487,7 +487,7 @@ describe("getPreferences and updatePreferences (D21 decisions 20 and 33)", () =>
 
 const SESSION_A = "4b3a2f1e-0d9c-4b8a-9f7e-6d5c4b3a2f1e";
 
-describe("the account's security calls (D21 decisions 35-40)", () => {
+describe("the account's security calls", () => {
   it("changePassword puts both passwords in the body with the CSRF header, and resolves undefined on a 204", async () => {
     const route = "PUT /api/v1/auth/me/password";
     serve({ [route]: () => ({ status: 204 }) });
@@ -639,7 +639,7 @@ describe("renameOrganization", () => {
     expect(request!.headers["x-telflo-csrf"]).toBe("1");
   });
 
-  it("sends removeLogo: true with the name when asked, in the one JSON request (D23-2 decision 9)", async () => {
+  it("sends removeLogo: true with the name when asked, in the one JSON request", async () => {
     const route = `PATCH /api/v1/organizations/${GROUP_ID}`;
     serve({ [route]: () => ({ status: 200, body: { organization: GROUP } }) });
     expect(await client.renameOrganization(GROUP_ID, { name: "Group", removeLogo: true })).toEqual({ organization: GROUP });
@@ -668,7 +668,7 @@ async function organizationPartsOf(body: unknown): Promise<[string, unknown][]> 
   return parts;
 }
 
-describe("organizations with a logo (D23-2 decisions 8, 9 and 33)", () => {
+describe("organizations with a logo", () => {
   const LOGO_ID = "0193a1b2-c3d4-7e5f-8a6b-7c8d9e0f1a2b";
   const WITH_LOGO = { ...GROUP, logoId: LOGO_ID };
 
@@ -766,7 +766,7 @@ describe("getMembers", () => {
     expect(request!.withCredentials).toBe(true);
   });
 
-  it("refreshes an expired access token and retries, as every browser request does (D2b's handoff)", async () => {
+  it("refreshes an expired access token and retries, as every browser request does", async () => {
     let accessTokenValid = false;
     serve({
       [MEMBERS]: () => (accessTokenValid ? { status: 200, body: { items: [LISTED_MEMBER] } } : EXPIRED),
@@ -873,13 +873,13 @@ const LISTED_INVITATION = {
   isExpired: false,
 };
 
-describe("the service accounts' calls (D22 decisions 26 and 31)", () => {
+describe("the service accounts' calls", () => {
   const ACCOUNT_ID = "5a000000-0000-4000-8000-000000000001";
   const TOKEN_ID = "5b000000-0000-4000-8000-000000000001";
   const ACCOUNTS = `/api/v1/organizations/${GROUP_ID}/service-accounts`;
   const ACCOUNT = `${ACCOUNTS}/${ACCOUNT_ID}`;
   const TOKENS = `${ACCOUNT}/api-tokens`;
-  // Built at run time, never a literal (D22 Preflight ruling 32), and compared as a boolean only (Ruling 99).
+  // Built at run time, never a literal, and compared as a boolean only.
   const TOKEN_START = "tf_";
   const token = `${TOKEN_START}${"Ab0_-".repeat(8)}xyz`;
   const SERVICE_ACCOUNT = {
@@ -910,7 +910,7 @@ describe("the service accounts' calls (D22 decisions 26 and 31)", () => {
     expect(await client.getServiceAccounts(GROUP_ID)).toEqual({ items: [SERVICE_ACCOUNT] });
     expect(await client.getServiceAccount(GROUP_ID, ACCOUNT_ID)).toEqual({ serviceAccount: SERVICE_ACCOUNT });
     const listed = await client.getApiTokens(GROUP_ID, ACCOUNT_ID);
-    // Booleans first (Ruling 99): the list holds the prefix and never the token, then the rest.
+    // Booleans first: the list holds the prefix and never the token, then the rest.
     expect(JSON.stringify(listed).includes(token), "the list holding the token").toBe(false);
     expect(listed.items[0]?.prefix === token.slice(0, 11), "the listed prefix").toBe(true);
     expect(listed).toEqual({ items: [API_TOKEN] });
@@ -1078,7 +1078,7 @@ describe("getConfigurations", () => {
     expect(request!.withCredentials).toBe(true);
   });
 
-  it("sends the limit, the cursor, the search text encoded and trimmed, and the filter (D11b decision 6)", async () => {
+  it("sends the limit, the cursor, the search text encoded and trimmed, and the filter", async () => {
     const route = `GET ${CONFIGURATIONS}?limit=10&cursor=abc_-1&q=a+%26+b%25%3F&filter=mine`;
     serve({ [route]: () => ({ status: 200, body: { items: [], nextCursor: null } }) });
 
@@ -1133,7 +1133,7 @@ describe("getConfigurations", () => {
     });
   });
 
-  it("carries the caller's AbortSignal; aborted in flight, it rejects with REQUEST_ABORTED (D17b-1 Preflight ruling 6)", async () => {
+  it("carries the caller's AbortSignal on the list's read; aborted in flight, it rejects with REQUEST_ABORTED", async () => {
     const route = `GET ${CONFIGURATIONS}?limit=100&filter=published`;
     serve({ [route]: hangsUntilAborted() });
     const controller = new AbortController();
@@ -1148,7 +1148,7 @@ describe("getConfigurations", () => {
   });
 });
 
-describe("getConfigurationVersions (D17b-1 decisions 7 and 31, Preflight ruling 6)", () => {
+describe("getConfigurationVersions", () => {
   const VERSIONS = `GET ${CONFIGURATION}/versions`;
 
   it("gets the published versions with filter=published, no CSRF header, and parses the four keys", async () => {
@@ -1203,7 +1203,7 @@ describe("getConfigurationVersions (D17b-1 decisions 7 and 31, Preflight ruling 
   });
 });
 
-describe("getCollectorDistributions (D13a decision 11)", () => {
+describe("getCollectorDistributions", () => {
   const route = "GET /api/v1/collector-distributions";
   const CATALOGUE = {
     distributions: [
@@ -1236,7 +1236,7 @@ describe("getCollectorDistributions (D13a decision 11)", () => {
     ],
   };
 
-  it("gets the catalogue, not an organization's, with no CSRF header, and parses it in the API's order", async () => {
+  it("gets the catalog, not an organization's, with no CSRF header, and parses it in the API's order", async () => {
     serve({ [route]: () => ({ status: 200, body: CATALOGUE }) });
 
     expect(await client.getCollectorDistributions()).toEqual(CATALOGUE);
@@ -1245,14 +1245,14 @@ describe("getCollectorDistributions (D13a decision 11)", () => {
     expect(request!.withCredentials).toBe(true);
   });
 
-  it("reports an answer that isn't the catalogue as unexpected_response", async () => {
+  it("reports an answer that isn't the catalog as unexpected_response", async () => {
     serve({ [route]: () => ({ status: 200, body: { distributions: [{ id: "otelcol-contrib" }] } }) });
 
     await expect(client.getCollectorDistributions()).rejects.toMatchObject({ code: "unexpected_response" });
   });
 });
 
-describe("getFlows and getFlow (D12 decision 10)", () => {
+describe("getFlows and getFlow", () => {
   it("lists every flow the caller may see, not an organization's, with no CSRF header, parsed with the contract", async () => {
     const route = "GET /api/v1/flows";
     const flows = [TAIL_SAMPLING, HIDDEN];
@@ -1288,7 +1288,7 @@ describe("getFlows and getFlow (D12 decision 10)", () => {
   });
 });
 
-describe("validateAnonymously (D31-1 decision 29, Ruling 300)", () => {
+describe("validateAnonymously", () => {
   const route = "POST /api/public/v1/validate/anonymous";
 
   it("posts the text in the body only, to the exact path with no query, with the CSRF header", async () => {
@@ -1322,7 +1322,7 @@ describe("validateAnonymously (D31-1 decision 29, Ruling 300)", () => {
   });
 });
 
-describe("getPublishedFlows and getPublishedFlow (D31-1 decision 34)", () => {
+describe("getPublishedFlows and getPublishedFlow", () => {
   /** A flow as the open read answers it: in full but its id, published, sortOrder and createdAt. */
   const published = (flow: typeof TAIL_SAMPLING) => {
     const { id: _id, published: _published, sortOrder: _sortOrder, createdAt: _createdAt, ...rest } = flow;
@@ -1368,7 +1368,7 @@ describe("getPublishedFlows and getPublishedFlow (D31-1 decision 34)", () => {
   });
 });
 
-describe("the product admin's flows writes (D12 decision 11)", () => {
+describe("the product admin's flows writes", () => {
   const { id: _id, createdAt: _createdAt, updatedAt: _updatedAt, source: _source, authorUrl: _authorUrl, ...fields } =
     TAIL_SAMPLING;
 
@@ -1439,7 +1439,7 @@ describe("the product admin's flows writes (D12 decision 11)", () => {
   });
 });
 
-describe("the collector fields in the configurations requests (D13a Ruling 26)", () => {
+describe("the collector fields in the configurations requests", () => {
   it("createConfiguration sends the picked distribution", async () => {
     const route = `POST ${CONFIGURATIONS}`;
     serve({ [route]: () => ({ status: 201, body: { configuration: LISTED_CONFIGURATION } }) });
@@ -1538,7 +1538,7 @@ const OPENED_VERSION = {
   pipelines: [],
   createdAt: "2026-09-20T12:00:00.000Z",
   updatedAt: "2026-09-21T12:00:00.000Z",
-  // A draft (D11b decision 10).
+  // A draft.
   publishedAt: null,
   publishedBy: null,
   collectorVersion: "0.162.0",
@@ -1547,7 +1547,7 @@ const OPENED_VERSION = {
 };
 /**
  * A second version, unnamed and by a creator who is gone, published by the
- * member (D11b decision 10): the list's summary of it.
+ * member: the list's summary of it.
  */
 const NEWER_VERSION_SUMMARY = {
   id: "0199c000-0000-7000-8000-000000000002",
@@ -1558,7 +1558,7 @@ const NEWER_VERSION_SUMMARY = {
   updatedAt: "2026-09-23T12:00:00.000Z",
   publishedAt: "2026-09-23T13:00:00.000Z",
   publishedBy: { userId: MEMBER_ID, email: "member@example.com" },
-  // Pinned to a version the catalogue deprecated since (D13a decision 4).
+  // Pinned to a version the catalog deprecated since.
   collectorVersion: "0.155.0",
   collectorVersionDeprecated: true,
   collectorVersionDeprecatedNote: "Retired: upgrade to 0.162.0.",
@@ -1576,7 +1576,7 @@ const OPENED_VERSION_SUMMARY = {
   collectorVersionDeprecated: OPENED_VERSION.collectorVersionDeprecated,
   collectorVersionDeprecatedNote: OPENED_VERSION.collectorVersionDeprecatedNote,
 };
-/** A read's answer (D10 decision 4): the configuration, the version, and every version's summary. */
+/** A read's answer: the configuration, the version, and every version's summary. */
 const OPENED = {
   configuration: LISTED_CONFIGURATION,
   version: OPENED_VERSION,
@@ -1603,7 +1603,7 @@ describe("getConfiguration", () => {
 
   it.each([
     ["without its version", { configuration: LISTED_CONFIGURATION, versions: [OPENED_VERSION_SUMMARY] }],
-    ["without the version list, D8's answer", { configuration: LISTED_CONFIGURATION, version: OPENED_VERSION }],
+    ["without the version list", { configuration: LISTED_CONFIGURATION, version: OPENED_VERSION }],
     [
       "with a version without its label",
       { ...OPENED, version: { ...OPENED_VERSION, label: undefined } },
@@ -1628,7 +1628,7 @@ describe("getConfiguration", () => {
 });
 
 describe("saveConfigurationVersion", () => {
-  /** A graph as D9a stores it (D9a decision 6). */
+  /** A graph as a version stores it. */
   const GRAPH = {
     nodes: [
       {
@@ -1662,7 +1662,7 @@ describe("saveConfigurationVersion", () => {
     expect(request!.headers["x-telflo-csrf"]).toBe("1");
   });
 
-  it("accepts an answer whose graph another writer shaped: the response's columns are arrays of anything (D9a Preflight ruling 14)", async () => {
+  it("accepts an answer whose graph another writer shaped: the response's columns are arrays of anything", async () => {
     const route = `PATCH ${CONFIGURATION}/versions/${VERSION_ID}`;
     const saved = {
       ...OPENED_VERSION,
@@ -1680,7 +1680,7 @@ describe("saveConfigurationVersion", () => {
     ).toEqual({ version: saved });
   });
 
-  it("encodes every id in the path (D8 Preflight ruling 17)", async () => {
+  it("encodes every id in the save's path", async () => {
     const route = `PATCH /api/v1/organizations/a%2Fb/configurations/..%2Fc/versions/..%2F..%2Fd%3Fe`;
     serve({ [route]: () => ({ status: 200, body: { version: OPENED_VERSION } }) });
     await client.saveConfigurationVersion("a/b", "../c", "../../d?e", { yamlContent: "", ...EMPTY_GRAPH });
@@ -1722,7 +1722,7 @@ describe("getConfigurationVersion", () => {
     expect(request!.withCredentials).toBe(true);
   });
 
-  it("carries the caller's AbortSignal; aborted in flight, it rejects with REQUEST_ABORTED (D20 Preflight ruling 32)", async () => {
+  it("carries the caller's AbortSignal on a version's read; aborted in flight, it rejects with REQUEST_ABORTED", async () => {
     serve({ [route]: hangsUntilAborted() });
     const controller = new AbortController();
     const pending = client
@@ -1734,7 +1734,7 @@ describe("getConfigurationVersion", () => {
     expect(await pending).toMatchObject({ code: client.REQUEST_ABORTED });
   });
 
-  it("encodes every id in the path (Preflight ruling 18)", async () => {
+  it("encodes every id in the read's path", async () => {
     const encoded = `GET /api/v1/organizations/a%2Fb/configurations/..%2Fc/versions/..%2F..%2Fd%3Fe`;
     serve({ [encoded]: () => ({ status: 200, body: OPENED }) });
     await client.getConfigurationVersion("a/b", "../c", "../../d?e");
@@ -1789,7 +1789,7 @@ describe("createConfigurationVersion", () => {
     expect(seen!.headers["x-telflo-csrf"]).toBe("1");
   });
 
-  it("encodes every id in the path (Preflight ruling 18)", async () => {
+  it("encodes every id in the create's path", async () => {
     const encoded = `POST /api/v1/organizations/a%2Fb/configurations/..%2Fc%3Fd/versions`;
     serve({ [encoded]: () => ({ status: 201, body: { version: CREATED } }) });
     await client.createConfigurationVersion("a/b", "../c?d", request);
@@ -1832,7 +1832,7 @@ describe("renameConfigurationVersion", () => {
     expect(seen!.headers["x-telflo-csrf"]).toBe("1");
   });
 
-  it("encodes every id in the path (Preflight ruling 18)", async () => {
+  it("encodes every id in the rename's path", async () => {
     const encoded = `PUT /api/v1/organizations/a%2Fb/configurations/..%2Fc/versions/..%2F..%2Fd%3Fe/label`;
     serve({ [encoded]: () => ({ status: 200, body: { version: RENAMED } }) });
     await client.renameConfigurationVersion("a/b", "../c", "../../d?e", { label: "Renamed" });
@@ -1859,7 +1859,7 @@ describe("renameConfigurationVersion", () => {
   });
 });
 
-describe("publishConfigurationVersion (D11b decision 11)", () => {
+describe("publishConfigurationVersion", () => {
   const route = `POST ${CONFIGURATION}/versions/${VERSION_ID}/publish`;
   const PUBLISHED = {
     ...OPENED_VERSION_SUMMARY,
@@ -1869,7 +1869,7 @@ describe("publishConfigurationVersion (D11b decision 11)", () => {
 
   const EXPECTED = { expectedUpdatedAt: OPENED_VERSION.updatedAt };
 
-  it("posts the updatedAt the tab saw (Ruling 30) to the version's publish path with the CSRF header, and parses the summary", async () => {
+  it("posts the updatedAt the tab saw to the version's publish path with the CSRF header, and parses the summary", async () => {
     serve({ [route]: () => ({ status: 200, body: { version: PUBLISHED } }) });
 
     expect(await client.publishConfigurationVersion(GROUP_ID, CONFIGURATION_ID, VERSION_ID, EXPECTED)).toEqual({
@@ -1915,7 +1915,7 @@ describe("publishConfigurationVersion (D11b decision 11)", () => {
   });
 });
 
-describe("validateVersion (D13b decision 12)", () => {
+describe("validateVersion", () => {
   const route = `POST ${CONFIGURATION}/versions/${VERSION_ID}/validation`;
   const ANSWER = {
     status: "invalid",
@@ -1982,7 +1982,7 @@ describe("validateVersion (D13b decision 12)", () => {
     });
   });
 
-  it("carries the caller's AbortSignal; aborted in flight, it rejects with REQUEST_ABORTED, the session untouched (Ruling 69)", async () => {
+  it("carries the caller's AbortSignal on a validation; aborted in flight, it rejects with REQUEST_ABORTED, the session untouched", async () => {
     const controller = new AbortController();
     // As axios's own adapters do: an abort while waiting cancels the request.
     serve({
@@ -2051,7 +2051,7 @@ describe("selectConfigurationVersion", () => {
     expect(seen!.headers["x-telflo-csrf"]).toBe("1");
   });
 
-  it("encodes every id in the path (Preflight ruling 18)", async () => {
+  it("encodes every id in the select's path", async () => {
     const encoded = `PUT /api/v1/organizations/a%2Fb/configurations/..%2Fc%3Fd/selected-version`;
     serve({ [encoded]: () => ({ status: 204 }) });
     await client.selectConfigurationVersion("a/b", "../c?d", { versionId: VERSION_ID });
@@ -2102,7 +2102,7 @@ function hangsUntilAborted(): Route {
     });
 }
 
-describe("the fleet calls (D17a Task 3)", () => {
+describe("the fleet calls", () => {
   describe("getFleets", () => {
     it("gets the first page of every fleet with no query string and no CSRF header, and parses it", async () => {
       const page = { fleets: [fleetDetail()], nextCursor: "next-page" };
@@ -2406,7 +2406,7 @@ describe("the fleet calls (D17a Task 3)", () => {
   });
 });
 
-describe("the collector calls (D17b-1 Task 3)", () => {
+describe("the collector calls", () => {
   const COLLECTORS = `${FLEET}/collectors`;
   const COLLECTOR = `${COLLECTORS}/${COLLECTOR_ID}`;
   const NAME_TAKEN = "Another of the organization's collectors has this name.";
@@ -2697,7 +2697,7 @@ describe("the collector calls (D17b-1 Task 3)", () => {
 
 });
 
-describe("the group and token calls (D17b-2 Task 2)", () => {
+describe("the group and token calls", () => {
   const GROUPS = `${FLEET}/groups`;
   const GROUP = `${GROUPS}/${GATEWAYS_GROUP_ID}`;
   const EVENTS = `${FLEET}/tokens/events`;
@@ -3034,7 +3034,7 @@ describe("the group and token calls (D17b-2 Task 2)", () => {
   });
 });
 
-describe("the install calls and the new default token (D17c-1 Task 5)", () => {
+describe("the install calls and the new default token", () => {
   const GROUPS = `${FLEET}/groups`;
   const FACTS = `GET ${GROUPS}/${GATEWAYS_GROUP_ID}/install`;
   const BUNDLE = `POST ${GROUPS}/${GATEWAYS_GROUP_ID}/install-bundle`;
@@ -3231,7 +3231,7 @@ describe("the install calls and the new default token (D17c-1 Task 5)", () => {
     });
   });
 
-  describe("the group calls' annotations (decisions 30 and 31)", () => {
+  describe("the group calls' annotations", () => {
     const GROUP = `${GROUPS}/${GATEWAYS_GROUP_ID}`;
     const withMounts = gatewaysGroup({ annotations: mountsAnnotations([NGINX_MOUNT, DATA_MOUNT]) });
 
@@ -3262,7 +3262,7 @@ describe("the install calls and the new default token (D17c-1 Task 5)", () => {
   });
 });
 
-describe("the quick-deploy links' calls (D17c-2 Task 4)", () => {
+describe("the quick-deploy links' calls", () => {
   const CREATE = `POST ${FLEET}/groups/${GATEWAYS_GROUP_ID}/quick-deploy-links`;
   const LINKS = `${FLEET}/quick-deploy-links`;
   const EXTEND = `POST ${LINKS}/${QUICK_DEPLOY_LINK_ID}/extend`;
@@ -3731,7 +3731,7 @@ describe("refreshing an expired access token", () => {
   });
 
   it("a refresh answering 401 ends the session once, and every waiting request rejects with unauthenticated", async () => {
-    // A staged playground edit: a session the server ended counts as a sign-out (Q211, Ruling 317).
+    // A staged playground edit: a session the server ended counts as a sign-out.
     window.localStorage.setItem("telflo-playground-staged-edit", JSON.stringify({ version: 1 }));
     const refreshGate = deferred();
     expiredSession({ refresh: UNAUTHENTICATED, refreshGate: refreshGate.promise });
@@ -3751,7 +3751,7 @@ describe("refreshing an expired access token", () => {
       expect((outcome as PromiseRejectedResult).reason).toMatchObject({ code: "unauthenticated" });
     }
     expect(sessionEnded).toHaveBeenCalledTimes(1);
-    // PostHog forgets the user, once (D4 decision 8), and the staged playground edit goes (Q211, Ruling 317).
+    // PostHog forgets the user, once, and the staged playground edit goes.
     expect(analytics.signedOutLocally).toHaveBeenCalledTimes(1);
     expect(window.localStorage.getItem("telflo-playground-staged-edit") !== null).toBe(false);
     expect(api.seen(REFRESH)).toHaveLength(1);
@@ -3877,7 +3877,7 @@ describe("the session ending on any 401 unauthenticated", () => {
     expect(sessionEnded).toHaveBeenCalledTimes(1);
   });
 
-  it("while suspended, a refused refresh calls nothing; after the release, the next one calls the handler (D6 Preflight ruling 3)", async () => {
+  it("while suspended, a refused refresh calls nothing; after the release, the next one calls the handler", async () => {
     expiredSession({ refresh: UNAUTHENTICATED });
     const release = client.suspendSessionEndedHandler();
 
@@ -3889,7 +3889,7 @@ describe("the session ending on any 401 unauthenticated", () => {
     expect(sessionEnded).toHaveBeenCalledTimes(1);
   });
 
-  it("while suspended, a refused refresh still resets PostHog: the user is gone either way (D4 decision 8)", async () => {
+  it("while suspended, a refused refresh still resets PostHog: the user is gone either way", async () => {
     expiredSession({ refresh: UNAUTHENTICATED });
     const release = client.suspendSessionEndedHandler();
 
@@ -3900,7 +3900,7 @@ describe("the session ending on any 401 unauthenticated", () => {
     release();
   });
 
-  it("while suspended, resets PostHog once however many requests fail; after a success, the next ended session resets it again (D4 Ruling 16)", async () => {
+  it("while suspended, resets PostHog once however many requests fail; after a success, the next ended session resets it again", async () => {
     serve({ [ME]: () => UNAUTHENTICATED });
     const release = client.suspendSessionEndedHandler();
 
@@ -3961,7 +3961,7 @@ describe("the session ending on any 401 unauthenticated", () => {
   });
 });
 
-describe("whenRequestsInFlightSettle (D12 Ruling 33)", () => {
+describe("whenRequestsInFlightSettle", () => {
   it("resolves at once with nothing in flight", async () => {
     await expect(client.whenRequestsInFlightSettle()).resolves.toBeUndefined();
   });
@@ -4028,8 +4028,8 @@ describe("the default session-ended handler", () => {
   });
 });
 
-// D17d-2 decisions 15 and 20; Preflight rulings 1 and 33: a Kubernetes group's Helm facts and the organization's settings.
-describe("the Helm install's reads (D17d-2 Task 4)", () => {
+// A Kubernetes group's Helm facts and the organization's settings.
+describe("the Helm install's reads", () => {
   const FACTS = `GET ${FLEET}/groups/${GATEWAYS_GROUP_ID}/install`;
   const SETTINGS = `GET /api/v1/organizations/${GROUP_ID}/settings`;
 
@@ -4092,7 +4092,7 @@ describe("the Helm install's reads (D17d-2 Task 4)", () => {
   });
 });
 
-describe("the product-admin calls (D29 decisions 28, 31, 33 and 34)", () => {
+describe("the product-admin calls", () => {
   const USER_ID = "5c000000-0000-4000-8000-000000000001";
   const FEEDBACK_ID = "5d000000-0000-4000-8000-000000000001";
   const BASE = "/api/v1/product-admin";

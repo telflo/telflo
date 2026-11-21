@@ -8,7 +8,7 @@ import { noStore, PRODUCT_ADMIN_ROUTE_PREFIX, productAdminActorOf, productAdminG
 import { createSettingsService } from "./settings-service.js";
 
 /*
- * The site's settings (D36-1 decision 51; Q252, Ruling 359):
+ * The site's settings:
  *
  *   * `GET /api/v1/product-admin/settings`: `{ organizationCreation }`,
  *     `everyone` or `product-admins`.

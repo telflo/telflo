@@ -62,7 +62,7 @@ import {
 } from "./support/test-templates-page.js";
 import { versionPath } from "./support/versions-page.js";
 
-// Test templates (D14b), in the browser: product admin's Test Templates page
+// Test templates, in the browser: product admin's Test Templates page
 // (its nav, the dialog's checks and refusals, create, edit and delete, and
 // its gate for everyone else, a revoked admin included), and a member's
 // Templates step in the run dialog and the definition dialog (the filters,
@@ -72,10 +72,10 @@ import { versionPath } from "./support/versions-page.js";
 // Templates are global, as flows are: every parallel test sees what another
 // wrote. Each test names its own `e2e-<uuid>`, asserts only on its own rows
 // (never a count, never the empty state), and deletes them as the tables'
-// owner when it ends, however it ends (`testTemplates`, D14b Preflight
-// ruling 27). Each admin is a fresh user, made one by the README's SQL.
-// The runs go to the OpenAPI-checked fake tester, which answers a text
-// with none of its markers with a success whose output is the input.
+// owner when it ends, however it ends (`testTemplates`). Each admin is a fresh
+// user, made one by the README's SQL. The runs go to the OpenAPI-checked fake
+// tester, which answers a text with none of its markers with a success whose
+// output is the input.
 
 const PASSWORD = "correct horse battery staple";
 
@@ -157,7 +157,7 @@ function templateUploads(page: Page): Request[] {
   return sent;
 }
 
-test("a product admin's nav lists User Feedback, Test Templates, Test Regex, Library, Flows, Users, then Product admins (D29 decision 36); a template is created (after each check's words), edited and deleted", async ({
+test("a product admin's nav lists User Feedback, Test Templates, Test Regex, Library, Flows, Users, then Product admins; a template is created (after each check's words), edited and deleted", async ({
   page,
   testTemplates,
 }) => {
@@ -230,7 +230,7 @@ test("a product admin's nav lists User Feedback, Test Templates, Test Regex, Lib
     fileName: file.name,
   });
 
-  // Delete, through its confirmation; the focus goes to New Template (Ruling 45).
+  // Delete, through its confirmation; the focus goes to New Template.
   await adminTemplateRow(page, renamed).getByRole("button", { name: "Delete", exact: true }).click();
   const confirmation = page.getByRole("dialog", { name: "Delete Test Template" });
   await expect(confirmation).toContainText(renamed);
@@ -302,7 +302,7 @@ test("someone not a product admin, at the Test Templates page, lands on /app; an
   await expect(memberPage.locator("#createNewConfigurationButton")).toBeVisible();
   await expect(memberPage.getByRole("heading", { name: "Admin Dashboard" })).toHaveCount(0);
 
-  // An admin, revoked on Test Templates, moving to Flows (D14b Ruling 44).
+  // An admin, revoked on Test Templates, moving to Flows.
   const admin = await signedInProductAdmin(page);
   await openTestTemplatesAdmin(page);
   await revokeProductAdmin(admin.email);
@@ -330,10 +330,9 @@ test("a member filters the templates, views one (its text in the replay block), 
   testTemplates,
 }) => {
   // The run dialog's Templates step, its filters, a Monaco viewer, a
-  // download, a run, then the Suites subtab and the definition dialog: 15-21
-  // s in Task 9's full runs (five workers), up to 70% of the 30 s per-test
-  // limit (10.3-16.5 s in the final fix wave's runs of the four files it
-  // touched). Slow triples the limit, a hang guard; every wait inside keeps
+  // download, a run, then the Suites subtab and the definition dialog:
+  // 10.3-21 s in measured runs (five workers), up to 70% of the 30 s per-test
+  // limit. Slow triples the limit, a hang guard; every wait inside keeps
   // its own bound.
   test.slow();
   const errors = pageErrors(page);
@@ -373,7 +372,7 @@ test("a member filters the templates, views one (its text in the replay block), 
   await chooseOption(page, dialog, "Signal Type", "Any");
   await expect(templateRow(dialog, logs.name)).toBeVisible();
 
-  // Viewed: its text, in a replay-blocked dialog, Monaco's live region in the shell's host (D14a Ruling 48).
+  // Viewed: its text, in a replay-blocked dialog, Monaco's live region in the shell's host.
   await dialog.getByRole("button", { name: `View contents of ${logs.name}`, exact: true }).click();
   const viewer = page.getByRole("dialog", { name: logs.name });
   await expect(viewer.locator(".monaco-editor .view-lines")).toContainText(body);
@@ -424,10 +423,9 @@ test("a template the admin deletes leaves the list, and a test configuration mad
   testTemplates,
 }) => {
   // Two people, the admin's page opening product admin and deleting through
-  // its confirmation, then a run and the run dialog's Templates step: 11-18
-  // s in Task 9's full runs (five workers), up to 59% of the 30 s per-test
-  // limit (5.9-10.3 s in the final fix wave's runs of the four files it
-  // touched). Slow triples the limit, a hang guard; every wait inside keeps
+  // its confirmation, then a run and the run dialog's Templates step:
+  // 5.9-18 s in measured runs (five workers), up to 59% of the 30 s per-test
+  // limit. Slow triples the limit, a hang guard; every wait inside keeps
   // its own bound.
   test.slow();
   const { request } = await productAdminSession(playwright, PASSWORD);

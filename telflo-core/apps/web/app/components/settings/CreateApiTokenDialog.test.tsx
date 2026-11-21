@@ -25,10 +25,9 @@ import {
 import { CreateApiTokenDialog, expiryDaysOf } from "./CreateApiTokenDialog.js";
 
 /*
- * "Create API token" (D22 decisions 8, 31 and 43; Preflight rulings 25, 30
- * and 31): minting a token on the account, the expiry's check, the
+ * "Create API token": minting a token on the account, the expiry's check, the
  * refusals and the lost answer. Its token is built at run time and
- * compared only as a boolean (Ruling 99).
+ * compared only as a boolean.
  */
 
 function renderDialog() {
@@ -90,7 +89,7 @@ describe("CreateApiTokenDialog", () => {
     expect(create).toBeDisabled();
     await user.type(name, "canary-token-name-9d");
     expect(create).toBeEnabled();
-    // The typed name is never an attribute (Preflight ruling 25).
+    // The typed name is never an attribute.
     expect(attributesHolding("canary-token-name-9d")).toEqual([]);
   });
 
@@ -197,7 +196,7 @@ describe("CreateApiTokenDialog", () => {
     expect(error).toHaveBeenCalledWith("Organization not found");
   });
 
-  it("takes any owner's calls (D25 Preflight ruling 22): their create and words; an answer no longer current is dropped, and only leaveOn decides a leave", async () => {
+  it("takes any owner's calls: their create and words; an answer no longer current is dropped, and only leaveOn decides a leave", async () => {
     const token = buildApiToken();
     let current = true;
     const calls = {

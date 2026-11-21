@@ -9,32 +9,31 @@ import { findPattern } from "~/lib/regex-library.js";
 import type { ValueChange } from "~/lib/graph/text-edits.js";
 
 /*
- * The `regex_replace` operator's form (ADR 0018), over the card's scope (D9c
- * decisions 2, 3 and 8). Ids are the card's (`op-<index>-regex-replace-…`).
- * The pattern's placeholder is regex-library's "ISO Date (YYYY-MM-DD)".
+ * The `regex_replace` operator's form, over the card's scope. Ids are the
+ * card's (`op-<index>-regex-replace-…`). The pattern's placeholder is
+ * regex-library's "ISO Date (YYYY-MM-DD)".
  *
  * The collector takes exactly one of `regex` and `regex_name`
  * (`transformer/regexreplace/config.go:66-68`), and `regex_name` only as
  * `ansi_control_sequences` (`:48-57`).
  * - Pattern Type shows Well-Known Pattern while `regex_name` is set, else
  *   Custom Regex.
- * - Fixed (decision 3): choosing Custom Regex writes nothing (never
- *   `regex: ""` with `regex_name` removed, which the collector refuses). The
- *   choice is the card's own state until a regex is typed: the form's, so it
- *   follows the card when it moves (Preflight ruling 25), and it holds only
- *   while `regex` and `regex_name` read as they did when it was made (a
- *   change from elsewhere, an undo or the YAML box, drops it, as
- *   FieldSelector's pick, D9c Ruling 57). The first regex typed is written
- *   with `regex_name` removed, in the same change (`TextField`'s `excludes`;
- *   one undo entry, no alert).
+ * - Choosing Custom Regex writes nothing (never `regex: ""` with
+ *   `regex_name` removed, which the collector refuses). The choice is the
+ *   card's own state until a regex is typed: the form's, so it follows the
+ *   card when it moves, and it holds only while `regex` and `regex_name`
+ *   read as they did when it was made (a change from elsewhere, an undo or
+ *   the YAML box, drops it, as FieldSelector's pick does). The first regex
+ *   typed is written with `regex_name` removed, in the same change
+ *   (`TextField`'s `excludes`; one undo entry, no alert).
  * - Choosing Well-Known Pattern writes `regex_name: ansi_control_sequences`
  *   and removes `regex`, in one change; with `regex_name`
  *   still there (Custom chosen, nothing typed), it writes nothing.
- * Changed (D9b decisions 2 and 3): Field is required
- * (`docs/operators/regex_replace.md`) and shows no default (never `body`
- * as a value it doesn't write); the Regex Pattern, cleared, removes `regex`
- * (D9b's rule; never `""`); Replace With, cleared, removes its key (the
- * seed's `replace_with: ""` shows empty and blurring it writes
+ *
+ * Field is required (`docs/operators/regex_replace.md`) and shows no
+ * default (never `body` as a value it doesn't write); the Regex Pattern,
+ * cleared, removes `regex` (never `""`); Replace With, cleared, removes its
+ * key (the seed's `replace_with: ""` shows empty and blurring it writes
  * nothing). A `regex_name` outside the one option shows as an extra option,
  * as written.
  */

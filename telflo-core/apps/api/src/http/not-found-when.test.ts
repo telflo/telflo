@@ -4,9 +4,9 @@ import { registerErrorHandling } from "../errors.js";
 import { notFoundWhen } from "./not-found-when.js";
 
 /*
- * notFoundWhen (D36-1 decision 31, Preflight ruling 7): off, a route answers
- * as a path no route serves, and nothing after the gate runs (the next
- * hook, the body's limit, the handler); on, the route answers as before.
+ * notFoundWhen: off, a route answers as a path no route serves, and nothing
+ * after the gate runs (the next hook, the body's limit, the handler); on, the
+ * route answers as before.
  */
 describe("notFoundWhen", () => {
   let server: FastifyInstance;

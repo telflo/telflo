@@ -7,7 +7,7 @@ import { selectIsDirty, selectIsVersionPublished, useEditorStore } from "~/lib/s
 import { GROUP_ID, MINE, PUBLISHED_FIELDS, answerFor, versionFixture } from "~/test/configurations.js";
 
 /*
- * The re-read after a 409 `configuration_version_published` (Ruling 35): the
+ * The re-read after a 409 `configuration_version_published`: the
  * version a teammate published, whole, so its published content becomes the
  * saved baseline, never only its summary over this tab's older text.
  */
@@ -29,7 +29,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe("rereadVersion (Ruling 35)", () => {
+describe("rereadVersion", () => {
   it("takes the content the teammate published, not just its summary: the saved text and the screen are what was published", async () => {
     const read = vi
       .spyOn(apiClient, "getConfigurationVersion")

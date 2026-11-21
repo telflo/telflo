@@ -12,18 +12,18 @@ import {
 
 /*
  * The public surface's request and response shapes for configurations and
- * their versions (routes 4–12) (D25 decisions 17, 18, 19 and 31; Preflight
- * rulings 6 and 16): strict Zod schemas, camelCase, reusing the platform's contracts where they
- * already hold a field (the name, the description, the label, the YAML's
- * limit, the collector version's and the distribution's formats).
+ * their versions (routes 4–12): strict Zod schemas, camelCase, reusing the
+ * platform's contracts where they already hold a field (the name, the
+ * description, the label, the YAML's limit, the collector version's and the
+ * distribution's formats).
  *
  * A version's name is its `label` (1–80). The YAML is `yaml`.
  */
 
 /**
- * A version's number in a path (Preflight ruling 16): a positive integer of
- * at most nine digits, written plainly: no sign, no leading zero, no
- * exponent (`07`, `1e2`, `0` and `-1` are 400 `invalid_request`).
+ * A version's number in a path: a positive integer of at most nine digits,
+ * written plainly: no sign, no leading zero, no exponent (`07`, `1e2`, `0`
+ * and `-1` are 400 `invalid_request`).
  */
 export const PublicVersionNumberSchema = z
   .string()
@@ -31,9 +31,9 @@ export const PublicVersionNumberSchema = z
   .transform(Number);
 
 /**
- * A version's YAML in a request: the platform's limit (D8 decision 7), and
- * no character Postgres can't store exactly. Stored as given; nothing
- * validates it unless the version PATCH asks (`?validate=true`).
+ * A version's YAML in a request: the platform's limit, and no character
+ * Postgres can't store exactly. Stored as given; nothing validates it unless
+ * the version PATCH asks (`?validate=true`).
  */
 const PublicConfigurationYamlSchema = z
   .string()
@@ -44,8 +44,8 @@ const PublicConfigurationYamlSchema = z
  * A configuration as the list answers it (a summary): no YAML.
  * `versionNumber` is its latest version's number, `collectorVersion` that
  * version's pin, and `publishedVersionNumber` its HIGHEST published
- * version's number (the platform can publish several; Preflight ruling 6),
- * or null for a draft.
+ * version's number (the platform can publish several), or null for a
+ * draft.
  */
 export const PublicConfigurationSchema = z
   .object({
@@ -69,7 +69,7 @@ export const PublicConfigurationDetailSchema = PublicConfigurationSchema.extend(
 
 export type PublicConfigurationDetail = z.infer<typeof PublicConfigurationDetailSchema>;
 
-/** `GET /configurations`: a page, most recently updated first (decision 19); `nextCursor` null on the last. */
+/** `GET /configurations`: a page, most recently updated first; `nextCursor` null on the last. */
 export const PublicConfigurationsPageSchema = z
   .object({
     items: z.array(PublicConfigurationSchema),
@@ -80,9 +80,9 @@ export const PublicConfigurationsPageSchema = z
 export type PublicConfigurationsPage = z.infer<typeof PublicConfigurationsPageSchema>;
 
 /**
- * `GET /configurations`' query (decision 19): the browser list's cursor,
- * `limit` 1–100 (50 when left out) and `cursor` a previous page's
- * `nextCursor`. Strict: anything else is 400 `invalid_request`.
+ * `GET /configurations`' query: the browser list's cursor, `limit` 1–100 (50
+ * when left out) and `cursor` a previous page's `nextCursor`. Strict:
+ * anything else is 400 `invalid_request`.
  */
 export const PublicListConfigurationsQuerySchema = z
   .object({
@@ -99,10 +99,10 @@ export const PublicListConfigurationsQuerySchema = z
 export type PublicListConfigurationsQuery = z.input<typeof PublicListConfigurationsQuerySchema>;
 
 /**
- * `POST /configurations` (decision 31): the configuration and its version 1
- * in one transaction, holding `yaml` as given. `distribution` is the one it
- * is built for, fixed for its life; left out, the catalogue's default. One
- * the catalogue doesn't offer is 400 `collector_distribution_unknown`.
+ * `POST /configurations`: the configuration and its version 1 in one
+ * transaction, holding `yaml` as given. `distribution` is the one it is
+ * built for, fixed for its life; left out, the catalog's default. One the
+ * catalog doesn't offer is 400 `collector_distribution_unknown`.
  */
 export const PublicCreateConfigurationRequestSchema = z
   .object({
@@ -115,9 +115,9 @@ export const PublicCreateConfigurationRequestSchema = z
 export type PublicCreateConfigurationRequest = z.input<typeof PublicCreateConfigurationRequestSchema>;
 
 /**
- * `PATCH /configurations/{configurationId}` (decision 31): the name, the
- * description, both or neither. The description's maximum is the
- * platform's 500; `null` clears it to `""`.
+ * `PATCH /configurations/{configurationId}`: the name, the description, both
+ * or neither. The description's maximum is the platform's 500; `null` clears
+ * it to `""`.
  */
 export const PublicUpdateConfigurationRequestSchema = z
   .object({
@@ -162,7 +162,7 @@ export const PublicConfigurationVersionSchema = PublicConfigurationVersionSummar
 
 export type PublicConfigurationVersion = z.infer<typeof PublicConfigurationVersionSchema>;
 
-/** `GET /configurations/{configurationId}/versions`: every version, highest first, never paginated (decision 19). */
+/** `GET /configurations/{configurationId}/versions`: every version, highest first, never paginated. */
 export const PublicConfigurationVersionsSchema = z
   .object({
     items: z.array(PublicConfigurationVersionSummarySchema),
@@ -173,11 +173,11 @@ export const PublicConfigurationVersionsSchema = z
 export type PublicConfigurationVersions = z.infer<typeof PublicConfigurationVersionsSchema>;
 
 /**
- * `POST /configurations/{configurationId}/versions` (decision 31): the next
- * version, from the latest, holding `yaml` as given, with the latest's pin
- * and its suites and validation pipelines copied. `label` is the version's
- * name, 1–80 characters after trimming; left out or
- * null, the version is unnamed.
+ * `POST /configurations/{configurationId}/versions`: the next version,
+ * from the latest, holding `yaml` as given, with the latest's pin and its
+ * suites and validation pipelines copied. `label` is the version's name,
+ * 1–80 characters after trimming; left out or null, the version is
+ * unnamed.
  */
 export const PublicCreateConfigurationVersionRequestSchema = z
   .object({
@@ -189,10 +189,10 @@ export const PublicCreateConfigurationVersionRequestSchema = z
 export type PublicCreateConfigurationVersionRequest = z.input<typeof PublicCreateConfigurationVersionRequestSchema>;
 
 /**
- * `PATCH /configurations/{configurationId}/versions/{versionNumber}`
- * (decision 31): merges `yaml` and `collectorVersion` over a draft; a field
- * left out keeps the one stored, and neither changes nothing. A change of
- * pin must name a version the configuration's distribution offers, else 400
+ * `PATCH /configurations/{configurationId}/versions/{versionNumber}`:
+ * merges `yaml` and `collectorVersion` over a draft; a field left out keeps
+ * the one stored, and neither changes nothing. A change of pin must name a
+ * version the configuration's distribution offers, else 400
  * `collector_version_unknown`.
  */
 export const PublicUpdateConfigurationVersionRequestSchema = z

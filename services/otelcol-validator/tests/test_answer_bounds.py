@@ -1,7 +1,7 @@
-"""What D13b ruling 69 bounds (the final review's findings): an answer's
-requirements (each once, at most 200), the path parts (matched whole, ASCII
-digits only, as openapi.yaml's patterns read) and the removal of a check's
-directory (carried on past a failure, logged by the errors' types only)."""
+"""What the answer bounds: an answer's requirements (each once, at most 200),
+the path parts (matched whole, ASCII digits only, as openapi.yaml's patterns
+read) and the removal of a check's directory (carried on past a failure, logged
+by the errors' types only)."""
 
 from __future__ import annotations
 
@@ -53,14 +53,14 @@ def test_bounded_keeps_the_first_200_and_leaves_the_rest_of_the_answer() -> None
 
 def org_references(count: int) -> str:
     """A text whose one value names `count` organization variables: each its
-    own requirement (the final review's amplification probe)."""
+    own requirement (an amplification probe)."""
     references = "".join(f"${{org:v{index}}}" for index in range(count))
     return f"receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: {references}\n"
 
 
 def test_a_text_naming_thousands_of_variables_answers_200_requirements(binary_dir: Path) -> None:
-    """The review's probe: 20,000 `${org:}` references answered 5.1 MiB,
-    over the platform's 4 MiB. Now 200 requirements, the first ones named."""
+    """20,000 `${org:}` references would answer 5.1 MiB unbounded, over the
+    platform's 4 MiB; bounded, 200 requirements, the first ones named."""
     write_collector(binary_dir, "0.162.0", PASSING_COLLECTOR)
     text = org_references(18_000)
     assert len(text) <= 262_144
@@ -127,10 +127,10 @@ def test_a_path_part_with_a_line_break_or_a_non_ascii_digit_is_invalid(binary_di
 def test_a_failed_entry_doesnt_stop_the_removal_and_is_logged_by_type(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Ruling 67 (Task 8's review, m2): the removal stopped at the first entry
-    it couldn't remove, so whatever came after it (the configuration's file
-    included) stayed. The first unlink fails here, whichever entry it is;
-    every other entry is still removed, and the log names the error's type."""
+    """A removal that stopped at the first entry it couldn't remove would
+    leave whatever came after it (the configuration's file included). The first
+    unlink fails here, whichever entry it is; every other entry is still
+    removed, and the log names the error's type."""
     directory = tmp_path / "otelcol-check-partial"
     directory.mkdir()
     for name in ("config.yaml", "a.txt", "b.txt", "c.txt"):
@@ -186,7 +186,7 @@ def test_remove_directory_returns_each_failures_type_and_removes_the_rest(
     assert json.dumps(failures).count("otelcol-check") == 0
 
 
-# ---- errors: at most 200, each string within its budget (ruling 71) -------------------
+# ---- errors: at most 200, each string within its budget -------------------
 
 from app import runner as _runner  # noqa: E402 - the bounds' constants, read where they are defined
 
@@ -263,11 +263,10 @@ def test_every_requirement_field_is_cut_to_its_budget_before_the_duplicates_go()
 
 def test_the_largest_possible_answer_is_the_documented_bound_and_fits_the_platforms_4_mib() -> None:
     """Every field over its budget, in 6-byte escaped characters: the
-    rendered answer stays within MAX_ANSWER_BYTES (2,290,356 bytes, ADR
-    0027), under the platform client's 4 MiB. Not the exact worst case (an
-    ASCII-filled answer is a few KB larger, still under the bound, which is
-    a slightly loose upper bound: the 201st error is always the short
-    marker)."""
+    rendered answer stays within MAX_ANSWER_BYTES (2,290,356 bytes), under the
+    platform client's 4 MiB. Not the exact worst case (an ASCII-filled answer
+    is a few KB larger, still under the bound, which is a slightly loose upper
+    bound: the 201st error is always the short marker)."""
     worst = "\u0001" * 30_000
     # Each distinct where the cut keeps it: its number first.
     errors = [error(str(index) + worst, str(index) + worst) for index in range(1_000)]
@@ -284,7 +283,7 @@ def test_the_largest_possible_answer_is_the_documented_bound_and_fits_the_platfo
     assert _runner.MAX_ANSWER_BYTES == 2_290_356
 
 
-# A collector that prints the reviewer's shape: one error per pipeline, many
+# A collector that prints this shape: one error per pipeline, many
 # pipelines (an aliased multi-line key printed 130,746 errors on 0.162.0).
 MANY_ERRORS_COLLECTOR = """echo 'Error: invalid configuration: receivers::otlp/0: must specify at least one protocol' >&2
 i=1
@@ -322,7 +321,7 @@ def test_a_collector_error_longer_than_4_kib_is_cut(binary_dir: Path) -> None:
     assert cut["message"] == "q" * (4_096 - 3) + "…"
 
 
-# ---- requirements: the collector's first, then the text's (ruling 71) -----------------
+# ---- requirements: the collector's first, then the text's -----------------
 
 COLLECTOR_REQUIREMENT = """echo 'Error: extensions::file_storage: directory must exist: stat /var/lib/otel: no such file or directory. You can enable the create_directory option to automatically create it' >&2
 exit 1

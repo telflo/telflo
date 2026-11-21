@@ -30,32 +30,28 @@ import {
 } from "./fake-opamp-server-fleets.js";
 import { createVariablesModel, MAX_VARIABLE_NAME_LENGTH, variableReferences } from "./fake-opamp-server-variables.js";
 
-// The opamp-server's management API in memory, for tests only (D11a Task 7).
-// Built on node:http. It never ships: .dockerignore leaves apps/api/src/testing
-// out of the images, and a lint rule keeps production code from importing it.
+// The opamp-server's management API in memory, for tests only. Built on
+// node:http. It never ships: .dockerignore leaves apps/api/src/testing out of
+// the images, and a lint rule keeps production code from importing it.
 //
 // It answers the four organization operations and the five publication
-// operations with the real server's semantics (spec decisions 8 to 10 and
-// 20, Rulings 26 and 33, and Ruling 27's millisecond publishedAt): the
-// registry, every publication and fleet route under an unregistered
-// organization a 404 organization_not_found once its path ids are read
-// (before its query or body), and an organization's delete taking its
-// publications and its fleets with it. The 25 fleet-model operations
-// (D16a's, D17b-2's token events and D17c-1's new default token: fleets,
+// operations with the real server's semantics (publishedAt in whole
+// milliseconds): the registry, every publication and fleet route under an
+// unregistered organization a 404 organization_not_found once its path ids are
+// read (before its query or body), and an organization's delete taking its
+// publications and its fleets with it. The 25 fleet-model operations (fleets,
 // collector groups, enrollment tokens, collectors, limits and a
-// configuration's usage) are fake-opamp-server-fleets.ts's, ported
-// from the Go (D16b Task 1, plan Preflight ruling 4). D20's 11
-// organization variables operations are fake-opamp-server-variables.ts's
-// (Task 9): a publication keeps the names its live `${org:NAME}`
-// references name (refusing one over 128 characters, Ruling 51), which the
-// guards, the undefined check and drift read.
-// It checks the contract both ways: every request it receives
-// and every reply it sends is validated against
-// vendor/opamp-server/openapi.yaml, with ajv's JSON Schema 2020-12
+// configuration's usage) are fake-opamp-server-fleets.ts's, ported from the
+// Go. The 11 organization variables operations are
+// fake-opamp-server-variables.ts's: a publication keeps the names its live
+// `${org:NAME}` references name (refusing one over 128 characters), which the
+// guards, the undefined check and drift read. It checks the contract both
+// ways: every request it receives and every reply it sends is validated
+// against vendor/opamp-server/openapi.yaml, with ajv's JSON Schema 2020-12
 // dialect. A mismatch is a violation: kept until takeViolations() reads it,
 // and close() rejects while any is unread, so a test that forgets to look
-// still fails. The request is then answered as the real server would
-// (a 400, 401 or 404), so the client under test sees a realistic reply.
+// still fails. The request is then answered as the real server would (a 400,
+// 401 or 404), so the client under test sees a realistic reply.
 //
 // Faults, one shot each (nextFault): answer 500, hang until the client gives
 // up (past any timeout), reset the connection, or send a reply that breaks the
@@ -63,9 +59,9 @@ import { createVariablesModel, MAX_VARIABLE_NAME_LENGTH, variableReferences } fr
 //
 // A published version a collector group is assigned, or a collector pinned
 // to, is in use: its delete, and its configuration's, answer 409
-// publication_in_use, deleting nothing (D16a decision 31), and the
-// configuration's usage says so. markPublicationInUse stands for such a use
-// without a fleet (D11b's tests): one phantom pinned collector.
+// publication_in_use, deleting nothing, and the configuration's usage says
+// so. markPublicationInUse stands for such a use without a fleet: one
+// phantom pinned collector.
 
 /** A fixed, public test credential: 32 bytes and more. */
 export const FAKE_OPAMP_SERVER_SECRET = "telflo-fake-opamp-management-secret-0123456789";
@@ -92,10 +88,10 @@ export interface FakeOpampServer {
   nextFault(fault: FakeOpampServerFault, operationId?: string): void;
   /**
    * Marks the organization's publication as used by a collector group or a
-   * collector (D16a decision 31), as the real server's fleet model would:
-   * deleting it, or its configuration's, then answers 409
-   * `publication_in_use` and deletes nothing. Throws if the organization
-   * holds no such publication. `inUse` false clears the mark.
+   * collector, as the real server's fleet model would: deleting it, or its
+   * configuration's, then answers 409 `publication_in_use` and deletes
+   * nothing. Throws if the organization holds no such publication. `inUse`
+   * false clears the mark.
    */
   markPublicationInUse(organizationId: string, publicationId: string, inUse?: boolean): void;
   /**
@@ -370,7 +366,7 @@ function mediaTypeOf(value: string | undefined): string | undefined {
 // ---------------------------------------------------------------------------
 // The server.
 
-/** The real server's body cap (spec decision 8). */
+/** The real server's body cap. */
 const MAX_BODY_BYTES = 2 * 1024 * 1024;
 /** Bodies past this aren't read at all: the fake drops the connection. */
 const MAX_READ_BYTES = 8 * 1024 * 1024;
@@ -393,18 +389,18 @@ interface StoredPublication {
   yaml: string;
   sha256: string;
   publishedBy: { id: string; email: string } | null;
-  /** Whole milliseconds (Ruling 27). */
+  /** Whole milliseconds, as the real server keeps it. */
   publishedAt: number;
   receivedAt: number;
-  /** The collector it was published for (D13a decision 7), as sent. */
+  /** The collector it was published for, as sent. */
   collector: { distribution: string; version: string };
-  /** D20 decision 30: the names its live `${org:NAME}` references name, written at publish. */
+  /** The names its live `${org:NAME}` references name, written at publish. */
   names: string[];
 }
 
 const notFound = (): Reply => errorReply(404, "not_found", "Not found.");
 const payloadTooLarge = (): Reply => errorReply(413, "payload_too_large", "The request body is larger than 2 MiB.");
-/** management/publications.go's messageReferenceTooLong (D20 Ruling 51): it names the field, never the name. */
+/** management/publications.go's messageReferenceTooLong: it names the field, never the name. */
 const REFERENCE_TOO_LONG = "yaml references an organization variable name over 128 characters, which no variable can have.";
 const unauthorized = (): Reply => ({
   ...errorReply(401, "unauthorized", "Missing or invalid credentials."),
@@ -423,7 +419,7 @@ function organizationJson(stored: StoredOrganization): JsonObject {
 /**
  * The registry's own operations under an organization's path, which answer
  * a plain 404 not_found; every other one there needs the organization
- * registered (decision 20).
+ * registered.
  */
 const REGISTRY_OPERATIONS = new Set(["getOrganization", "renameOrganization", "deleteOrganization"]);
 
@@ -456,7 +452,7 @@ function isIdentical(a: StoredPublication, b: StoredPublication): boolean {
       ? b.publishedBy === null
       : b.publishedBy !== null && a.publishedBy.id === b.publishedBy.id && a.publishedBy.email === b.publishedBy.email) &&
     a.publishedAt === b.publishedAt &&
-    // D13a decision 7: the collector is part of the publication.
+    // The collector is part of the publication.
     a.collector.distribution === b.collector.distribution &&
     a.collector.version === b.collector.version
   );
@@ -558,7 +554,7 @@ export async function startFakeOpampServer(options: FakeOpampServerOptions = {})
     isMarkedInUse: (organizationId, id) => inUse.has(publicationKey(organizationId, id)),
     variables: variablesModel,
   });
-  /** In use: assigned to a group or pinned on a collector, or marked (D16a decision 31). */
+  /** In use: assigned to a group or pinned on a collector, or marked. */
   const isInUse = (organizationId: string, id: string) =>
     inUse.has(publicationKey(organizationId, id)) || fleetModel.publicationUsed(organizationId, id);
   /** Deletes the publication, and each collector served it loses the pointer (keeping the hash). */
@@ -603,7 +599,7 @@ export async function startFakeOpampServer(options: FakeOpampServerOptions = {})
   ): { badPath: string | undefined; badQuery: string | undefined; query: Map<string, string> } {
     const where = `${operation.operationId} request`;
     // The real server reads the path's ids first, then the organization,
-    // then the query (Ruling 33), so the two are answered apart.
+    // then the query, so the two are answered apart.
     const bad: { path: string | undefined; query: string | undefined } = { path: undefined, query: undefined };
     const query = new Map<string, string>();
     for (const parameter of operation.parameters) {
@@ -782,8 +778,8 @@ export async function startFakeOpampServer(options: FakeOpampServerOptions = {})
     if (createHash("sha256").update(fields.yaml, "utf8").digest("hex") !== fields.sha256) {
       return errorReply(422, "sha256_mismatch", "sha256 isn't the SHA-256 of yaml's UTF-8 bytes.");
     }
-    // D20 Ruling 51: a live reference to a name no variable can have is
-    // refused before anything is written, after the 422.
+    // A live reference to a name no variable can have is refused before
+    // anything is written, after the 422.
     const names = variableReferences(fields.yaml);
     if (names.some((name) => name.length > MAX_VARIABLE_NAME_LENGTH)) return invalidRequest(REFERENCE_TOO_LONG);
     const candidate: StoredPublication = {
@@ -1026,7 +1022,7 @@ export async function startFakeOpampServer(options: FakeOpampServerOptions = {})
       !REGISTRY_OPERATIONS.has(operation.operationId) &&
       !organizations.has(pathValues.get("organizationId")?.toLowerCase() ?? "")
     ) {
-      // Decision 20: once the path's ids are read, before the query or the body.
+      // Once the path's ids are read, before the query or the body.
       reply = organizationNotFound();
     } else if (badQuery !== undefined) {
       reply = invalidRequest(badQuery);

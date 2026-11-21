@@ -8,12 +8,12 @@ import {
   type FakeOtelcolValidatorFault,
 } from "./fake-otelcol-validator.js";
 
-// The fake collector validator's own contract checks (D13b Preflight ruling
-// 20): it must catch a request that breaks services/otelcol-validator/openapi.yaml,
-// and a reply of its own that does, or the client's and the API's tests
-// against it prove nothing; and it must answer by the text, as the browser
-// tests rely on. These tests send raw requests, shaped as the client's are,
-// then broken.
+// The fake collector validator's own contract checks: it must catch a
+// request that breaks services/otelcol-validator/openapi.yaml, and a reply
+// of its own that does, or the client's and the API's tests against it
+// prove nothing; and it must answer by the text, as the browser tests rely
+// on. These tests send raw requests, shaped as the client's are, then
+// broken.
 
 let fake: FakeOtelcolValidator;
 
@@ -66,7 +66,7 @@ describe("the fake otelcol-validator's request validation", () => {
     }
   });
 
-  it("accepts the organization's values within the server's bounds (150 of at most 1,024 characters, Q104), and records them (D20)", async () => {
+  it("accepts the organization's values within the server's bounds (150 of at most 1,024 characters), and records them", async () => {
     const organizationVariables = {
       HOST: "a$b",
       [`A${"_".repeat(127)}`]: "é".repeat(1024),
@@ -183,7 +183,7 @@ describe("the fake otelcol-validator's request validation", () => {
   });
 });
 
-describe("the fake otelcol-validator's answers by the text (Preflight ruling 20)", () => {
+describe("the fake otelcol-validator's answers by the text", () => {
   it("answers valid by default, naming the collector it was asked for", async () => {
     const response = await post({ yaml: "receivers:\n  otlp: {}\n" }, {}, validateUrl("fixture-build", "1.2.3"));
 
@@ -230,7 +230,7 @@ describe("the fake otelcol-validator's answers by the text (Preflight ruling 20)
     ]);
   });
 
-  it("answers one row naming the organization's values it was sent, as the validator names those it filled in (D20)", async () => {
+  it("answers one row naming the organization's values it was sent, as the validator names those it filled in", async () => {
     const body = (await (
       await post({ yaml: 'exporters:\n  debug:\n    x: "${env:LEVEL}"\n', organizationVariables: { B: "1", A: "2" } })
     ).json()) as { requirements: Array<Record<string, unknown>> };
@@ -310,8 +310,8 @@ describe("the fake otelcol-validator's close", () => {
       body: JSON.stringify({ yaml: "a: 1\n" }),
     });
     // Wait until the fake has read it (the request is then recorded): on that condition, since the request
-    // crosses a real socket and no count of event-loop turns bounds it, with a hang guard under vitest's 5 s
-    // (D23-2 Ruling 153).
+    // crosses a real socket and no count of event-loop turns bounds it, with a hang guard under
+    // vitest's 5 s.
     let received = 0;
     await vi.waitFor(
       () => {

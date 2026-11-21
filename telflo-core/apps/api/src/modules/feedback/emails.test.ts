@@ -8,11 +8,10 @@ import {
 } from "./emails.js";
 
 /*
- * User Feedback's emails (D29 decisions 35 and 43): their fixed subjects
- * and words; every inserted value escaped in the HTML part; the admins'
- * email built from the sender's address and the link alone (it is never
- * given the text); the reply's line breaks kept. The values here are made
- * up for the test.
+ * User Feedback's emails: their fixed subjects and words; every inserted
+ * value escaped in the HTML part; the admins' email built from the
+ * sender's address and the link alone (it is never given the text); the
+ * reply's line breaks kept. The values here are made up for the test.
  */
 
 const SENDER = "sender@example.com";

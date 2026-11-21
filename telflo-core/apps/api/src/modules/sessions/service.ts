@@ -29,17 +29,17 @@ import type { ISessionRepository, SessionOrganization } from "./repositories/ses
  * repository must never call it; leaving it out of the type makes that a
  * compile error rather than a convention.
  *
- * `setDatabaseContext` sets whom the rest of the transaction acts for (D5
- * decision 2). Reading a session's membership needs it: row-level security
- * hides every membership from a transaction with no context.
+ * `setDatabaseContext` sets whom the rest of the transaction acts for. Reading
+ * a session's membership needs it: row-level security hides every membership
+ * from a transaction with no context.
  *
  * `inOrganization` hands out the switch's locking reads of its target,
  * scoped to that organization. Row-level security applies a locking read's
- * update policy (Preflight ruling 1), so the context must name the target
- * first. A new sign-in's landing takes the same reads (Q265).
+ * update policy, so the context must name the target first. A new
+ * sign-in's landing takes the same reads.
  *
  * `organizations` reads the user's own memberships, in the user's context:
- * where a new sign-in may land (Q265).
+ * where a new sign-in may land.
  */
 export interface SessionTransaction {
   users: Pick<IUserRepository, "findPasswordHashForShare">;
@@ -73,10 +73,10 @@ export interface SessionServiceDependencies {
    */
   sessions: ISessionRepository;
   audit: IAuditRepository;
-  /** Sign-in's and refresh's writes, each in one transaction (D2a Ruling 9). */
+  /** Sign-in's and refresh's writes, each in one transaction. */
   withTransaction: WithSessionTransaction;
   accessTokens: IAccessTokens;
-  /** The refresh tokens' lifetime, and the site's Terms version, which `authenticate` compares (D36-1 decision 32). */
+  /** The refresh tokens' lifetime, and the site's Terms version, which `authenticate` compares. */
   settings: Pick<AppSettings, "refreshTokenTtlDays" | "site">;
   now: () => Date;
   /** Injectable so tests can observe the calls; defaults to identity's Argon2id verify. */
@@ -131,13 +131,12 @@ export interface SwitchOrganizationResult {
 }
 
 /**
- * One session start (D2c Ruling 10), shared by password sign-in, a
- * provider's and an invitation's: a session, its first refresh token, and
- * `user.signed_in` with `auditMetadata`. The session starts in
- * `organizationId`, which the caller chose (an invitation's, which its
- * `check` confirms), or, for a new sign-in (password or a provider's), in
- * the organization `landing` chooses in the session's transaction (D36-1
- * decision 56, Q265), the personal organization the last resort.
+ * One session start, shared by password sign-in, a provider's and an
+ * invitation's: a session, its first refresh token, and `user.signed_in` with
+ * `auditMetadata`. The session starts in `organizationId`, which the caller
+ * chose (an invitation's, which its `check` confirms), or, for a new sign-in
+ * (password or a provider's), in the organization `landing` chooses in the
+ * session's transaction, the personal organization the last resort.
  */
 export type StartSessionInput = StartSessionBase &
   (
@@ -171,7 +170,7 @@ export interface IssuedSession {
 /**
  * What a refresh issued. `rotated` is a new pair. `grace` is only a new access
  * token: the refresh token presented was consumed moments ago by a concurrent
- * refresh, whose response carries the new refresh token (D2b decision 3).
+ * refresh, whose response carries the new refresh token.
  */
 export type RefreshResult =
   | { kind: "rotated"; issued: IssuedSession }
@@ -184,20 +183,20 @@ export type AuthenticationResult =
       email: string;
       /**
        * Whether the user's Terms are satisfied, from their accepted version as
-       * the session check read it, so `requireCurrentTerms` needs no query (D7
-       * decision 10): the site asks for none (its Terms version is "", D36-1
-       * decision 32), or the user has accepted that version. False for an
-       * older version and for none (a federated sign-up), alike.
+       * the session check read it, so `requireCurrentTerms` needs no query:
+       * the site asks for none (its Terms version is ""), or the user has
+       * accepted that version. False for an older version and for none (a
+       * federated sign-up), alike.
        */
       hasAcceptedCurrentTerms: boolean;
-      /** The row's flag, as the session check read it on this request (D12 decision 3). */
+      /** The row's flag, as the session check read it on this request. */
       isProductAdmin: boolean;
       sessionId: string;
       organization: SessionOrganization;
     }
   /**
    * Validly signed but past `exp`, or naming an organization the session has
-   * since left (D5 decision 10): the cases a refresh can fix.
+   * since left: the cases a refresh can fix.
    */
   | { status: "expired"; sessionId: string }
   | { status: "unauthenticated" };
@@ -224,9 +223,9 @@ export interface ISessionService {
 const DAY_IN_MILLISECONDS = 24 * 60 * 60 * 1000;
 
 /**
- * How long after a refresh token was consumed presenting it again is taken
- * for a concurrent refresh (two tabs at once) rather than a reuse (D2b
- * decision 3). A constant, not a setting.
+ * How long after a refresh token was consumed presenting it again is taken for
+ * a concurrent refresh (two tabs at once) rather than a reuse. A constant, not
+ * a setting.
  */
 export const REFRESH_GRACE_SECONDS = 10;
 const REFRESH_GRACE_MILLISECONDS = REFRESH_GRACE_SECONDS * 1000;
@@ -238,7 +237,7 @@ const REFRESH_GRACE_MILLISECONDS = REFRESH_GRACE_SECONDS * 1000;
  * as every stored hash, so those paths pay the same verify cost as a wrong
  * password. The password it hashes is random and discarded, so nothing can
  * ever match it. Not dead code: removing the verify that uses it makes an
- * unknown email measurably faster than a known one (D2a Parity Notes).
+ * unknown email measurably faster than a known one.
  */
 const dummyPasswordHash: Promise<string> = hashPassword(randomBytes(32).toString("base64url"));
 
@@ -274,7 +273,7 @@ type RefreshOutcome =
 export function createSessionService(deps: SessionServiceDependencies): ISessionService {
   const { users, withUserOrganizations, sessions, audit, withTransaction, accessTokens, settings, now } = deps;
 
-  /** The site asks for no Terms, or the user accepted its version (D36-1 Preflight ruling 1). Read per call. */
+  /** The site asks for no Terms, or the user accepted its version. Read per call. */
   function termsSatisfied(acceptedTermsVersion: string | null): boolean {
     const current = settings.site.terms.version;
     return current === "" || acceptedTermsVersion === current;
@@ -323,8 +322,7 @@ export function createSessionService(deps: SessionServiceDependencies): ISession
   }
 
   /**
-   * Where a new sign-in lands (D36-1 decision 56, Q265, Ruling 372), chosen
-   * in the session's transaction:
+   * Where a new sign-in lands, chosen in the session's transaction:
    * 1. the active organization of the user's most recently used earlier
    *    session (the one refreshed last; revoked and expired sessions count,
    *    as they still record where the person was), while it is live and the
@@ -333,17 +331,17 @@ export function createSessionService(deps: SessionServiceDependencies): ISession
    *    newest live membership, the personal one included);
    * 3. otherwise `personalOrganizationId`, the personal organization the
    *    caller read (and whose absence it refuses, as before).
-   * A candidate is taken only under the switch's locks (Ruling 22): the
-   * organization `for share`, then the membership `for share`, both held
-   * until the session commits. A removal or a delete (which locks the
-   * organization first) then either waits and reassigns the new session as
-   * it does any other, or committed first and the candidate is passed over:
-   * the session never starts somewhere the user can't act. Both candidates
-   * are locked before either is chosen, in id order, as an account's delete
-   * locks a person's organizations (migration 042), so a passed-over
-   * candidate's lock, held to the commit, never closes a cycle with it.
-   * These locks come before `check`'s on the user: organization -> user ->
-   * session, the order every path takes.
+   * A candidate is taken only under the switch's locks: the organization
+   * `for share`, then the membership `for share`, both held until the
+   * session commits. A removal or a delete (which locks the organization
+   * first) then either waits and reassigns the new session as it does any
+   * other, or committed first and the candidate is passed over: the session
+   * never starts somewhere the user can't act. Both candidates are locked
+   * before either is chosen, in id order, as an account's delete locks a
+   * person's organizations (migration 042), so a passed-over candidate's
+   * lock, held to the commit, never closes a cycle with it. These locks
+   * come before `check`'s on the user: organization -> user -> session, the
+   * order every path takes.
    */
   async function landingOrganizationId(
     transaction: SessionTransaction,
@@ -411,7 +409,7 @@ export function createSessionService(deps: SessionServiceDependencies): ISession
 
   return {
     /**
-     * Enumeration-safe in the same sense as D1's registration: an unknown
+     * Enumeration-safe in the same sense as registration: an unknown
      * email, an account without a password, a soft-deleted account (which
      * findByEmail does not find) and a wrong password all fail with the
      * identical `invalid_credentials`, and each pays exactly one Argon2id
@@ -448,11 +446,11 @@ export function createSessionService(deps: SessionServiceDependencies): ISession
       }
 
       // The personal organization: where a sign-in lands when nothing else
-      // will do (Q265's last resort; `startSession`'s landing). A person
+      // will do (the last resort of `startSession`'s landing). A person
       // always has one, so its absence is a bug to surface, not a case to
-      // paper over by picking another organization. A service account,
-      // which has none, never gets here: the lookup matches people only
-      // (D22 decision 22), and no session is ever made for one.
+      // paper over by picking another organization. A service account, which
+      // has none, never gets here: the lookup matches people only, and no
+      // session is ever made for one.
       const personal = await withUserOrganizations(user.id, (organizations) =>
         organizations.findPersonalForUser(user.id),
       );
@@ -464,10 +462,10 @@ export function createSessionService(deps: SessionServiceDependencies): ISession
       }
 
       // The password was verified outside the transaction, so a reset may
-      // have committed since (D3 Ruling 15). Rereading the hash `for share`
-      // either waits for a reset in flight, whose `for update` holds the row,
-      // or makes a later one wait for this commit, whose session it then
-      // revokes. A hash that changed refuses the sign-in and creates nothing.
+      // have committed since. Rereading the hash `for share` either waits for
+      // a reset in flight, whose `for update` holds the row, or makes a later
+      // one wait for this commit, whose session it then revokes. A hash that
+      // changed refuses the sign-in and creates nothing.
       const verifiedHash = user.passwordHash;
       const issued = await startSession({
         user,
@@ -485,7 +483,7 @@ export function createSessionService(deps: SessionServiceDependencies): ISession
     startSession,
 
     /**
-     * Rotates the pair. `consume` is the atomic gate (Ruling 21), so of two
+     * Rotates the pair. `consume` is the atomic gate, so of two
      * presentations of one token exactly one gets here as `consumed`; the
      * other sees `already_consumed`, which is a grace (below) or a reuse.
      * Inside the transaction, a concurrent presentation waits on the first
@@ -493,21 +491,21 @@ export function createSessionService(deps: SessionServiceDependencies): ISession
      * consumes the token itself if the first rolled back.
      *
      * A reuse, a consumed token presented after the grace window, revokes
-     * the whole session (ADR 0010): either the legitimate client or a thief
+     * the whole session: either the legitimate client or a thief
      * is holding a token that was already rotated, and the server cannot
      * tell which, so neither keeps the session.
      *
      * An expired token is refused without revoking: it was consumed just
      * now for the first time, so nothing was reused.
      *
-     * The grace window (D2b decision 3): a token consumed at most
-     * REFRESH_GRACE_SECONDS before this presentation, unexpired, for a
-     * session that is still live, gets only a new access token. Nothing is written: the
-     * concurrent refresh that consumed it already rotated the pair and set
-     * the new refresh cookie in the same browser's jar. The difference may
-     * be negative: a presentation that waited on the winner's row lock read
-     * its clock before the winner wrote `consumed_at` (D2b Preflight ruling
-     * 1), and that is exactly the two-tab case the window exists for.
+     * The grace window: a token consumed at most REFRESH_GRACE_SECONDS before
+     * this presentation, unexpired, for a session that is still live, gets
+     * only a new access token. Nothing is written: the concurrent refresh that
+     * consumed it already rotated the pair and set the new refresh cookie in
+     * the same browser's jar. The difference may be negative: a presentation
+     * that waited on the winner's row lock read its clock before the winner
+     * wrote `consumed_at`, and that is exactly the two-tab case the window
+     * exists for.
      *
      * The session's membership is read in its user's database context, set
      * once `consume` has named the user, in the same transaction.
@@ -515,10 +513,10 @@ export function createSessionService(deps: SessionServiceDependencies): ISession
     async refresh(input: RefreshInput): Promise<RefreshResult> {
       const at = now();
 
-      // Consume, the new token and the touch commit together (D2a Ruling 9).
-      // If anything after consume fails, consume rolls back with it, so the
-      // client, which keeps its cookies on a non-AppError failure, can retry
-      // with the same token instead of having it treated as a reuse.
+      // Consume, the new token and the touch commit together. If anything
+      // after consume fails, consume rolls back with it, so the client,
+      // which keeps its cookies on a non-AppError failure, can retry with
+      // the same token instead of having it treated as a reuse.
       const outcome = await withTransaction(async (transaction): Promise<RefreshOutcome> => {
         const result = await transaction.refreshTokens.consume(hashToken(input.refreshToken), at);
         if (result.status === "not_found") return { status: "refused" };
@@ -556,7 +554,7 @@ export function createSessionService(deps: SessionServiceDependencies): ISession
         if (!live) return { status: "refused" };
 
         // The session row, not the old access token, says which organization
-        // the new token carries (ADR 0010).
+        // the new token carries.
         const issued = await issueCredentials(
           transaction.refreshTokens,
           live.user,
@@ -632,21 +630,21 @@ export function createSessionService(deps: SessionServiceDependencies): ISession
     },
 
     /**
-     * D2a decision 4's per-request check. A valid JWT is not enough: the
-     * session row must still be live, so revocation takes effect on the next
-     * request rather than when the token expires.
+     * The per-request check. A valid JWT is not enough: the session row must
+     * still be live, so revocation takes effect on the next request rather
+     * than when the token expires.
      *
      * The token's `sub` and `organization_id` must also agree with the
-     * session row. The row is authoritative (ADR 0010) and the token only
-     * caches it. A token naming another user is forged or misrouted, and is
+     * session row. The row is authoritative and the token only caches it. A
+     * token naming another user is forged or misrouted, and is
      * `unauthenticated`. A token naming the right user but another
      * organization is stale: the session was switched in another tab, or
-     * moved when the user lost that organization (D5 decisions 9 and 10).
-     * It gets `expired`, and the refresh the client answers with issues a
-     * token for the session's current organization. Either way the request
-     * is refused rather than silently acting in the row's organization: a
-     * request must never act in an organization other than the one its
-     * token names, which is also the organization audit rows record for it.
+     * moved when the user lost that organization. It gets `expired`, and
+     * the refresh the client answers with issues a token for the session's
+     * current organization. Either way the request is refused rather than
+     * silently acting in the row's organization: a request must never act
+     * in an organization other than the one its token names, which is also
+     * the organization audit rows record for it.
      *
      * The lookup runs in the database context the token claims. Row-level
      * security shows it the claimed user's memberships and the claimed
@@ -680,8 +678,8 @@ export function createSessionService(deps: SessionServiceDependencies): ISession
     },
 
     /**
-     * D5 decision 10, in one transaction. Its locks, in order (Ruling 22,
-     * which reorders Preflight ruling 8's):
+     * Switches the session's organization, in one transaction. Its locks, in
+     * order:
      * 1. the target organization, `for share`, which must be live, so a
      *    concurrent delete (which locks it `for no key update`) either waits
      *    for the switch and then reassigns the session, or commits first and
@@ -702,15 +700,15 @@ export function createSessionService(deps: SessionServiceDependencies): ISession
      * session already acts in changes and audits nothing, and takes no lock
      * (below).
      *
-     * The session row is authoritative (ADR 0010): the new access token is
-     * issued only once the switch has committed, and the refresh token,
+     * The session row is authoritative: the new access token is issued only
+     * once the switch has committed, and the refresh token,
      * which belongs to the session, is untouched.
      *
-     * The request's id is lowercased before any comparison (Ruling 85):
-     * Postgres matches an id in capitals to the same row, so the current
-     * organization in capitals would skip the no-op, audit a switch from it
-     * to itself and issue a token naming it in capitals. Anything that isn't
-     * a uuid is nothing's id: the same 403.
+     * The request's id is lowercased before any comparison: Postgres matches
+     * an id in capitals to the same row, so the current organization in
+     * capitals would skip the no-op, audit a switch from it to itself and
+     * issue a token naming it in capitals. Anything that isn't a uuid is
+     * nothing's id: the same 403.
      */
     async switchOrganization(input: SwitchOrganizationInput): Promise<SwitchOrganizationResult> {
       const { context } = input;
@@ -738,11 +736,10 @@ export function createSessionService(deps: SessionServiceDependencies): ISession
         // delete (and a removal) locks the organization first and then,
         // reassigning, every session active in it. This session is active
         // in it, so a lock on the organization here could wait on a delete
-        // that then waits on this session (Ruling 16). An unlocked read
-        // answers the no-op: if the delete or removal committed first, the
-        // organization or membership is gone and the answer is the same 403
-        // a switch into it gets; if it commits later, it reassigns this
-        // session.
+        // that then waits on this session. An unlocked read answers the
+        // no-op: if the delete or removal committed first, the organization
+        // or membership is gone and the answer is the same 403 a switch
+        // into it gets; if it commits later, it reassigns this session.
         const current = await transaction.sessions.findLive(context.sessionId);
         if (!current || current.userId !== context.userId) throw unauthenticated();
         if (current.activeOrganizationId === organizationId) {

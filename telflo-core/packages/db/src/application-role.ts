@@ -4,7 +4,7 @@ import pg from "pg";
 import type { Database } from "./schema.js";
 
 /**
- * The API's own database role (D5 decision 1, ADR 0014).
+ * The API's own database role.
  *
  * Migration 009 creates `telflo_platform_runtime`, a NOLOGIN role holding only the
  * privileges the API needs. The API connects as a login role that is a member
@@ -20,7 +20,7 @@ export const APPLICATION_ROLE = "telflo_platform_runtime";
  * every database on the server shares. Roles belong to the whole server, and
  * two test runs provisioning at once would otherwise race: a concurrent
  * `create role` fails with 23505, a concurrent `alter role … password` with
- * XX000 (D5 Preflight ruling 5).
+ * XX000.
  */
 const PROVISIONING_LOCK = "telflo.provision_application_role";
 
@@ -59,8 +59,8 @@ export function migrationSettings(env: NodeJS.ProcessEnv): MigrationSettings {
  * never demote the role migrations run as, or quietly keep a role that
  * bypasses every policy.
  *
- * The owner need not be a superuser (D33-1 decision 15: in a cluster it holds
- * only `LOGIN CREATEROLE`). Such an owner may not name SUPERUSER, BYPASSRLS,
+ * The owner need not be a superuser (in a cluster it holds only
+ * `LOGIN CREATEROLE`). Such an owner may not name SUPERUSER, BYPASSRLS,
  * CREATEDB or REPLICATION in `alter role`, not even to clear them, so it
  * resets only the login, `nocreaterole`, `inherit` and the password. It
  * refuses an existing login holding any of those four (it can't remove them,

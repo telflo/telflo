@@ -9,15 +9,15 @@ import { buildRouteEdges, isConfigTargetedConnectorNode } from "~/lib/graph/rout
 import type { Graph, OTelEdge, OTelNode, PaletteComponent } from "~/lib/graph/types.js";
 
 /*
- * The canvas's handlers, outside the component (Preflight ruling 17), so
- * they are tested without React Flow's pointer events: what a drop carries
- * and where it lands, a connection and its warning, the edges the canvas
- * draws, the minimap's colours, and the viewport remembered per version.
- * The graph's changes themselves are the editor store's, on the pure
- * functions of `lib/graph/canvas-operations.ts`.
+ * The canvas's handlers, outside the component, so they are tested without
+ * React Flow's pointer events: what a drop carries and where it lands, a
+ * connection and its warning, the edges the canvas draws, the minimap's
+ * colors, and the viewport remembered per version. The graph's changes
+ * themselves are the editor store's, on the pure functions of
+ * `lib/graph/canvas-operations.ts`.
  */
 
-/** The drag payload's type: the palette entry as JSON (D9a decision 7: static data only). */
+/** The drag payload's type: the palette entry as JSON (static data only). */
 export const PALETTE_DRAG_TYPE = "application/reactflow";
 
 /** Starts a palette chip's drag: the static palette entry, never anything a person wrote. */
@@ -46,7 +46,7 @@ export function readPaletteDrop(dataTransfer: Pick<DataTransfer, "getData">): st
 const READ_ONLY = { selectable: false, deletable: false, focusable: false } as const;
 
 /**
- * The edges the canvas draws (with Task 3's ruling):
+ * The edges the canvas draws:
  * - the stored edges, with those leaving a routing or failover connector
  *   hidden (their targets are its config's, drawn as route edges);
  * - an edge to or from a pipeline's group (a connector with nothing else in
@@ -84,20 +84,19 @@ const MINIMAP_COLORS: Readonly<Record<string, string>> = {
 };
 
 /**
- * The minimap's fill: a group in its pipeline's colour, a
- * component in its type's. From the type and the colour only, never a name
- * (D9a decision 7).
+ * The minimap's fill: a group in its pipeline's color, a component in its
+ * type's. From the type and the color only, never a name.
  */
 const confined = new WeakMap<OTelNode, OTelNode>();
 
 /**
  * The node as the canvas is given it. A component in a pipeline's group
- * can't be dragged out of it (the owner's ruling, D9a Ruling 41): React
- * Flow's `extent: "parent"` keeps it inside while it moves, and the group's
- * resizer can't shrink past it. So a node never leaves its pipeline by a
- * drag, even partly; one outside every pipeline can still be dragged into
- * one. The same object comes back for the same node, so React Flow's
- * per-node memo holds while one node is dragged.
+ * can't be dragged out of it: React Flow's `extent: "parent"` keeps it
+ * inside while it moves, and the group's resizer can't shrink past it. So a
+ * node never leaves its pipeline by a drag, even partly; one outside every
+ * pipeline can still be dragged into one. The same object comes back for
+ * the same node, so React Flow's per-node memo holds while one node is
+ * dragged.
  */
 export function displayedNode(node: OTelNode): OTelNode {
   if (node.parentId === undefined || isGroup(node)) return node;
@@ -133,7 +132,7 @@ export function warnRefusedConnection(
  */
 export function connectOnCanvas(connection: Connection): ConnectResult {
   const result = useEditorStore.getState().connect(connection);
-  // The title names the nodes (configuration text): out of replay (decision 39).
+  // The title names the nodes (configuration text): out of replay.
   warnRefusedConnection(result, (title, options) => toast.warning(title, { ...options, className: "ph-no-capture" }));
   return result;
 }
@@ -163,9 +162,8 @@ export function selectionIds(nodes: readonly Pick<OTelNode, "id">[]): string[] {
 
 /**
  * Where the canvas's viewport is remembered, per version, in this browser
- * (under the product's own key; D9a
- * decision 7): `{ [versionId]: { x, y, zoom } }`, keyed by the version's
- * opaque id; positions only.
+ * (under the product's own key): `{ [versionId]: { x, y, zoom } }`, keyed by
+ * the version's opaque id; positions only.
  */
 export const VIEWPORT_STORAGE_KEY = "telflo-canvas-viewports";
 
@@ -202,7 +200,7 @@ function readAll(storage: StorageLike): Record<string, unknown> {
   return typeof parsed === "object" && parsed !== null && !Array.isArray(parsed) ? (parsed as Record<string, unknown>) : {};
 }
 
-/** The viewport remembered for a version; null when none is (or storage can't be read: D2b's rule, never throw). */
+/** The viewport remembered for a version; null when none is (or storage can't be read: never throw). */
 export function readViewport(versionId: string | undefined, storage: () => StorageLike = browserStorage): Viewport | null {
   if (!versionId) return null;
   try {

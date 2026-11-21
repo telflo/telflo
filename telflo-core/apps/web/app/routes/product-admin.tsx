@@ -7,22 +7,18 @@ import { fetchCurrentUser, fetchPendingFeedbackCount } from "~/lib/api-client.se
 import { cn } from "~/lib/utils.js";
 
 /*
- * Product admin (`/product-admin`; ADR 0018): the "Admin Dashboard" shell,
- * its left nav and the page beside it. Its rules, in the D12, D14b, D15b and
- * D29 Parity Notes:
- * - the nav (D29 decision 36): User Feedback, Test Templates, Test Regex,
- *   Library, Flows, Users and Product admins (no AI Access or Token
- *   Requests: D29 decision 1; Email Automations is D35's, Billing D28's);
- * - User Feedback shows the pending count, 0 included (D29 decision 37,
- *   Preflight ruling 14), read by the loaders after the gate; a count that
- *   can't be read hides the badge and nothing else (it never reaches the gate
- *   or the error boundary). The User Feedback page revalidates this layout
- *   after each acknowledge or dismiss;
- * - the gate is checked on the server before anything renders (D12
- *   decision 3, Preflight ruling 5), and again on every move between its
- *   pages (`shouldRevalidate`, D14b Ruling 44), so a non-admin never sees
- *   the page, not even before a redirect;
- * - `/product-admin` itself goes to Flows, its page since D12;
+ * Product admin (`/product-admin`): the "Admin Dashboard" shell, its left nav
+ * and the page beside it. Its rules:
+ * - the nav: User Feedback, Test Templates, Test Regex, Library, Flows, Users
+ *   and Product admins;
+ * - User Feedback shows the pending count, 0 included, read by the loaders
+ *   after the gate; a count that can't be read hides the badge and nothing
+ *   else (it never reaches the gate or the error boundary). The User Feedback
+ *   page revalidates this layout after each acknowledge or dismiss;
+ * - the gate is checked on the server before anything renders, and again on
+ *   every move between its pages (`shouldRevalidate`), so a non-admin never
+ *   sees the page, not even before a redirect;
+ * - `/product-admin` itself goes to Flows;
  * - the signed-in layout route supplies the shell (AppLayout) and the
  *   session check, as for `/settings` and `/org-admin`.
  *
@@ -42,7 +38,7 @@ import { cn } from "~/lib/utils.js";
  */
 export type ProductAdminData = { status: "product_admin"; pendingFeedback: number | null } | { status: "refresh_needed" };
 
-/** Where `/product-admin` itself goes: Flows, product admin's page since D12. */
+/** Where `/product-admin` itself goes: Flows. */
 export const PRODUCT_ADMIN_HOME = "/product-admin/flows";
 
 /** The pathname without a trailing slash, so `/product-admin/` is `/product-admin` too. */
@@ -68,10 +64,9 @@ function admit(currentUser: CurrentUserResponse, url: URL): void {
 }
 
 /**
- * The pending count, read after the gate has said yes (D29 decision 37,
- * Preflight ruling 14): any failure (the API's refusal, an expired token,
- * an outage, an answer that isn't the schema) is null, no badge, and never
- * reaches the gate or the error boundary.
+ * The pending count, read after the gate has said yes: any failure (the API's
+ * refusal, an expired token, an outage, an answer that isn't the schema) is
+ * null, no badge, and never reaches the gate or the error boundary.
  */
 async function pendingCountOr(read: () => Promise<number | null>): Promise<number | null> {
   try {
@@ -82,10 +77,10 @@ async function pendingCountOr(read: () => Promise<number | null>): Promise<numbe
 }
 
 /**
- * The server's gate (D12 Preflight ruling 5): no session goes to sign in and
- * back, as the signed-in layout sends it; an expired access token says so,
- * for the client loader; a signed-in user goes through `admit`. An
- * unreachable API throws from fetchCurrentUser, for the error boundary.
+ * The server's gate: no session goes to sign in and back, as the signed-in
+ * layout sends it; an expired access token says so, for the client loader;
+ * a signed-in user goes through `admit`. An unreachable API throws from
+ * fetchCurrentUser, for the error boundary.
  */
 export async function loader({ request }: Route.LoaderArgs): Promise<ProductAdminData> {
   const url = new URL(request.url);
@@ -132,20 +127,18 @@ export async function clientLoader({ request, serverLoader }: Route.ClientLoader
 clientLoader.hydrate = true as const;
 
 /**
- * The gate runs again on every move between product admin's pages (D14b
- * Ruling 44): by default React Router keeps a parent's answer when only a
- * child changes, so an admin whose flag was cleared on Flows would still
- * see Test Templates. Each move asks the server again, as the first visit
- * did.
+ * The gate runs again on every move between product admin's pages: by
+ * default React Router keeps a parent's answer when only a child changes,
+ * so an admin whose flag was cleared on Flows would still see Test
+ * Templates. Each move asks the server again, as the first visit did.
  */
 export function shouldRevalidate(): boolean {
   return true;
 }
 
 /**
- * The nav's order (D29 decision 36; D15b decision 9; D23-2 decision 25):
- * User Feedback (with the pending count), Test Templates, Test Regex,
- * Library, Flows, Users, then Product admins.
+ * The nav's order: User Feedback (with the pending count), Test Templates,
+ * Test Regex, Library, Flows, Users, then Product admins.
  */
 const navItems: Array<{ path: string; label: string; showsPendingFeedback?: true }> = [
   { path: "/product-admin/user-feedback", label: "User Feedback", showsPendingFeedback: true },

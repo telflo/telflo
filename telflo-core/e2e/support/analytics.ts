@@ -39,7 +39,7 @@ export const test = base.extend<{ tag: string }, object>({
 
 export { expect };
 
-/** posthog-js's event and replay endpoints: none may be called before consent (Preflight ruling 3). */
+/** posthog-js's event and replay endpoints: none may be called before consent. */
 export function isCapture(request: RecordedRequest): boolean {
   return /^\/(e|i|s)(\/|$)/.test(request.path);
 }
@@ -50,9 +50,9 @@ export function isRecorderScript(request: RecordedRequest): boolean {
 }
 
 /**
- * What posthog-js asks for before consent (decision 8): its flags
- * (`/flags/`) and its remote configuration (`/array/<key>/config` and
- * `config.js`), and a CORS preflight for either.
+ * What posthog-js asks for before consent: its flags (`/flags/`) and its
+ * remote configuration (`/array/<key>/config` and `config.js`), and a CORS
+ * preflight for either.
  */
 export function isFlagsOrConfig(request: RecordedRequest): boolean {
   return /^\/flags\/?$/.test(request.path) || /^\/array\/[^/]+\/config(\.js)?$/.test(request.path);

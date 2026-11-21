@@ -10,8 +10,7 @@ import {
 } from "./test-runs.js";
 
 /*
- * The test suites and definitions endpoints (D14b decisions 1, 2, 4, 5, 8
- * and 9; details 17 and 19; Preflight rulings 1 to 3, 7 and 23), under
+ * The test suites and definitions endpoints, under
  * /api/v1/organizations/:organizationId/configurations/:configurationId/
  * versions/:versionId:
  *
@@ -25,11 +24,11 @@ import {
  *   TEST_FILE_HEAD_MAXIMUM_BYTES of the definition's input, as
  *   application/octet-stream (Play one's fixture-shape check).
  *
- * A definition is created and deleted, never edited (decision 2). Suites and
- * definitions follow their configuration's visibility (decision 8) and may
- * change on any version, published or not (decision 5).
+ * A definition is created and deleted, never edited. Suites and definitions
+ * follow their configuration's visibility and may change on any version,
+ * published or not.
  *
- * Names and descriptions are configuration text (ADR 0024): they travel only
+ * Names and descriptions are configuration text: they travel only
  * in these JSON bodies, never in a URL, a log line or an audit row. Their
  * bounds are migration 029's checks.
  */
@@ -46,16 +45,16 @@ export const TEST_DEFINITION_NAME_MAXIMUM_LENGTH = 200;
 /** A definition's description, after trimming: at most 2,000 characters; `''` is none. */
 export const TEST_DEFINITION_DESCRIPTION_MAXIMUM_LENGTH = 2_000;
 
-/** How many suites a version may have (the owner, D14b decision 25, Preflight ruling 23). */
+/** How many suites a version may have. */
 export const TEST_SUITES_PER_VERSION_MAXIMUM = 100;
 
-/** How many definitions a suite may have (the owner, D14b decision 25, Preflight ruling 23). */
+/** How many definitions a suite may have. */
 export const TEST_DEFINITIONS_PER_SUITE_MAXIMUM = 100;
 
-/** Decision 25's words, exactly: 409 `test_suite_limit_reached`. */
+/** The words, exactly, of 409 `test_suite_limit_reached`. */
 export const TEST_SUITE_LIMIT_MESSAGE = `A version can have at most ${TEST_SUITES_PER_VERSION_MAXIMUM} test suites.`;
 
-/** Decision 25's words, exactly: 409 `test_definition_limit_reached`. */
+/** The words, exactly, of 409 `test_definition_limit_reached`. */
 export const TEST_DEFINITION_LIMIT_MESSAGE = `A test suite can have at most ${TEST_DEFINITIONS_PER_SUITE_MAXIMUM} test configurations.`;
 
 /**
@@ -144,12 +143,12 @@ export const TestSuiteResponseSchema = z.object({ suite: TestSuiteSchema }).stri
 export type TestSuiteResponse = z.infer<typeof TestSuiteResponseSchema>;
 
 /**
- * `POST …/test-suites/:suiteId/definitions` (decisions 1, 9 and 13): a
- * definition, its input copied at once from exactly one of the caller's own
- * test file in this organization (`inputFileId`) or a live template
- * (`templateId`). The pipeline's signal is its name's first part, and must
- * be `signal` (migration 029's ck_test_definitions_pipeline_signal). The
- * description may be left out. Strict. A suite's 101st is 409
+ * `POST …/test-suites/:suiteId/definitions`: a definition, its input copied
+ * at once from exactly one of the caller's own test file in this
+ * organization (`inputFileId`) or a live template (`templateId`). The
+ * pipeline's signal is its name's first part, and must be `signal`
+ * (migration 029's ck_test_definitions_pipeline_signal). The description
+ * may be left out. Strict. A suite's 101st is 409
  * `test_definition_limit_reached`.
  */
 export const CreateTestDefinitionRequestSchema = z
@@ -176,7 +175,7 @@ export const CreateTestDefinitionRequestSchema = z
 export type CreateTestDefinitionRequest = z.input<typeof CreateTestDefinitionRequestSchema>;
 
 /**
- * A definition (decision 9). `inputName` is its input's original file name
+ * A definition. `inputName` is its input's original file name
  * (a test file's or a template's, with its extension), as a run from it is
  * named. `createdByUserId` is null once that account is hard-deleted. Its
  * name, description and input name are configuration text.

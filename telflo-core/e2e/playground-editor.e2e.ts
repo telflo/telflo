@@ -1,21 +1,19 @@
 import { expect, type Page } from "@playwright/test";
-// The SaaS pair (D36-1 Preflight ruling 16): open registration, the Terms, the playground and the anonymous reads.
+// The SaaS pair: open registration, the Terms, the playground and the anonymous reads.
 import { test } from "./support/saas.js";
 import { openYamlTab, platformKeys, typeLineAtTop } from "./support/editor-page.js";
 import { recordPlaygroundRequests, sampled } from "./support/playground.js";
 import { waitForHydration } from "./support/session.js";
 
-// The playground editor with NO account (D31-1 decisions 2, 3, 12, 16, 22,
-// 28-31 and 44; Preflight rulings 5, 9 and 18): a sample opens, its YAML
-// edits, D27's anonymous validate marks an error and clears it, a 429 shows
-// "Checking paused" counting down (the 429 stubbed: Preflight ruling 5,
-// never asserting that none came), the Testing tab shows the sample's runs
-// and a run's details, its Run, a rule and a suite are locked, Save stages
-// the edit and opens "Sign in to save", and the phone page stands in for
-// the editor. Each test records its requests: none falls outside decision
-// 22's invariant. The words are the spec's, written out here: the browser
-// tests don't import the web app's modules. Every text asserted is the
-// sample's own or the test's own marker.
+// The playground editor with NO account: a sample opens, its YAML edits, the
+// anonymous validate marks an error and clears it, a 429 shows "Checking
+// paused" counting down (the 429 stubbed, never asserting that none came),
+// the Testing tab shows the sample's runs and a run's details, its Run, a
+// rule and a suite are locked, Save stages the edit and opens "Sign in to
+// save", and the phone page stands in for the editor. Each test records its
+// requests: none falls outside the playground's request invariant. The words
+// are written out here: the browser tests don't import the web app's modules.
+// Every text asserted is the sample's own or the test's own marker.
 
 const GATEWAY_ID = "11111111-0000-4000-8000-000000000001";
 const GATEWAY_NAME = "K8s Production Gateway";
@@ -45,7 +43,7 @@ async function openSample(page: Page): Promise<void> {
 // Text goes into Monaco as the signed-in specs type it, one line at the top
 // (support/editor-page.ts's typeLineAtTop): Playwright's insertText of text
 // holding a newline lands twice in Firefox, in every editor, signed in too,
-// while typing and a real paste land once (Ruling 306).
+// while typing and a real paste land once.
 
 test.describe.configure({ mode: "serial" });
 
@@ -56,7 +54,7 @@ test("a sample opens; the anonymous validate marks an error typed in the YAML an
   await expect(page).toHaveTitle("Playground Editor - Telflo");
   await expect(page.getByText("Edit freely — Save to keep your changes.")).toBeVisible();
   await openYamlTab(page);
-  // An opened text is checked after the pause, as a change is (decision 3).
+  // An opened text is checked after the pause, as a change is.
   await expect(page.getByText(validText(GATEWAY_PIN), { exact: true })).toBeVisible();
 
   await typeLineAtTop(page, "connectors: {unknown_zqplayground: {}}");
@@ -158,7 +156,7 @@ test("a phone gets the phone page: no editor, nothing checked", async ({ page, c
   await expect(page.getByText("The editor is best viewed on larger screens such as laptop or computer browsers.")).toBeVisible();
   await expect(page.getByRole("link", { name: "Back to playground" })).toHaveAttribute("href", "/playground");
   await expect(page.locator(".monaco-editor")).toHaveCount(0);
-  // Nothing checked, past the 1.5 s pause after which an opened text would be (Ruling 304).
+  // Nothing checked, past the 1.5 s pause after which an opened text would be.
   const checked = await sampled(() => recorder.apiRequests().length > 0, 20);
   expect(checked.some(Boolean)).toBe(false);
   expect(recorder.outside()).toEqual([]);

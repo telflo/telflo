@@ -2,7 +2,7 @@ import { act, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { OnlineBar, onlineLegend, type LivenessCounts } from "./OnlineBar.js";
 
-// The Online column (D17a decisions 9 and 18, Preflight ruling 11).
+// The Online column.
 
 const SOME: LivenessCounts = { collectors: 10, online: 4, warning: 3, unknown: 2, offline: 1 };
 const LEGEND =

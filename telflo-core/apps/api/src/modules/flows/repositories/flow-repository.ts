@@ -3,15 +3,15 @@ import type { FlowSignal, FlowSource } from "@telflo/contracts";
 import type { Database, FlowsTable } from "@telflo/db";
 
 /*
- * The flows (D12 decision 2; migration 1700000000026): one row per flow, no
- * history, a published switch.
+ * The flows (migration 1700000000026): one row per flow, no history, a
+ * published switch.
  *
- * A global repository (ADR 0008; the resource registry's `kind: "global"`):
+ * A global repository (the resource registry's `kind: "global"`):
  * every organization, and every signed-out visitor, reads the same flows, so
  * there is no organization scope and no row-level security. The API's role
  * may read and write every row (migration 1700000000009's default
  * privileges); whether a caller may write is the service's question, and
- * `requireProductAdmin`'s (decision 3).
+ * `requireProductAdmin`'s.
  *
  * Every list is in the gallery's order: `sort_order`, then the name, then
  * the slug, which is unique, so two flows of one order and name still have
@@ -43,7 +43,7 @@ export interface Flow {
   updatedAt: Date;
 }
 
-/** A published flow's card (D12 decision 10): what a signed-out read may see. Never the YAML. */
+/** A published flow's card: what a signed-out read may see. Never the YAML. */
 export interface FlowCard {
   slug: string;
   name: string;
@@ -105,7 +105,7 @@ export interface IFlowRepository {
    * id. A slug another flow has throws `FlowSlugTakenError`.
    */
   update(id: string, changes: FlowChanges, at: Date): Promise<Flow | undefined>;
-  /** Deletes it for good (D12 decision 2), and returns it as it was; undefined when no flow has the id. */
+  /** Deletes it for good, and returns it as it was; undefined when no flow has the id. */
   remove(id: string): Promise<Flow | undefined>;
 }
 

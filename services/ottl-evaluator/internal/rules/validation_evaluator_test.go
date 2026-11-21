@@ -1,5 +1,4 @@
-// The text and regex rules' cases, and S4's pathological regexes (D15a
-// decision 2; plan Preflight ruling 14):
+// The text and regex rules' cases, and the pathological regexes:
 //
 //   - the retired and unknown kinds are refused by the request's shape (400):
 //     internal/server's TestRetiredAndUnknownKindsAreRefused;
@@ -7,7 +6,7 @@
 //     or the log's line) and its context on the line;
 //   - a regex that doesn't compile is "Invalid regex: …";
 //   - text rules search the output's bytes as they are, whitespace-tolerant;
-//   - S4's two-second wall-clock bound is the suite's hang guard: Go's
+//   - the two-second wall-clock bound is the suite's hang guard: Go's
 //     regexp, like RE2, is linear.
 
 package rules
@@ -230,7 +229,7 @@ func TestZeroWidthRegexMarksFailureWithoutRecordingSpans(t *testing.T) {
 	if r.Passed || !noDetail(r) || r.Error != nil {
 		t.Fatalf("want failed with no detail: %+v", r)
 	}
-	// New in D15a (Ruling 55): the advisory says why (TestOnlyEmptyMatchesFailWithAnAdvisory).
+	// The advisory says why (TestOnlyEmptyMatchesFailWithAnAdvisory).
 	if want := "The pattern matched only empty text (4 times), so there is no match to show."; advisoryOf(r) != want {
 		t.Fatalf("advisory %q, want %q", advisoryOf(r), want)
 	}

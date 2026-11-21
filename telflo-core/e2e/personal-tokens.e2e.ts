@@ -6,22 +6,22 @@ import { attributeHoldersOf, recordRequestUrls, recordToasts, storageHolding, to
 import { createPersonalApiTokenThroughApi, PERSONAL_API_TOKENS_API_PATH, whoami, type WhoAmIAnswer } from "./support/service-accounts.js";
 import { signInThroughApi, waitForHydration } from "./support/session.js";
 
-// Settings › Account's "API tokens" (D25 decisions 3, 28, 30, 50 and 53):
-// a person's own `tf_` token made on the page, shown once and copied by
-// its button, used as a CLI uses it (a cookieless request context at the
-// E2E API, with X-Telflo-Org), then revoked on the page.
+// Settings › Account's "API tokens": a person's own `tf_` token made on the
+// page, shown once and copied by its button, used as a CLI uses it (a
+// cookieless request context at the E2E API, with X-Telflo-Org), then revoked
+// on the page.
 //
-// A token is a secret (D22 decision 48): built by the API at run time and
-// read from the create's reply, never written here and never printed. No
-// page that holds or shows a token is open when an assertion can fail
-// (D23-2 Ruling 144: Playwright writes the page's ARIA snapshot to
-// error-context.md): while the reveal is open the test only COLLECTS
-// booleans, closes it, goes to about:blank, and asserts there. A token's
-// name is the person's content: visible text in the masked shell only.
+// A token is a secret: built by the API at run time and read from the
+// create's reply, never written here and never printed. No page that holds or
+// shows a token is open when an assertion can fail (Playwright writes the
+// page's ARIA snapshot to error-context.md): while the reveal is open the
+// test only COLLECTS booleans, closes it, goes to about:blank, and asserts
+// there. A token's name is the person's content: visible text in the masked
+// shell only.
 //
-// Recorded residue (as D22's spec records for the create's reply): a failed
-// run's trace holds the reply, and the source of the page.evaluate that
-// counts where the token sits, which names it. Both are e2e-only tokens.
+// Recorded residue: a failed run's trace holds the reply, and the source of
+// the page.evaluate that counts where the token sits, which names it. Both
+// are e2e-only tokens.
 
 const PASSWORD = "correct horse battery staple";
 const REVEAL_WORDS = "This is the only time you'll see it. If you lose it, revoke this token and create a new one.";

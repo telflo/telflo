@@ -1,7 +1,6 @@
-# The collector tester's image (D14a spec decisions 5, 6 and 14; Preflight
-# rulings 4, 5 and 19), built with the REPOSITORY'S ROOT as the context, so it
-# can read catalog/ (the root .dockerignore lets in only telflo-core/,
-# catalog/ and the two Python services):
+# The collector tester's image, built with the REPOSITORY'S ROOT as the
+# context, so it can read catalog/ (the root .dockerignore lets in only
+# telflo-core/, catalog/ and the two Python services):
 #
 #   docker build -f services/otelcol-testing/Dockerfile -t telflo-otelcol-testing .
 #   docker build -f services/otelcol-testing/Dockerfile --build-arg OTELCOL_VERSIONS=default ...
@@ -10,9 +9,9 @@
 #
 # OTELCOL_VERSIONS picks the collectors it bakes in, as the validator's
 # image does: `all` (the default, every offered version in catalog/),
-# `default` (the catalogue's default version), or a comma-separated list of
-# offered versions. A name the catalogue doesn't offer, or a download whose
-# sha256 isn't the catalogue's, fails the build. A version the catalogue
+# `default` (the catalog's default version), or a comma-separated list of
+# offered versions. A name the catalog doesn't offer, or a download whose
+# sha256 isn't the catalog's, fails the build. A version the catalog
 # offers but the image doesn't hold answers 503 `version_unavailable`.
 #
 # Stages: download (the collectors, kwok's five binaries and tini, each
@@ -21,8 +20,8 @@
 # and the tests). The default target is the runtime.
 #
 # The image mirrors the repository's layout under /app (the service in
-# /app/services/otelcol-testing, the catalogue in /app/catalog/distributions),
-# so the service's default catalogue directory (app/settings.py, three
+# /app/services/otelcol-testing, the catalog in /app/catalog/distributions),
+# so the service's default catalog directory (app/settings.py, three
 # directories above its package) is the copy the image carries.
 #
 # It is meant to run as compose runs it (docker-compose.yml): a read-only root
@@ -33,7 +32,7 @@
 # under /opt, owned by root and read-only to the service.
 
 # python:3.12-slim (Debian trixie), pinned by its index digest: the
-# validator's (ADR 0019: a reviewed component). To move it, take the new
+# validator's (a reviewed component). To move it, take the new
 # index digest from `docker buildx imagetools inspect python:3.12-slim`, in
 # both services' Dockerfiles.
 ARG PYTHON_IMAGE=python:3.12-slim@sha256:05cda9777409a9c3ffddd94a4c476b79f0769a0b4857f0c7ed9226b6800b0d6f
@@ -53,7 +52,7 @@ ARG TINI_SHA256_AMD64=93dcc18adc78c65a028a84799ecf8ad40c936fdfc5f2a57b1acda5a811
 ARG TINI_SHA256_ARM64=07952557df20bfd2a95f9bef198b445e006171969499a1d361bd9e6f8e5e0e81
 WORKDIR /build
 # The validator's downloader, unchanged (fetch and check by sha256, the
-# catalogue's collectors); kwok's manifest and its own small script use it.
+# catalog's collectors); kwok's manifest and its own small script use it.
 COPY services/otelcol-validator/scripts/download-binaries.py ./
 RUN case "$TARGETARCH" in \
       amd64) sha256="$TINI_SHA256_AMD64" ;; \
@@ -63,13 +62,13 @@ RUN case "$TARGETARCH" in \
  && python download-binaries.py file \
       --url "https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-${TARGETARCH}" \
       --sha256 "$sha256" --dest /out/tini --mode 755
-# kwok's five (kwok, kwokctl, kubectl, kube-apiserver, etcd; Preflight ruling
-# 19): the manifest pins each by sha256 per architecture. etcd's archive is
-# checked whole and only its etcd file is copied out.
+# kwok's five (kwok, kwokctl, kubectl, kube-apiserver, etcd): the manifest
+# pins each by sha256 per architecture. etcd's archive is checked whole and
+# only its etcd file is copied out.
 COPY services/otelcol-testing/scripts/download-kwok.py ./
 COPY services/otelcol-testing/kwok/binaries.json ./kwok-binaries.json
 RUN python download-kwok.py --manifest kwok-binaries.json --arch "$TARGETARCH" --dest /out/kwok
-# The catalogue and the build argument come last, so changing either
+# The catalog and the build argument come last, so changing either
 # downloads only the collectors again.
 COPY catalog/distributions/ ./catalog/distributions/
 ARG OTELCOL_VERSIONS=all
@@ -102,15 +101,15 @@ RUN rm /usr/bin/openssl \
 COPY --from=download --chown=0:0 /out/tini /usr/local/bin/tini
 
 # kwok's binaries, then the collectors, before the Python dependencies: the
-# largest layer changes only with the catalogue or OTELCOL_VERSIONS. Owned
+# largest layer changes only with the catalog or OTELCOL_VERSIONS. Owned
 # by root (`--chown=0:0` explicitly: BuildKit's cache key for a COPY ignores
 # its files' owners, so a cached layer of another build, with an archive's
 # owner on etcd, could otherwise stand in), read-only to the service. Each
 # must run here and say its own version.
-# Under emulation (a cross-platform build: the other processor type's
-# stage) Go binaries crash at random (D36-2 Ruling 405: QEMU, both ways), so
-# the "run and say its version" checks below run in a native build only
-# (BUILDPLATFORM = TARGETPLATFORM; a plain docker build sets neither: native).
+# Under emulation (a cross-platform build: the other processor type's stage)
+# Go binaries crash at random (QEMU, both ways), so the "run and say its
+# version" checks below run in a native build only (BUILDPLATFORM =
+# TARGETPLATFORM; a plain docker build sets neither: native).
 # The release builds amd64 natively on the runner and the rehearsal arm64
 # natively on an Apple machine; every binary's sha256 is checked at download.
 ARG BUILDPLATFORM
@@ -135,9 +134,9 @@ RUN if [ "${BUILDPLATFORM:-}" != "${TARGETPLATFORM:-}" ]; then \
     done; fi
 
 WORKDIR /app/services/otelcol-testing
-# The hash-pinned runtime lock only (Preflight ruling 19): wheels, no
-# dependency outside the lock. PyYAML's wheels carry libyaml, which the
-# neutraliser's bounded reader needs (CSafeLoader): checked here.
+# The hash-pinned runtime lock only: wheels, no dependency outside the lock.
+# PyYAML's wheels carry libyaml, which the neutralizer's bounded reader needs
+# (CSafeLoader): checked here.
 COPY services/otelcol-testing/requirements.txt ./
 RUN pip install --require-hashes --no-deps --only-binary=:all: -r requirements.txt \
  && python -c "import yaml; yaml.CSafeLoader"
@@ -174,7 +173,7 @@ USER 10001:10001
 EXPOSE 8002
 # 200 once kwok's cluster is up (a few seconds after start), 503 while it
 # starts or after it failed; the service exits once kwok has failed every
-# attempt, and compose's restart policy starts it afresh (Ruling 26).
+# attempt, and compose's restart policy starts it afresh.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
   CMD ["python", "-c", "import sys, urllib.request; sys.exit(urllib.request.urlopen('http://127.0.0.1:8002/testing/v1/health', timeout=4).status != 200)"]
 # tini is PID 1: it reaps what a killed run or kwok leaves and passes
@@ -205,14 +204,14 @@ COPY services/otelcol-testing/scripts/ ./scripts/
 COPY services/otelcol-testing/tests/ ./tests/
 # The build context's catalog/, apart from the image's own copy, so the image
 # test can check the copy the service reads is catalog/'s, file for file and
-# byte for byte (Ruling 33).
+# byte for byte.
 COPY catalog/distributions/ /opt/context-catalog/distributions/
 ENV OTELCOL_CONTEXT_CATALOG_DIR=/opt/context-catalog/distributions
 # pytest's temporary directories (each test's tmp_path, where the fake
 # collectors are written and run) go to a directory the service's user owns
 # and may execute from: not /tmp, which compose (and a `--read-only
 # --tmpfs /tmp` run) mounts noexec. pytest can't write its cache here, and
-# warnings fail the run (pytest.ini). The neutraliser's identity test
+# warnings fail the run (pytest.ini). The neutralizer's identity test
 # compares the copies with the validator's files, which this image doesn't
 # carry: it runs in the repository's suite only.
 RUN install -d -o 10001 -g 10001 -m 0700 /var/tmp/otelcol-testing-tests

@@ -18,15 +18,14 @@ import { changePassword, isSessionEnded } from "~/lib/api-client.js";
 import { PASSWORD_MINIMUM_LENGTH } from "@telflo/contracts";
 
 /*
- * Settings › Account's "Change Password" (D21 decisions 35 and 45):
- * "Current Password", "New Password", "Confirm New Password", "Update
- * Password" ("Updating..." while it runs).
+ * Settings › Account's "Change Password": "Current Password", "New Password",
+ * "Confirm New Password", "Update Password" ("Updating..." while it runs).
  *
  * - Before sending, the web checks the match, then the length (in
  *   `ResetPasswordForm`'s order and words); "Confirm" is the web's alone.
- *   Over 128 characters is the API's refusal said first, in fixed words
- *   (Ruling 89): no `maxLength`, which would cut a pasted password short
- *   without a word, and the register and reset forms have none either.
+ *   Over 128 characters is the API's refusal said first, in fixed words: no
+ *   `maxLength`, which would cut a pasted password short without a word, and
+ *   the register and reset forms have none either.
  * - `PUT /api/v1/auth/me/password`. A wrong current password shows the API's
  *   fixed message under its field, announced (`role="alert"`), and that
  *   field takes the focus again once it is enabled (unless the focus was
@@ -36,8 +35,8 @@ import { PASSWORD_MINIMUM_LENGTH } from "@telflo/contracts";
  *   toasts "Password updated successfully". Every session is kept.
  * - The passwords live only in the form's own fields, uncontrolled: React
  *   writes a controlled input's value into its `value` attribute, so these
- *   never get one (decision 45). They are read when the form is sent and
- *   emptied after every answer; replay masks inputs (`maskAllInputs`).
+ *   never get one. They are read when the form is sent and emptied after
+ *   every answer; replay masks inputs (`maskAllInputs`).
  */
 
 type Filled = { current: boolean; next: boolean; confirm: boolean };
@@ -54,7 +53,7 @@ export function ChangePasswordCard() {
   // Counts wrong current passwords: after each, once the field is enabled again, it takes the focus (RenameVersionDialog's way),
   // unless the person moved it elsewhere meanwhile: only a focus that is lost (on the body, gone) or still in the form moves
   // (SessionsCard's guard). A layout effect: in the very commit that shows the alert and enables the field, not in a later
-  // task (Ruling 93).
+  // task.
   const [wrongPasswords, setWrongPasswords] = useState(0);
   useLayoutEffect(() => {
     if (wrongPasswords === 0) return;

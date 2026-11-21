@@ -10,15 +10,15 @@ import { createDatabaseSessionService } from "../sessions/routes.js";
 import type { ProductAdminActor } from "./repositories/system-repository.js";
 
 /*
- * What the product-admin routes share (D29 decision 28): the prefix, the
- * gate (`[authenticate, requireProductAdmin]`: no terms check, as the four
+ * What the product-admin routes share: the prefix, the gate
+ * (`[authenticate, requireProductAdmin]`: no terms check, as the four
  * pages built; CSRF is global), `cache-control: no-store` on every answer
  * (they carry other people's personal data), the actor of the audit rows,
  * and the path's id schema (any string: one that isn't a canonical UUID is
  * the route's 404, through canonicalIdOf, never a 400).
  */
 
-/** Every product-admin route is under this prefix; the request log drops their queries (decision 41). */
+/** Every product-admin route is under this prefix; the request log drops their queries. */
 export const PRODUCT_ADMIN_ROUTE_PREFIX = "/api/v1/product-admin";
 
 /** What buildServer's module dependencies hold that these routes read. */

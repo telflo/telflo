@@ -24,32 +24,29 @@ import { GROUP_NOT_FOUND_MESSAGE } from "./GroupDialog.js";
 import { HelmUninstall } from "./HelmUninstall.js";
 
 /*
- * A group's delete (D17b-2 decisions 14 and 25; Preflight ruling 4; D17d-1
- * decisions 3 and 25, Preflight ruling 30), both fleet types': an
- * AlertDialog (ADR 0018) with the title `Delete {name}`, "Delete" /
- * "Deleting..." and Cancel, with D17b-1's `DeleteCollectorDialog` for a
- * write under way. In the D17b-2 and D17d-1 Parity Notes:
+ * A group's delete, both fleet types': an AlertDialog with the title
+ * `Delete {name}`, "Delete" / "Deleting..." and Cancel, with
+ * `DeleteCollectorDialog`'s pattern for a write under way.
  *
- * - The body says what the delete does (D17d-1 decision 25; Ruling 56):
- *   the group and its collectors' records go; a collector installed into it
- *   that is still running keeps its configuration and is refused from then
- *   on, while one moved into it from another group rejoins the group it was
- *   installed into (its install names that group); a Kubernetes fleet's
- *   adds the Helm release's uninstall. The Default group has no Delete (the
- *   tabs offer none, and the API refuses it).
+ * - The body says what the delete does: the group and its collectors'
+ *   records go; a collector installed into it that is still running keeps
+ *   its configuration and is refused from then on, while one moved into it
+ *   from another group rejoins the group it was installed into (its install
+ *   names that group); a Kubernetes fleet's adds the Helm release's
+ *   uninstall. The Default group has no Delete (the tabs offer none, and
+ *   the API refuses it).
  * - The delete is confirmed by typing the group's name ("Type {name} to
- *   confirm", the name bold with its white space kept; D17d-1 decision 3,
- *   the owner's; Ruling 70, the owner's Q50): Delete is disabled
- *   until the typed text, with ASCII white space stripped from its ends
- *   (never `trim()`, which would strip a U+FEFF a name may hold at its
- *   ends; a name never starts or ends with a space: the contract refuses
- *   one), equals the name exactly, and the handler checks it again. The
- *   input is uncontrolled (no `value` attribute ever holds the text) and
- *   inside `ph-no-capture` (the typed text is configuration text), empty at
- *   each opening, with no placeholder. The label, the name's text in it,
- *   sits inside `ph-no-capture` with the input; it stays the input's
- *   accessible name, which so holds the name as label text (ADR 0024 allows
- *   visible text; no attribute holds it).
+ *   confirm", the name bold with its white space kept): Delete is disabled
+ *   until the typed text, with ASCII white space stripped from its ends (never
+ *   `trim()`, which would strip a U+FEFF a name may hold at its ends; a name
+ *   never starts or ends with a space: the contract refuses one), equals the
+ *   name exactly, and the handler checks it again. The input is uncontrolled
+ *   (no `value` attribute ever holds the text) and inside `ph-no-capture` (the
+ *   typed text is configuration text), empty at each opening, with no
+ *   placeholder. The label, the name's text in it, sits inside `ph-no-capture`
+ *   with the input; it stays the input's accessible name, which so holds the
+ *   name as label text (the privacy rule allows visible text; no attribute
+ *   holds it).
  * - Escape does nothing while the delete is under way; Cancel is disabled;
  *   the action keeps the dialog open until the API answers. A double click
  *   sends once.
@@ -65,22 +62,21 @@ import { HelmUninstall } from "./HelmUninstall.js";
  *   layout; a session ended is silent. An answer after the dialog unmounted,
  *   or for an organization no longer active, does nothing; each opening is
  *   a new session (`useOpeningKey`).
- * - A Kubernetes fleet's (D17d-2 decision 25; Preflight ruling 31): after
- *   GROUP_DELETE_HELM, the group's quoted `helm uninstall` (its settings as
- *   the opening found them) in a copy box outside the description; none
- *   when its settings can't be read.
+ * - A Kubernetes fleet's: after GROUP_DELETE_HELM, the group's quoted
+ *   `helm uninstall` (its settings as the opening found them) in a copy box
+ *   outside the description; none when its settings can't be read.
  * The name is text only, in the masked shell; no attribute holds it, nor the
  * typed text.
  */
 
 export const DELETE_GROUP_FAILED_MESSAGE = "Failed to delete group";
 
-/** D17d-1 decision 25's body, both fleet types: what the delete does to the group and its collectors (Ruling 56: installed into it, or moved in). */
+/** The body, both fleet types: what the delete does to the group and its collectors (installed into it, or moved in). */
 export const GROUP_DELETE_CONSEQUENCES =
   "This deletes the group and its collectors' records. A collector installed into it that is still running keeps the configuration it has, but the fleet refuses its connections from then on: uninstall it, or reinstall it into another group. A collector moved into it from another group rejoins the group it was installed into.";
-/** A Kubernetes fleet's addition (Preflight ruling 30). */
+/** A Kubernetes fleet's addition. */
 export const GROUP_DELETE_HELM = "Uninstall the group's Helm release in your cluster.";
-/** The confirm label's words around the group's name, shown bold between them (Ruling 70, the owner's Q50). */
+/** The confirm label's words around the group's name, shown bold between them. */
 export const GROUP_DELETE_CONFIRM_BEFORE = "Type";
 export const GROUP_DELETE_CONFIRM_AFTER = "to confirm";
 
@@ -89,7 +85,7 @@ export function groupDeleteConfirmLabel(name: string): string {
   return `${GROUP_DELETE_CONFIRM_BEFORE} ${name} ${GROUP_DELETE_CONFIRM_AFTER}`;
 }
 
-/** ASCII white space at either end: tab, line feed, carriage return, space (Preflight ruling 30). */
+/** ASCII white space at either end: tab, line feed, carriage return, space. */
 const ASCII_SPACE_AT_ENDS = /^[\t\n\r ]+|[\t\n\r ]+$/g;
 
 /** Whether the typed text confirms the group's name: exact, but for ASCII white space at its ends. */

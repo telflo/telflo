@@ -16,8 +16,7 @@ import { metaArgs } from "~/test/meta.js";
 vi.mock("~/lib/api-client.server.js", () => ({ fetchFlows: vi.fn() }));
 
 /*
- * `/app/flows`, the gallery with its FlowPicker (D12 Preflight rulings 12
- * and 18).
+ * `/app/flows`, the gallery with its FlowPicker.
  */
 
 function FlowPage() {
@@ -29,12 +28,12 @@ function FlowPage() {
   );
 }
 
-/** The signed-in user, a product admin or not (D12 decision 3). */
+/** The signed-in user, a product admin or not. */
 function signIn({ productAdmin }: { productAdmin: boolean }) {
   useUserStore.getState().setCurrent({ ...signedInMember(), isProductAdmin: productAdmin });
 }
 
-/** The product admin's "Show hidden flows" switch (Ruling 42). */
+/** The product admin's "Show hidden flows" switch. */
 function showHiddenSwitch() {
   return screen.queryByRole("switch", { name: "Show hidden flows" });
 }
@@ -90,7 +89,7 @@ const COMMUNITY = makeFlow({
   tags: ["shared"],
 });
 
-describe("the gallery's loaders (D12 Preflight rulings 5 and 18)", () => {
+describe("the gallery's loaders", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     vi.mocked(fetchFlows).mockReset();
@@ -230,7 +229,7 @@ describe("the gallery (/app/flows)", () => {
     expect(screen.queryByPlaceholderText("Search flows…")).toBeNull();
   });
 
-  describe("hidden flows and the product admin's switch (Ruling 42)", () => {
+  describe("hidden flows and the product admin's switch", () => {
     it("has no Show hidden flows switch for a signed-in user who isn't a product admin, and lists published flows only", async () => {
       signIn({ productAdmin: false });
       // The API never lists a hidden flow to them; were one there, it would stay out.
@@ -251,7 +250,7 @@ describe("the gallery (/app/flows)", () => {
       expect(toggle).not.toBeNull();
       expect(toggle).not.toBeChecked();
       expect(shownNames()).toEqual([TAIL_SAMPLING.name, PII_REDACTION.name]);
-      // The switch's name is its static text, not an attribute holding flow text (ADR 0024).
+      // The switch's name is its static text, not an attribute holding flow text.
       expect(toggle).not.toHaveAttribute("aria-label");
       expect(toggle).toHaveAttribute("aria-labelledby");
     });

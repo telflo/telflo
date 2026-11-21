@@ -1,21 +1,17 @@
 import type { ValidationRule, ValidationRuleCount, ValidationRuleKind, ValidationRuleTarget } from "@telflo/contracts";
 
 /*
- * Shared display helpers for validation rules, used by the
- * rule list (the Validation subtab's cards) and by the run's results grid
- * (D15a Task 9), so the two views stay consistent. Each map is typed
+ * Shared display helpers for validation rules, used by the rule list (the
+ * Validation subtab's cards) and by the run's results grid, so the two
+ * views stay consistent. Each map is typed
  * `Record<ValidationRuleKind, string>`, so a new kind is flagged wherever
  * it is missed.
  *
- * Differences (the Parity Notes): only the five kinds (decision 12): the
- * nine retired ones (the JSON match, record count, record attribute,
- * cardinality and the diff kinds), and their summaries, aren't ported. A
- * rule's OTTL is the contracts' structured `ottl`, not a JSON string, so an
- * unreadable payload can't happen; and one display name serves a rule and a
- * run's frozen copy of it (`ValidationRuleSnapshot` has the same fields).
- * The texts
- * these return are configuration text (ADR 0024): shown as text inside
- * `ph-no-capture`, never put in an attribute outside it.
+ * A rule's OTTL is the contracts' structured `ottl`, so an unreadable payload
+ * can't happen; and one display name serves a rule and a run's frozen copy of
+ * it (`ValidationRuleSnapshot` has the same fields). The texts these return
+ * are configuration text: shown as text inside `ph-no-capture`, never put in
+ * an attribute outside it.
  */
 
 /** What these helpers read of a rule, or of a run's copy of one. */

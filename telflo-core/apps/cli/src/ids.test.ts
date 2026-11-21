@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { canonicalIdOf, requireId } from "./ids.js";
 import { ExitError } from "./output.js";
 
-/* canonicalIdOf (D27 Preflight ruling 23): the API's semantics. */
+/* canonicalIdOf: the API's semantics. */
 
 const ID = "0b7e8a9c-1d2e-4f30-8a4b-5c6d7e8f9a0b";
 

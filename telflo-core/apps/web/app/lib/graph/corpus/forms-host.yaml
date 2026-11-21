@@ -1,4 +1,4 @@
-# The host forms' components (D9c Task 1), with CRLF line endings:
+# The host forms' components, with CRLF line endings:
 # comments, an anchor and a merge, a quoted API version and `0750`,
 # a bare scraper (null: on, with its defaults) and a root path.
 x-interval: &interval

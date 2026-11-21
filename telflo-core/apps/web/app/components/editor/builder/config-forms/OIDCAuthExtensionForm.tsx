@@ -10,13 +10,13 @@ import { Label } from "~/components/ui/label.js";
 import type { ValueView } from "~/lib/graph/value-view.js";
 
 /*
- * The OIDC auth extension's form (ADR 0018), over the form's fields
- * (D9b decisions 2 and 3). The providers are collapsible cards, not
- * sortable; each card's fields write their own key under
- * `providers.<index>`. "Add Provider" appends `{}` and opens it; the trash
- * button removes the item's lines (the last leaves `providers: []`).
- * Clearing Issuer URL writes `""`; clearing any other field removes its
- * key; unticking "Skip the audience check" removes `ignore_audience`.
+ * The OIDC auth extension's form, over the form's fields. The providers
+ * are collapsible cards, not sortable; each card's fields write their own
+ * key under `providers.<index>`. "Add Provider" appends `{}` and opens it;
+ * the trash button removes the item's lines (the last leaves
+ * `providers: []`). Clearing Issuer URL writes `""`; clearing any other
+ * field removes its key; unticking "Skip the audience check" removes
+ * `ignore_audience`.
  *
  * The deprecated single-provider form (`issuer_url`, `audience`, … at the
  * top level, which ClickStack's shipped configs use) is flagged and never
@@ -27,8 +27,7 @@ import type { ValueView } from "~/lib/graph/value-view.js";
  * skipped (`ProviderCfg.Validate`).
  *
  * Cards are keyed and identified by index (`oidc-0-issuer`); an issuer URL
- * is shown in its card's header as text, never in an attribute (decision
- * 10).
+ * is shown in its card's header as text, never in an attribute.
  */
 
 const LEGACY_KEYS = ["issuer_url", "audience", "ignore_audience", "issuer_ca_path", "username_claim", "groups_claim"];

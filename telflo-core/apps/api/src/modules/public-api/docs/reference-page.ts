@@ -4,7 +4,7 @@ import { sendNotFound } from "../../../errors.js";
 import { PUBLIC_API_PREFIX } from "../route-guard.js";
 
 /*
- * The API reference page (D25 decision 49, Preflight ruling 20; Q170):
+ * The API reference page:
  * Swagger UI with try-it over the public surface's OpenAPI document, served
  * from the API's own origin by the open routes (open-routes.ts registers
  * the two routes with this module's handlers), without a token. Swagger UI is vendored in swagger-ui/ (swagger-ui-dist 5.32.15,
@@ -13,7 +13,7 @@ import { PUBLIC_API_PREFIX } from "../route-guard.js";
  * index.html, its start init.js (the token in memory only, no form
  * history, a tokenless curl block, no cookie sent; see init.js).
  *
- *   GET /api/public/v1/docs    301 to /api/public/v1/docs/ (Ruling 160)
+ *   GET /api/public/v1/docs    301 to /api/public/v1/docs/
  *   GET /api/public/v1/docs/   the page
  *   GET /api/public/v1/docs/{swagger-ui.css, swagger-ui-bundle.js, init.js}
  *
@@ -21,7 +21,7 @@ import { PUBLIC_API_PREFIX } from "../route-guard.js";
  * server readies, and kept in memory: nothing on disk is read per request,
  * and no request names a file (the wildcard's value is looked up in a
  * fixed map; anything else is the root's 404 words). Every reply carries
- * the CSP Preflight B18 measured with no violation in Chromium, Firefox
+ * a CSP measured with no violation in Chromium, Firefox
  * and WebKit (scripts, styles, images, fonts and fetches from this origin
  * only; no frame, base or form target), `Referrer-Policy: no-referrer` and
  * `nosniff`. The vendored assets are cached an hour; the page and init.js
@@ -29,7 +29,7 @@ import { PUBLIC_API_PREFIX } from "../route-guard.js";
  * No analytics: PostHog isn't on this page, which isn't the web app's.
  */
 
-/** Preflight B18's policy, exactly. */
+/** The page's policy, exactly. */
 export const REFERENCE_PAGE_CSP =
   "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; font-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'";
 
@@ -83,7 +83,7 @@ function withPageHeaders(reply: FastifyReply): FastifyReply {
     .header("x-content-type-options", "nosniff");
 }
 
-/** `GET /docs`: 301 to the page with its slash (Ruling 160), whose absolute references don't need it but whose address should be one. */
+/** `GET /docs`: 301 to the page with its slash, whose absolute references don't need it but whose address should be one. */
 export async function redirectToReferencePage(_request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {
   return withPageHeaders(reply)
     .header("cache-control", PAGE_CACHE_CONTROL)

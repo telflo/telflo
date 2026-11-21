@@ -15,18 +15,18 @@ import { signedInMember } from "~/test/configurations.js";
 import { SAAS_SITE, underSite } from "~/test/site.js";
 
 /*
- * The members' library (D23-2 Task 5: decisions 5, 10, 54, 58 and 59; Q160,
- * Q162), the page and its columns: the header, the description and its link,
- * the search, the empty states, the table and its sorting, Download (the
- * bytes saved under the list's file name) and Copy curl (the link's request
- * into the clipboard, the command built under the page's own origin), the
- * list read on each visit, and the secrets' rules: the link and the command
- * only on the clipboard, never in the DOM, a toast or storage.
+ * The members' library, the page and its columns: the header, the
+ * description and its link, the search, the empty states, the table and its
+ * sorting, Download (the bytes saved under the list's file name) and Copy
+ * curl (the link's request into the clipboard, the command built under the
+ * page's own origin), the list read on each visit, and the secrets' rules:
+ * the link and the command only on the clipboard, never in the DOM, a toast
+ * or storage.
  *
  * The API is its client's functions, spied on; the clipboard and the
  * download are their modules' functions, spied on. The link is a
- * hand-written fixture, visibly fake (`tll_FAKE…`, decision 59), so it may
- * be compared. Names, descriptions and file names carry the marker "zq".
+ * hand-written fixture, visibly fake (`tll_FAKE…`), so it may be compared.
+ * Names, descriptions and file names carry the marker "zq".
  */
 
 function fileFixture(overrides: Partial<LibraryFile> = {}): LibraryFile {
@@ -58,7 +58,7 @@ const BUNDLE = fileFixture({
 /** The API's order: newest first. */
 const FILES = [GUIDE, SAMPLE, BUNDLE];
 
-/** A visibly fake link's path (decision 59): the contract's shape, never signed. */
+/** A visibly fake link's path: the contract's shape, never signed. */
 const FAKE_LINK_PATH = `/api/v1/library-links/tll_${"FAKE".repeat(17)}FAK`;
 const SESSION_ENDED = new ApiError("unauthenticated", "You need to sign in.", { status: 401 });
 
@@ -73,7 +73,7 @@ function renderPage({ termsAcceptanceRequired = false, docsUrl }: { termsAccepta
       children: [{ path: "/library", Component: LibraryPage }],
     },
   ];
-  // With `docsUrl`, root's site data names it (D36-1 decision 34); without, the default docs.
+  // With `docsUrl`, root's site data names it; without, the default docs.
   const Stub = createRoutesStub(docsUrl === undefined ? layout : underSite({ ...SAAS_SITE, docsUrl }, layout));
   const view = render(<Stub initialEntries={["/library"]} />);
   return { user: userEvent.setup(), unmount: view.unmount };
@@ -133,7 +133,7 @@ function shownNames(): string[] {
     .map((row) => within(row).getAllByRole("cell")[0]?.textContent ?? "");
 }
 
-describe("the members' library page (D23-2 decision 54)", () => {
+describe("the members' library page", () => {
   it("is titled with fixed words", () => {
     expect(meta({} as Parameters<typeof meta>[0])).toEqual([
       { title: "Library - Telflo" },
@@ -142,7 +142,7 @@ describe("the members' library page (D23-2 decision 54)", () => {
     expect(LibraryRoute).toBeTypeOf("function");
   });
 
-  it("links Learning Telflo under the site's docs, and leaves it plain text with TELFLO_DOCS_URL empty (D36-1 decision 34)", async () => {
+  it("links Learning Telflo under the site's docs, and leaves it plain text with TELFLO_DOCS_URL empty", async () => {
     const first = renderPage({ docsUrl: "https://docs.example.org/telflo" });
     expect(await screen.findByRole("link", { name: "Learning Telflo" })).toHaveAttribute("href", "https://docs.example.org/telflo/docs/learning/about");
     first.unmount();
@@ -343,7 +343,7 @@ describe("Download", () => {
   });
 });
 
-describe("Copy curl (decision 10; Q160, Q162)", () => {
+describe("Copy curl", () => {
   it("hands the link's request to the clipboard inside the click, before it answers; the command is single-quoted, under the page's own origin", async () => {
     const answer = deferred<{ path: string }>();
     link.mockReturnValueOnce(answer.promise);
@@ -409,7 +409,7 @@ describe("Copy curl (decision 10; Q160, Q162)", () => {
     expect(within(rowOf(GUIDE.name)).getByRole("button", { name: "Curl" })).toBeInTheDocument();
   });
 
-  it("keeps the link and the command out of the DOM, browser storage and every toast (decision 4)", async () => {
+  it("keeps the link and the command out of the DOM, browser storage and every toast", async () => {
     const { user } = renderPage();
     await screen.findByText(GUIDE.name);
 
@@ -428,7 +428,7 @@ describe("Copy curl (decision 10; Q160, Q162)", () => {
   });
 });
 
-describe("replay's rules (decision 58)", () => {
+describe("replay's rules", () => {
   it("puts no name, description or file name in any attribute; each row's buttons are described by the name's text", async () => {
     renderPage();
     await screen.findByText(GUIDE.name);

@@ -7,9 +7,9 @@ import { fakeFetch } from "../../tests/fake-fetch.js";
 import { parseVersionNumber, pullConfiguration, pushConfiguration } from "./configurations.js";
 
 /*
- * The configurations' calls (D27 decision 26) beyond what the command
- * tests reach: the version number's parser against the contract (a drift
- * test, Preflight ruling 23) and a push with no versions at all.
+ * The configurations' calls beyond what the command tests reach: the version
+ * number's parser against the contract (a drift test) and a push with no
+ * versions at all.
  */
 
 const SERVER = "https://telflo.example";
@@ -33,7 +33,7 @@ describe("parseVersionNumber", () => {
 });
 
 describe("pushConfiguration", () => {
-  it("validates on the catalogue's defaults when the configuration has no version", async () => {
+  it("validates on the catalog's defaults when the configuration has no version", async () => {
     const fake = fakeFetch((call, index) => {
       if (index === 0) return { json: { items: [], nextCursor: null } };
       if (index === 1) return { json: { valid: true, collectorVersion: "0.147.0", errors: [] } };

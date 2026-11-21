@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-# deploy/compose/setup.sh's self-test (D36-2 decisions 67, 90-92; Preflight
-# ruling 1, the preflight's P1, P10 and P11). Each case runs setup.sh in a
+# deploy/compose/setup.sh's self-test. Each case runs setup.sh in a
 # throwaway copy of deploy/compose and checks, by boolean only (no value is
 # ever printed, compared by a tool that prints it, or written outside the
 # case's folder):

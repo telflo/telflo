@@ -3,14 +3,13 @@ import { PLATFORM_CONNECTION_OPTIONS } from "../database-schema.js";
 import { validateCollectorCatalogue, type CatalogueDistribution, type CatalogueFile } from "./catalogue.js";
 
 /*
- * The catalogue's sync (D13a decision 2, Preflight ruling 9): the migration
- * step upserts the catalogue's files into collector_distributions and
- * collector_versions, after the migrations and before the API's role is
- * provisioned (runMigrationStep in ../migrations.ts, which migrate.ts and
- * prepareTestDatabase run). The step validates the files before it
- * migrates; the sync validates them again, as its own guard.
+ * The catalog's sync: the migration step upserts the catalog's files into
+ * collector_distributions and collector_versions, after the migrations and
+ * before the API's role is provisioned (runMigrationStep in ../migrations.ts,
+ * which migrate.ts and prepareTestDatabase run). The step validates the files
+ * before it migrates; the sync validates them again, as its own guard.
  *
- *   * It validates first: a catalogue that fails its validator is refused
+ *   * It validates first: a catalog that fails its validator is refused
  *     before anything is written.
  *   * Then one transaction, under an advisory lock, so two migration steps
  *     against one database (two test runs, two containers) take turns.
@@ -19,14 +18,14 @@ import { validateCollectorCatalogue, type CatalogueDistribution, type CatalogueF
  *     still resolves), and a distribution is never deleted either.
  *   * The defaults move first: each table's one-default unique index is
  *     checked row by row, so an upsert that set the new default before it
- *     cleared the old one would be refused (the preflight reproduced it).
+ *     cleared the old one would be refused.
  *     Only a row whose default really changes is cleared.
  *   * Each upsert writes a row only when a value differs (`is distinct
  *     from`), so a second run writes no row at all: no new row version,
- *     no xmin changed. A distribution's renames (D13b decision 6, migration
- *     1700000000025) are compared as jsonb, the list's order included.
+ *     no xmin changed. A distribution's renames (migration 1700000000025)
+ *     are compared as jsonb, the list's order included.
  *
- * It runs as the tables' owner: the API's role may only read the catalogue
+ * It runs as the tables' owner: the API's role may only read the catalog
  * (migration 1700000000023).
  */
 
@@ -47,10 +46,10 @@ export interface CollectorCatalogueSyncResult {
 }
 
 /**
- * Rows the database holds that the files no longer list. A sync that finds
- * one changes nothing. Its message says how to recover (D13a Ruling 38;
- * catalog/README.md, "Switching to a branch with an older catalogue"): the
- * sync never tolerates the gap itself.
+ * Rows the database holds that the files no longer list. A sync that finds one
+ * changes nothing. Its message says how to recover (catalog/README.md,
+ * "Switching to a branch with an older catalog"): the sync never tolerates
+ * the gap itself.
  */
 export class CollectorCatalogueRemovalError extends Error {
   readonly missing: readonly string[];
@@ -115,7 +114,7 @@ const VERSION_RECORD = `(distribution text, version text, label text, descriptio
   otelcol_contrib_version text, supported_components jsonb, otelcol_contrib jsonb, opamp_supervisor jsonb)`;
 
 /**
- * Writes the catalogue in `files` to the database `client` is connected to,
+ * Writes the catalog in `files` to the database `client` is connected to,
  * as the tables' owner, and reports how many rows it wrote. Validates
  * first, and throws `CollectorCatalogueError` having sent no query;
  * throws `CollectorCatalogueRemovalError` (after a rollback) when the files
@@ -148,7 +147,7 @@ export async function syncCollectorCatalogue(
     );
     if (missing.rows.length > 0) throw new CollectorCatalogueRemovalError(missing.rows.map((row) => row.row));
 
-    // The defaults that move, cleared first (Preflight ruling 9).
+    // The defaults that move, cleared first.
     const clearedDistributions = await client.query<{ row: string }>(
       `update collector_distributions d set is_default = false
          from jsonb_to_recordset($1::jsonb) as f${DISTRIBUTION_RECORD}
@@ -217,7 +216,7 @@ export async function syncCollectorCatalogue(
 }
 
 /**
- * The migration step's sync: writes the catalogue in `files` (as
+ * The migration step's sync: writes the catalog in `files` (as
  * `readCollectorCatalogueFiles` read them) to the database `url` names,
  * connecting as the tables' owner. Used by runMigrationStep.
  */
@@ -225,7 +224,7 @@ export async function syncCollectorCatalogueAt(
   url: string,
   files: readonly CatalogueFile[],
 ): Promise<CollectorCatalogueSyncResult> {
-  // Validated before connecting, so a malformed catalogue reaches no database.
+  // Validated before connecting, so a malformed catalog reaches no database.
   validateCollectorCatalogue(files);
   const client = new pg.Client({ connectionString: url, options: PLATFORM_CONNECTION_OPTIONS });
   await client.connect();

@@ -13,8 +13,8 @@ import {
 } from "./prompt.js";
 
 /*
- * The hidden prompt through a pty-less stream (D27 decisions 19 and 32): it
- * echoes nothing and always puts the terminal back.
+ * The hidden prompt through a pty-less stream: it echoes nothing and always
+ * puts the terminal back.
  */
 
 let stderr: string;

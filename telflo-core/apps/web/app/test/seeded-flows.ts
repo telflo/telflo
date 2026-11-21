@@ -2,11 +2,11 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 /*
- * The 13 seeded flows as the schema tests read them (D12 decision 15,
- * Preflight ruling 20): `services/otelcol-validator/tests/fixtures/
- * seeded-flows.json`, each flow's slug, pin and YAML, which the db
- * workspace writes from migration 1700000000026's `seededFlows` and whose
- * staleness its suite checks (packages/db/src/seeded-flows-fixture.ts).
+ * The 13 seeded flows as the schema tests read them:
+ * `services/otelcol-validator/tests/fixtures/seeded-flows.json`, each
+ * flow's slug, pin and YAML, which the db workspace writes from migration
+ * 1700000000026's `seededFlows` and whose staleness its suite checks
+ * (packages/db/src/seeded-flows-fixture.ts).
  *
  * The fixture, not the constant: the web doesn't depend on @telflo/db, and
  * the constant is reached only by a dynamic import of the migration module
@@ -46,17 +46,17 @@ export function seededFlows(): SeededFlow[] {
 
 // ── The version a seeded flow is checked on ─────────────────────────────────
 
-/** The part of a catalogue file's version `checkedVersion` reads. */
+/** The part of a catalog file's version `checkedVersion` reads. */
 export interface CatalogueOffer {
   version: string;
   deprecated: boolean;
   default: boolean;
 }
 
-/** Each catalogue file's `versions`, by the file's path, as Vite bundles them (as the schema tests' versions are). */
+/** Each catalog file's `versions`, by the file's path, as Vite bundles them (as the schema tests' versions are). */
 const CATALOGUE_FILES = import.meta.glob<unknown>("../../../../../catalog/distributions/*.json", { eager: true, import: "versions" });
 
-/** `value` as a catalogue version, or undefined when it isn't one. */
+/** `value` as a catalog version, or undefined when it isn't one. */
 function catalogueOffer(value: unknown): CatalogueOffer | undefined {
   const entry = (typeof value === "object" && value !== null ? value : {}) as Record<string, unknown>;
   const { version, deprecated } = entry;
@@ -77,17 +77,16 @@ function readCatalogueOffers(files: Readonly<Record<string, unknown>>): Record<s
   return byDistribution;
 }
 
-/** Every distribution's versions, as the catalogue lists them. */
+/** Every distribution's versions, as the catalog lists them. */
 export const CATALOGUE_OFFERS: Readonly<Record<string, readonly CatalogueOffer[]>> = readCatalogueOffers(CATALOGUE_FILES);
 
 /**
- * The version a seeded flow is checked on (D12 Ruling 37): its pin while the
- * catalogue offers it, else the distribution's default, the version "Use
- * this flow" gives a copy of it (`flowCopyPin`, decision 16). So retiring a
- * seeded pin moves the flow's checks to the default, with the copies, and
- * no test needs editing. Throws for a distribution the catalogue doesn't
- * list or one without an offered default (the catalogue's validator refuses
- * both).
+ * The version a seeded flow is checked on: its pin while the catalog
+ * offers it, else the distribution's default, the version "Use this flow"
+ * gives a copy of it (`flowCopyPin`). So retiring a seeded pin moves the
+ * flow's checks to the default, with the copies, and no test needs editing.
+ * Throws for a distribution the catalog doesn't list or one without an
+ * offered default (the catalog's validator refuses both).
  */
 export function checkedVersion(
   flow: Pick<SeededFlow, "slug" | "collectorDistribution" | "collectorVersion">,

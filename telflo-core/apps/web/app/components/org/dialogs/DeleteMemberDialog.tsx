@@ -15,9 +15,9 @@ import { removeMember } from "~/lib/api-client.js";
 import { isManagementLost, isRefusal, refusalMessage, useLeaveManagement } from "~/lib/organizations.js";
 
 /*
- * Removing a member (ADR 0018). Removing takes only this membership: the
- * member keeps their account and their sessions, which move to their fallback
- * organization (D5 decision 9); the account isn't banned.
+ * Removing a member. Removing takes only this membership: the member keeps
+ * their account and their sessions, which move to their fallback
+ * organization; the account isn't banned.
  *
  * The dialog stays open, showing "Removing...", until the API
  * answers, and a refusal keeps it open, as the Change Role dialog does.

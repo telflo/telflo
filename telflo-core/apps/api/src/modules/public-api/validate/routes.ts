@@ -4,23 +4,21 @@ import { apiActorOf } from "../actor.js";
 import type { PublicApiArea } from "../area.js";
 
 /*
- * The public surface's validate (D25 decision 17's route 15; decision 34;
- * Preflight rulings 9 and 17), registered into the `/api/public/v1` plugin
- * (routes.ts), so it runs the token check, the per-token limit and its
- * access check (read, decision 14) before anything else. It checks a text
- * with the collector validator through the configurations' shared
- * validation service (`validateText`, decision 15), as the token's user in
- * its organization: the person's validation limits and the organization's
- * variables are the browser's. Nothing is stored. Its OpenAPI fragment is
- * `openapi/validate.yaml`.
+ * The public surface's validate, registered into the `/api/public/v1`
+ * plugin (routes.ts), so it runs the token check, the per-token limit and
+ * its access check (read) before anything else. It checks a text with the
+ * collector validator through the configurations' shared validation service
+ * (`validateText`), as the token's user in its organization: the person's
+ * validation limits and the organization's variables are the browser's.
+ * Nothing is stored. Its OpenAPI fragment is `openapi/validate.yaml`.
  *
  * The text and the collector's errors (which can quote it) go only into the
- * reply's body, never a log line or an error's message (ADR 0024); the
- * reply is `no-store`.
+ * reply's body, never a log line or an error's message; the reply is
+ * `no-store`.
  */
 
 /**
- * The body limit (Preflight ruling 17), the gateway's on the same path:
+ * The body limit, the gateway's on the same path:
  * 262,144 characters of YAML are at most 1.5 MiB once JSON escapes them.
  */
 export const VALIDATE_BODY_LIMIT = 2 * 1024 * 1024;

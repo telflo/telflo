@@ -9,7 +9,7 @@ import type { ThemeHandle } from "~/lib/theme.js";
 export const VERIFY_TOKEN_STORAGE_KEY = "telflo.verifyEmailToken";
 
 // An auth screen: root's Layout renders the theme this browser was last
-// told, the remembered one or the `telflo_theme` cookie's (D21 decision 22).
+// told, the remembered one or the `telflo_theme` cookie's.
 export const handle = { theme: "remembered" } satisfies ThemeHandle;
 
 export function meta(_args: Route.MetaArgs) {
@@ -19,8 +19,8 @@ export function meta(_args: Route.MetaArgs) {
 /*
  * The link's token is in its query, `?token=…`. The page takes it out of the
  * address bar when it mounts, before analytics can record the URL, and keeps
- * it for a reload, which confirms again as the link did (D4 Ruling 14). Until
- * then the panel waits, as it does on the server.
+ * it for a reload, which confirms again as the link did. Until then the
+ * panel waits, as it does on the server.
  */
 export default function VerifyEmailPage() {
   /** `undefined` until the address bar has been read; then the token, or null. */

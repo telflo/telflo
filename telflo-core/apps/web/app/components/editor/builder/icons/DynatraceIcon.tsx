@@ -1,6 +1,6 @@
 /*
  * The Dynatrace signet, for the OTLP/HTTP exporter's "Dynatrace" quick
- * setup (D9b decision 8).
+ * setup.
  *
  * Source: the npm package `@dynatrace/strato-icons` 2.6.1, its
  * `DynatraceSignetIcon` (`__icons/DynatraceSignetIcon.js`, viewBox
@@ -12,9 +12,8 @@
  * names the backend the quick setup pre-fills. Listed in
  * docs/third-party-assets.md.
  *
- * Monochrome in the surrounding text colour;
- * decorative, so hidden from assistive technology (the option's text names
- * the backend).
+ * Monochrome in the surrounding text color; decorative, so hidden from
+ * assistive technology (the option's text names the backend).
  */
 export function DynatraceIcon({ className }: { className?: string }) {
   return (

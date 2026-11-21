@@ -33,7 +33,7 @@ async function thrownBy(run: Promise<unknown>): Promise<unknown> {
   );
 }
 
-describe("/ (D36-1 decision 22)", () => {
+describe("/", () => {
   beforeEach(() => {
     vi.mocked(fetchCurrentUser).mockReset();
   });

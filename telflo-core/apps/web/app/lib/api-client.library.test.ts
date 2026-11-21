@@ -3,14 +3,13 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { LibraryFile } from "@telflo/contracts";
 
 /*
- * The browser client's library calls (D23-2 decisions 42 and 54; Preflight
- * ruling 19), against a fake API behind a custom axios adapter, as
- * api-client.testing.test.ts does: the members' list, bytes and link; the
- * product admin's create (multipart, the parts in the API's order), change
- * and delete; the refusals as their codes and words.
+ * The browser client's library calls, against a fake API behind a custom
+ * axios adapter, as api-client.testing.test.ts does: the members' list,
+ * bytes and link; the product admin's create (multipart, the parts in the
+ * API's order), change and delete; the refusals as their codes and words.
  *
- * The link here is a hand-written fixture, visibly fake (`tll_FAKE…`,
- * decision 59), so it may be compared directly: nothing here is signed.
+ * The link here is a hand-written fixture, visibly fake (`tll_FAKE…`), so it
+ * may be compared directly: nothing here is signed.
  * Names, descriptions and file names carry the private-text marker "zq".
  */
 
@@ -93,7 +92,7 @@ const FILE: LibraryFile = {
   createdAt: "2026-10-24T12:00:00.000Z",
   updatedAt: "2026-10-24T12:00:00.000Z",
 };
-/** A visibly fake link's path (decision 59): the contract's shape, never signed. */
+/** A visibly fake link's path: the contract's shape, never signed. */
 const FAKE_LINK_PATH = `/api/v1/library-links/tll_${"FAKE".repeat(17)}FAK`;
 
 const envelope = (code: string, message: string) => ({ error: { code, message } });
@@ -117,7 +116,7 @@ async function partsOf(body: unknown): Promise<[string, unknown][]> {
   return parts;
 }
 
-describe("the members' library calls (D23-2 decision 54)", () => {
+describe("the members' library calls", () => {
   it("lists the files with a GET (no CSRF header), parsed; a list that isn't the contract's is unexpected_response", async () => {
     api.routes[`GET ${FILES}`] = () => ({ status: 200, body: { libraryFiles: [FILE] } });
 
@@ -190,7 +189,7 @@ describe("the members' library calls (D23-2 decision 54)", () => {
   });
 });
 
-describe("the product admin's library writes (D23-2 decisions 42 to 44)", () => {
+describe("the product admin's library writes", () => {
   it("uploads multipart: name, description, file, in that order, with the CSRF header and no content type set by hand; no name in the address", async () => {
     api.routes[`POST ${FILES}`] = () => ({ status: 201, body: { libraryFile: FILE } });
     const file = new File(["{}"], "zq-sample.json", { type: "application/json" });

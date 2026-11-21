@@ -47,7 +47,7 @@ describe("CreateOrganizationDialog", () => {
     useUserStore.setState({ isSwitchingOrganization: false });
   });
 
-  it("creates with its copy and its Company Logo block (D23-2 decision 52)", async () => {
+  it("creates with its copy and its Company Logo block", async () => {
     renderDialog();
     const dialog = await screen.findByRole("dialog", { name: "Create Organization" });
 
@@ -215,7 +215,7 @@ describe("CreateOrganizationDialog", () => {
 });
 
 // ---------------------------------------------------------------------------
-// The logo (D23-2 decisions 8, 9, 17, 51, 52 and 57).
+// The logo.
 // ---------------------------------------------------------------------------
 
 const LOGO_ID = "0193a1b2-c3d4-7e5f-8a6b-7c8d9e0f1a2b";
@@ -348,7 +348,7 @@ describe("CreateOrganizationDialog's logo", () => {
     expect(name.closest(".ph-no-capture")).not.toBeNull();
     expect(screen.getByRole("button", { name: "Change Image" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Remove logo" })).toBeInTheDocument();
-    // The file's name is text, never an attribute (decision 57).
+    // The file's name is text, never an attribute.
     expect(attributeValues().some((value) => value.includes("acme-private-logo"))).toBe(false);
   });
 
@@ -536,7 +536,7 @@ describe("CreateOrganizationDialog's logo", () => {
     expect(revokeObjectURL).toHaveBeenCalledWith("blob:stub-1");
   });
 
-  it("shows the API's refusal of a logo on create and stays open, creating nothing (all or nothing, Q158)", async () => {
+  it("shows the API's refusal of a logo on create and stays open, creating nothing (all or nothing)", async () => {
     vi.spyOn(apiClient, "createOrganizationWithLogo").mockRejectedValue(
       new ApiError("organization_logo_type_unsupported", "The logo must be a PNG, JPEG or WebP image."),
     );
@@ -645,7 +645,7 @@ describe("CreateOrganizationDialog's logo", () => {
     expect(screen.queryByRole("button", { name: "Remove logo" })).not.toBeInTheDocument();
   });
 
-  it("shows the API's refusal of a logo on Save and stays open, changing nothing in the store (Q159)", async () => {
+  it("shows the API's refusal of a logo on Save and stays open, changing nothing in the store", async () => {
     vi.spyOn(apiClient, "changeOrganizationWithLogo").mockRejectedValue(
       new ApiError("organization_logo_too_large", "The logo must be 2 MB or smaller."),
     );
@@ -661,7 +661,7 @@ describe("CreateOrganizationDialog's logo", () => {
     expect(useUserStore.getState().current?.organization).toEqual(GROUP_WITH_LOGO);
   });
 
-  it("keeps the baseline taken at opening when the organization prop changes while open (D17c-1 Ruling 66)", async () => {
+  it("keeps the baseline taken at opening when the organization prop changes while open", async () => {
     const renameOrganization = vi
       .spyOn(apiClient, "renameOrganization")
       .mockResolvedValue({ organization: { id: GROUP.id, name: "Group", type: "group", logoId: null } });

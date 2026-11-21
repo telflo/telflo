@@ -21,9 +21,9 @@ import { ExitError } from "./output.js";
 import { NO_SERVER_MESSAGE } from "./server.js";
 
 /*
- * Which login a command runs with, and the origin rule (D27 decisions 12
- * and 15): a token goes only to the origin it was entered for. Tokens are
- * made at run time and checked with boolean canaries only.
+ * Which login a command runs with, and the origin rule: a token goes only to
+ * the origin it was entered for. Tokens are made at run time and checked with
+ * boolean canaries only.
  */
 
 const STORED_SERVER = "https://stored.example";
@@ -73,7 +73,7 @@ afterEach(() => {
   rmSync(root, { recursive: true, force: true });
 });
 
-describe("resolveLogin (decisions 12 and 15)", () => {
+describe("resolveLogin", () => {
   it("answers null with no file and no TELFLO_TOKEN; requireLogin exits 3", () => {
     expect(resolveLogin(env)).toBeNull();
     const error = refusalOf(() => requireLogin(env));
@@ -148,7 +148,7 @@ describe("resolveLogin (decisions 12 and 15)", () => {
   });
 });
 
-describe("clientFor: the token to its server, X-Telflo-Org for a person (decision 15)", () => {
+describe("clientFor: the token to its server, X-Telflo-Org for a person", () => {
   const routes = (kind: "person" | "service_account") =>
     routedFetch({
       "GET /whoami": { json: { kind, tokenName: "t", access: "write", organizationId: kind === "person" ? null : ORGANIZATION } },

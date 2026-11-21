@@ -13,8 +13,8 @@ import { DialogErrorAlert } from "./DialogErrorAlert.js";
 import { SecretCopyBox } from "~/components/secrets/SecretCopyBox.js";
 
 /*
- * Reveal (D17b-2 decisions 12, 30 and 34; Preflight ruling 4), on either
- * kind of fleet: a Dialog opened by a valid token's "Reveal".
+ * Reveal, on either kind of fleet: a Dialog opened by a valid token's
+ * "Reveal".
  *
  * - "Default token" or "Rotate token" as its title; one `POST …/reveal` per
  *   opening (a bearer reply: the person's 10 a minute), "Revealing…" until
@@ -22,8 +22,8 @@ import { SecretCopyBox } from "~/components/secrets/SecretCopyBox.js";
  *   "Copy rotate token"), inside `ph-no-capture`, as text only.
  * - Its words: either kind enrolls a collector (`Enroll` checks no kind),
  *   and each reveal is recorded in the token history; on an archived fleet
- *   (a reveal is allowed there, Preflight ruling 8), that its collectors are
- *   refused until it is unarchived.
+ *   (a reveal is allowed there), that its collectors are refused until it is
+ *   unarchived.
  * - Refusals in the dialog (`enrollment_token_revoked`, `_expired`,
  *   `_not_found`, a 429 with its words), else "Failed to reveal token";
  *   `fleet_not_found` toasts, closes and reloads; an unknown outcome (the
@@ -34,10 +34,10 @@ import { SecretCopyBox } from "~/components/secrets/SecretCopyBox.js";
  *   tab and the fleet reload: the history gains the reveal, or the token's
  *   state moved.
  * - The bearer lives only in this session's state, and leaves it as the
- *   dialog closes (D17a's residue "Back or a closed tab before Done loses a
- *   create's bearers": a valid token can be revealed again). Each opening
- *   is a new session (`useOpeningKey`); an answer after the dialog unmounted
- *   or for an organization no longer active does nothing.
+ *   dialog closes (Back or a closed tab before Done loses a create's
+ *   bearers, but a valid token can be revealed again). Each opening is a new
+ *   session (`useOpeningKey`); an answer after the dialog unmounted or for
+ *   an organization no longer active does nothing.
  */
 
 export const REVEAL_WORDS =

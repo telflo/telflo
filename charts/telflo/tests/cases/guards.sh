@@ -1,6 +1,6 @@
-# The guards (D33-1 decision 26, Preflight rulings 3 and 5): each refuses
-# with one fixed message naming the value, never quoting it. Sourced by
-# tests/render-tests.sh, which defines every helper used here.
+# The guards: each refuses with one fixed message naming the value, never
+# quoting it. Sourced by tests/render-tests.sh, which defines every helper
+# used here.
 #
 # Where the vendored opamp-server chart guards the same value itself
 # (server.publicUrl, auth.existingSecret), its templates render first, so
@@ -34,7 +34,7 @@ done
 run_case "guard: api.image.repository holding a user and password refused, not quoted" refused \
   "api.image.repository must be an image's path (lower-case letters, digits, . _ - and /)" "cnrypw" \
   "${D[@]}" --set-string 'api.image.repository=cnryuser:cnrypw@x/api'
-# The agent URL (Ruling 338): the contracts' agent-endpoint shape.
+# The agent URL: the contracts' agent-endpoint shape.
 M_AGENT="opamp-server.server.publicUrl must be an http, https, ws or wss URL with a host, an optional port and a path of letters, digits and ._~%/+- (no user name, password, query or fragment)"
 run_case "guard: the agent URL holding a user and password refused, not quoted" refused "$M_AGENT" "cnrypw" \
   "${D[@]}" --set-string 'opamp-server.server.publicUrl=https://cnryuser:cnrypw@opamp.example.com/opamp/api/v1'
@@ -215,7 +215,7 @@ notes_default_type() {
 run_case "NOTES.txt: the gateway's type through default \"LoadBalancer\", as gateway.yaml renders it" notes_default_type
 # Every kubectl line in NOTES.txt names --context <context> (the README's
 # rule), and the uninstall note names the file store's claim with the local
-# file store (Ruling 331).
+# file store.
 notes_context() {
   local n="$CHART_DIR/templates/NOTES.txt"
   [ "$(grep -cE '^ *kubectl ' "$n")" -ge 5 ] && ! grep -E '^ *kubectl ' "$n" | grep -vqF 'kubectl --context <context> -n {{ .Release.Namespace }} '

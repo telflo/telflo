@@ -1,9 +1,9 @@
 import { parse } from "yaml";
 
 /*
- * The fixture-shape check before a run is queued (D14a decision 17). It
- * mirrors the tester's `services/otelcol-testing/app/fixture_shape.py` and its
- * strategy picker (`app/executors/__init__.py`'s `pick_strategy`, with
+ * The fixture-shape check before a run is queued. It mirrors the tester's
+ * `services/otelcol-testing/app/fixture_shape.py` and its strategy picker
+ * (`app/executors/__init__.py`'s `pick_strategy`, with
  * `app/testable_receivers.py`'s `detect_testable_receiver`), so the browser
  * can offer "Run Anyway" or Cancel before anything is queued. The tester
  * re-detects on its own and attaches the same F-001/F-002/F-003 advisory to
@@ -25,7 +25,7 @@ import { parse } from "yaml";
  *   none, as the tester reads it;
  * - `file_log`, filelog's name from collector 0.149.0, takes the filelog
  *   strategy too, and the advisories name the receiver `file_log` (or
- *   `filelog`) (Ruling 49).
+ *   `filelog`).
  */
 
 export type FixtureShape = "empty" | "otlp_envelope" | "otlp_array" | "ndjson" | "single_json" | "raw_lines" | "single_line";
@@ -54,10 +54,10 @@ const SIGNAL_TO_ENVELOPE_KEY: Record<string, string> = {
 const NDJSON_SAMPLE_LINES = 50;
 
 // The receivers the tester feeds by pull (filelog) or push (syslog), by every
-// name they go by: the catalogue renamed `filelog` to `file_log` from
+// name they go by: the catalog renamed `filelog` to `file_log` from
 // collector 0.149.0 (its `renamedTypes`; the old name still works), and both
-// take the filelog strategy, as in the tester's testable_receivers.py (D14a
-// Ruling 49). `syslog` has no rename. A key may carry an `/instance` suffix
+// take the filelog strategy, as in the tester's testable_receivers.py.
+// `syslog` has no rename. A key may carry an `/instance` suffix
 // (`filelog/app1`), stripped before matching. A Map, so a key such as
 // `constructor` matches nothing.
 const TESTABLE_RECEIVERS: ReadonlyMap<string, StrategyKind> = new Map([
@@ -68,8 +68,8 @@ const TESTABLE_RECEIVERS: ReadonlyMap<string, StrategyKind> = new Map([
 
 // How the advisories name a strategy's receiver: the name, and its first
 // mention. The filelog strategy's receiver is `file_log` on every collector
-// the platform offers, so its words give both spellings (Ruling 49), as
-// the tester's fixture_shape.py does.
+// the platform offers, so its words give both spellings, as the tester's
+// fixture_shape.py does.
 const RECEIVER_WORDS: Record<"filelog" | "syslog", { name: string; firstMention: string }> = {
   filelog: { name: "file_log", firstMention: "`file_log` (or `filelog`)" },
   syslog: { name: "syslog", firstMention: "`syslog`" },

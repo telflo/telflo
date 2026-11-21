@@ -21,28 +21,25 @@ import { useOpeningKey } from "~/lib/hooks/use-opening-key.js";
 import { currentRotateToken, tokenValidAt } from "~/lib/tokens.js";
 
 /*
- * Revoke (D17b-2 decisions 13 and 31; Preflight ruling 4's words; Preflight
- * ruling 18's MJ2 and MJ3; ADR 0018): an AlertDialog with "Revoke this
- * token?", "Cancel" / "Revoke token" ("Revoking..."), "Token revoked" and
- * "Failed to revoke token". Per the D17b-2 Parity Notes:
+ * Revoke: an AlertDialog with "Revoke this token?", "Cancel" / "Revoke
+ * token" ("Revoking..."), "Token revoked" and "Failed to revoke token". Its
+ * details:
  *
  * - The body by the token's kind and the fleet's tokens at the render (the
  *   opamp-server's rules, `lib/tokens.ts`):
  *   - a rotate token: its collectors are refused within 10 seconds and stay
  *     refused until their supervisors restart, coming back through the
  *     default token (when the fleet's tokens hold no valid default token,
- *     the clause saying to issue a new one and re-install them: D17c-1
- *     Ruling 61), and, only while another valid rotate token remains,
- *     handed the fleet's current one (they don't fall back to the
- *     default bearer on their next poll);
+ *     the clause saying to issue a new one and re-install them), and, only
+ *     while another valid rotate token remains, handed the fleet's current
+ *     one (they don't fall back to the default bearer on their next poll);
  *     the fleet's only valid rotate token: the suspension;
  *     the current token while another is valid: that one becomes current
  *     until its own expiry (said only when another is valid);
- *   - the default token: what refusing it does now (MJ2), and that a new
- *     one can then be issued ("New default token" on the Tokens tab, D17c-1
- *     decision 45) and the install command re-run on each host (on a
- *     Kubernetes-supervisor fleet, each group's Helm release reinstalled:
- *     D17d-1 Ruling 55);
+ *   - the default token: what refusing it does now, and that a new one can
+ *     then be issued ("New default token" on the Tokens tab) and the
+ *     install command re-run on each host (on a Kubernetes-supervisor
+ *     fleet, each group's Helm release reinstalled);
  *   - the active count, the API's activeCollectors: collectors seen in
  *     the last 5 minutes that are on (hold) the token now ("1 collector
  *     seen in the last 5 minutes is on it.", destructive; "No collector
@@ -64,11 +61,11 @@ const ROTATE_REFUSED = "Collectors holding it are refused within 10 seconds and 
 const HANDED_CURRENT = " and are handed the fleet's current rotate token";
 
 /**
- * The clause after "the default token" when the fleet's tokens show none valid (D17c-1 Ruling 61): a collector coming
- * back through it is refused too, until a new default token is issued and the collector installed again with it.
+ * The clause after "the default token" when the fleet's tokens show none valid: a collector coming back through it is
+ * refused too, until a new default token is issued and the collector installed again with it.
  */
 export const NO_VALID_DEFAULT_CLAUSE = " (the fleet has no valid default token now: issue a new default token and re-install them)";
-/** NO_VALID_DEFAULT_CLAUSE for a sentence about one collector (the rotate dialog's info box: Ruling 64). */
+/** NO_VALID_DEFAULT_CLAUSE for a sentence about one collector (the rotate dialog's info box). */
 export const NO_VALID_DEFAULT_CLAUSE_ONE = " (the fleet has no valid default token now: issue a new default token and re-install it)";
 
 /** Whether the fleet's tokens, as read, hold no valid default token (a default token never expires: not revoked). */
@@ -79,7 +76,7 @@ export function noValidDefaultToken(tokens: readonly EnrollmentTokenListed[], no
 export const ONLY_VALID_ROTATE =
   "This is the fleet's only valid rotate token. Revoking it suspends the fleet: collectors that enroll or restart are sent no configuration until you rotate again.";
 
-/** ONLY_VALID_ROTATE, with NO_VALID_DEFAULT_CLAUSE when the fleet has no valid default token (restarting collectors are refused: Ruling 64). */
+/** ONLY_VALID_ROTATE, with NO_VALID_DEFAULT_CLAUSE when the fleet has no valid default token (restarting collectors are refused). */
 export function onlyValidRotateWords(noValidDefault: boolean): string {
   return noValidDefault ? `${ONLY_VALID_ROTATE.slice(0, -1)}${NO_VALID_DEFAULT_CLAUSE}.` : ONLY_VALID_ROTATE;
 }
@@ -88,14 +85,14 @@ export const DEFAULT_REVOKE =
   "Collectors still on the default token (those that don't accept connection settings, and every collector while the fleet is suspended) are refused within 10 seconds. New collectors can no longer enroll with it, and collectors whose supervisors restart are refused (they present it). You can then issue a new default token and re-run the install command on each host.";
 
 /**
- * DEFAULT_REVOKE on a Kubernetes-supervisor fleet (D17d-1 Ruling 55; D17d-2 Preflight ruling 32): its collectors come
- * from its groups' Helm releases, which the Helm install dialog upgrades.
+ * DEFAULT_REVOKE on a Kubernetes-supervisor fleet: its collectors come from its groups' Helm releases, which the Helm
+ * install dialog upgrades.
  */
 export const DEFAULT_REVOKE_KUBERNETES = `${DEFAULT_REVOKE.slice(0, DEFAULT_REVOKE.lastIndexOf(" You can"))} You can issue a new default token, then run each group's Install with Helm again.`;
 
 /**
- * The rotate token's first sentence: the hand-off clause only while another valid rotate token remains (MJ3), and
- * NO_VALID_DEFAULT_CLAUSE when the fleet has no valid default token to come back through (Ruling 61).
+ * The rotate token's first sentence: the hand-off clause only while another valid rotate token remains, and
+ * NO_VALID_DEFAULT_CLAUSE when the fleet has no valid default token to come back through.
  */
 export function rotateRefusedWords(anotherValid: boolean, noValidDefault = false): string {
   return `${ROTATE_REFUSED}${noValidDefault ? NO_VALID_DEFAULT_CLAUSE : ""}${anotherValid ? HANDED_CURRENT : ""}.`;
@@ -103,7 +100,7 @@ export function rotateRefusedWords(anotherValid: boolean, noValidDefault = false
 
 /**
  * "Another valid rotate token, one being replaced, becomes current until it expires on {date}: …", with
- * NO_VALID_DEFAULT_CLAUSE after "handed it" when the fleet has no valid default token (Ruling 64).
+ * NO_VALID_DEFAULT_CLAUSE after "handed it" when the fleet has no valid default token.
  */
 export function successorWords(expiresAt: string | null, noValidDefault = false): string {
   const clause = noValidDefault ? NO_VALID_DEFAULT_CLAUSE : "";
@@ -111,7 +108,7 @@ export function successorWords(expiresAt: string | null, noValidDefault = false)
   return `Another valid rotate token, one being replaced, becomes current until it expires on ${formatDateTime(expiresAt)}: collectors that enroll or restart are handed it${clause}, and are refused when it expires. Rotate before then.`;
 }
 
-/** The active count's sentence: collectors seen in the last 5 minutes that are on the token now (Ruling 33). */
+/** The active count's sentence: collectors seen in the last 5 minutes that are on the token now. */
 export function activeWords(count: number): string {
   if (count === 0) return "No collector seen in the last 5 minutes is on it.";
   if (count === 1) return "1 collector seen in the last 5 minutes is on it.";
@@ -145,7 +142,7 @@ export interface RevokeTokenDialogProps {
   /** The active organization the dialog was opened in. */
   organizationId: string;
   fleetId: string;
-  /** The fleet's type: a Kubernetes-supervisor fleet's default token words name its groups' Helm releases (D17d-1 Ruling 55). */
+  /** The fleet's type: a Kubernetes-supervisor fleet's default token words name its groups' Helm releases. */
   fleetType: FleetType;
   /** After the revoke, a 404, or an unknown outcome: the tab reloads, and the fleet. */
   onRevoked: () => void;

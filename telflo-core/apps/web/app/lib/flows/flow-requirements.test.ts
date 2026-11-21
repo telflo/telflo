@@ -2,8 +2,7 @@ import { describe, expect, it } from "vitest";
 import { describeFlowRequirements } from "./flow-requirements.js";
 
 /*
- * The requirements' cases (D12 Preflight ruling 12), on the editor's reading
- * of the text (`yaml`).
+ * The requirements' cases, on the editor's reading of the text (`yaml`).
  */
 
 const CONFIG = `
@@ -88,7 +87,7 @@ exporters:
     expect(envVars).toEqual(["CLICKHOUSE_PASSWORD"]);
   });
 
-  it("does not mistake the other token tiers, or the legacy $orgvar: (plain text since D20, Q95), for org variables", () => {
+  it("does not mistake the other token tiers, or the legacy $orgvar: (plain text), for org variables", () => {
     const config = "exporters:\n  otlp:\n    a: '$other:X'\n    b: '$secret:Y'\n    c: '$orgvar:LEGACY'\n    d: '$${org:ESCAPED}'\n";
     expect(describeFlowRequirements(config).orgVars).toEqual([]);
   });

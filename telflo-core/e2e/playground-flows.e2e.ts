@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { expect, type Locator, type Page } from "@playwright/test";
-// The SaaS pair (D36-1 Preflight ruling 16): open registration, the Terms, the playground and the anonymous reads.
+// The SaaS pair: open registration, the Terms, the playground and the anonymous reads.
 import { test } from "./support/saas.js";
 import { loadFlowsMigration } from "@telflo/db/testing";
 import {
@@ -13,17 +13,16 @@ import {
 import { recordPlaygroundRequests } from "./support/playground.js";
 import { waitForHydration } from "./support/session.js";
 
-// The playground's flows with NO account (D31-1 decisions 5, 6, 22 and 33;
-// Preflight ruling 1): the gallery lists the flows table's published flows
-// through the open flow read, a flow's page shows its YAML read-only from
-// the open slug read, "Use this flow" opens the sign-up prompt, and a slug
-// the read doesn't answer (unknown or hidden) is "Flow not found.". Every
-// request stays within decision 22's allowlist, the open reads read from
-// the browser.
+// The playground's flows with NO account: the gallery lists the flows table's
+// published flows through the open flow read, a flow's page shows its YAML
+// read-only from the open slug read, "Use this flow" opens the sign-up prompt,
+// and a slug the read doesn't answer (unknown or hidden) is "Flow not found.".
+// Every request stays within the playground's request allowlist, the open
+// reads read from the browser.
 //
 // The seeded flows are global setup's (migration 1700000000026's rows),
 // read here from the migration's constant and never written; a flow's YAML
-// is Telflo's published catalogue, fine to compare. The one hidden flow is
+// is Telflo's published catalog, fine to compare. The one hidden flow is
 // this spec's own `e2e-` flow, deleted when its test ends (the flows table
 // is global: other specs' flows may be listed too, so nothing counts cards).
 

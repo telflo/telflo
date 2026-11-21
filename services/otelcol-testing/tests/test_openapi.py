@@ -1,9 +1,8 @@
-"""The contract test (D14a Preflight ruling 1): `openapi.yaml` is what the
-platform's client and its test double are written against, so every route's
-real answers, every status the file documents, are produced here through the
-real app and validated against the file (jsonschema), as are the requests
-sent. A route the app has that the file doesn't document (or the reverse)
-fails too."""
+"""The contract test: `openapi.yaml` is what the platform's client and its
+test double are written against, so every route's real answers, every
+status the file documents, are produced here through the real app and
+validated against the file (jsonschema), as are the requests sent. A route
+the app has that the file doesn't document (or the reverse) fails too."""
 
 from __future__ import annotations
 
@@ -285,7 +284,7 @@ def test_the_schema_refuses_what_the_tester_never_answers() -> None:
     # The sandbox's mutations (R-*) and the fixture-shape advisories (F-*).
     for mutation_id in ("R-001", "R-105", "R-106", "F-001", "F-003"):
         _check(pointer, {**base, "mutations": [{"id": mutation_id, "severity": "warn", "message": "m", "details": {}}]})
-    # The compatibility checks, C-005 (Ruling 28) included.
+    # The compatibility checks, C-005 included.
     for issue_id in ("C-000", "C-004", "C-005"):
         issue = {"id": issue_id, "severity": "refuse", "component": "geoip", "message": "m", "details": {}}
         _check(pointer, {**base, "status": "failed", "error": {"code": "refused", "message": "m"}, "compatibility": [issue]})

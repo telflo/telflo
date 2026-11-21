@@ -10,9 +10,8 @@ import {
 import { Button } from "~/components/ui/button.js";
 
 /*
- * The Unsaved Changes dialog (ADR 0018; D8 decision 15). The editor page
- * opens it while the navigation guard holds a navigation
- * (useNavigationGuard).
+ * The Unsaved Changes dialog. The editor page opens it while the navigation
+ * guard holds a navigation (useNavigationGuard).
  */
 
 interface UnsavedChangesDialogProps {

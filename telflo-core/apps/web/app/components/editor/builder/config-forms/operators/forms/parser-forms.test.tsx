@@ -16,21 +16,18 @@ import { selectIsDirty, selectUndoDescription, useEditorStore } from "~/lib/stor
 import { builderStore, componentNamed, openText } from "~/test/builder-store.js";
 
 /*
- * The parser operator forms (D9c Task 6): the 12 parser forms in
- * the operator cards, over the form contract. Each field is driven as a
- * person would (typing, clicking, picking) on the logs corpus' parsers
- * (`filelog/parsers`: comments, flow items, quoted scalars; the corpus
- * around them has an anchor and merges and `0750`), LF and CRLF, and
- * writes only its key: the text changes in that key's lines only, as one
- * undo entry, and parses to the value (decision 2). The fixes each have a
- * test that fails if the bug returns: csv's exclusions and
- * Header Attribute as a name (decisions 4 and 7); container's default and
- * copy (decision 4); severity_parser writing nothing on render (decision
- * 8; Preflight ruling 26); time_parser's presets per layout type and the
- * layout switch (decisions 3 and 7; Preflight ruling 14); trace_parser's
- * hints (decision 4); syslog_parser's Protocol with `none`, unset shown
- * unset, and no timestamp section (decisions 4 and 6); uri_parser without
- * `fragment` (decision 4); json_array_parser's required Parse To.
+ * The parser operator forms: the 12 parser forms in the operator cards,
+ * over the form contract. Each field is driven as a person would (typing,
+ * clicking, picking) on the logs corpus' parsers (`filelog/parsers`:
+ * comments, flow items, quoted scalars; the corpus around them has an
+ * anchor and merges and `0750`), LF and CRLF, and writes only its key: the
+ * text changes in that key's lines only, as one undo entry, and parses to
+ * the value. Each of these has a test that fails if it breaks: csv's
+ * exclusions and Header Attribute as a name; container's default and copy;
+ * severity_parser writing nothing on render; time_parser's presets per
+ * layout type and the layout switch; trace_parser's hints; syslog_parser's
+ * Protocol with `none`, unset shown unset, and no timestamp section;
+ * uri_parser without `fragment`; json_array_parser's required Parse To.
  *
  * Collector claims cite contrib v0.162.0 (`pkg/stanza/`).
  */
@@ -52,7 +49,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-/** The info toasts shown so far: decision 7's adjustments toast their messages (Ruling 87). */
+/** The info toasts shown so far: the forms' adjustments toast their messages. */
 const infoToasts = () => vi.mocked(toast.info).mock.calls.map(([message]) => message);
 
 function ComponentForm({ nodeId, children }: { nodeId: string; children: ReactNode }) {
@@ -139,7 +136,7 @@ const withParsers = (lines: readonly string[]) =>
 /** The 12 parsers as Add Operator seeds them, as flow items: every field unset but the seed's. */
 const SEEDS = withParsers(PARSER_TYPES.map((type) => JSON.stringify(operatorSeed(type))));
 
-// ── Every field writes only its key (decision 2) ──
+// ── Every field writes only its key ──
 
 interface FieldCase {
   name: string;
@@ -266,7 +263,7 @@ const CASES: FieldCase[] = [
     check: (op) => expect(op.header).toBe("a,b,c"),
   },
   {
-    name: "csv_parser Header Attribute: a name, and the header goes with it (decision 7)",
+    name: "csv_parser Header Attribute: a name, and the header goes with it",
     edit: (user) => typeInto(user, field(CSV, "csv-header-attr"), "fields"),
     from: CSV_LINES,
     to: '        delimiter: ","\n        lazy_quotes: true # loose quoting\n        header_attribute: fields\n',
@@ -293,7 +290,7 @@ const CASES: FieldCase[] = [
     check: (op) => expect(op.lazy_quotes).toBe(false),
   },
   {
-    name: "csv_parser Ignore quotes, ticked: lazy quotes unticked with it (decision 7)",
+    name: "csv_parser Ignore quotes, ticked: lazy quotes unticked with it",
     edit: (user) => user.click(field(CSV, "csv-ignore-quotes")),
     from: "        lazy_quotes: true # loose quoting\n",
     to: "        lazy_quotes: false # loose quoting\n        ignore_quotes: true\n",
@@ -359,7 +356,7 @@ const CASES: FieldCase[] = [
     check: (op) => expect(op).toMatchObject({ protocol: "rfc5424", timestamp: { layout_type: "gotime" } }),
   },
   {
-    name: "syslog_parser Protocol: none (decision 6)",
+    name: "syslog_parser Protocol: none",
     edit: (user) => pickIn(user, field(SYSLOG, "syslog-protocol"), "None (message kept as-is)"),
     from: "        protocol: rfc3164\n",
     to: "        protocol: none\n",
@@ -507,7 +504,7 @@ const CASES: FieldCase[] = [
     check: (op) => expect(op.preset).toBe("default"),
   },
   {
-    name: "severity_parser a mapping row, under the key's spelling in the text (Preflight ruling 26)",
+    name: "severity_parser a mapping row, under the key's spelling in the text",
     edit: (user) => retypeInto(user, field(SEVERITY, "sevp-mapping-error"), "error"),
     from: "          Error: [err, E] # keyed as written\n",
     to: "          Error: error # keyed as written\n",
@@ -548,7 +545,7 @@ const CASES: FieldCase[] = [
     check: (op) => expect(op.parse_from).toBe("attributes.time"),
   },
   {
-    name: "time_parser Layout Type: strptime sets the first strptime preset, one change (decision 7)",
+    name: "time_parser Layout Type: strptime sets the first strptime preset, one change",
     edit: (user) => pickIn(user, field(TIME, "time-layout-type"), "strptime (Python-style)"),
     from: '        layout_type: gotime\n        layout: "2006-01-02 15:04:05"\n',
     to: '        layout_type: strptime\n        layout: "%Y-%m-%d %H:%M:%S"\n',
@@ -698,7 +695,7 @@ CASES.push(
   },
 );
 
-describe("every field of each parser writes only its key (decision 2)", () => {
+describe("every field of each parser writes only its key", () => {
   it.each(CASES.flatMap((c) => [[`${c.name}, LF`, c, false] as const, [`${c.name}, CRLF`, c, true] as const]))(
     "%s",
     async (_name, c, crlf) => {
@@ -721,7 +718,7 @@ describe("every field of each parser writes only its key (decision 2)", () => {
     20_000,
   );
 
-  it("the cards are the 12 parsers, each with its form (Task 6)", () => {
+  it("the cards are the 12 parsers, each with its form", () => {
     renderParsers();
     expect(operatorsOf(CORPUS).map((op) => op.type)).toEqual(PARSER_TYPES);
     for (const type of PARSER_TYPES) expect(OPERATOR_FORMS[type]).toBeDefined();
@@ -730,7 +727,7 @@ describe("every field of each parser writes only its key (decision 2)", () => {
 
 // ── The fixes ──
 
-describe("csv_parser: Header Attribute is a name; the header pair and the quote pair exclude each other (decisions 4 and 7)", () => {
+describe("csv_parser: Header Attribute is a name; the header pair and the quote pair exclude each other", () => {
   const WITH_ATTRIBUTE = CORPUS.replace("        header: id,name,msg\n", "        header_attribute: fields # the header row\n");
 
   it("Header Attribute is a text field with the collector's example, not a field path (csv/parser.go:95)", () => {
@@ -779,7 +776,7 @@ describe("csv_parser: Header Attribute is a name; the header pair and the quote 
   });
 });
 
-describe("json_array_parser (decision 3)", () => {
+describe("json_array_parser", () => {
   it("Parse To is marked required and shows no default; the seed's body shows as written", () => {
     renderParsers(SEEDS);
     const card = cardOf(`op-${JSON_ARRAY}-json-array-parse-to`);
@@ -789,7 +786,7 @@ describe("json_array_parser (decision 3)", () => {
   });
 });
 
-describe("container: Max Log Size's default is the collector's 1MiB (decision 4)", () => {
+describe("container: Max Log Size's default is the collector's 1MiB", () => {
   it("shows Default 1MiB, the corrected description, and 1MiB as the placeholder (container/config.go:25, 43)", () => {
     renderParsers(SEEDS);
     const card = cardOf(`op-${CONTAINER}-container-max-log-size`);
@@ -809,7 +806,7 @@ describe("container: Max Log Size's default is the collector's 1MiB (decision 4)
   });
 });
 
-describe("severity_parser writes nothing on render (decision 8; Preflight ruling 26)", () => {
+describe("severity_parser writes nothing on render", () => {
   const UPPER = CORPUS.replace("          info: ok\n", "          INFO: ok\n          WARN: w\n");
 
   it("a mapping keyed in upper case is read, and opening, expanding and leaving its rows writes nothing", async () => {
@@ -839,14 +836,14 @@ describe("severity_parser writes nothing on render (decision 8; Preflight ruling
     expect(within(cardOf(`op-${SEVERITY}-sevp-custom`)).getByText(UNSHOWABLE_VALUE_MESSAGE)).toBeInTheDocument();
   });
 
-  it("unset Preset shows the collector's default, and Default default (Ruling 51)", () => {
+  it("unset Preset shows the collector's default, and Default default", () => {
     renderParsers(CORPUS.replace("        preset: none\n", ""));
     expect(field(SEVERITY, "sevp-preset")).toHaveTextContent("Default (info, warn, error, debug, etc.)");
     expect(hintIn(cardOf(`op-${SEVERITY}-sevp-preset`), "Predefined severity mappings. · Default default")).not.toBeNull();
   });
 });
 
-describe("time_parser: presets per layout type, and the switch (decisions 3 and 7; Preflight ruling 14)", () => {
+describe("time_parser: presets per layout type, and the switch", () => {
   const TIME_BASE = (type: string, layout: string) =>
     CORPUS.replace('        layout_type: gotime\n        layout: "2006-01-02 15:04:05"\n', `        layout_type: ${type}\n        layout: ${layout}\n`);
 
@@ -857,7 +854,7 @@ describe("time_parser: presets per layout type, and the switch (decisions 3 and 
     return options;
   }
 
-  it("strptime offers six presets, the first labelled with what it writes", async () => {
+  it("strptime offers six presets, the first labeled with what it writes", async () => {
     const user = renderParsers(TIME_BASE("strptime", "'%Y-%m-%d %H:%M:%S'"));
     expect(field(TIME, "time-layout-preset")).toHaveTextContent("%Y-%m-%d %H:%M:%S");
     expect(await optionsOf(user)).toEqual([
@@ -873,7 +870,7 @@ describe("time_parser: presets per layout type, and the switch (decisions 3 and 
     expect(operatorsOf(text())[TIME]!.layout).toBe("%Y-%m-%dT%H:%M:%S.%f%z");
   });
 
-  // Its own time limit (D9c Rulings 54 and 80).
+  // Its own time limit.
   it("Go time offers the same six in Go's layouts (ctimefmt.go:30-72)", async () => {
     const user = renderParsers();
     expect(field(TIME, "time-layout-preset")).toHaveTextContent("2006-01-02 15:04:05");
@@ -919,7 +916,7 @@ describe("time_parser: presets per layout type, and the switch (decisions 3 and 
     expect(text()).toBe(CORPUS);
   });
 
-  it("a custom layout is kept across a switch, with no toast (Preflight ruling 14)", async () => {
+  it("a custom layout is kept across a switch, with no toast", async () => {
     const base = TIME_BASE("gotime", "'02 Jan 06 15:04'");
     const user = renderParsers(base);
     expect(field(TIME, "time-layout-preset")).toHaveTextContent("Custom...");
@@ -941,7 +938,7 @@ describe("time_parser: presets per layout type, and the switch (decisions 3 and 
   });
 });
 
-describe("trace_parser: the boxes say what the collector reads when off (decision 4)", () => {
+describe("trace_parser: the boxes say what the collector reads when off", () => {
   it("each box has its hint, on or off (helper/trace.go:59-83)", () => {
     renderParsers(CORPUS.replace("        span_id: {parse_from: attributes.span}\n", ""));
     const card = cardOf(`op-${TRACE}-trace-id-enable`);
@@ -962,7 +959,7 @@ describe("trace_parser: the boxes say what the collector reads when off (decisio
   });
 });
 
-describe("syslog_parser: Protocol with none, unset shown unset, no timestamp section (decisions 4 and 6)", () => {
+describe("syslog_parser: Protocol with none, unset shown unset, no timestamp section", () => {
   it("offers RFC 5424, RFC 3164 and none", async () => {
     const user = renderParsers();
     await user.click(field(SYSLOG, "syslog-protocol"));
@@ -978,7 +975,7 @@ describe("syslog_parser: Protocol with none, unset shown unset, no timestamp sec
     expect(field(SYSLOG, "syslog-location")).toBeNull();
   });
 
-  // Its own time limit (D9c Rulings 54 and 80).
+  // Its own time limit.
   it("Location for RFC 3164 only, with Default UTC (config.go:98-100)", async () => {
     const user = renderParsers();
     expect(field(SYSLOG, "syslog-location")).toHaveValue("America/New_York");
@@ -1004,7 +1001,7 @@ describe("syslog_parser: Protocol with none, unset shown unset, no timestamp sec
   });
 });
 
-describe("uri_parser: no fragment (decision 4)", () => {
+describe("uri_parser: no fragment", () => {
   it("the description and the output fields list scheme, host, port, path, query and user only (parseutils/uri.go:100-128)", () => {
     renderParsers();
     const card = cardOf(`op-${URI}-uri-parse-from`);
@@ -1035,7 +1032,7 @@ describe("regex_parser's copy and Cache Size", () => {
   });
 });
 
-// ── Opening writes nothing (D9b decision 2) ──
+// ── Opening writes nothing ──
 
 describe("opening and expanding each parser card writes nothing", () => {
   const TEXTS = [
@@ -1044,7 +1041,7 @@ describe("opening and expanding each parser card writes nothing", () => {
     ["the seeds, every other field unset", SEEDS],
   ] as const;
 
-  // One test per form and text, each with its own time limit (D9c Ruling 54).
+  // One test per form and text, each with its own time limit.
   it.each(PARSER_TYPES.flatMap((type, card) => TEXTS.map(([name, base]) => [type, name, card, base] as const)))(
     "%s on %s: collapsed, expanded, every field focused and left",
     async (_type, _name, card, base) => {
@@ -1065,9 +1062,9 @@ describe("opening and expanding each parser card writes nothing", () => {
   );
 });
 
-// ── Privacy (decision 10) ──
+// ── Privacy ──
 
-describe("privacy (decision 10)", () => {
+describe("privacy", () => {
   it("puts no config value in any attribute across the parser cards, every menu opened", async () => {
     const MARK = "zq-mark";
     const base = withParsers([
@@ -1122,9 +1119,9 @@ describe("privacy (decision 10)", () => {
   }, 20_000);
 });
 
-// ── The Task 5 review's fixes (D9c Rulings 58 and 59) ──
+// ── The syslog framing trailer, and container's format ──
 
-describe("syslog_parser: a protocol other than RFC 5424 takes no framing trailer (Ruling 58)", () => {
+describe("syslog_parser: a protocol other than RFC 5424 takes no framing trailer", () => {
   // parser/syslog/config.go:88-91: the trailer is refused with none and with anything but rfc5424.
   const WITH_TRAILER = CORPUS.replace(
     "        protocol: rfc3164\n        location: America/New_York\n",
@@ -1158,7 +1155,7 @@ describe("syslog_parser: a protocol other than RFC 5424 takes no framing trailer
   });
 });
 
-describe("container: format auto is shown as written (Ruling 59)", () => {
+describe("container: format auto is shown as written", () => {
   // parser/container/config.go:63-71: only docker, crio and containerd; auto is refused.
   const AUTO = CORPUS.replace(CONTAINER_LINES, CONTAINER_LINES.replace("format: docker", "format: auto"));
 
@@ -1173,9 +1170,9 @@ describe("container: format auto is shown as written (Ruling 59)", () => {
   });
 });
 
-// ── The Task 6 review's fixes (D9c Rulings 61-63) ──
+// ── Octet counting, and the epoch layouts ──
 
-describe("syslog_parser: octet counting (Rulings 61 and 62)", () => {
+describe("syslog_parser: octet counting", () => {
   const WITH_TRAILER = CORPUS.replace(
     "        protocol: rfc3164\n        location: America/New_York\n",
     "        protocol: rfc5424\n        non_transparent_framing_trailer: LF # framing\n        location: America/New_York\n",
@@ -1229,7 +1226,7 @@ describe("syslog_parser: octet counting (Rulings 61 and 62)", () => {
   });
 });
 
-describe("csv, time_parser and the epoch layouts (Ruling 63)", () => {
+describe("csv, time_parser and the epoch layouts", () => {
   const TIME_WITH = (type: string, layout: string) =>
     CORPUS.replace('        layout_type: gotime\n        layout: "2006-01-02 15:04:05"\n', `        layout_type: ${type}\n        layout: ${layout}\n`);
 
@@ -1240,7 +1237,7 @@ describe("csv, time_parser and the epoch layouts (Ruling 63)", () => {
     expect(hintIn(card, "Comma-separated column names.")).toBeNull();
   });
 
-  it("clearing time_parser's custom layout removes the key (D9b's rule; never \"\")", async () => {
+  it("clearing time_parser's custom layout removes the key (never \"\")", async () => {
     const base = TIME_WITH("gotime", "'02 Jan 06 15:04'");
     const user = renderParsers(base);
     await retypeInto(user, field(TIME, "time-layout-custom"), "");
@@ -1263,7 +1260,7 @@ describe("csv, time_parser and the epoch layouts (Ruling 63)", () => {
     expect(field(TIME, "time-location")).toHaveValue("UTC");
   });
 
-  // Its own time limit (D9c Rulings 54 and 80).
+  // Its own time limit.
   it.each(["s", "ms", "us", "ns", "s.ms", "s.us", "s.ns"])(
     "epoch's %s counts as epoch's: a switch away sets the new type's first preset (time.go:100)",
     async (layout) => {

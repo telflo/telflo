@@ -26,13 +26,12 @@ import { SAMPLE_PINS } from "./types.js";
 import { SAMPLE_TESTING_READS, sampleTesting, type SampleTesting } from "./testing-tab.js";
 
 /*
- * The sample's Testing tab (D31-1 decisions 10, 12 and 31; Preflight
- * rulings 6 and 8): every object parses with its contracts schema and each
- * read's answer with its response schema; ids are fixed, lowercase and
- * stable; everything is the open draft's, its pipelines the text's, its
- * pins offered; and the reads answer from the sample, never calling the
- * API client. sample.test.ts searches the whole sample, this included, for
- * secret-shaped values.
+ * The sample's Testing tab: every object parses with its contracts schema and
+ * each read's answer with its response schema; ids are fixed, lowercase and
+ * stable; everything is the open draft's, its pipelines the text's, its pins
+ * offered; and the reads answer from the sample, never calling the API client.
+ * sample.test.ts searches the whole sample, this included, for secret-shaped
+ * values.
  */
 
 const NOW = Date.parse("2026-10-27T12:00:00.000Z");

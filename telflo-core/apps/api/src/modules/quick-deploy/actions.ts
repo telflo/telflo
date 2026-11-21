@@ -1,15 +1,14 @@
 /*
- * The quick-deploy links' audit actions (D17c-2 decision 9, Preflight
- * ruling 13). Each row names ids (the link's, the fleet's, the group's),
- * the method, the arch, the systemd choice, the preset or the requester's
- * address and user agent: never the secret, its hash, a path, a variable's
- * name or a value.
+ * The quick-deploy links' audit actions. Each row names ids (the link's, the
+ * fleet's, the group's), the method, the arch, the systemd choice, the preset
+ * or the requester's address and user agent: never the secret, its hash, a
+ * path, a variable's name or a value.
  */
 
 /**
  * A member made a link (the create's transaction): a Linux link's `{linkId,
  * fleetId, groupId, method, arch, systemd}`, a Helm values link's `{linkId,
- * fleetId, groupId, kind: "helm"}` (D17d-2: never its release or namespace).
+ * fleetId, groupId, kind: "helm"}` (never its release or namespace).
  */
 export const QUICK_DEPLOY_LINK_CREATED = "quick_deploy_link.created";
 /** A member extended a link: `{linkId, fleetId, by, expiresAt}`. */

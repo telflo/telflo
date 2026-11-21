@@ -2,8 +2,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "~/comp
 import { formatDateTime, formatRelativeTime } from "~/lib/format.js";
 
 /*
- * A collector's Last seen (D17b-1 decisions 11 and 23, Preflight ruling
- * 10; D17d-2 Ruling 55): how long ago (D17a's `formatRelativeTime`, at the
+ * A collector's Last seen: how long ago (`formatRelativeTime`, at the
  * tab's render, so each poll re-reckons it) as plain text, no dot: the
  * server's `liveness` is the Status column's (`CollectorStatusCell`). The
  * full local time is tooltip text on a focusable trigger and screen-reader

@@ -4,19 +4,16 @@ import { seedUser } from "./support/database.js";
 import { E2E_ANALYTICS_WEB_URL, E2E_SAAS_WEB_URL, E2E_WEB_URL } from "./support/environment.js";
 import { signInThroughApi, waitForHydration } from "./support/session.js";
 
-// The site's switches in the browser (D36-1 decisions 20-23, 27, 31 and 33;
-// Preflight rulings 6, 7, 12, 16 and 19): on the default pair, the open
+// The site's switches in the browser: on the default pair, the open
 // source's defaults (no marketing site, `/` to sign-in or the app, robots
 // disallowing everything, the playground and the anonymous reads off, no
 // Sign up, no request leaving the site); the "on" cases on the SaaS pair.
 // The switched pages answer 404 on a full load and on a client-side
-// navigation alike (server loaders, never client ones). The marketing
-// pages' own checks left with them (telflo-site's now); the robots and
-// no-PostHog checks moved here from marketing.e2e.ts.
+// navigation alike (server loaders, never client ones).
 
 const PASSWORD = "correct horse battery staple";
 
-/** The pages that left the web app (decision 20), and the sitemap. */
+/** Marketing pages the web app doesn't serve, and the sitemap. */
 const REMOVED_PAGES = [
   "/pricing",
   "/use-cases",
@@ -34,7 +31,7 @@ const REMOVED_PAGES = [
   "/sitemap.xml",
 ];
 
-/** The playground's pages, behind TELFLO_PLAYGROUND (decision 31). */
+/** The playground's pages, behind TELFLO_PLAYGROUND. */
 const PLAYGROUND_PAGES = ["/playground", "/playground/flows", "/playground/fleet-management", "/playground/editor", "/public-editor"];
 
 const ROBOTS = "User-agent: *\nDisallow: /\n";
@@ -93,14 +90,14 @@ test.describe("the open source's defaults (the default pair)", () => {
     await waitForHydration(page);
   });
 
-  test("every page that left with the marketing site, and the sitemap, is a 404", async ({ page, request }) => {
+  test("every marketing page, and the sitemap, is a 404", async ({ page, request }) => {
     for (const path of REMOVED_PAGES) {
       expect((await request.get(path, { maxRedirects: 0 })).status(), path).toBe(404);
     }
     await expectNotFoundPage(page, "/pricing");
   });
 
-  test("the playground's pages are 404s on a full load and on a client-side navigation (decision 31)", async ({ page }) => {
+  test("the playground's pages are 404s on a full load and on a client-side navigation", async ({ page }) => {
     for (const path of PLAYGROUND_PAGES) await expectNotFoundPage(page, path);
 
     await page.goto("/login");
@@ -110,7 +107,7 @@ test.describe("the open source's defaults (the default pair)", () => {
     await expect(page.getByText("You're in the playground")).toHaveCount(0);
   });
 
-  test("the anonymous reads and the sales inquiries answer as a path nothing serves (decisions 25 and 31)", async ({ request }) => {
+  test("the anonymous reads and the sales inquiries answer as a path nothing serves", async ({ request }) => {
     const calls = anonymousCalls(request);
     for (const [name, call] of Object.entries(calls)) {
       const response = await call();
@@ -119,14 +116,14 @@ test.describe("the open source's defaults (the default pair)", () => {
     }
   });
 
-  test("sign-in offers no Sign up: the site is invitation-only (decision 23)", async ({ page }) => {
+  test("sign-in offers no Sign up: the site is invitation-only", async ({ page }) => {
     await page.goto("/login");
     await waitForHydration(page);
     await expect(page.getByRole("link", { name: "Forgot password?" })).toBeVisible();
     await expect(page.getByRole("link", { name: /sign up/i })).toHaveCount(0);
   });
 
-  test("/docs/* still redirects to the docs (decision 21)", async ({ request }) => {
+  test("/docs/* still redirects to the docs", async ({ request }) => {
     const response = await request.get("/docs/anything", { maxRedirects: 0 });
     expect(response.status()).toBe(301);
     expect(response.headers()["location"]).toBe(DEFAULT_DOCS_URL);
@@ -152,7 +149,7 @@ test.describe("the open source's defaults (the default pair)", () => {
 });
 
 for (const base of [E2E_WEB_URL, E2E_SAAS_WEB_URL, E2E_ANALYTICS_WEB_URL]) {
-  test(`robots.txt disallows every path and names no sitemap, whatever the site's values (${base}; Preflight ruling 12)`, async ({
+  test(`robots.txt disallows every path and names no sitemap, whatever the site's values (${base})`, async ({
     request,
   }) => {
     const robots = await request.get(`${base}/robots.txt`);

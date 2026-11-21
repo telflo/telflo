@@ -6,20 +6,19 @@ import { FlowSlugSchema } from "./flow-slug.js";
 export { FLOW_SLUG_MAXIMUM_LENGTH, FLOW_SLUG_PATTERN, FlowSlugSchema } from "./flow-slug.js";
 
 /*
- * The flows endpoints (D12 decisions 2, 10 and 11): prebuilt collector
- * configurations, each solving one problem, in camelCase. Anyone reads the published
- * flows' cards (`GET /api/v1/flow-showcase`); a signed-in user lists and
- * reads them in full (`GET /api/v1/flows`, `GET /api/v1/flows/:slug`), the
- * hidden ones too when a product admin; only a product admin creates,
- * changes and deletes them (`POST /api/v1/flows`, `PATCH` and `DELETE
- * /api/v1/flows/:id`) and runs the security lint over a configuration
- * (`POST /api/v1/flows/lint`).
+ * The flows endpoints: prebuilt collector configurations, each solving one
+ * problem, in camelCase. Anyone reads the published flows' cards
+ * (`GET /api/v1/flow-showcase`); a signed-in user lists and reads them in full
+ * (`GET /api/v1/flows`, `GET /api/v1/flows/:slug`), the hidden ones too when a
+ * product admin; only a product admin creates, changes and deletes them
+ * (`POST /api/v1/flows`, `PATCH` and `DELETE /api/v1/flows/:id`) and runs the
+ * security lint over a configuration (`POST /api/v1/flows/lint`).
  *
  * The request's limits: the name's 120 and the author's 80, the summary's
- * 300, the slug's 80 (D12 Preflight ruling 19), the source link's http(s)
- * scheme (the table's ck_flows_source_url_scheme). The YAML has the
- * configuration's limit (D8 decision 7). Text Postgres can't store exactly
- * is refused, as the configurations' is (`hasUnstorableCharacter`).
+ * 300, the slug's 80, the source link's http(s) scheme (the table's
+ * ck_flows_source_url_scheme). The YAML has the configuration's limit.
+ * Text Postgres can't store exactly is refused, as the configurations' is
+ * (`hasUnstorableCharacter`).
  */
 
 /** The signals a flow handles, derived from its pipelines by the admin dialog. */
@@ -41,7 +40,7 @@ export const FLOW_NAME_MAXIMUM_LENGTH = 120;
 export const FLOW_SUMMARY_MAXIMUM_LENGTH = 300;
 export const FLOW_AUTHOR_NAME_MAXIMUM_LENGTH = 80;
 
-/** The YAML's limit: a configuration version's (D8 decision 7). */
+/** The YAML's limit: a configuration version's. */
 export const FLOW_YAML_MAXIMUM_LENGTH = CONFIGURATION_YAML_MAXIMUM_LENGTH;
 
 /**
@@ -158,7 +157,7 @@ const flowInputFields = {
   signals: FlowSignalsSchema,
   tags: FlowTagsSchema,
   yaml: FlowYamlSchema,
-  /** One the catalogue doesn't have is 400 `collector_distribution_unknown`. */
+  /** One the catalog doesn't have is 400 `collector_distribution_unknown`. */
   collectorDistribution: CollectorDistributionIdSchema,
   /** One the distribution doesn't offer (unknown or deprecated) is 400 `collector_version_unknown`. */
   collectorVersion: CollectorVersionNumberSchema,
@@ -168,12 +167,11 @@ const flowInputFields = {
 };
 
 /**
- * `POST /api/v1/flows` (D12 decision 11), product admins only: the admin
- * dialog's fields, every one required but `published`, which is true left
- * out. The source is always `telflo`, so the body can't name one; nor an
- * author link, which the dialog never sets. Strict: an
- * unknown field is 400 `invalid_request`. A slug another flow has is 409
- * `flow_slug_taken`.
+ * `POST /api/v1/flows`, product admins only: the admin dialog's fields,
+ * every one required but `published`, which is true left out. The source
+ * is always `telflo`, so the body can't name one; nor an author link,
+ * which the dialog never sets. Strict: an unknown field is 400
+ * `invalid_request`. A slug another flow has is 409 `flow_slug_taken`.
  */
 export const CreateFlowRequestSchema = z
   .object({ ...flowInputFields, published: z.boolean().default(true) })
@@ -183,10 +181,10 @@ export const CreateFlowRequestSchema = z
 export type CreateFlowRequest = z.input<typeof CreateFlowRequestSchema>;
 
 /**
- * `PATCH /api/v1/flows/:id` (D12 decision 11), product admins only: any of
- * the dialog's fields and `published` (the visibility switch); a field left
- * out stays as it is. A pin left as it is stays even if deprecated since
- * (D12 Preflight ruling 19); a changed one must be offered.
+ * `PATCH /api/v1/flows/:id`, product admins only: any of the dialog's
+ * fields and `published` (the visibility switch); a field left out stays as
+ * it is. A pin left as it is stays even if deprecated since; a changed one
+ * must be offered.
  */
 export const UpdateFlowRequestSchema = z
   .object({
@@ -209,11 +207,10 @@ export const UpdateFlowRequestSchema = z
 export type UpdateFlowRequest = z.input<typeof UpdateFlowRequestSchema>;
 
 /**
- * A flow in full, camelCase: what a signed-in read
- * and every write answer. `yaml` is the configuration "Use this flow" and
- * "Start from a flow" copy byte for byte (D12 decision 5). `published` false
- * hides it from everyone but product admins. The timestamps are ISO 8601,
- * from the API's clock.
+ * A flow in full, camelCase: what a signed-in read and every write
+ * answer. `yaml` is the configuration "Use this flow" and "Start from a
+ * flow" copy byte for byte. `published` false hides it from everyone but
+ * product admins. The timestamps are ISO 8601, from the API's clock.
  */
 export const FlowSchema = z
   .object({
@@ -241,9 +238,8 @@ export const FlowSchema = z
 export type Flow = z.infer<typeof FlowSchema>;
 
 /**
- * A published flow's card (D12 decision 10): `GET /api/v1/flow-showcase`'s,
- * read signed out where public flows are on (D36-1 decision 31). Never the
- * YAML.
+ * A published flow's card: `GET /api/v1/flow-showcase`'s, read signed out
+ * where public flows are on. Never the YAML.
  */
 export const FlowCardSchema = z
   .object({
@@ -280,20 +276,20 @@ export const FlowResponseSchema = z.object({ flow: FlowSchema }).strict();
 export type FlowResponse = z.infer<typeof FlowResponseSchema>;
 
 /**
- * A published flow as the open flow read answers it (D31-1 decision 34,
- * Preflight ruling 1): `FlowSchema` without what only the signed-in reads
- * and the admin's table need (`id`, `published`, `sortOrder`, `createdAt`).
- * The YAML is in it, as in the signed-in reads: the playground's gallery
- * and a flow's page show it. Strict: nothing else is answered.
+ * A published flow as the open flow read answers it: `FlowSchema` without
+ * what only the signed-in reads and the admin's table need (`id`,
+ * `published`, `sortOrder`, `createdAt`). The YAML is in it, as in the
+ * signed-in reads: the playground's gallery and a flow's page show it.
+ * Strict: nothing else is answered.
  */
 export const PublishedFlowSchema = FlowSchema.omit({ id: true, published: true, sortOrder: true, createdAt: true }).strict();
 
 export type PublishedFlow = z.infer<typeof PublishedFlowSchema>;
 
 /**
- * `GET /api/v1/published-flows` (D31-1 decisions 5 and 34): every published
- * flow, in the gallery's order (`sort_order`, then the name), with no
- * session. A hidden flow is never in it, whoever asks.
+ * `GET /api/v1/published-flows`: every published flow, in the gallery's order
+ * (`sort_order`, then the name), with no session. A hidden flow is never in
+ * it, whoever asks.
  */
 export const PublishedFlowsResponseSchema = z.object({ flows: z.array(PublishedFlowSchema) }).strict();
 
@@ -305,12 +301,11 @@ export const PublishedFlowResponseSchema = z.object({ flow: PublishedFlowSchema 
 export type PublishedFlowResponse = z.infer<typeof PublishedFlowResponseSchema>;
 
 /**
- * `POST /api/v1/flows/lint` (D12 decision 6, Preflight ruling 3), product
- * admins only: the security lint over a configuration, advisory. The YAML has
- * a flow's limit and is otherwise any text, blank included: an empty one is
- * the lint's `empty-config`, not a refusal. Strict: `yaml` is required and
- * nothing else is accepted. Nothing is stored, so text Postgres can't store
- * is linted too.
+ * `POST /api/v1/flows/lint`, product admins only: the security lint over a
+ * configuration, advisory. The YAML has a flow's limit and is otherwise any
+ * text, blank included: an empty one is the lint's `empty-config`, not a
+ * refusal. Strict: `yaml` is required and nothing else is accepted. Nothing
+ * is stored, so text Postgres can't store is linted too.
  */
 export const FlowLintRequestSchema = z.object({ yaml: z.string().max(FLOW_YAML_MAXIMUM_LENGTH) }).strict();
 
@@ -345,10 +340,10 @@ export const FLOW_LINT_CODES = [
 export type FlowLintCode = (typeof FLOW_LINT_CODES)[number];
 
 /**
- * One finding: `message` and `path` quote the
- * configuration's keys and values (and, for `invalid-yaml`, the parser's
- * message), so both are configuration text (ADR 0024). `path` is where in
- * the configuration (`exporters.otlp.endpoint`, `config` for the whole text).
+ * One finding: `message` and `path` quote the configuration's keys and values
+ * (and, for `invalid-yaml`, the parser's message), so both are configuration
+ * text. `path` is where in the configuration (`exporters.otlp.endpoint`,
+ * `config` for the whole text).
  */
 export const FlowLintFindingSchema = z
   .object({
@@ -378,14 +373,14 @@ export const FlowLintResponseSchema = z
 export type FlowLintResponse = z.infer<typeof FlowLintResponseSchema>;
 
 /**
- * The flows endpoints' own refusals (D12 decisions 10 and 11):
- * `flow_not_found` (404), a slug or id no flow has, a hidden flow read by
- * anyone but a product admin, and an id that isn't a UUID; `flow_slug_taken`
- * (409), a create or a rename to a slug another flow has. Their other
- * refusals are shared: `product_admin_required` (403, IDENTITY_ERROR_CODES)
- * for a write by anyone but a product admin; `collector_distribution_unknown`
- * and `collector_version_unknown` (400, CONFIGURATION_ERROR_CODES) for a pin
- * the catalogue doesn't offer; the session's.
+ * The flows endpoints' own refusals: `flow_not_found` (404), a slug or id no
+ * flow has, a hidden flow read by anyone but a product admin, and an id that
+ * isn't a UUID; `flow_slug_taken` (409), a create or a rename to a slug
+ * another flow has. Their other refusals are shared: `product_admin_required`
+ * (403, IDENTITY_ERROR_CODES) for a write by anyone but a product admin;
+ * `collector_distribution_unknown` and `collector_version_unknown` (400,
+ * CONFIGURATION_ERROR_CODES) for a pin the catalog doesn't offer; the
+ * session's.
  */
 export const FLOW_ERROR_CODES = ["flow_not_found", "flow_slug_taken"] as const;
 

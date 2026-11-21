@@ -20,39 +20,35 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~
 import type { ValueChange } from "~/lib/graph/text-edits.js";
 
 /*
- * The timestamp section (ADR 0018), a parser's `timestamp` block, over the
- * form (D9c decisions 2 and 7). It sits in an operator
- * card, under the card's scope; its ids are the card's (`op-<index>-…`,
- * decision 8). The Layout label still points at `…-ts-layout`, which no
+ * The timestamp section, a parser's `timestamp` block, over the form. It sits
+ * in an operator card, under the card's scope; its ids are the card's
+ * (`op-<index>-…`). The Layout label still points at `…-ts-layout`, which no
  * control has (the select is `…-ts-layout-preset`).
  *
- * Kept (Parity Notes): ticking "Parse Timestamp" writes
- * `{parse_from: attributes.timestamp, layout: "%Y-%m-%d %H:%M:%S",
- * layout_type: strptime}`; unticking removes the block; Custom... shows the
- * layout's input (a per-card toggle, following the card, Preflight ruling
- * 25).
- * Fixed (decisions 3, 4 and 7; Preflight rulings 14 and 15):
+ * Ticking "Parse Timestamp" writes `{parse_from: attributes.timestamp,
+ * layout: "%Y-%m-%d %H:%M:%S", layout_type: strptime}`; unticking removes
+ * the block; Custom... shows the layout's input (a per-card toggle,
+ * following the card).
+ *
  * - the Layout presets are the layout type's (`LAYOUT_PRESETS`): strptime's
- *   ones, the first labelled with what it writes ("%Y-%m-%d %H:%M:%S", not
- *   the Go notation); Go layouts under Go time (never strptime strings, which
- *   Go doesn't read); the collector's epoch layouts `s` and `s.us` under
- *   epoch (`helper/time.go:98-106`);
- * - switching Layout Type sets the new type's first preset when the layout
- *   is another type's preset (the collector refuses a strptime layout under
+ *   ones, the first labeled with what it writes ("%Y-%m-%d %H:%M:%S", not the
+ *   Go notation); Go layouts under Go time (never strptime strings, which Go
+ *   doesn't read); the collector's epoch layouts `s` and `s.us` under epoch
+ *   (`helper/time.go:98-106`);
+ * - switching Layout Type sets the new type's first preset when the layout is
+ *   another type's preset (the collector refuses a strptime layout under
  *   epoch, `time.go:98-106`), in the same change (one undo entry), with the
- *   toast "Layout set to the first <type> preset." (D9d decision 7); a custom layout is typed text and is kept, as
- *   is one of the new type's own;
- * - Layout shows under epoch too, so the layout the switch set is seen
- *   (decision 7: "the other control shows its new value"), not hidden with
- *   its strptime layout left in the text.
- * Changed (D9b decision 3; Ruling 31): an unset Layout Type shows the
- * collector's `strptime` (`time.go:62-64`) as its placeholder and "Default
- * strptime"; a type outside the three (`native`) shows as an extra option,
- * and its Layout offers Custom... only. A layout the select can't show is
- * read-only with decision 3's hint.
- * As time_parser's (D9c Ruling 63, final review M1 and M2): clearing the
- * custom layout removes `layout` (D9b's rule; never `""`);
- * Timezone is hidden under epoch, where the collector doesn't read
+ *   toast "Layout set to the first <type> preset."; a custom layout is typed
+ *   text and is kept, as is one of the new type's own;
+ * - Layout shows under epoch too, so the layout the switch set is seen, not
+ *   hidden with its strptime layout left in the text.
+ *
+ * An unset Layout Type shows the collector's `strptime` (`time.go:62-64`) as
+ * its placeholder and "Default strptime"; a type outside the three (`native`)
+ * shows as an extra option, and its Layout offers Custom... only. A layout the
+ * select can't show is read-only with the unshowable-value hint. As in the
+ * time parser's form, clearing the custom layout removes `layout` (never
+ * `""`); Timezone is hidden under epoch, where the collector doesn't read
  * `location` (`time.go:114-117`), and a location in the text is kept.
  */
 
@@ -130,20 +126,19 @@ export interface LayoutControl {
   selectValue: string;
   /** Custom... is picked: the layout's own input shows. */
   custom: boolean;
-  /** The layout is written in a form the select can't show: read-only, with decision 3's hint. */
+  /** The layout is written in a form the select can't show: read-only, with the unshowable-value hint. */
   unshowable: boolean;
-  /** Layout Type's write: decision 7's switch. */
+  /** Layout Type's write: the switch (`layoutAfterSwitch`). */
   switchType: (next: string) => void;
   /** The Layout select's write. */
   chooseLayout: (value: string) => void;
 }
 
 /**
- * The layout controls' reading and writing (decision 7; Preflight ruling 14),
- * shared by this section (its own presets, `inSection`) and the time parser's
- * form (all of its type's presets, `all`). A switch that sets the layout
- * toasts `layoutSetMessage`. Custom... is per-card state, following the card
- * (Preflight ruling 25).
+ * The layout controls' reading and writing, shared by this section (its own
+ * presets, `inSection`) and the time parser's form (all of its type's
+ * presets, `all`). A switch that sets the layout toasts `layoutSetMessage`.
+ * Custom... is per-card state, following the card.
  */
 export function useLayoutControl(adjustments: Adjustments, all: boolean): LayoutControl {
   const form = useForm();
@@ -166,7 +161,7 @@ export function useLayoutControl(adjustments: Adjustments, all: boolean): Layout
   if (wasCustom !== custom) setWasCustom(custom);
   const selectValue = unshowable ? "" : custom ? "custom" : layout;
 
-  /** decision 7: a preset of another type becomes the new type's first, in the same change, with the toast. */
+  /** A preset of another type becomes the new type's first, in the same change, with the toast. */
   const switchType = (next: string) => {
     const to = asLayoutType(next);
     const current = layoutView.kind === "scalar" && typeof layoutView.value === "string" ? layoutView.value : undefined;

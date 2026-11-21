@@ -1,8 +1,7 @@
-"""The image itself (marked `binary`; D14a Task 5, Preflight ruling 6's
-binary test 12, rulings 4 and 19): run inside the image's `test` target.
+"""The image itself (marked `binary`): run inside the image's `test` target.
 
-- Its catalogue is catalog/'s: the image mirrors the repository's layout, so
-  the service's default catalogue directory is the copy it carries, and the
+- Its catalog is catalog/'s: the image mirrors the repository's layout, so
+  the service's default catalog directory is the copy it carries, and the
   collectors it holds are exactly the versions it was built for
   (`OTELCOL_EXPECTED_VERSIONS`: every offered version for `all`), never a
   retired or unknown one, each saying its own version.
@@ -39,14 +38,14 @@ MANIFEST = json.loads((SERVICE_ROOT / "kwok" / "binaries.json").read_text(encodi
 
 def test_the_service_reads_the_catalogue_the_image_carries() -> None:
     """The image mirrors the repository (/app/services/otelcol-testing beside
-    /app/catalog), so the service's default catalogue is the copy of
+    /app/catalog), so the service's default catalog is the copy of
     catalog/distributions, and OTELCOL_CATALOG_DIR names that same copy."""
     assert CATALOG_DIR.resolve() == DEFAULT_CATALOG_DIR.resolve()
     assert (CATALOG_DIR / "otelcol-contrib.json").is_file()
 
 
 def test_the_images_catalogue_is_catalog_s_file_for_file() -> None:
-    """Ruling 33: not only its versions: every file of the catalogue the
+    """Not only its versions: every file of the catalog the
     service reads is catalog/'s (the build context's copy, kept apart in the
     test target), byte for byte, and there is no other."""
     context = Path(os.environ.get("OTELCOL_CONTEXT_CATALOG_DIR", ""))
@@ -191,8 +190,8 @@ def test_a_non_dumpable_process_refuses_its_environment_to_the_same_user() -> No
 
 
 def test_exec_makes_a_process_dumpable_again() -> None:
-    """Why the secret must be in no environment (Preflight ruling 4): a
-    collector the non-dumpable service starts is an exec, readable again."""
+    """Why the secret must be in no environment: a collector the
+    non-dumpable service starts is an exec, readable again."""
     execed = _child(
         "from app.hardening import make_not_dumpable\n"
         "import os, sys\n"

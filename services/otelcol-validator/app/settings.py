@@ -1,10 +1,10 @@
 """The validator's settings, read from the environment once, at startup.
 
-D13b spec decision 11 and Preflight ruling 11. The shared secret follows ADR
-0026's pattern (the opamp-server's `Secrets`): the current secret and every
-previous one are kept only as SHA-256 digests, each at least 32 bytes, and a
-presented token is compared with all of them in constant time. Without a
-current secret the service refuses to start; there is no opt-out.
+The shared secret follows the opamp-server's `Secrets`: the current secret
+and every previous one are kept only as SHA-256 digests, each at least
+32 bytes, and a presented token is compared with all of them in constant
+time. Without a current secret the service refuses to start; there is no
+opt-out.
 """
 
 from __future__ import annotations
@@ -31,13 +31,13 @@ DEFAULT_MAX_CONCURRENCY = 8
 DEFAULT_VALIDATE_TIMEOUT = 10
 # A whole check (its child process: the pre-processing, the collector, the
 # stderr parse) may run the collector's limit plus this before its process
-# group is killed (D13b ruling 27; `app/runner.py` says why 2 s).
+# group is killed (`app/runner.py` says why 2 s).
 DEADLINE_MARGIN_SECONDS = 2
-# Seconds a request waits for a free slot before it answers 503 (spec
-# decision 10: the wait is bounded). Not an environment setting.
+# Seconds a request waits for a free slot before it answers 503 (the wait
+# is bounded). Not an environment setting.
 DEFAULT_SLOT_WAIT_SECONDS = 5.0
 DEFAULT_BINARY_DIR = Path("/opt/otelcol")
-# Run from the checkout, the catalogue is the repository's own
+# Run from the checkout, the catalog is the repository's own
 # (services/otelcol-validator/app/settings.py -> <repo>/catalog/distributions).
 # The image sets OTELCOL_CATALOG_DIR to the copy it carries.
 DEFAULT_CATALOG_DIR = Path(__file__).resolve().parents[3] / "catalog" / "distributions"

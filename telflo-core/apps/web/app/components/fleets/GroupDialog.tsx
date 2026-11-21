@@ -66,12 +66,10 @@ import {
 } from "./VariableGroupChoice.js";
 
 /*
- * The group dialog (D17b-2 decisions 15 and 24; Preflight ruling 11; its
- * mounts D17c-1 decisions 31 and 32, Preflight ruling 30), ADR 0018: one
- * Dialog for create, edit and assign, with its titles' forms, its Name
- * placeholder, "Create", "Assign" or "Save", and outside clicks and Escape
- * blocked while saving; D17b-1's pin picker (`ConfigurationVersionPicker`)
- * picks the version. Per the D17b-2 Parity Notes:
+ * The group dialog: one Dialog for create, edit and assign, with its
+ * titles' forms, its Name placeholder, "Create", "Assign" or "Save", and
+ * outside clicks and Escape blocked while saving; the pin picker
+ * (`ConfigurationVersionPicker`) picks the version. Its details:
  *
  * - The titles "New group", `Edit {name}` and `Assign a published version to
  *   {name}` (an unassigned group's); the descriptions say what pinned
@@ -83,66 +81,59 @@ import {
  *   (`collector_group_name_taken`) or a 400 naming `name` shows there too.
  *   The Default group's Name is read-only, with "The Default group can't be
  *   renamed.", and never sent.
- * - **Published version** (the picker: published configurations with
- *   "Load more" and no search box (Ruling 35, the owner's), then the
- *   chosen configuration's published versions, newest first, a
- *   configuration chosen selecting its newest; the
+ * - **Published version** (the picker: published configurations with "Load
+ *   more" and no search box, then the chosen configuration's published
+ *   versions, newest first, a configuration chosen selecting its newest; the
  *   current assignment's configuration always offered; no "(group default)"
- *   marker). Create requires one (Ruling 34, the owner's): it shows the
- *   picker alone, with no choice and no "Nothing assigned", and no visible
- *   "Published version" heading (Ruling 36, on the owner's point): a
- *   group whose `aria-label` is the fixed words "Published version". An
- *   unassigned group's Assign shows the picker alone too, nothing picked
- *   (D17c-1 Ruling 72, the owner's: "Nothing assigned" only releases an
- *   assigned group). An assigned group's Edit keeps its visible "Published
- *   version" label and chooses "A published version" (the picker) or
- *   "Nothing assigned" (its hint says it releases the version), and "A
- *   deleted configuration's version" only for such an assignment,
- *   preselected and never sent unless changed. No starter configuration
- *   (Parity Notes).
- * - **Variable group** (D20 default 23; Q83): a Select of the
- *   organization's variable groups, read at the opening (`VariableGroupChoice`:
- *   the list a snapshot), "None (organization values)" first and the
- *   default; the group's own preselected. `variableGroupId` is sent only when
- *   the choice differs from the group's as it opened (null for None; a
- *   create sends it only for a variable group chosen), and a change alone
- *   enables the save. The Select's trigger and list sit inside
- *   `ph-no-capture` (a variable group's name is configuration text, Q88).
- * - **Variables used** (default 23; Q86; Preflight ruling 32): for the
- *   version chosen (the assignment it opens with included), its text read
- *   through `getConfigurationVersion(…, signal)` under the opening's reads (a
- *   new choice aborts the previous read, whose late answer is dropped), its
- *   names extracted with the web's `References`, and those no organization
- *   variable has listed before Save, inside `ph-no-capture`. A 422
- *   `variables_undefined` shows the API's words and its names (at most 100,
- *   then "… and N more" from `totalNames`); a 404 `variable_group_not_found`
- *   its words.
- * - **Mounts** (D17c-1; `MountsEditor.tsx`): a disclosure "Mounts (for the
- *   container install)", a plain button with `aria-expanded` and
- *   `aria-controls` (the panel stays in the document, `hidden` while closed),
- *   closed by default and open when the group has mounts (or ones Telflo
- *   can't read), for create and edit, Default's included. The rows start as
+ *   marker). Create requires one: it shows the picker alone, with no choice and
+ *   no "Nothing assigned", and no visible "Published version" heading: a group
+ *   whose `aria-label` is the fixed words "Published version". An unassigned
+ *   group's Assign shows the picker alone too, nothing picked ("Nothing
+ *   assigned" only releases an assigned group). An assigned group's Edit keeps
+ *   its visible "Published version" label and chooses "A published version"
+ *   (the picker) or "Nothing assigned" (its hint says it releases the version),
+ *   and "A deleted configuration's version" only for such an assignment,
+ *   preselected and never sent unless changed. No starter configuration.
+ * - **Variable group**: a Select of the organization's variable groups, read at
+ *   the opening (`VariableGroupChoice`: the list a snapshot), "None
+ *   (organization values)" first and the default; the group's own preselected.
+ *   `variableGroupId` is sent only when the choice differs from the group's as
+ *   it opened (null for None; a create sends it only for a variable group
+ *   chosen), and a change alone enables the save. The Select's trigger and list
+ *   sit inside `ph-no-capture` (a variable group's name is configuration text).
+ * - **Variables used**: for the version chosen (the assignment it opens with
+ *   included), its text read through `getConfigurationVersion(…, signal)` under
+ *   the opening's reads (a new choice aborts the previous read, whose late
+ *   answer is dropped), its names extracted with the web's `References`, and
+ *   those no organization variable has listed before Save, inside
+ *   `ph-no-capture`. A 422 `variables_undefined` shows the API's words and its
+ *   names (at most 100, then "… and N more" from `totalNames`); a 404
+ *   `variable_group_not_found` its words.
+ * - **Mounts** (`MountsEditor.tsx`): a disclosure "Mounts (for the container
+ *   install)", a plain button with `aria-expanded` and `aria-controls` (the
+ *   panel stays in the document, `hidden` while closed), closed by default and
+ *   open when the group has mounts (or ones Telflo can't read), for create and
+ *   edit, Default's included. The rows start as
  *   `dockerMountsOf(group.annotations)`; a "telflo" annotation Telflo can't
- *   read shows no rows and says a mount added here replaces it (a rename
- *   alone leaves it). `annotations` is sent only when the mounts (paths
- *   trimmed) differ from the group's: `annotationsWithDockerMounts` keeps
- *   every other key, removes "telflo" with no mounts and sends null when
- *   nothing is left; a create sends it only with mounts. Before an edit's
- *   mounts write (Ruling 61) the group is read again under the write's hang
- *   guard and the mounts merged into its fresh annotations; when its mounts
- *   changed since the opening (a member saved one meanwhile) the save is
- *   refused, "This group's mounts changed since you opened it: close and
- *   reopen to see them.", nothing sent, so a mount saved elsewhere is never
- *   silently dropped, and the tab reads its groups again at once
- *   (`onChanged`: Ruling 64); a name or version save alone reads nothing. The
- *   contracts' rules are checked at submit, each field's message under it (a
- *   400's `annotations.telflo.dockerMounts.{n}` details too), with nothing
- *   sent, and the disclosure opened.
+ *   read shows no rows and says a mount added here replaces it (a rename alone
+ *   leaves it). `annotations` is sent only when the mounts (paths trimmed)
+ *   differ from the group's: `annotationsWithDockerMounts` keeps every other
+ *   key, removes "telflo" with no mounts and sends null when nothing is left; a
+ *   create sends it only with mounts. Before an edit's mounts write the group
+ *   is read again under the write's hang guard and the mounts merged into its
+ *   fresh annotations; when its mounts changed since the opening (a member
+ *   saved one meanwhile) the save is refused, "This group's mounts changed
+ *   since you opened it: close and reopen to see them.", nothing sent, so a
+ *   mount saved elsewhere is never silently dropped, and the tab reads its
+ *   groups again at once (`onChanged`); a name or version save alone reads
+ *   nothing. The contracts' rules are checked at submit, each field's message
+ *   under it (a 400's `annotations.telflo.dockerMounts.{n}` details too), with
+ *   nothing sent, and the disclosure opened.
  * - A hint says what saving does: a version is sent to the group's unpinned
  *   collectors on their next poll (only for a version the save would send:
  *   none for the assignment a group opens with); "Nothing assigned" releases
- *   the version (Ruling 72). The Published version select (create and an
- *   unassigned group's Assign: the picker's group) is described by it.
+ *   the version. The Published version select (create and an unassigned
+ *   group's Assign: the picker's group) is described by it.
  * - The submit is disabled without a trimmed name; on create, until a
  *   complete version is picked; when editing, while "A published version"
  *   has a configuration chosen but no version, and until something changes
@@ -165,7 +156,7 @@ import {
  *   revalidates the layout; a session ended is silent.
  * - The session's baseline (the rows, the title, what the request and the
  *   mounts-changed check compare against) is the group as it opened, a
- *   snapshot, never the live prop (Ruling 66).
+ *   snapshot, never the live prop.
  * - Success toasts "Group created" or "Group updated", closes, and reloads
  *   the tab and the fleet.
  * - While saving: Cancel disabled, no X, Escape and outside clicks do
@@ -173,11 +164,11 @@ import {
  *   is a new session (`useOpeningKey`); an answer after the dialog unmounted
  *   or for an organization no longer active does nothing.
  *
- * Privacy (decision 34): group and configuration names and version labels
- * are text in the masked shell. The Name input's `value` (React writes a
- * controlled input's) is the named exception, masked by replay's
- * `maskAllInputs` (the picker has no search box: Ruling 35); every
- * Select's item values are ids or the fixed choices below.
+ * Privacy: group and configuration names and version labels are text in
+ * the masked shell. The Name input's `value` (React writes a controlled
+ * input's) is the named exception, masked by replay's `maskAllInputs`
+ * (the picker has no search box); every Select's item values are ids or
+ * the fixed choices below.
  */
 
 export const SAVE_GROUP_FAILED_MESSAGE = "Failed to save group";
@@ -190,19 +181,19 @@ export const EDIT_DESCRIPTION =
 export const DEFAULT_DESCRIPTION =
   "Change the group's published version, its variable group or its mounts. The group's collectors that aren't pinned follow a new version on their next poll; pinned ones keep their pin.";
 export const DEFAULT_NAME_HINT = "The Default group can't be renamed.";
-/** A mounts save refused because the group's mounts were changed elsewhere since the dialog opened (D17c-1 Ruling 61). */
+/** A mounts save refused because the group's mounts were changed elsewhere since the dialog opened. */
 export const MOUNTS_CHANGED_MESSAGE = "This group's mounts changed since you opened it: close and reopen to see them.";
 
-/** The hints (decision 24): what saving does to the group's collectors. */
+/** The hints: what saving does to the group's collectors. */
 export const HINT_VERSION = "The group's collectors that aren't pinned are sent this version on their next poll; pinned ones keep their pin.";
-/** "Nothing assigned", offered only to release an assigned group's version (D17c-1 Ruling 72, the owner's words). */
+/** "Nothing assigned", offered only to release an assigned group's version. */
 export const HINT_NOTHING =
   "Releases the published version (e.g. to delete its configuration). Collectors keep running what they have; new installs need a published version.";
 
-/** The mounts' disclosure (D17c-1 decision 32). */
+/** The mounts' disclosure. */
 export const MOUNTS_DISCLOSURE = "Mounts (for the container install)";
 
-/** The Variable group Select's fixed choice (default 23): no variable group. Its item value, never an id. */
+/** The Variable group Select's fixed choice: no variable group. Its item value, never an id. */
 export const NO_VARIABLE_GROUP_CHOICE = "none";
 
 /** The Variable group Select's label. */
@@ -221,29 +212,27 @@ function isAssignmentChoice(value: string): value is AssignmentChoice {
   return value === "version" || value === "nothing" || value === "orphan";
 }
 
-/** The choice a dialog opens on: create and an unassigned group's Assign (which offer no other: Ruling 72) on "A published version", nothing picked. */
+/** The choice a dialog opens on: create and an unassigned group's Assign (which offer no other) on "A published version", nothing picked. */
 export function choiceOf(group: CollectorGroup | null): AssignmentChoice {
   if (group === null || isUnassigned(group)) return "version";
   return group.assignedVersion === null ? "orphan" : "version";
 }
 
-/** The title (decision 24). */
+/** The title. */
 export function groupDialogTitle(group: CollectorGroup | null): string {
   if (group === null) return "New group";
   return isUnassigned(group) ? `Assign a published version to ${group.name}` : `Edit ${group.name}`;
 }
 
 /**
- * What the submit sends, or why it is disabled (Preflight ruling 11,
- * preflight B's `requestOf`): the name is trimmed; a name the contract
- * refuses is checked at submit, not here. A create always sends a version
- * (Ruling 34): it has no choice, so `choice` is not read for it. `mounts`
+ * What the submit sends, or why it is disabled: the name is trimmed; a name
+ * the contract refuses is checked at submit, not here. A create always sends
+ * a version: it has no choice, so `choice` is not read for it. `mounts`
  * (their paths trimmed) are sent as `annotations` only when they differ from
  * the group's (none for a create), merged into the annotations it was read
- * with (D17c-1 Preflight ruling 30); their rules are checked at submit.
- * `variableGroupId` (D20 default 23: null for none) is sent only when it
- * differs from the group's (a create: only one chosen); it defaults to the
- * group's, no change.
+ * with; their rules are checked at submit. `variableGroupId` (null for none)
+ * is sent only when it differs from the group's (a create: only one chosen);
+ * it defaults to the group's, no change.
  */
 export function requestOf(
   group: CollectorGroup | null,
@@ -319,8 +308,8 @@ function mountProblemsOfDetails(failure: unknown): MountProblems | null {
 }
 
 /**
- * A mounts save's stops before its write (Ruling 61): the group's mounts changed since the opening, the new
- * annotations break a rule once merged into the fresh ones, the group gone from the fresh read, or that read failed.
+ * A mounts save's stops before its write: the group's mounts changed since the opening, the new annotations break a
+ * rule once merged into the fresh ones, the group gone from the fresh read, or that read failed.
  */
 type FreshReadStop =
   | { kind: "mountsChanged" }
@@ -346,9 +335,9 @@ export function GroupDialog(props: GroupDialogProps) {
 }
 
 function GroupSession({ open, onOpenChange, group: liveGroup, organizationId, fleetId, onChanged, onCloseAutoFocus }: GroupDialogProps) {
-  // The session's baseline is the group as it opened, never the live prop (Ruling 66): a parent reading its groups
-  // again while the dialog is open (the refusal's own `onChanged`, a poll) must not move what the rows, the request
-  // and the mounts-changed check compare against, or a second save would drop another member's mounts.
+  // The session's baseline is the group as it opened, never the live prop: a parent reading its groups again while
+  // the dialog is open (the refusal's own `onChanged`, a poll) must not move what the rows, the request and the
+  // mounts-changed check compare against, or a second save would drop another member's mounts.
   const [group] = useState(liveGroup);
   const { revalidate } = useRevalidator();
   const isStillCurrent = useStillCurrent(organizationId);
@@ -374,7 +363,7 @@ function GroupSession({ open, onOpenChange, group: liveGroup, organizationId, fl
   const [error, setError] = useState<string | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
 
-  // The mounts (D17c-1 Preflight ruling 30): the group's as it opened, the disclosure open when it has any.
+  // The mounts: the group's as it opened, the disclosure open when it has any.
   const [mountRows, setMountRows] = useState<MountRow[]>(() => dockerMountsOf(group?.annotations).mounts.map((mount) => ({ ...mount })));
   const [mountsOpen, setMountsOpen] = useState(() => {
     const stored = dockerMountsOf(group?.annotations);
@@ -389,7 +378,7 @@ function GroupSession({ open, onOpenChange, group: liveGroup, organizationId, fl
   // The picker's configurations chosen, kept while the choice switches away and back.
   const pickerKept = useConfigurationPickerKept();
 
-  // The variable group (D20 default 23): the group's as it opened, else None; the list read at the opening.
+  // The variable group: the group's as it opened, else None; the list read at the opening.
   const offeredVariableGroups = useOfferedVariableGroups(open, read, organizationId);
   const [variableGroupChoice, setVariableGroupChoice] = useState<string>(group?.variableGroupId ?? NO_VARIABLE_GROUP_CHOICE);
   const chosenVariableGroupId = variableGroupChoice === NO_VARIABLE_GROUP_CHOICE ? null : variableGroupChoice;
@@ -412,10 +401,10 @@ function GroupSession({ open, onOpenChange, group: liveGroup, organizationId, fl
   const request = requestOf(group, name, choice, configurationId, versionId, mounts, chosenVariableGroupId);
   const canSubmit = !saving && request.kind !== "disabled";
   const isDefault = group?.isDefault === true;
-  // Create and an unassigned group's Assign: the picker alone (Rulings 34 and 72), no choice offered.
+  // Create and an unassigned group's Assign: the picker alone, no choice offered.
   const pickerAlone = group === null || isUnassigned(group);
 
-  // The version hint only for a version the save would send (Ruling 22: an assigned group's Edit opens with none).
+  // The version hint only for a version the save would send (an assigned group's Edit opens with none).
   const sendsVersion = choice === "version" && versionId !== null && (group === null || versionId !== group.assignedVersion?.versionId);
   const hint = choice === "nothing" ? HINT_NOTHING : sendsVersion ? HINT_VERSION : null;
 
@@ -432,12 +421,12 @@ function GroupSession({ open, onOpenChange, group: liveGroup, organizationId, fl
     onChanged();
   };
 
-  /** A mounts save stopped before its write (Ruling 61): nothing was written. */
+  /** A mounts save stopped before its write: nothing was written. */
   const stopped = ({ stop }: FreshReadStopped) => {
     switch (stop.kind) {
       case "mountsChanged":
         setError(MOUNTS_CHANGED_MESSAGE);
-        // The tab (and the fleet) read again now (Ruling 64), so a reopening shows the mounts as they are.
+        // The tab (and the fleet) read again now, so a reopening shows the mounts as they are.
         onChanged();
         return;
       case "mountProblems":
@@ -468,9 +457,9 @@ function GroupSession({ open, onOpenChange, group: liveGroup, organizationId, fl
   };
 
   /**
-   * A mounts change's annotations (Ruling 61): the group read again under the write's hang guard, the mounts merged
-   * into its fresh annotations (another member's keys kept), checked again whole; stopped (FreshReadStopped) when the
-   * fresh mounts differ from those the dialog opened with, so a mount saved elsewhere meanwhile is never dropped.
+   * A mounts change's annotations: the group read again under the write's hang guard, the mounts merged into its
+   * fresh annotations (another member's keys kept), checked again whole; stopped (FreshReadStopped) when the fresh
+   * mounts differ from those the dialog opened with, so a mount saved elsewhere meanwhile is never dropped.
    */
   const freshAnnotations = async (sentIn: string, opened: CollectorGroup, signal: AbortSignal) => {
     let groups: CollectorGroup[];
@@ -585,7 +574,7 @@ function GroupSession({ open, onOpenChange, group: liveGroup, organizationId, fl
       if (request.kind === "create") {
         await createCollectorGroup(sentIn, fleetId, request.body, { signal: guard.signal });
       } else if (group !== null) {
-        // A mounts change merges into the group's fresh annotations (Ruling 61); a name or version alone reads nothing.
+        // A mounts change merges into the group's fresh annotations; a name or version alone reads nothing.
         const body =
           request.body.annotations === undefined
             ? request.body
@@ -701,8 +690,8 @@ function GroupSession({ open, onOpenChange, group: liveGroup, organizationId, fl
             </div>
 
             {pickerAlone ? (
-              // Create and an unassigned group's Assign: the picker alone (Rulings 34 and 72), with no visible
-              // heading (Ruling 36), a group named (fixed words) and described as the edit's select is.
+              // Create and an unassigned group's Assign: the picker alone, with no visible heading, a group
+              // named (fixed words) and described as the edit's select is.
               <div
                 role="group"
                 aria-label="Published version"

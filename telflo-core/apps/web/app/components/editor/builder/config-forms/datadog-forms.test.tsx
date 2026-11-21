@@ -26,11 +26,11 @@ import { builderStore, componentNamed, openText } from "~/test/builder-store.js"
 import { formControls } from "~/test/form-controls.js";
 
 /*
- * The Datadog exporter and receiver (D9d Task 11): their forms over the
- * form contract. Each field is driven as a person would on the vendors
- * corpus text (comments, an anchor and its merges, flow lists, `${env:…}`
- * references, CRLF as the file has it, and LF), and writes only its key.
- * The fixes have tests that fail if the bug returns.
+ * The Datadog exporter and receiver: their forms over the form contract.
+ * Each field is driven as a person would on the vendors corpus text
+ * (comments, an anchor and its merges, flow lists, `${env:…}` references,
+ * CRLF as the file has it, and LF), and writes only its key. The fixes
+ * have tests that fail if the bug returns.
  *
  * Collector claims cite contrib v0.162.0 (`pkg/datadog/config`,
  * `receiver/datadogreceiver`) and core v0.162.0 (`config/confighttp`).
@@ -160,8 +160,8 @@ const pause = () => act(() => new Promise<void>((resolve) => setTimeout(resolve,
 
 /**
  * Clears the field `id` without leaving it, waits for the write, then types
- * `typed` and leaves (D9d Ruling 48b): the input is the same element
- * throughout, focused, so nothing typed after the key moved is lost.
+ * `typed` and leaves: the input is the same element throughout, focused, so
+ * nothing typed after the key moved is lost.
  */
 async function clearPauseRetype(user: UserEvent, id: string, typed: string) {
   const input = byId(id);
@@ -175,7 +175,7 @@ async function clearPauseRetype(user: UserEvent, id: string, typed: string) {
 }
 const combo = (label: string) => screen.getByRole("combobox", { name: label });
 
-/** A labelled field's block (its ConfigField), by its label. */
+/** A labeled field's block (its ConfigField), by its label. */
 function fieldOf(label: string): HTMLElement {
   return screen.getByText(label, { selector: "label" }).closest("div.space-y-1\\.5") as HTMLElement;
 }
@@ -205,7 +205,7 @@ const RX_END = '    compression_algorithms: ["", gzip, zstd] # "" is an uncompre
 
 const EXPORTER_CASES: FieldCase[] = [
   {
-    name: "Site: ap2.datadoghq.com (decision 6)",
+    name: "Site: ap2.datadoghq.com",
     key: EX,
     edit: (user) => pickIn(user, combo("Site"), "ap2.datadoghq.com"),
     from: "      site: datadoghq.eu\n",
@@ -641,7 +641,7 @@ const RECEIVER_CASES: FieldCase[] = [
     check: (v) => expect(v.compression_algorithms).toEqual(["gzip", "zstd"]),
   },
   {
-    name: "Compression: x-snappy-framed ticked (decision 6)",
+    name: "Compression: x-snappy-framed ticked",
     key: RX,
     edit: async (user) => {
       await openSection(user, "Performance: HTTP Server");
@@ -708,7 +708,7 @@ const RECEIVER_CASES: FieldCase[] = [
   },
 ];
 
-describe("every field writes only its key (decision 2)", () => {
+describe("every field writes only its key", () => {
   it.each(
     [...EXPORTER_CASES, ...RECEIVER_CASES].flatMap((c) => [
       [`${c.key}: ${c.name}, LF`, c, false] as const,
@@ -741,14 +741,14 @@ describe("every field writes only its key (decision 2)", () => {
 
 // ── Opening writes nothing ──
 
-describe("opening writes nothing (decision 2)", () => {
+describe("opening writes nothing", () => {
   async function openEverything(user: UserEvent) {
     for (let round = 0; round < 3; round++) {
       for (const button of screen.queryAllByRole("button", { expanded: false })) await user.click(button);
     }
   }
 
-  // One test per text, each with its own time limit (D9c Ruling 54).
+  // One test per text, each with its own time limit.
   it.each([
     // 3 top fields; Host 2; Connection 5; Host Metadata 4; Traces 7; Metrics 8; Logs 4; retry 5; queue 4+.
     ["the exporter, the vendors corpus", CORPUS, EX, 40],
@@ -785,7 +785,7 @@ describe("opening writes nothing (decision 2)", () => {
   });
 });
 
-// ── The cascades (decision 7) ──
+// ── The cascades ──
 
 interface CascadeCase {
   name: string;
@@ -895,7 +895,7 @@ const CASCADES: CascadeCase[] = [
   },
 ];
 
-describe("the nine cascades: one change, one undo entry, one toast (decision 7)", () => {
+describe("the nine cascades: one change, one undo entry, one toast", () => {
   it.each(CASCADES.map((c) => [c.name, c] as const))("%s", async (_name, c) => {
     const user = renderForm(c.base, EX);
     await openSection(user, c.section);
@@ -954,7 +954,7 @@ describe("the nine cascades: one change, one undo entry, one toast (decision 7)"
 
 // ── The exporter's keys and defaults ──
 
-describe("Idle Connection Timeout: the key the text uses (the controller's ruling)", () => {
+describe("Idle Connection Timeout: the key the text uses", () => {
   it("with neither key, writes keepalive.idle_conn_timeout, the current key (client.go:99-104, 163-168); never idle_connection_timeout", async () => {
     const base = ownExporter(API);
     const user = renderForm(base, EX);
@@ -978,7 +978,7 @@ describe("Idle Connection Timeout: the key the text uses (the controller's rulin
     expect(text()).toBe(base.replace("      idle_conn_timeout: 45s\n", ""));
   });
 
-  it("a flat idle_conn_timeout cleared (the only flat key) and, after the pause, retyped: the input keeps focus and what is typed goes to keepalive.idle_conn_timeout (Ruling 48b)", async () => {
+  it("a flat idle_conn_timeout cleared (the only flat key) and, after the pause, retyped: the input keeps focus and what is typed goes to keepalive.idle_conn_timeout", async () => {
     const base = ownExporter(`${API}    idle_conn_timeout: 30s\n`);
     const user = renderForm(base, EX);
     await openSection(user, "Connection");
@@ -987,7 +987,7 @@ describe("Idle Connection Timeout: the key the text uses (the controller's rulin
     expect(valueOf(EX)).toEqual({ api: { key: "${env:DD_API_KEY}" }, keepalive: { idle_conn_timeout: "45s" } });
   });
 
-  it("a flat idle_conn_timeout cleared beside another flat key and retyped stays flat, the input kept (Ruling 48b)", async () => {
+  it("a flat idle_conn_timeout cleared beside another flat key and retyped stays flat, the input kept", async () => {
     const base = ownExporter(`${API}    max_idle_conns: 50\n    idle_conn_timeout: 30s\n`);
     const user = renderForm(base, EX);
     await openSection(user, "Connection");
@@ -1004,7 +1004,7 @@ describe("Idle Connection Timeout: the key the text uses (the controller's rulin
   });
 });
 
-describe("the dropped controls (decision 3)", () => {
+describe("the dropped controls", () => {
   it("Host's Hostname Source, Dump Payloads and HTTP Headers aren't shown; their keys in a text are left alone by an edit", async () => {
     const base = ownExporter(
       `${API}    hostname: a\n    hostname_source: first_resource # top level\n    headers:\n      X-Team: obs\n    logs:\n      dump_payloads: true\n`,
@@ -1023,7 +1023,7 @@ describe("the dropped controls (decision 3)", () => {
   });
 });
 
-describe("the defaults and the copy (decision 4)", () => {
+describe("the defaults and the copy", () => {
   it("unset: the three boxes ticked (config.go:360, 382-383), Trace Buffer Default 0 (traces.go:131-133), Site Default datadoghq.com", async () => {
     const user = renderForm(ownExporter(""), EX);
     for (const button of screen.queryAllByRole("button", { expanded: false })) await user.click(button);
@@ -1071,7 +1071,7 @@ describe("the defaults and the copy (decision 4)", () => {
     expect(box("Send Histogram Aggregation Metrics")).toHaveAttribute("data-state", "checked");
   });
 
-  it("API Key is a plain text field (decision 11), required, with its placeholder", () => {
+  it("API Key is a plain text field, required, with its placeholder", () => {
     renderForm(CORPUS, EX);
     expect(byId("datadog-api-key")).toHaveAttribute("type", "text");
     expect(byId("datadog-api-key")).toHaveAttribute("placeholder", "${env:DD_API_KEY}");
@@ -1087,7 +1087,7 @@ describe("the defaults and the copy (decision 4)", () => {
   });
 });
 
-describe("the comma lists (D9b Ruling 75)", () => {
+describe("the comma lists", () => {
   it("a typed comma is held until the next item; left, the list is written", async () => {
     const base = ownExporter(API);
     const user = renderForm(base, EX);
@@ -1103,7 +1103,7 @@ describe("the comma lists (D9b Ruling 75)", () => {
     expect(entries()).toBe(1);
   });
 
-  it("an item holding a comma makes the field read-only with D9b's hint (never split on retype)", async () => {
+  it("an item holding a comma makes the field read-only with the unshowable-value hint (never split on retype)", async () => {
     const user = renderForm(ownExporter(`${API}    traces:\n      ignore_resources: ["GET /a{1,3}", b]\n`), EX);
     await openSection(user, "Traces");
     expect(byId("datadog-traces-ignore")).toBeDisabled();
@@ -1121,7 +1121,7 @@ describe("the comma lists (D9b Ruling 75)", () => {
 
 // ── The receiver ──
 
-describe("the receiver's defaults and copy (decision 4)", () => {
+describe("the receiver's defaults and copy", () => {
   it("Read Timeout unset is Default 0 (none): the receiver's own 60s field is never read", () => {
     // The receiver declares read_timeout (config.go:26-27, default 60s at factory.go:42) but builds its server from the
     // squashed confighttp.ServerConfig (receiver.go:244: ddr.config.ServerConfig.ToServer), which uses ServerConfig's
@@ -1152,7 +1152,7 @@ describe("the receiver's defaults and copy (decision 4)", () => {
   });
 });
 
-describe("Compression Algorithms (decisions 5, 6)", () => {
+describe("Compression Algorithms", () => {
   it("offers the collector's set with none (uncompressed) and x-snappy-framed (compression.go:28-29), and the hint", async () => {
     const user = renderForm(ownReceiver(""), RX);
     await openSection(user, "Performance: HTTP Server");
@@ -1168,7 +1168,7 @@ describe("Compression Algorithms (decisions 5, 6)", () => {
       "x-snappy-framed",
     ]);
     expect(COMPRESSION_ITEMS[0]).toEqual({ value: "", label: "none (uncompressed)" });
-    // Unset: none ticked (decision 5), the hint naming the collector's default.
+    // Unset: none ticked, the hint naming the collector's default.
     for (const checkbox of within(field).getAllByRole("checkbox")) expect(checkbox).toHaveAttribute("data-state", "unchecked");
     expect(field).toHaveTextContent(`Restrict which request encodings are accepted. · ${COMPRESSION_HINT}`);
     expect(COMPRESSION_HINT).toBe("Default: all, uncompressed included. Ticking any accepts only those ticked.");
@@ -1204,8 +1204,8 @@ describe("Compression Algorithms (decisions 5, 6)", () => {
   });
 });
 
-describe("keep-alives (decision 4) and the keepalive move (decision 7)", () => {
-  it("the box shows what the collector does: a flat keep_alives_enabled: false alone is ignored (server.go:197-244), so ticked, with the hint (Ruling 47)", async () => {
+describe("keep-alives and the keepalive move", () => {
+  it("the box shows what the collector does: a flat keep_alives_enabled: false alone is ignored (server.go:197-244), so ticked, with the hint", async () => {
     const user = renderForm(ownReceiver("    keep_alives_enabled: false"), RX);
     await openSection(user, "Performance: HTTP Server");
     expect(box("Enable HTTP Keep-Alives")).toHaveAttribute("data-state", "checked");
@@ -1222,7 +1222,7 @@ describe("keep-alives (decision 4) and the keepalive move (decision 7)", () => {
     }
   });
 
-  it("unticking over an ignored flat false writes keepalive.enabled: false with the move, one change, its toast; the hint goes (Ruling 47)", async () => {
+  it("unticking over an ignored flat false writes keepalive.enabled: false with the move, one change, its toast; the hint goes", async () => {
     const base = ownReceiver("    keep_alives_enabled: false # off\n    endpoint: localhost:8126");
     const user = renderForm(base, RX);
     await openSection(user, "Performance: HTTP Server");
@@ -1230,7 +1230,7 @@ describe("keep-alives (decision 4) and the keepalive move (decision 7)", () => {
     expect(valueOf(RX)).toEqual({ endpoint: "localhost:8126", keepalive: { enabled: false } });
     expect(box("Enable HTTP Keep-Alives")).toHaveAttribute("data-state", "unchecked");
     expect(screen.queryByText(IGNORED_FLAT_HINT)).toBeNull();
-    // The person turned them off: the box's own change replaces the flat key, removed (final ruling F5).
+    // The person turned them off: the box's own change replaces the flat key, removed.
     expect(toasts("info")).toEqual([removedToast("keep_alives_enabled")]);
     expect(removedToast("keep_alives_enabled")).toBe("Removed keep_alives_enabled: the collector refuses it beside a keepalive block.");
     expect(entries()).toBe(1);
@@ -1268,7 +1268,7 @@ describe("keep-alives (decision 4) and the keepalive move (decision 7)", () => {
     expect(text()).toBe(CORPUS);
   });
 
-  it("Idle Timeout typed beside a flat keep_alives_enabled: false moves it into keepalive with the write, toasted that keep-alives are now off (Ruling 47)", async () => {
+  it("Idle Timeout typed beside a flat keep_alives_enabled: false moves it into keepalive with the write, toasted that keep-alives are now off", async () => {
     const base = ownReceiver("    keep_alives_enabled: false # off");
     const user = renderForm(base, RX);
     await openSection(user, "Performance: HTTP Server");
@@ -1288,12 +1288,12 @@ describe("keep-alives (decision 4) and the keepalive move (decision 7)", () => {
     await openSection(user, "Performance: HTTP Server");
     await typeInto(user, byId("datadog-idle-timeout-server"), "30s");
     expect(valueOf(RX)).toEqual({ keepalive: { idle_timeout: "30s", enabled: true } });
-    // A no-op to the collector, which doesn't refuse it beside keepalive (server.go:217-227): no reason given (Ruling 48c).
+    // A no-op to the collector, which doesn't refuse it beside keepalive (server.go:217-227): no reason given.
     expect(toasts("info")).toEqual(["Moved keep_alives_enabled into keepalive."]);
     expect(toasts("info")).toEqual([movedNoOpToast("keep_alives_enabled")]);
   });
 
-  it("a zero flat idle_timeout (0s, 0, 0m0s) moved by the box is toasted without the refusal reason (Ruling 48c)", async () => {
+  it("a zero flat idle_timeout (0s, 0, 0m0s) moved by the box is toasted without the refusal reason", async () => {
     for (const zero of ["0s", "0", "0m0s"]) {
       const user = renderForm(ownReceiver(`    idle_timeout: ${zero}`), RX);
       await openSection(user, "Performance: HTTP Server");
@@ -1305,7 +1305,7 @@ describe("keep-alives (decision 4) and the keepalive move (decision 7)", () => {
     }
   });
 
-  it("a flat idle_timeout cleared and, after the pause, retyped: the input keeps focus and what is typed goes to keepalive.idle_timeout (Ruling 48b)", async () => {
+  it("a flat idle_timeout cleared and, after the pause, retyped: the input keeps focus and what is typed goes to keepalive.idle_timeout", async () => {
     const user = renderForm(ownReceiver("    idle_timeout: 30s"), RX);
     await openSection(user, "Performance: HTTP Server");
     expect(byId("datadog-idle-timeout-server")).toHaveValue("30s");
@@ -1326,7 +1326,7 @@ describe("keep-alives (decision 4) and the keepalive move (decision 7)", () => {
     expect(entries()).toBe(1);
   });
 
-  it("K1: ticking over keepalive {enabled: false} beside a flat keep_alives_enabled: false removes both, and the emptied block (final ruling F5)", async () => {
+  it("K1: ticking over keepalive {enabled: false} beside a flat keep_alives_enabled: false removes both, and the emptied block", async () => {
     const base = ownReceiver("    keepalive:\n      enabled: false\n    keep_alives_enabled: false\n    endpoint: localhost:8126");
     const user = renderForm(base, RX);
     await openSection(user, "Performance: HTTP Server");
@@ -1338,7 +1338,7 @@ describe("keep-alives (decision 4) and the keepalive move (decision 7)", () => {
     expect(entries()).toBe(1);
   });
 
-  it("K2: Idle Timeout shows a flat idle_timeout beside keepalive (it overrides it, server.go:235-239); cleared, both go, and the emptied block (final ruling F5)", async () => {
+  it("K2: Idle Timeout shows a flat idle_timeout beside keepalive (it overrides it, server.go:235-239); cleared, both go, and the emptied block", async () => {
     const base = ownReceiver("    keepalive:\n      idle_timeout: 30s\n    idle_timeout: 0\n    endpoint: localhost:8126");
     const user = renderForm(base, RX);
     await openSection(user, "Performance: HTTP Server");
@@ -1350,7 +1350,7 @@ describe("keep-alives (decision 4) and the keepalive move (decision 7)", () => {
     expect(entries()).toBe(1);
   });
 
-  it("Idle Timeout typed over a flat idle_timeout beside keepalive writes keepalive.idle_timeout and removes the flat key, toasted (final ruling F5)", async () => {
+  it("Idle Timeout typed over a flat idle_timeout beside keepalive writes keepalive.idle_timeout and removes the flat key, toasted", async () => {
     const base = ownReceiver("    keepalive:\n      enabled: true\n    idle_timeout: 90s");
     const user = renderForm(base, RX);
     await openSection(user, "Performance: HTTP Server");
@@ -1370,7 +1370,7 @@ describe("keep-alives (decision 4) and the keepalive move (decision 7)", () => {
   });
 });
 
-describe("the authenticator (carried forward)", () => {
+describe("the authenticator", () => {
   it("cleared, the whole auth block goes (\"blank disables auth\")", async () => {
     const base = ownReceiver("    auth:\n      authenticator: bearertokenauth/dd\n      request_params: [tenant]\n    endpoint: localhost:8126");
     const user = renderForm(base, RX);
@@ -1395,9 +1395,9 @@ describe("the authenticator (carried forward)", () => {
   });
 });
 
-// ── Privacy (decision 13) ──
+// ── Privacy ──
 
-describe("privacy (decision 13)", () => {
+describe("privacy", () => {
   async function openAll(user: UserEvent) {
     for (let round = 0; round < 3; round++) {
       for (const button of screen.queryAllByRole("button", { expanded: false })) await user.click(button);

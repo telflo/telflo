@@ -7,10 +7,10 @@ import { auditUserAgent } from "./audit-user-agent.js";
 export { PUBLIC_DOWNLOAD_REFERRER_POLICY, sendPlainTextRefusal };
 
 /*
- * The machinery of a public download (D17c-2 decision 27, Preflight ruling
- * 10): a route anyone holding a link may call, with no session, no cookie
- * and no CSRF header (a GET). The quick-deploy download uses it; D30's
- * binaries reuse it. A public route:
+ * The machinery of a public download: a route anyone holding a link may
+ * call, with no session, no cookie and no CSRF header (a GET). The
+ * quick-deploy download, the library's links and the public logo read use
+ * it. A public route:
  *
  *   - attaches a per-IP limit as its `onRequest` hook
  *     (`rateLimiters.quickDeployPerIp`, rate-limits.ts), so every request
@@ -27,7 +27,7 @@ export { PUBLIC_DOWNLOAD_REFERRER_POLICY, sendPlainTextRefusal };
  *   - is logged with its secret cut out (request-log.ts).
  */
 
-/** At most this many public renders in flight per API process (D17c-2 decision 26). */
+/** At most this many public renders in flight per API process. */
 export const PUBLIC_DOWNLOAD_RENDERS_IN_FLIGHT = 8;
 
 /** A full cap's Retry-After: a render ends within seconds, so one is enough to wait. */
@@ -78,7 +78,7 @@ export function createInFlightCap(max: number): InFlightCap {
 const DOWNLOAD_FILE_NAME = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
 
 /**
- * Sends a download (D17c-2 decision 26; the signed-in bundle's headers):
+ * Sends a download (the signed-in bundle's headers):
  * `content-type`, `attachment; filename="…"`, `cache-control: no-store`,
  * `x-content-type-options: nosniff` and `referrer-policy: no-referrer`.
  * The file name is the caller's fixed text (the method and the arch, never
@@ -106,19 +106,18 @@ export const PUBLIC_DOWNLOAD_SERVER_ERROR_MESSAGE = "Something went wrong. Pleas
 export type PublicDownloadLogFields = Readonly<Record<string, string>>;
 
 /**
- * A public route's `errorHandler` (Preflight ruling 10): every refusal in
- * plain text. An AppError answers its status, its message (the platform's
- * fixed words) and its headers (a 429's Retry-After, set by the per-IP
- * hook on the reply or carried by the error). Its 5xx are the route's
- * expected refusals (the cap's `downloads_busy`, the opamp-server or the
- * templates unavailable, values that can't be opened, a download that
- * can't be recorded: each cause logged where it happened, with its ids):
- * logged at warn with the code and `fieldsOf(request)`'s ids only, no
- * stack (D17c-2 Ruling 36). Fastify's own 4xx answer generic words, logged
- * at warn; anything else is unexpected, logged at error in full and
- * answered 500. The request log already cuts the secret from the URL each
- * line holds (request-log.ts); nothing here adds the URL or a parameter to
- * a line.
+ * A public route's `errorHandler`: every refusal in plain text. An
+ * AppError answers its status, its message (the platform's fixed words)
+ * and its headers (a 429's Retry-After, set by the per-IP hook on the
+ * reply or carried by the error). Its 5xx are the route's expected
+ * refusals (the cap's `downloads_busy`, the opamp-server or the templates
+ * unavailable, values that can't be opened, a download that can't be
+ * recorded: each cause logged where it happened, with its ids): logged at
+ * warn with the code and `fieldsOf(request)`'s ids only, no stack.
+ * Fastify's own 4xx answer generic words, logged at warn; anything else is
+ * unexpected, logged at error in full and answered 500. The request log
+ * already cuts the secret from the URL each line holds (request-log.ts);
+ * nothing here adds the URL or a parameter to a line.
  */
 export function createPublicDownloadErrorHandler(
   fieldsOf: (request: FastifyRequest) => PublicDownloadLogFields | undefined = () => undefined,
@@ -142,12 +141,12 @@ export function createPublicDownloadErrorHandler(
 /** A public route's `errorHandler` with no ids to log. */
 export const publicDownloadErrorHandler = createPublicDownloadErrorHandler();
 
-/** The most of a user agent a download's audit row keeps (D17c-2 Preflight ruling 13). */
+/** The most of a user agent a download's audit row keeps. */
 export const REQUESTER_USER_AGENT_MAXIMUM_LENGTH = 512;
 
-/** Who asked for a public download, for its audit row (D17c-2 decision 9). */
+/** Who asked for a public download, for its audit row. */
 export interface Requester {
-  /** The client's address (`request.ip`, the trusted hops honoured), when it is a well-formed one. */
+  /** The client's address (`request.ip`, the trusted hops honored), when it is a well-formed one. */
   ipAddress: string | undefined;
   /** The User-Agent's first 512 characters, when one was sent. */
   userAgent: string | undefined;

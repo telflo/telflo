@@ -1,9 +1,6 @@
 #!/usr/bin/env bash
 # Builds telflo's collector image (docker/collector-image: otelcol-contrib and
-# the OpAMP supervisor) for one collector version of the catalogue (D17c-1
-# spec decisions 3, 20 and 49; Preflight ruling 16; D18 spec decisions 9 and
-# 27, Preflight rulings 8 and 9; D36-2 decisions 71, 72, 80 and 85, Preflight
-# rulings 5 and 6).
+# the OpAMP supervisor) for one collector version of the catalog.
 #
 #   scripts/build-collector-image.sh <version> [--platform linux/amd64|linux/arm64]
 #   scripts/build-collector-image.sh <version> --build-oci <dir> --builder <name> [--no-attest]
@@ -22,13 +19,12 @@
 # this platform's); the Dockerfile
 # checks each download against its sha256.
 #
-# --list-offered prints the versions the catalogue offers (not deprecated,
+# --list-offered prints the versions the catalog offers (not deprecated,
 # each entry checked as above), newest first, one a line: the versions the
-# collector workflow's `all` builds (D36-2 decision 85).
+# collector workflow's `all` builds.
 #
 # The image carries the OCI labels source (this repository), version (the
-# collector's), revision (git HEAD), title and description. No `latest` tag
-# (D17c-1 decision 19).
+# collector's), revision (git HEAD), title and description. No `latest` tag.
 #
 # A local build (no --build-oci or --push-oci) builds ONE platform (the
 # Docker engine's, or --platform) tagged
@@ -71,39 +67,38 @@
 # run) refuse:
 #   - TELFLO_COLLECTOR_IMAGE_REPOSITORY set to anything but
 #     ghcr.io/telflo/telflo/collector: they name only that repository
-#     (the older registry paths ghcr.io/telflo/collector, D18 decision 9,
-#     and ghcr.io/telflo/platform/collector can't be reached);
-#   - a catalogue other than the repository's (TELFLO_COLLECTOR_CATALOGUE);
+#     (the older registry paths ghcr.io/telflo/collector and
+#     ghcr.io/telflo/platform/collector can't be reached);
+#   - a catalog other than the repository's (TELFLO_COLLECTOR_CATALOGUE);
 #   - a tree that isn't a git checkout of this repository (its git toplevel
 #     isn't this repository's root, e.g. a copy inside another repository);
 #   - an input flagged assume-unchanged or skip-worktree (git status would
 #     not see its changes);
 #   - uncommitted changes in the image's inputs (docker/collector-image, the
-#     catalogue, this script, scripts/release's oci.sh, tools.sh and
+#     catalog, this script, scripts/release's oci.sh, tools.sh and
 #     tools.lock): the revision label must describe the image;
-#   - a DOCKER_CONFIG the caller set whose config.json (Ruling 34; its
-#     content never printed) is missing or can't be read, isn't JSON, has no
-#     "auths" object or an empty one (Docker would then consult the
-#     keychain's helper: it must name the registry's login), has a
-#     "credsStore" or "credHelpers" key in any spelling (Go's encoding/json
-#     matches keys case-insensitively), or has a key that folds to "auths"
-#     but isn't "auths";
+#   - a DOCKER_CONFIG the caller set whose config.json (its content never
+#     printed) is missing or can't be read, isn't JSON, has no "auths" object
+#     or an empty one (Docker would then consult the keychain's helper: it
+#     must name the registry's login), has a "credsStore" or "credHelpers"
+#     key in any spelling (Go's encoding/json matches keys
+#     case-insensitively), or has a key that folds to "auths" but isn't
+#     "auths";
 #   - (a --build-oci dry run) a tag the registry already holds, asked by
-#     `crane digest` (Preflight ruling 6): a digest, it exists (refused);
-#     MANIFEST_UNKNOWN or NAME_UNKNOWN, it doesn't; anything else, the dry run
-#     says it can't tell and goes on.
+#     `crane digest`: a digest, it exists (refused); MANIFEST_UNKNOWN or
+#     NAME_UNKNOWN, it doesn't; anything else, the dry run says it can't tell
+#     and goes on.
 # Credentials: whatever DOCKER_CONFIG the caller set, once checked (the
 # configuration that holds the caller's login; crane reads its
 # config.json); when it is unset, a temporary configuration with no login,
 # so no credential helper is ever consulted. This script never logs in.
 # --build-oci builds from the commit itself: its build context is HEAD's raw
 # blobs under docker/collector-image (`git ls-tree`, `git cat-file blob`),
-# written into a temporary directory (Ruling 32: no ignored or untracked file
-# of the working tree reaches the image; Ruling 36: no local attribute,
-# filter or line-ending setting alters them; a symlink or submodule is
-# refused), its build arguments come from HEAD's catalogue blob (Ruling 34):
-# the downloads' URLs and sums, the only build arguments (never a secret: the
-# provenance attestation records them).
+# written into a temporary directory (no ignored or untracked file of the
+# working tree reaches the image; no local attribute, filter or line-ending
+# setting alters them; a symlink or submodule is refused), its build arguments
+# come from HEAD's catalog blob: the downloads' URLs and sums, the only
+# build arguments (never a secret: the provenance attestation records them).
 #
 # crane is scripts/release/tools.sh's checked one, else `crane` on PATH (a
 # runner's pinned install); the script never downloads it.
@@ -112,7 +107,7 @@
 # apt's curl and ca-certificates from Debian's mirrors, and the two binaries
 # from GitHub.
 #
-# TELFLO_COLLECTOR_CATALOGUE names another catalogue file (the script's tests,
+# TELFLO_COLLECTOR_CATALOGUE names another catalog file (the script's tests,
 # docker/collector-image/build-collector-image_test.sh, use it); its values
 # are checked the same way. bash 3.2 compatible (macOS's /bin/bash).
 set -euo pipefail
@@ -120,15 +115,15 @@ set -euo pipefail
 ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." >/dev/null && pwd)"
 
 # No inherited GIT_* setting (GIT_DIR, GIT_INDEX_FILE, GIT_CONFIG_*…) may
-# change which repository, index or configuration git reads (Ruling 36).
+# change which repository, index or configuration git reads.
 for v in $(env | sed -n 's/^\(GIT_[A-Za-z0-9_]*\)=.*/\1/p'); do unset "$v"; done
-# Local `git replace` objects never stand in for HEAD's (Ruling 37).
+# Local `git replace` objects never stand in for HEAD's.
 export GIT_NO_REPLACE_OBJECTS=1
 REPOSITORY_CATALOGUE="$ROOT/catalog/distributions/otelcol-contrib.json"
 CATALOGUE="${TELFLO_COLLECTOR_CATALOGUE:-$REPOSITORY_CATALOGUE}"
 CONTEXT="$ROOT/docker/collector-image"
 REPOSITORY="${TELFLO_COLLECTOR_IMAGE_REPOSITORY:-ghcr.io/telflo/telflo/collector}"
-# The one repository --build-oci and --push-oci publish to (D36-2 decision 85).
+# The one repository --build-oci and --push-oci publish to.
 RELEASE_REPOSITORY="ghcr.io/telflo/telflo/collector"
 RELEASE_PATH="telflo/telflo/collector"
 # An older registry path that isn't this repository's: never pushed to.
@@ -138,8 +133,8 @@ SOURCE_URL="https://github.com/telflo/telflo"
 IMAGE_INPUTS=(docker/collector-image catalog/distributions/otelcol-contrib.json scripts/build-collector-image.sh
   scripts/release/oci.sh scripts/release/tools.sh scripts/release/tools.lock)
 
-# The catalogue's own formats (telflo-core's catalogue.ts) and the platform's
-# TELFLO_COLLECTOR_IMAGE_REPOSITORY rule (D17c-1 spec decision 34).
+# The catalog's own formats (telflo-core's catalogue.ts) and the platform's
+# TELFLO_COLLECTOR_IMAGE_REPOSITORY rule.
 VERSION_RE='^[0-9]+\.[0-9]+\.[0-9]+$'
 SHA256_RE='^[a-f0-9]{64}$'
 URL_RE='^https://github\.com/open-telemetry/opentelemetry-collector-releases/releases/download/[A-Za-z0-9._%/+-]+$'
@@ -148,7 +143,7 @@ BUILDER_RE='^[A-Za-z0-9][A-Za-z0-9._-]*$'
 REVISION_RE='^[0-9a-f]{40}([0-9a-f]{24})?$'
 DIGEST_RE='^sha256:[0-9a-f]{64}$'
 
-# The release helpers: the registry, crane and the OCI archives (D36-2).
+# The release helpers: the registry, crane and the OCI archives.
 # shellcheck source=scripts/release/oci.sh
 . "$ROOT/scripts/release/oci.sh"
 
@@ -170,9 +165,8 @@ note() { echo "build-collector-image: $1" >&2; }
 # under the path, written below the destination at their repository paths
 # (`git ls-tree` then `git cat-file blob`): no attribute, filter or
 # line-ending conversion of the local git setup applies, as `git archive`'s
-# would (Ruling 36). A symlink or a submodule is refused, naming its path; the
-# executable mode (100755) is kept. Each file written must hash to its tree
-# entry (Ruling 37).
+# would. A symlink or a submodule is refused, naming its path; the executable
+# mode (100755) is kept. Each file written must hash to its tree entry.
 extract_head_dir() {
   local entry meta path mode rest sha count=0 tab=$'\t'
   while IFS= read -r -d '' entry; do
@@ -186,7 +180,7 @@ extract_head_dir() {
     esac
     mkdir -p "$2/$(dirname -- "$path")"
     git -C "$ROOT" cat-file blob "$sha" >"$2/$path" || fail "can't read HEAD's $path"
-    # What was written must hash to HEAD's tree entry (Ruling 37): any local
+    # What was written must hash to HEAD's tree entry: any local
     # substitution (a replace ref, a tampered object store) is refused.
     [ "$(git -C "$ROOT" hash-object --no-filters -t blob -- "$2/$path")" = "$sha" ] \
       || fail "HEAD's $path doesn't hash to its tree entry: refused (a local substitution of git objects)"
@@ -201,7 +195,7 @@ extract_head_dir() {
 # a non-empty "auths" object and has no key naming a credential store or
 # helper in any spelling (Docker and oras read keys case-insensitively, as
 # Go's encoding/json does, and auto-detect the keychain's helper when "auths"
-# is empty). Its content is never printed (Rulings 32 and 34).
+# is empty). Its content is never printed.
 check_caller_credentials() {
   command -v python3 >/dev/null 2>&1 || fail "python3 is required to check $1's file"
   [ -f "$2" ] || fail "$1: its file ($2) is missing"
@@ -292,11 +286,11 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-# The catalogue's reader: `list` prints the offered versions newest first;
+# The catalog's reader: `list` prints the offered versions newest first;
 # `entry <version>` refuses an unknown or deprecated version and prints the
 # version's eight values, one a line, in a fixed order. Every offered entry
 # (in `list`) or the version's entry (in `entry`) is refused when a value
-# isn't the catalogue's format. -I: nothing from the current directory or
+# isn't the catalog's format. -I: nothing from the current directory or
 # the environment is imported.
 read_catalogue() { # list | entry <version>
   [ -f "$CATALOGUE" ] || fail "the catalogue is missing: $CATALOGUE"
@@ -463,10 +457,10 @@ fi
 
 # --build-oci and --push-oci talk to the registry: with the caller's
 # DOCKER_CONFIG once checked, else a temporary one holding no login (Docker
-# and crane would otherwise consult the macOS keychain's credential helper,
-# or ~/.docker). Everything they publish comes from HEAD (Ruling 34): the
-# build context is HEAD's docker/collector-image and the build arguments
-# HEAD's catalogue, both written into the temporary directory.
+# and crane would otherwise consult the macOS keychain's credential helper, or
+# ~/.docker). Everything they publish comes from HEAD: the build context is
+# HEAD's docker/collector-image and the build arguments HEAD's catalog, both
+# written into the temporary directory.
 tmp=""
 cleanup() { if [ -n "$tmp" ]; then rm -rf "$tmp"; fi; }
 trap cleanup EXIT
@@ -534,7 +528,7 @@ if [ "$oci_mode" = push-oci ]; then
   [ "$(grep -c '' "$digest_file")" -eq 1 ] || fail "$digest_file must be one line"
   want="$(cat "$digest_file")"
   [[ "$want" =~ $DIGEST_RE ]] || fail "$digest_file isn't sha256:<64 hex>"
-  # Attestations are required for every registry but a loopback one (decision 72).
+  # Attestations are required for every registry but a loopback one.
   attest_required=""
   telflo_registry_loopback "$registry" || attest_required=attest
   telflo_oci_inspect "$archive" "$want" "$version" "$revision" "$attest_required" >/dev/null || fail "the archive refused: nothing pushed"
@@ -563,7 +557,7 @@ labels=(
 
 
 # --build-oci: the archive must not exist; the SBOM generator pinned by
-# digest in tools.lock (Preflight ruling 5: a bare --sbom=true is refused).
+# digest in tools.lock (a bare --sbom=true is refused).
 if [ "$oci_mode" = build-oci ]; then
   for f in "$archive" "$digest_file" "$archive.partial"; do
     [ ! -e "$f" ] || fail "$f exists: --build-oci never overwrites an archive (use a new folder)"

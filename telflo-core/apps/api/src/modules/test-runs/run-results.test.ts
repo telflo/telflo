@@ -11,9 +11,9 @@ import {
   versionUnknownFailure,
 } from "./run-results.js";
 
-// What the dispatcher stores (D14a Rulings 24 and 39): strings cut to the
-// contract's bounds in code points, never splitting a pair; no NUL or lone
-// surrogate; fixed failures that hold no error's own text.
+// What the dispatcher stores: strings cut to the contract's bounds in code
+// points, never splitting a pair; no NUL or lone surrogate; fixed failures
+// that hold no error's own text.
 
 describe("a run's stored results", () => {
   describe("storableText", () => {
@@ -21,7 +21,7 @@ describe("a run's stored results", () => {
       expect(storableText("abc", 3)).toBe("abc");
     });
 
-    it("cuts at the bound, counted in code points (Ruling 39), a pair kept whole", () => {
+    it("cuts at the bound, counted in code points, a pair kept whole", () => {
       expect(storableText("abcdef", 4)).toBe("abcd");
       expect(storableText("😀😀😀", 2)).toBe("😀😀");
       expect(storableText("a😀b", 2)).toBe("a😀");
@@ -35,7 +35,7 @@ describe("a run's stored results", () => {
     });
   });
 
-  describe("validationResults (D15a decision 15)", () => {
+  describe("validationResults", () => {
     it("keeps each result's five fields in order, as JSON, and makes every string storable: a NUL from an output becomes U+FFFD", () => {
       const results = [
         { id: "a", passed: true, error: null, advisory: "Only \u0000 checked", detail: null },
@@ -82,12 +82,12 @@ describe("a run's stored results", () => {
         inputUnavailable: { code: "input_unavailable", message: "The run's input couldn't be read." },
         storageFailed: { code: "storage_failed", message: "The run's results couldn't be saved. Run it again." },
         internalError: { code: "internal_error", message: "Something went wrong running the test. Run it again." },
-        // D15a decision 3's words, exactly.
+        // The evaluator's refusal's words, exactly.
         rulesUnavailable: {
           code: "rules_unavailable",
           message: "Validation rules couldn't be checked: the rule evaluator is unavailable.",
         },
-        // D20 Ruling 78's words, exactly: the queue's families.
+        // The queue's refusals' words, exactly.
         variablesUnavailable: { code: "variables_unavailable", message: "The organization's variables couldn't be reached. Run it again." },
         filledInTooLong: {
           code: "filled_in_too_long",
@@ -97,14 +97,14 @@ describe("a run's stored results", () => {
       for (const failure of Object.values(TEST_RUN_FAILURES)) expect(failure.code).toMatch(/^[a-z][a-z0-9_]{0,63}$/);
     });
 
-    it("version_unavailable names the version (Preflight ruling 13)", () => {
+    it("version_unavailable names the version", () => {
       expect(versionUnavailableFailure("0.162.0")).toEqual({
         code: "version_unavailable",
         message: "Collector v0.162.0 isn't installed in the tester. Pick another version or try again later.",
       });
     });
 
-    it("version_retired names the version, in its own words (Ruling 50)", () => {
+    it("version_retired names the version, in its own words", () => {
       expect(versionRetiredFailure("0.162.0")).toEqual({
         code: "version_retired",
         message: "Collector v0.162.0 is no longer offered by the tester. Pick a newer collector version.",
@@ -112,7 +112,7 @@ describe("a run's stored results", () => {
       expect(unavailableFailure("version_retired", "0.162.0")).toEqual(versionRetiredFailure("0.162.0"));
     });
 
-    it("version_unknown names the version, in its own neutral words (Ruling 51)", () => {
+    it("version_unknown names the version, in its own neutral words", () => {
       expect(versionUnknownFailure("0.162.0")).toEqual({
         code: "version_unknown",
         message: "Collector v0.162.0 isn't available in the tester. Pick another collector version.",

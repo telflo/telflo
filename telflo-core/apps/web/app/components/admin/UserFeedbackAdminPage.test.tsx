@@ -19,15 +19,14 @@ import { attributesHolding } from "~/test/fleets.js";
 import { holdsText, quietQueries, showsText, waitUntilGone } from "~/test/service-accounts.js";
 
 /*
- * Product admin's User Feedback page (D29 decisions 33, 34, 37, 40 and 41;
- * Preflight rulings 14, 15 and 21): its texts; the pending list
- * with "Load more"; the full text; acknowledge (the default reply, Ok
- * disabled while blank, "Sending...") and dismiss, each removing the row and
- * revalidating the layout (the nav's count); a deleted sender's row with
- * Dismiss only; the refusals (an item handled meanwhile or its sender
- * deleted: the API's words and the list read again; 403 to /app; an ended
- * session silent); replay's rules (no email, text or reply in an attribute
- * or a toast; the reply's box uncontrolled inside `ph-no-capture`).
+ * Product admin's User Feedback page: its texts; the pending list with "Load
+ * more"; the full text; acknowledge (the default reply, Ok disabled while
+ * blank, "Sending...") and dismiss, each removing the row and revalidating
+ * the layout (the nav's count); a deleted sender's row with Dismiss only; the
+ * refusals (an item handled meanwhile or its sender deleted: the API's words
+ * and the list read again; 403 to /app; an ended session silent); replay's
+ * rules (no email, text or reply in an attribute or a toast; the reply's box
+ * uncontrolled inside `ph-no-capture`).
  *
  * The emails and texts are made-up fixtures; checks on them are booleans
  * with fixed labels, and failed queries print no DOM (quietQueries).
@@ -319,7 +318,7 @@ describe("UserFeedbackAdminPage", () => {
     expect(bodyRows().length).toBe(1);
   });
 
-  it("reads the first page again when every loaded row is handled while more are pending: never the empty row with Load more hidden (Ruling 271)", async () => {
+  it("reads the first page again when every loaded row is handled while more are pending: never the empty row with Load more hidden", async () => {
     list.mockResolvedValueOnce(page([BENS, CARAS], "cursor-1")).mockResolvedValueOnce(page([THIRD]));
     const user = await loadedPage();
     expect(screen.getByRole("button", { name: "Load more" })).toBeInTheDocument();
@@ -332,7 +331,7 @@ describe("UserFeedbackAdminPage", () => {
     expect(screen.queryByText("No pending user feedback")).toBeNull();
   });
 
-  it("keeps Dismiss focusable while it sends (aria-disabled, never disabled: a browser would drop the focus to the body), and a second press sends nothing (Ruling 272)", async () => {
+  it("keeps Dismiss focusable while it sends (aria-disabled, never disabled: a browser would drop the focus to the body), and a second press sends nothing", async () => {
     let finish: () => void = () => undefined;
     dismiss.mockImplementation(() => new Promise((resolve) => (finish = () => resolve(undefined))));
     const user = await loadedPage();
@@ -354,7 +353,7 @@ describe("UserFeedbackAdminPage", () => {
     expect(document.activeElement === within(bodyRows()[0]!).getAllByRole("button")[1]).toBe(true);
   });
 
-  it("moves the focus from a dismissed row to the row now in its place, then the row before, then the heading (Ruling 271)", async () => {
+  it("moves the focus from a dismissed row to the row now in its place, then the row before, then the heading", async () => {
     list.mockResolvedValue(page([BENS, CARAS, THIRD]));
     const user = await loadedPage();
     const actionOf = (index: number) => within(bodyRows()[index]!).getAllByRole("button")[1]!;
@@ -402,7 +401,7 @@ describe("UserFeedbackAdminPage", () => {
     expect(toastError).not.toHaveBeenCalled();
   });
 
-  it('toasts "Failed to load feedback" when the list can\'t be read, shows no table and never "No pending user feedback"; Try again reads it (Ruling 264)', async () => {
+  it('toasts "Failed to load feedback" when the list can\'t be read, shows no table and never "No pending user feedback"; Try again reads it', async () => {
     list.mockRejectedValueOnce(SERVER_ERROR).mockResolvedValueOnce(page([]));
     const user = await loadedPage();
     expect(toastError).toHaveBeenCalledWith(FEEDBACK_ADMIN_LOAD_FAILED_MESSAGE);

@@ -17,9 +17,8 @@ import {
 import type { OTelNode } from "./types.js";
 
 /*
- * The layered re-layout (D9a Parity Notes). The fixture's pipelines take
- * opaque ids, so a group is `group_<n>` for its pipeline's `pipeline_<n>`
- * (decision 7).
+ * The layered re-layout. The fixture's pipelines take opaque ids, so a
+ * group is `group_<n>` for its pipeline's `pipeline_<n>`.
  */
 
 /** The nodes at `ids`, which the fixture guarantees. */
@@ -346,7 +345,7 @@ describe("layoutPipelineGraph - connectors that are not fully wired", () => {
     );
   });
 
-  it("centres a half-wired connector on the node that feeds it", () => {
+  it("centers a half-wired connector on the node that feeds it", () => {
     const { nodes, edges } = halfWired();
 
     const laid = layoutPipelineGraph(nodes, edges);
@@ -488,7 +487,7 @@ describe("layoutPipelineGraph - stability", () => {
     const laid = layoutPipelineGraph(nodes, edges, pipelines);
 
     for (const n of laid) {
-      if (n.parentId) continue; // children are centred on their spine
+      if (n.parentId) continue; // children are centered on their spine
       expect(n.position.x % CANVAS_GRID_SIZE, `${n.id} x`).toBe(0);
       expect(n.position.y % CANVAS_GRID_SIZE, `${n.id} y`).toBe(0);
       if (n.type === "pipelineGroup") {

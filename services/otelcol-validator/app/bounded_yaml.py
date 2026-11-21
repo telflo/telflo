@@ -2,47 +2,46 @@
 `CSafeLoader` when PyYAML has it, as its wheels do), with two bounds every
 parse goes through.
 
-**Nesting** (D13b ruling 30). The composer recurses once or twice per level
-(libyaml's in C, without Python's recursion check), and so do the
-validator's walks over the result, `copy.deepcopy` and `safe_dump`. Before a
-document is composed, its parse events are read (the parser keeps its own
-stack, it doesn't recurse) and a text whose mappings and sequences nest more
-than `MAX_DEPTH` deep raises `TooDeep`. The events don't see what aliases
-nest: a chain of anchors, each a deep list around an alias of the one
-before, is a few levels deep in the text and thousands deep once expanded
-(forty 95-deep links: a RecursionError in the walks). So the composed
-document's expanded depth is counted too, in the same pass as its aliases
-(below), and past `MAX_DEPTH` raises `TooDeep` before anything is
-constructed. The walks then stay under about 3 × `MAX_DEPTH` frames, far
-below Python's limit of 1,000.
+**Nesting**. The composer recurses once or twice per level (libyaml's in C,
+without Python's recursion check), and so do the validator's walks over the
+result, `copy.deepcopy` and `safe_dump`. Before a document is composed, its
+parse events are read (the parser keeps its own stack, it doesn't recurse)
+and a text whose mappings and sequences nest more than `MAX_DEPTH` deep
+raises `TooDeep`. The events don't see what aliases nest: a chain of
+anchors, each a deep list around an alias of the one before, is a few levels
+deep in the text and thousands deep once expanded (forty 95-deep links: a
+RecursionError in the walks). So the composed document's expanded depth is
+counted too, in the same pass as its aliases (below), and past `MAX_DEPTH`
+raises `TooDeep` before anything is constructed. The walks then stay under
+about 3 × `MAX_DEPTH` frames, far below Python's limit of 1,000.
 
-**Aliases** (D13b ruling 24). An alias is cheap to write and expensive to
-walk: `a1: &a1 [*a0, *a0, …]` nested seven deep is 462 bytes and expands to
-ten million nodes, and the validator's walks (requirements, placeholders,
-provider neutralisation) visit every expanded node. Each document is composed
-first and its expanded size counted from the node graph (each distinct node
-once, so counting is linear in the text); a document whose aliases add more
-than `MAX_ALIAS_NODES` nodes raises `TooManyAliases` before anything is
-constructed or walked.
+**Aliases**. An alias is cheap to write and expensive to walk:
+`a1: &a1 [*a0, *a0, …]` nested seven deep is 462 bytes and expands to ten
+million nodes, and the validator's walks (requirements, placeholders,
+provider neutralization) visit every expanded node. Each document is
+composed first and its expanded size counted from the node graph (each
+distinct node once, so counting is linear in the text); a document whose
+aliases add more than `MAX_ALIAS_NODES` nodes raises `TooManyAliases` before
+anything is constructed or walked.
 
 Neither is a `yaml.YAMLError`: the call sites treat a YAMLError as
 "unparseable, let the collector say why" and fall back, and these must not
 be waved through that way. The check answers them with `DEPTH_MESSAGE` and
 `ALIASES_MESSAGE`, without running the collector.
 
-**Scalars** (D13b ruling 35). A plain scalar that PyYAML would resolve to a
-timestamp, to `=` (its "value" tag) or to `yaml`'s own tag, or to an int or
-float whose construction fails (`0b_`, `2001-13-45`), is a string: the
-collector's Go YAML reads these as strings, and PyYAML raised ValueError for
-some (an answer of 500) and a ConstructorError for others (unparseable, so
-the submitted text's words went unread). Any other failure to construct a
-value (an explicit `!!int x`) is a `YAMLError`: unparseable, never a crash.
+**Scalars**. A plain scalar that PyYAML would resolve to a timestamp, to `=`
+(its "value" tag) or to `yaml`'s own tag, or to an int or float whose
+construction fails (`0b_`, `2001-13-45`), is a string: the collector's Go
+YAML reads these as strings, and PyYAML raised ValueError for some (an
+answer of 500) and a ConstructorError for others (unparseable, so the
+submitted text's words went unread). Any other failure to construct a value
+(an explicit `!!int x`) is a `YAMLError`: unparseable, never a crash.
 
 Nothing here bounds time: the whole check runs in a child process under one
-deadline (D13b ruling 27; `app/runner.py`). Within one check the same text
-is parsed by several steps, so the last few texts' documents are kept and
-each caller gets its own deep copy (a copy keeps aliased parts shared, so it
-is no bigger than the document).
+deadline (`app/runner.py`). Within one check the same text is parsed by
+several steps, so the last few texts' documents are kept and each caller
+gets its own deep copy (a copy keeps aliased parts shared, so it is no
+bigger than the document).
 
 The module also re-exports `safe_dump` and `YAMLError`, so a module can bind
 it as `yaml` (providers.py does).
@@ -166,7 +165,7 @@ def _children(node: Node) -> list[Node]:
 
 
 _STR_TAG = "tag:yaml.org,2002:str"
-# Implicit tags read as strings whatever the scalar (ruling 35).
+# Implicit tags read as strings whatever the scalar.
 _STRING_TAGS = frozenset({"tag:yaml.org,2002:timestamp", "tag:yaml.org,2002:value", "tag:yaml.org,2002:yaml"})
 # Implicit tags kept only for a scalar their constructor takes.
 _CHECKED_TAGS = {
@@ -236,8 +235,8 @@ def mark_offset(text: str) -> int:
     Marks count characters (code points; CRLF is two), but libyaml takes a
     leading U+FEFF as the encoding's signature and leaves it out of every
     index (a later one, at the start of a line, is counted), while the
-    pure-Python reader counts it. Found writing ruling 44's splice tests: a
-    splice by the uncorrected index cut one character early."""
+    pure-Python reader counts it. Uncorrected, a splice by that index would
+    cut one character early."""
     return 1 if text.startswith("\ufeff") and _BASE_LOADER is not yaml.SafeLoader else 0
 
 
@@ -248,10 +247,10 @@ def single_node(text: str) -> Node | None:
 
     Composing stops short of construction, so no implicit type is resolved
     and no value is built: a node's `.value` is the scalar's decoded string
-    (escapes resolved, `${file:…}` hidden behind a YAML escape made visible),
-    exactly what the collector's confmap layer reads. Used by the provider
-    neutralisation (D13b ruling 39), which detects and splices references by
-    node position without ever re-dumping the document.
+    (escapes resolved, `${file:…}` hidden behind a YAML escape made
+    visible), exactly what the collector's confmap layer reads. Used by the
+    provider neutralization, which detects and splices references by node
+    position without ever re-dumping the document.
 
     Raises `YAMLError` for a text PyYAML can't read as one document (a scanner
     or parser error, or more than one document), `TooDeep` / `TooManyAliases`

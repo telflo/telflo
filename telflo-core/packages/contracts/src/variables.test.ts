@@ -36,8 +36,7 @@ import {
   VARIABLES_UNAVAILABLE_RUN_MESSAGE,
 } from "./variables.js";
 
-// The organization variables' contracts (D20 decisions 2, 3, 11, 31 and 37;
-// Preflight rulings 23, 26, 39 and 41): every bound counted in code points
+// The organization variables' contracts: every bound counted in code points
 // as the opamp-server's char_length counts them, the UPPER_CASE name rule
 // on a create's or a rename's request only (a reply's name has the
 // server's grammar, lowercase included), a value on one line, the details'
@@ -54,7 +53,7 @@ const PARAGRAPH_SEPARATOR = String.fromCharCode(0x2029);
 
 /**
  * A value of `length` code points the value pattern takes: astral
- * characters, `$` and text, never U+2028 or U+2029 (Preflight ruling 23).
+ * characters, `$` and text, never U+2028 or U+2029.
  */
 function valueOf(length: number): string {
   const unit = [ASTRAL, "$", "a", "{", "é"];
@@ -96,7 +95,7 @@ describe("a variable's bounds, in code points", () => {
     expect(nameOf(128)).toHaveLength(128);
   });
 
-  it("takes a value of 0 to 1,024 code points (Q104), astral characters counted once each", () => {
+  it("takes a value of 0 to 1,024 code points, astral characters counted once each", () => {
     expect(VARIABLE_VALUE_MAXIMUM_LENGTH).toBe(1024);
     expect(VariableValueSchema.safeParse("").success).toBe(true);
     const longest = ASTRAL.repeat(1024);
@@ -145,7 +144,7 @@ describe("a variable's bounds, in code points", () => {
   });
 });
 
-describe("a value on one line (Q87, Ruling 52)", () => {
+describe("a value on one line", () => {
   it.each([
     ["a line feed", "a\nb"],
     ["a carriage return", "a\rb"],
@@ -239,7 +238,7 @@ describe("the replies", () => {
     expect(OrganizationVariableSchema.safeParse(withoutChangedAt).success).toBe(false);
   });
 
-  it("lists at most 150 variables (Q104) and 100 variable groups", () => {
+  it("lists at most 150 variables and 100 variable groups", () => {
     expect(ORGANIZATION_VARIABLES_MAXIMUM).toBe(150);
     expect(VARIABLE_GROUPS_MAXIMUM).toBe(100);
     expect(OrganizationVariablesResponseSchema.safeParse({ variables: Array.from({ length: 150 }, () => variable) }).success).toBe(true);
@@ -262,7 +261,7 @@ describe("the replies", () => {
   });
 });
 
-describe("the refusals' details (Q102, Preflight ruling 26)", () => {
+describe("the refusals' details", () => {
   const group = { fleetId: ID, fleetLabel: "edge-prod", groupId: ID, groupName: "gateways" };
   const use = {
     publishedVersionId: ID,
@@ -304,7 +303,7 @@ describe("the refusals' details (Q102, Preflight ruling 26)", () => {
 });
 
 describe("VARIABLE_ERROR_CODES", () => {
-  it("is the opamp-server's variables codes and the platform's unavailable (P3, Preflight ruling 39)", () => {
+  it("is the opamp-server's variables codes and the platform's unavailable", () => {
     expect(VARIABLE_ERROR_CODES).toEqual([
       "variable_not_found",
       "variable_group_not_found",
@@ -321,7 +320,7 @@ describe("VARIABLE_ERROR_CODES", () => {
     ]);
   });
 
-  it("words variables_unavailable neutrally, one family for a read, a write and a test run (Ruling 78)", () => {
+  it("words variables_unavailable neutrally, one family for a read, a write and a test run", () => {
     expect(VARIABLES_UNAVAILABLE_MESSAGE).toBe("The organization's variables couldn't be reached. Try again.");
     expect(VARIABLES_UNAVAILABLE_RUN_MESSAGE).toBe("The organization's variables couldn't be reached. Run it again.");
     for (const message of [VARIABLES_UNAVAILABLE_MESSAGE, VARIABLES_UNAVAILABLE_RUN_MESSAGE]) {

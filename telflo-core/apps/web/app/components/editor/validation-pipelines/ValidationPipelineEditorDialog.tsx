@@ -20,28 +20,24 @@ interface ValidationPipelineEditorDialogProps {
 }
 
 /**
- * "New validation pipeline" (D15a decisions 12, 13 and 18): its one field,
- * words and hint. The field is one of the editor's pipelines
- * (its graph's, as the run dialog's); one that already has a validation
- * pipeline is offered disabled, " — already has a validation pipeline". On
- * any version, published or not (decision 13).
+ * "New validation pipeline": its one field, words and hint. The field is
+ * one of the editor's pipelines (its graph's, as the run dialog's); one
+ * that already has a validation pipeline is offered disabled, " — already
+ * has a validation pipeline". On any version, published or not.
  *
- * Differences (the Parity Notes):
  * - the request is the pipeline's name only (`{pipeline}`): the API takes
  *   the signal from it, and keeps no unused `name`;
  * - the select's values are the pipelines' opaque ids (`pipeline_<n>`), its
- *   names text only (ADR 0024), and its list sits in `ph-no-capture` with
- *   the dialog's content (Preflight ruling 27: both are portals, outside the
- *   panel's block);
+ *   names text only, and its list sits in `ph-no-capture` with the dialog's
+ *   content (both are portals, outside the panel's block);
  * - a refusal toasts the API's words (a second for one pipeline, 409:
  *   "Pipeline "logs" already has a validation pipeline for this version."),
  *   else fixed words; a session that ended toasts nothing; a 404 (the
- *   version gone) also closes the dialog, the store reading the list again
- *   (Ruling 56);
+ *   version gone) also closes the dialog, the store reading the list again;
  * - only the pipelines whose signal is logs, traces or metrics are offered
- *   (`signalOfPipeline`, Ruling 56): never a `profiles/…` pipeline, which
+ *   (`signalOfPipeline`): never a `profiles/…` pipeline, which
  *   the API refuses;
- * - an answer acts only on the dialog's session that sent it (Ruling 56): a
+ * - an answer acts only on the dialog's session that sent it: a
  *   create answered after Escape, or once the dialog has opened again,
  *   closes nothing and toasts nothing (the new card shows in the list, as
  *   the store keeps it);

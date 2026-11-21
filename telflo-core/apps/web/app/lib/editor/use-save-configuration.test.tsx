@@ -25,9 +25,8 @@ const SAVED_YAML = "receivers:\n  otlp:\n";
 const EDITED_YAML = "receivers:\r\n  otlp:   \n\n";
 
 /**
- * The loaded version's graph, hand-written in the shapes D9a
- * stores (D9a decision 6): a pipeline's group, a component in it, an
- * edge and the pipeline.
+ * The loaded version's graph, hand-written in the shapes a version stores: a
+ * pipeline's group, a component in it, an edge and the pipeline.
  */
 const GRAPH = {
   nodes: [
@@ -62,11 +61,11 @@ const initialState = useEditorStore.getState();
 
 /** What a save that sent the text and saved it answers. */
 const SAVED: SaveResult = { saved: true };
-/** Not saved, and nothing said: the caller may say it (D8 decision 15). */
+/** Not saved, and nothing said: the caller may say it. */
 const NOT_SAVED: SaveResult = { saved: false, toasted: false };
 /** Not saved, and the save toasted why. */
 const REFUSED: SaveResult = { saved: false, toasted: true };
-/** Not tried: a save or the picker's create was under way (D10 Ruling 36). */
+/** Not tried: a save or the picker's create was under way. */
 const BUSY: SaveResult = { saved: false, busy: true };
 
 /** MINE loaded in the group organization (as `version`), then edited to `text`. */
@@ -157,13 +156,13 @@ describe("useSaveConfiguration", () => {
     await expect(save()).resolves.toEqual(SAVED);
 
     expect(saveConfigurationVersion).toHaveBeenCalledTimes(1);
-    // The graph on the canvas, as the columns store it (D9a decision 6):
-    // the text's, with the stored layout where it matched (the traces group).
+    // The graph on the canvas, as the columns store it: the text's, with the
+    // stored layout where it matched (the traces group).
     const sent = toStored(useEditorStore.getState().graph);
     expect(saveConfigurationVersion).toHaveBeenCalledWith(GROUP_ID, MINE.id, VERSION.id, {
       yamlContent: EDITED_YAML,
       ...sent,
-      // No collectorVersion: the picker is untouched, so the server keeps the stored pin (D13a Ruling 37).
+      // No collectorVersion: the picker is untouched, so the server keeps the stored pin.
     });
     expect(sent.pipelines.map((p) => p.name)).toEqual(["traces", "metrics", "logs"]);
     expect(sent.nodes.find((n) => n.data.label === "traces")).toMatchObject({
@@ -216,7 +215,7 @@ describe("useSaveConfiguration", () => {
     expect(selectIsDirty(useEditorStore.getState())).toBe(true);
   });
 
-  it("saves a text whose values the graph's columns can't hold, with those configs left out (Preflight ruling 4)", async () => {
+  it("saves a text whose values the graph's columns can't hold, with those configs left out", async () => {
     const withNul = 'receivers:\n  otlp:\n    note: "a\\0b"\n';
     const saveConfigurationVersion = vi
       .spyOn(apiClient, "saveConfigurationVersion")
@@ -267,7 +266,7 @@ describe("useSaveConfiguration", () => {
     expect(state.isSaving).toBe(false);
   });
 
-  it("does nothing while the picker's create is under way, answering busy and saying nothing, and saves once it isn't (D10 Rulings 30 and 36)", async () => {
+  it("does nothing while the picker's create is under way, answering busy and saying nothing, and saves once it isn't", async () => {
     const saveConfigurationVersion = vi
       .spyOn(apiClient, "saveConfigurationVersion")
       .mockResolvedValue(savedVersion(EDITED_YAML));
@@ -297,12 +296,12 @@ describe("useSaveConfiguration", () => {
     resolve(savedVersion(EDITED_YAML));
 
     await expect(first).resolves.toEqual(SAVED);
-    // The second didn't try: the first was under way (Ruling 36).
+    // The second didn't try: the first was under way.
     await expect(second).resolves.toEqual(BUSY);
     expect(saveConfigurationVersion).toHaveBeenCalledTimes(1);
   });
 
-  it("refuses text over 262,144 characters without a request, and sends 262,144 (D8 decision 7)", async () => {
+  it("refuses text over 262,144 characters without a request, and sends 262,144", async () => {
     const saveConfigurationVersion = vi
       .spyOn(apiClient, "saveConfigurationVersion")
       .mockImplementation(async (_organizationId, _configurationId, _versionId, { yamlContent }) => savedVersion(yamlContent));
@@ -326,7 +325,7 @@ describe("useSaveConfiguration", () => {
     ["U+0000", "receivers:\u0000\n"],
     ["a lone high surrogate", "receivers: {}\n# \ud83d\n"],
     ["a lone low surrogate", "receivers: {}\n# \ude80\n"],
-  ])("refuses text holding %s without a request, which the API would refuse (D8 decision 5)", async (_label, text) => {
+  ])("refuses text holding %s without a request, which the API would refuse", async (_label, text) => {
     const saveConfigurationVersion = vi.spyOn(apiClient, "saveConfigurationVersion");
     const error = vi.spyOn(toast, "error");
     loadAndEdit(text);
@@ -360,7 +359,7 @@ describe("useSaveConfiguration", () => {
     });
   });
 
-  describe("a refusal keeps the text, and the editor dirty (D8 decision 12)", () => {
+  describe("a refusal keeps the text, and the editor dirty", () => {
     function expectTextKept() {
       const state = useEditorStore.getState();
       expect(state.text).toBe(EDITED_YAML);
@@ -388,7 +387,7 @@ describe("useSaveConfiguration", () => {
       const { save, loader } = await renderSave();
       const loadsBefore = loader.mock.calls.length;
 
-      // It toasted why, so the Unsaved Changes dialog adds nothing (D8 decision 15).
+      // It toasted why, so the Unsaved Changes dialog adds nothing.
       await expect(save()).resolves.toEqual(REFUSED);
 
       expect(error).toHaveBeenCalledTimes(1);
@@ -399,7 +398,7 @@ describe("useSaveConfiguration", () => {
       expect(SAVE_FAILED_MESSAGE).toBe("Failed to save configuration. Please try again.");
     });
 
-    it("says the configuration belongs to another organization, and revalidates the layout, on a 404 organization_not_found (Preflight ruling 4)", async () => {
+    it("says the configuration belongs to another organization, and revalidates the layout, on a 404 organization_not_found", async () => {
       vi.spyOn(apiClient, "saveConfigurationVersion").mockRejectedValue(
         new ApiError("organization_not_found", "Organization not found"),
       );
@@ -428,7 +427,7 @@ describe("useSaveConfiguration", () => {
       const loadsBefore = loader.mock.calls.length;
 
       // Nothing said: the terms dialog opens, and the Unsaved Changes dialog
-      // says the save failed (D8 decision 15).
+      // says the save failed.
       expect(await saveInAct(save)).toEqual(NOT_SAVED);
 
       await waitFor(() => expect(loader.mock.calls.length).toBe(loadsBefore + 1));
@@ -511,10 +510,10 @@ describe("useSaveConfiguration", () => {
   );
 });
 
-describe("a published version (D11b decision 4; Preflight ruling 12)", () => {
+describe("a published version", () => {
   const STALE = "Version 1 is published and can't be changed.";
 
-  it("a stale tab's save refused as published says so, reads the version again, and locks keeping the unsaved text, dirty against what was published (Ruling 35)", async () => {
+  it("a stale tab's save refused as published says so, reads the version again, and locks keeping the unsaved text, dirty against what was published", async () => {
     vi.spyOn(apiClient, "saveConfigurationVersion").mockRejectedValue(
       new ApiError("configuration_version_published", "This version is published and can't be changed."),
     );
@@ -573,7 +572,7 @@ describe("a published version (D11b decision 4; Preflight ruling 12)", () => {
     expect(error).toHaveBeenCalledWith(STALE);
   });
 
-  it("a clean published version sends nothing, and says it is published (Cmd/Ctrl+S on it; Ruling 31)", async () => {
+  it("a clean published version sends nothing, and says it is published (Cmd/Ctrl+S on it)", async () => {
     const saveConfigurationVersion = vi.spyOn(apiClient, "saveConfigurationVersion");
     const error = vi.spyOn(toast, "error");
     useEditorStore.getState().load({ organizationId: GROUP_ID, configuration: MINE, version: { ...VERSION, ...PUBLISHED_FIELDS } });
@@ -596,7 +595,7 @@ describe("a published version (D11b decision 4; Preflight ruling 12)", () => {
   });
 });
 
-describe("the collector version in a save (D13a decision 8; Ruling 37: the pin follows whoever last picked it)", () => {
+describe("the collector version in a save: the pin follows whoever last picked it", () => {
   /** A save that answers with what it stored: the text, and the pin sent or else the one `stored` (the server keeps it). */
   function storing(stored: Pick<ConfigurationVersion, "collectorVersion" | "collectorVersionDeprecated" | "collectorVersionDeprecatedNote"> = VERSION) {
     return vi
@@ -617,7 +616,7 @@ describe("the collector version in a save (D13a decision 8; Ruling 37: the pin f
       }));
   }
 
-  /** Ana's version 1, as her tab loaded it: pinned to a release the catalogue has deprecated since. */
+  /** Ana's version 1, as her tab loaded it: pinned to a release the catalog has deprecated since. */
   const ANAS_VERSION = versionFixture({
     yamlContent: SAVED_YAML,
     ...GRAPH,
@@ -665,7 +664,7 @@ describe("the collector version in a save (D13a decision 8; Ruling 37: the pin f
     expect(selectIsDirty(useEditorStore.getState())).toBe(false);
   });
 
-  it("keeps a deprecated pin on a text save: none is sent, and the server keeps it (decision 4)", async () => {
+  it("keeps a deprecated pin on a text save: none is sent, and the server keeps it", async () => {
     const saveConfigurationVersion = storing(ANAS_VERSION);
     loadAndEdit(EDITED_YAML, ANAS_VERSION);
     const { save } = await renderSave();
@@ -740,7 +739,7 @@ describe("the collector version in a save (D13a decision 8; Ruling 37: the pin f
     expect(selectIsDirty(useEditorStore.getState())).toBe(true);
   });
 
-  it("a stale tab's typed text, no pick, refused because a teammate published 0.160.0: the re-read shows the published pin, the text kept (Rulings 35 and 37)", async () => {
+  it("a stale tab's typed text, no pick, refused because a teammate published 0.160.0: the re-read shows the published pin, the text kept", async () => {
     const saveConfigurationVersion = vi
       .spyOn(apiClient, "saveConfigurationVersion")
       .mockRejectedValue(new ApiError("configuration_version_published", "This version is published and can't be changed."));
@@ -759,7 +758,7 @@ describe("the collector version in a save (D13a decision 8; Ruling 37: the pin f
     expect(selectIsDirty(state)).toBe(true);
   });
 
-  it("a stale tab that only picked, refused because a teammate published other text and 0.160.0: the re-read shows the teammate's text with the pick, dirty by the pin alone (Ruling 41)", async () => {
+  it("a stale tab that only picked, refused because a teammate published other text and 0.160.0: the re-read shows the teammate's text with the pick, dirty by the pin alone", async () => {
     const teammateText = `${SAVED_YAML}# Ben's published change\n`;
     const saveConfigurationVersion = vi
       .spyOn(apiClient, "saveConfigurationVersion")
@@ -792,7 +791,7 @@ describe("the collector version in a save (D13a decision 8; Ruling 37: the pin f
     expect(selectIsDirty({ ...state, collectorVersion: "0.160.0" })).toBe(false);
   });
 
-  it("a 400 collector_version_unknown (a pick retired since the page read the catalogue) says so, and keeps the pick unsaved", async () => {
+  it("a 400 collector_version_unknown (a pick retired since the page read the catalog) says so, and keeps the pick unsaved", async () => {
     vi.spyOn(apiClient, "saveConfigurationVersion").mockRejectedValue(
       new ApiError("collector_version_unknown", "That collector version isn't available."),
     );

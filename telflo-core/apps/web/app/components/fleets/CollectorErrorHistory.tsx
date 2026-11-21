@@ -3,22 +3,21 @@ import { Button } from "~/components/ui/button.js";
 import { formatDateTime } from "~/lib/format.js";
 
 /*
- * A collector's details' error history (D17b-1 decisions 13 and 24,
- * Preflight ruling 11): the opamp-server's history (its newest 100 for 30
- * days), newest first, 20 a page with "Load more". Each error's time and its
- * message, the collector's own text, in a `<pre>` that wraps, at most 12rem
- * tall and scrolling (focusable, so a keyboard scrolls it too, and a group
- * named by the fixed "Error message", never its text: ARIA 1.2 doesn't name
- * a `<pre>` without a role, and a group, unlike a region, isn't a landmark,
- * so a history of up to 100 adds none to the landmark list). The section is
- * `ph-no-capture`, so session replay records none of it; no message reaches
- * an attribute or a toast.
+ * A collector's details' error history: the opamp-server's history (its newest
+ * 100 for 30 days), newest first, 20 a page with "Load more". Each error's
+ * time and its message, the collector's own text, in a `<pre>` that wraps, at
+ * most 12rem tall and scrolling (focusable, so a keyboard scrolls it too, and
+ * a group named by the fixed "Error message", never its text: ARIA 1.2 doesn't
+ * name a `<pre>` without a role, and a group, unlike a region, isn't a
+ * landmark, so a history of up to 100 adds none to the landmark list). The
+ * section is `ph-no-capture`, so session replay records none of it; no message
+ * reaches an attribute or a toast.
  */
 
 /** A first read that failed, and a "Load more" that failed (its toast). */
 export const ERROR_HISTORY_FAILED_MESSAGE = "Failed to load the error history";
 
-/** The fixed name of each bounded error `<pre>`, a group and a tab stop: never the error's own text (ADR 0024). */
+/** The fixed name of each bounded error `<pre>`, a group and a tab stop: never the error's own text. */
 export const ERROR_MESSAGE_LABEL = "Error message";
 
 /** How many errors a page holds. */

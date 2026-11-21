@@ -1,9 +1,9 @@
 # shellcheck shell=bash
 # smoke-env.sh: source it (`. scripts/gates/smoke-env.sh oss|saas <work>`; bash
 # or zsh) for the stack smoke (scripts/smoke-test-stack.sh) against a
-# throwaway stack scripts/gates/stack.sh started with that --work (D36-2
-# decision 96). stack.sh sources it too, for every compose call, so the
-# stack and the smoke read one set of values.
+# throwaway stack scripts/gates/stack.sh started with that --work. stack.sh
+# sources it too, for every compose call, so the stack and the smoke read one
+# set of values.
 #
 # It reads <work>/stack.conf (stack.sh's) and exports:
 #   - the site's values: `saas` the SaaS's (registration open, the

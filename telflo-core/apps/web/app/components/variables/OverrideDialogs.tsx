@@ -42,17 +42,16 @@ import {
 import { handleSharedWriteFailure, type GoneCode } from "./write-failures.js";
 
 /*
- * A variable group's page's two writes per row (D20 default 22; Q82, Q100):
- * Override, a dialog with the variable's value in this group (a new
- * override, or a replace; an empty value is a value, Q90, and Reset is its
- * own action), and Reset, a confirmation, after which the variable takes the
- * organization's value in the group again. Titles and toasts are fixed
- * ("Override value", "Reset override"; "Override saved", "Override reset");
- * the variable's name and values sit inside `ph-no-capture`, the Value's own
- * `value` the one attribute holding what is typed. The row is the one the
- * dialog opened on (D17c-1 Ruling 66). A group or variable found gone toasts
- * its fixed words, closes and reloads the page; the rest as
- * `write-failures.ts` says.
+ * A variable group's page's two writes per row: Override, a dialog with the
+ * variable's value in this group (a new override, or a replace; an empty
+ * value is a value, and Reset is its own action), and Reset, a confirmation,
+ * after which the variable takes the organization's value in the group
+ * again. Titles and toasts are fixed ("Override value", "Reset override";
+ * "Override saved", "Override reset"); the variable's name and values sit
+ * inside `ph-no-capture`, the Value's own `value` the one attribute holding
+ * what is typed. The row is the one the dialog opened on. A group or
+ * variable found gone toasts its fixed words, closes and reloads the page;
+ * the rest as `write-failures.ts` says.
  */
 
 const GONE: readonly GoneCode[] = [

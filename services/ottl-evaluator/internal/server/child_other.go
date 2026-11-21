@@ -1,4 +1,3 @@
-// New in the follow-up to D15a Task 2's review (the controller's Ruling 33).
 // Pdeathsig is Linux's (child_linux.go): elsewhere (a developer's macOS) a
 // child gets its own process group only.
 

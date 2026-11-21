@@ -1,6 +1,6 @@
 # shellcheck shell=bash
-# quick-start.sh: the README's Quick start, read as the archive smoke runs it
-# (D36-2 decisions 94 and 98). Sourced, never run:
+# quick-start.sh: the README's Quick start, read as the archive smoke runs it.
+# Sourced, never run:
 #
 #   . scripts/release/quick-start.sh
 #   telflo_quick_start_region <README>

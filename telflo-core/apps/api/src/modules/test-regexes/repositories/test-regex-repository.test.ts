@@ -10,9 +10,9 @@ import {
 import type { Database } from "@telflo/db";
 import { createTestRegexRepository, TestRegexNameTakenError } from "./test-regex-repository.js";
 
-// D15b Ruling 20 (the Task 2 review's nit 2): only a unique violation of
-// uq_test_regex_name is the name taken. Against a Kysely whose every query
-// fails with the error given, as pg's driver would throw it: no database.
+// Only a unique violation of uq_test_regex_name is the name taken. Against a
+// Kysely whose every query fails with the error given, as pg's driver would
+// throw it: no database.
 
 /** pg's error for a unique violation of `constraint`, or another SQLSTATE's. */
 function pgError(code: string, constraint: string): Error {

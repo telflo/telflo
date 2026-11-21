@@ -1,7 +1,7 @@
 """What `validate` passes but the collector refuses at start, read from the
-text (D13b Preflight ruling 2, the owner's): TLS files, the file exporter's
-directory and the cluster's API become requirements; a tail_sampling OTTL
-policy with no conditions is an error. Nothing is opened."""
+text: TLS files, the file exporter's directory and the cluster's API become
+requirements; a tail_sampling OTTL policy with no conditions is an error.
+Nothing is opened."""
 
 from __future__ import annotations
 
@@ -77,9 +77,8 @@ exporters:
 
 
 def test_a_relative_directory_is_quoted_and_said_to_be_relative() -> None:
-    """D13b ruling 31: `path: 'stat /y: no such file or directory'` (a
-    relative path whose directory is `stat `) read `Directory stat  must
-    exist`."""
+    """`path: 'stat /y: no such file or directory'` (a relative path whose
+    directory is `stat `) must not read `Directory stat  must exist`."""
     text = """
 exporters:
   file:

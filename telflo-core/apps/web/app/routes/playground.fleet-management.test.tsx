@@ -26,8 +26,7 @@ import PlaygroundFleets from "./playground.fleet-management.js";
 vi.mock("~/lib/api-client.server.js", () => ({ fetchCurrentUser: vi.fn() }));
 
 /*
- * The playground's fleet pages (D31-1 decisions 8, 10, 24, 25 and 35;
- * Preflight rulings 8, 9 and 20): the list and both kinds of fleet page on
+ * The playground's fleet pages: the list and both kinds of fleet page on
  * the sample, inside the shell, read through the seam and never the API
  * client; reads open (a collector's details, a group's details, an install
  * link's View); every write locked at its opener, the sign-up prompt with
@@ -98,7 +97,7 @@ afterEach(() => {
   // Cleared first, so one test's failure here never carries into the next.
   useUserStore.getState().clear();
   document.body.className = "";
-  // No reader reached the API client: the playground reads the sample only (decisions 22 and 23).
+  // No reader reached the API client: the playground reads the sample only.
   for (const spy of spies) expect(spy, spy.getMockName()).not.toHaveBeenCalled();
 });
 
@@ -271,7 +270,7 @@ describe("an id the sample doesn't hold", () => {
   });
 });
 
-describe("a signed-in visitor (Ruling 289)", () => {
+describe("a signed-in visitor", () => {
   // Signed in to a real organization: the user store holds it, and the playground's pages still read the sample
   // only. Every tab, a collector's details and the install links, and the afterEach's spies see no API client call.
   beforeEach(() => {

@@ -1,5 +1,5 @@
-# Routing and failover whose receivers disagree with their configs (D9d
-# decision 8, Task 3), with CRLF line endings: the canvas keeps each
+# Routing and failover whose receivers disagree with their configs,
+# with CRLF line endings: the canvas keeps each
 # pipeline's receivers, and its processors, as the text has them.
 receivers:
   otlp:

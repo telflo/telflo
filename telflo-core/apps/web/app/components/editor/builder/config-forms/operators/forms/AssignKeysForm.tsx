@@ -9,22 +9,20 @@ import { Button } from "~/components/ui/button.js";
 import { flushHeldEdits } from "~/lib/editor/held-edits.js";
 
 /*
- * The `assign_keys` operator's form (ADR 0018), over the card's scope (D9c
- * decisions 2 and 8). Ids are the card's (`op-<index>-assign-keys-…`); each
- * key's input gets a fixed id by index, `op-<index>-assign-keys-key-<row>`
- * (decision 10), and its placeholder is `key<n>`, from the row's number.
+ * The `assign_keys` operator's form, over the card's scope. Ids are the card's
+ * (`op-<index>-assign-keys-…`); each key's input gets a fixed id by index,
+ * `op-<index>-assign-keys-key-<row>`, and its placeholder is `key<n>`, from
+ * the row's number.
  *
- * Keys is written by item (D9b decision 2): a row's typing sets its key
- * (held; cleared, it writes `""`, so the item stays), Add Key appends
- * `key<n+1>`, and Remove removes the item's
- * lines; the rows are keyed by their items (`useCardKeys`; D9c Ruling 68).
- * Remove is disabled while there is one key: the
- * collector refuses an empty `keys` (`transformer/assignkeys/config.go:51-53`).
- * A `keys` that isn't a list of scalars is read-only with decision 3's hint.
- * Changed (D9b decision 3): Field is required (`docs/operators/assign_keys.md`;
- * a body, attribute or resource field, `config.go:55-79`) and shows no
- * default (never `body` as a value it doesn't write). It isn't rootable
- * (`config.go:40`, an `entry.Field`).
+ * Keys is written by item: a row's typing sets its key (held; cleared, it
+ * writes `""`, so the item stays), Add Key appends `key<n+1>`, and Remove
+ * removes the item's lines; the rows are keyed by their items (`useCardKeys`).
+ * Remove is disabled while there is one key: the collector refuses an empty
+ * `keys` (`transformer/assignkeys/config.go:51-53`). A `keys` that isn't a
+ * list of scalars is read-only with `UNSHOWABLE_VALUE_MESSAGE`. Field is
+ * required (`docs/operators/assign_keys.md`; a body, attribute or resource
+ * field, `config.go:55-79`) and shows no default (never `body` as a value it
+ * doesn't write). It isn't rootable (`config.go:40`, an `entry.Field`).
  */
 
 const CODE = "rounded-[4px] bg-muted px-1 py-0.5 font-mono text-xs";
@@ -36,7 +34,7 @@ export function AssignKeysForm() {
   const items = view.kind === "absent" ? [] : view.kind === "list" ? view.value.map((_item, index) => form.read(["keys", index]).kind) : null;
   const count = items?.every((kind) => kind === "scalar") ? items.length : null;
   const disabled = form.disabled || count === null;
-  // Rows keyed by their items (Ruling 68), so a Remove click can't land on the next key's row.
+  // Rows keyed by their items, so a Remove click can't land on the next key's row.
   const cards = useCardKeys(count === null || view.kind !== "list" ? [] : view.value);
 
   return (

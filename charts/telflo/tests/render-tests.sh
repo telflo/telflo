@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
-# Render tests for charts/telflo (D33-1), modelled on the
-# opamp-server chart's own (charts/opamp-server/tests/render-tests.sh at its
-# first release, D26). The opamp-server's version is read from
-# vendor/opamp-server/PIN, and the chart's own from its Chart.yaml (through
-# scripts/release/version.sh), never written here (D36-1 decision 18; D36-2
-# decision 100): a patch release needs no test edit.
+# Render tests for charts/telflo, modeled on the opamp-server chart's own
+# (charts/opamp-server/tests/render-tests.sh at its first release). The
+# opamp-server's version is read from vendor/opamp-server/PIN, and the chart's
+# own from its Chart.yaml (through scripts/release/version.sh), never written
+# here: a patch release needs no test edit.
 #
 # `helm lint --strict` can't catch most of these: it lints with the values it
 # is given, and only warns on a failing `required`. So every guard, name,
@@ -38,7 +37,7 @@ SUBCHART_DIR="$CHART_DIR/charts/opamp-server"
 PIN_VERSION="$(sed -n 's/^version=//p' "$REPO_DIR/vendor/opamp-server/PIN")"
 PIN_DIGEST="$(sed -n 's/^digest=//p' "$REPO_DIR/vendor/opamp-server/PIN")"
 # The chart's version and appVersion (the platform images' tag), and the
-# release versions' one pattern (D36-2 decision 75).
+# release versions' one pattern.
 # shellcheck source=scripts/release/version.sh
 . "$REPO_DIR/scripts/release/version.sh"
 CHART_VERSION="$(telflo_chart_field "$CHART_DIR/Chart.yaml" version)" || CHART_VERSION=""
@@ -67,7 +66,7 @@ NS=telflo
 # gets a line "<path>[<name>]#index <i>", for the order; any other element by
 # its index. An empty map or list is "{}" or "[]"; a document that fails to
 # parse is "ERROR" (never its error's text). The listing goes to a file,
-# never to the output. (D26's.)
+# never to the output.
 mkdir -p "$tmp/flat/templates" "$tmp/json/templates" || exit 2
 printf 'apiVersion: v2\nname: flat\nversion: 0.0.0\n' >"$tmp/flat/Chart.yaml"
 cat >"$tmp/flat/templates/list.yaml" <<'TEMPLATE'
@@ -343,7 +342,7 @@ canary_names() {
     for c in example-api example-internal example-oidc example-mail; do not_elsewhere "$listing" "$c" "$allowed" || return 1; done
 }
 # not_elsewhere <listing> <canary> <allowed path regex>: wherever it is, only
-# at such paths (the Secrets that only Tasks 6's and 7's templates read).
+# at such paths (the Secrets that only some templates read).
 not_elsewhere() { ! awk -v c="$2" 'index($0, c) { print $1 }' "$1" | RE="$3" awk '$1 !~ ENVIRON["RE"] { bad = 1 } END { exit !bad }'; }
 run_case "Secret names (the full profile's) appear only where a Secret's name belongs" canary_names
 # (The full profile's names only: the default Secret names telflo-api and
@@ -352,7 +351,7 @@ no_value_names_secret() { ! awk '$1 ~ /\.env\[[^]]*\]\.value$/' "$1" | grep -qE 
 each_profile "no variable's value holds a Secret's name" no_value_names_secret
 
 # ---------------------------------------------------------------------------
-echo "# the vendored opamp-server chart and its wiring (decisions 2, 6, 21, 24; Preflight rulings 3, 5)"
+echo "# the vendored opamp-server chart and its wiring"
 
 OPAMP=telflo-opamp-server
 # Since 0.2.4 the opamp-server runs as two Deployments, <fullname>-agent
@@ -406,7 +405,7 @@ management_from() {
     no_path "$L" "$np[0].from[1]" && no_path "$L" "$np[1]" &&
     eq "$L" "$np[0].ports[0].port" 51235 && no_path "$L" "$np[0].ports[1]"
 }
-run_case "the management port admits only pods labelled app.kubernetes.io/name telflo, component api" management_from
+run_case "the management port admits only pods labeled app.kubernetes.io/name telflo, component api" management_from
 agent_open() {
   local np="NetworkPolicy/$OPAMP-agent.spec.ingress"
   no_path "$L" "$np[0].from" && eq "$L" "$np[0].ports[0].port" 51234 && no_path "$L" "$np[0].ports[1]" && no_path "$L" "$np[1]"
@@ -416,7 +415,7 @@ no_opamp_policy() { ! kinds "$(listing no-network-policy)" | grep -q '^NetworkPo
 run_case "no-network-policy: no NetworkPolicy from either chart" no_opamp_policy
 
 # ---------------------------------------------------------------------------
-echo "# pull secrets (D36-2 decisions 70 and 101)"
+echo "# pull secrets"
 
 # pod_specs <listing>: every pod template's spec path, sorted.
 pod_specs() {

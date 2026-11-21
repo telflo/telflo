@@ -13,29 +13,26 @@ import type { ValueView } from "~/lib/graph/value-view.js";
 import { findPattern } from "~/lib/regex-library.js";
 
 /*
- * The filter processor's form (ADR 0018), over the form (D9b decisions 2
- * and 3).
+ * The filter processor's form, over the form.
  *
- * - **Carried forward** (Parity Notes): OTTL condition lists only
- *   (`traces.span`, `traces.spanevent`, `metrics.metric`,
- *   `metrics.datapoint`, `logs.log_record`); the legacy matchers and the
- *   newer `*_conditions` keys stay in the YAML, untouched.
+ * - The form edits OTTL condition lists only (`traces.span`,
+ *   `traces.spanevent`, `metrics.metric`, `metrics.datapoint`,
+ *   `logs.log_record`); the legacy matchers and the newer `*_conditions` keys
+ *   stay in the YAML, untouched.
  * - Each list is sortable: dragging a condition (pointer or keyboard) moves
- *   its own lines, comments and quoting with it (`form.move`; Preflight
- *   ruling 2). A condition's typing is written to its item; cleared, it
- *   writes `""` (the item stays). "Add Filter" appends
- *   `""`; the trash button removes the item's lines.
- * - The examples' "Add" appends the example's expression to the list for
- *   its context and toasts "Added to <list>"; the
- *   "All Signals" examples go to Span Filters only (carried forward).
- * - **Fixed** (decision 3; Preflight ruling 8): an unset `error_mode` shows
- *   the collector's default, `ignore` (filterprocessor `createDefaultConfig`,
- *   `ErrorMode: ottl.IgnoreError`, contrib v0.162.0), as its placeholder
- *   (the option's label) and in the "Default ignore" hint (decision 3),
- *   never propagate as if it were set.
+ *   its own lines, comments and quoting with it (`form.move`). A condition's
+ *   typing is written to its item; cleared, it writes `""` (the item stays).
+ *   "Add Filter" appends `""`; the trash button removes the item's lines.
+ * - The examples' "Add" appends the example's expression to the list for its
+ *   context and toasts "Added to <list>"; the "All Signals" examples go to
+ *   Span Filters only.
+ * - An unset `error_mode` shows the collector's default, `ignore`
+ *   (filterprocessor `createDefaultConfig`, `ErrorMode: ottl.IgnoreError`,
+ *   contrib v0.162.0), as its placeholder (the option's label) and in the
+ *   "Default ignore" hint, never propagate as if it were set.
  *
  * Rows are keyed and identified by index (`span-filter-0`), never by a
- * condition (decision 10).
+ * condition.
  */
 
 // Example filter patterns

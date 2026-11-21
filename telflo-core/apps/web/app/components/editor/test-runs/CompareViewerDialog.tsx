@@ -23,7 +23,7 @@ const CANDIDATE_LABELS: Record<RuleCandidateKind, string> = {
 /** How many chips show. */
 export const CANDIDATES_SHOWN = 5;
 
-/** What the footer says instead of chips when a file was cut at 10 MiB (Preflight ruling 8). */
+/** What the footer says instead of chips when a file was cut at 10 MiB. */
 export function truncationLine(outputTruncated: boolean, decodedInputTruncated: boolean): string | null {
   if (outputTruncated && decodedInputTruncated) return "Input and output were cut at 10 MiB, so no rules are suggested.";
   if (outputTruncated) return "Output was cut at 10 MiB, so no rules are suggested.";
@@ -57,11 +57,11 @@ interface CompareViewerDialogProps {
  * `@monaco-editor/react` (4.7.0) disposes the models before the diff editor
  * when it unmounts, and Monaco (0.5x) reports that as an uncaught error,
  * "TextModel got disposed before DiffEditorWidget model got reset", each
- * time Compare closes (D14a Task 11's browser tests). So the library keeps
- * them (`keepCurrent…Model`), and this resets the diff editor's model first,
- * then disposes the two it held. React runs a removed tree's effect
- * clean-ups parent first, so this runs before the library disposes the
- * editor. `onMounted` gets the diff editor once it mounts.
+ * time Compare closes. So the library keeps them (`keepCurrent…Model`), and
+ * this resets the diff editor's model first, then disposes the two it held.
+ * React runs a removed tree's effect clean-ups parent first, so this runs
+ * before the library disposes the editor. `onMounted` gets the diff editor
+ * once it mounts.
  */
 function ReleasingDiffEditor({
   onMounted,
@@ -98,19 +98,18 @@ function ReleasingDiffEditor({
 
 /**
  * "Detected {n} candidate rule(s):" and up to five chips, each a rule to
- * create (its words, its five, its title); "Showing 5 of {n}." past
- * five; the truncation sentence instead when a file was cut; nothing when
- * there is nothing to offer. The two lines are polite status regions
- * mounted empty with the footer as Compare opens and filled once its files
- * show (`loaded`), so a screen reader hears them: a region inserted with
- * its text may go unannounced (Ruling 32). The chips are a group labelled
- * by the "Detected" line; every chip is held (`aria-disabled`) while one's
- * lookup runs, that one busy. A chip's key wraps, whole, however long (never
- * cut: no title can carry it); the chips' group is at most 10rem tall and
- * scrolls, so long keys never squeeze the diff editor (Ruling 34). The
- * keys are text inside Compare's `ph-no-capture`; the only title is the
- * fixed "Create an OTTL rule
- * asserting this change" (Preflight ruling 17).
+ * create (its words, its five, its title); "Showing 5 of {n}." past five;
+ * the truncation sentence instead when a file was cut; nothing when there is
+ * nothing to offer. The two lines are polite status regions mounted empty
+ * with the footer as Compare opens and filled once its files show
+ * (`loaded`), so a screen reader hears them: a region inserted with its text
+ * may go unannounced. The chips are a group labeled by the "Detected" line;
+ * every chip is held (`aria-disabled`) while one's lookup runs, that one
+ * busy. A chip's key wraps, whole, however long (never cut: no title can
+ * carry it); the chips' group is at most 10rem tall and scrolls, so long
+ * keys never squeeze the diff editor. The keys are text inside Compare's
+ * `ph-no-capture`; the only title is the fixed "Create an OTTL rule
+ * asserting this change".
  */
 function RuleCandidatesFooter({
   loaded,
@@ -143,7 +142,7 @@ function RuleCandidatesFooter({
       </span>
       {offered.length > 0 && (
         // At most 10rem tall, scrolling within: five long keys (up to 8 KiB each) wrap whole without squeezing the diff
-        // editor (Ruling 34's m2); the padding keeps a chip's focus ring inside the scrolled box.
+        // editor; the padding keeps a chip's focus ring inside the scrolled box.
         <div
           role="group"
           aria-labelledby={detectedId}
@@ -159,10 +158,10 @@ function RuleCandidatesFooter({
                 if (!held) onCreateRule?.(candidate, index);
               }}
               title="Create an OTTL rule asserting this change"
-              // Held, never disabled: the focus stays on the chip pressed (as D15a Rulings 57 and 58).
+              // Held, never disabled: the focus stays on the chip pressed.
               aria-disabled={held || undefined}
               aria-busy={busyCandidate === index || undefined}
-              // As tall as its key needs: a long key wraps rather than being cut (Ruling 32).
+              // As tall as its key needs: a long key wraps rather than being cut.
               className="h-auto min-h-7 max-w-full py-1 whitespace-normal aria-disabled:opacity-50 aria-disabled:cursor-not-allowed"
             >
               {busyCandidate === index && <Loader2 className="animate-spin" aria-hidden />}
@@ -186,44 +185,38 @@ function RuleCandidatesFooter({
 
 /**
  * The OTLP sent in beside the OTLP that came out, in Monaco's side-by-side
- * DiffEditor (D14a decision 22), with its rule footer: the record attributes
- * the run's pipeline added, removed or changed (`detectRuleCandidates`, D15b
- * decisions 3 and 4), each a chip creating the OTTL rule that asserts it
- * (`onCreateRule`: the host finds the run's validation pipeline and opens the
- * rule editor, D15b decisions 5 and 6). Differences:
+ * DiffEditor, with its rule footer: the record attributes the run's pipeline
+ * added, removed or changed (`detectRuleCandidates`), each a chip creating
+ * the OTTL rule that asserts it (`onCreateRule`: the host finds the run's
+ * validation pipeline and opens the rule editor). In detail:
  * - the person's theme, font size, line numbers and tab size, as every
- *   Monaco here (`useEditorPreferences`; D21 decisions 27 and 28), the tab
- *   size on both models; no minimap, which Monaco's diff editor never shows
- *   (D21 Preflight ruling 32); the
- *   themes defined before mount (Preflight ruling 14), JSON's tokens only,
- *   mounted once initMonaco() has resolved (MonacoGate), its models
- *   released after it (ReleasingDiffEditor);
- * - replay (ADR 0024): the whole dialog is `ph-no-capture`, with the
- *   DiffEditor's screen-reader live region in the shell's one replay-blocked
- *   host (`useAriaContainer`, Ruling 48): without one Monaco puts the region
- *   on `<body>` (proved by the preflight);
- *   no model paths;
+ *   Monaco here (`useEditorPreferences`), the tab size on both models; no
+ *   minimap, which Monaco's diff editor never shows; the themes defined
+ *   before mount, JSON's tokens only, mounted once initMonaco() has resolved
+ *   (MonacoGate), its models released after it (ReleasingDiffEditor);
+ * - replay: the whole dialog is `ph-no-capture`, with the DiffEditor's
+ *   screen-reader live region in the shell's one replay-blocked host
+ *   (`useAriaContainer`): without one Monaco puts the region on `<body>`; no
+ *   model paths;
  * - a failure shows the API's words, else "Failed to load files";
  * - each file is parsed once as the dialog opens (`parseJsonText`), and both
  *   pretty-printed and read for the chips from that one parse, the chips
- *   kept in state (Preflight ruling 8), not parsed and detected again on
- *   every render;
+ *   kept in state, not parsed and detected again on every render;
  * - the output's `{"records": […]}` (several batches) and an array or
  *   NDJSON input are read document by document, not each as one document
  *   (which would give no chip);
  * - a run whose output or decoded input was cut at 10 MiB offers no chips
  *   and says so, politely: "Output was cut at 10 MiB, so no rules are
- *   suggested." (or "Input …", "Input and output were …"; Preflight ruling
- *   8), never nothing for an unparseable file;
+ *   suggested." (or "Input …", "Input and output were …"), never nothing
+ *   for an unparseable file;
  * - past five chips, "Showing 5 of {n}.", never the rest hidden without a
  *   word;
  * - the footer's lines are polite status regions, mounted empty as Compare
- *   opens and filled once its files show (Ruling 32);
+ *   opens and filled once its files show;
  * - a chip's key wraps, whole, however long, the chips scrolling within a
- *   group at most 10rem tall, so the diff editor keeps most of the dialog
- *   (Ruling 34), never whole on one line, a long one running past the
- *   footer;
- * - the chips are a group labelled by the "Detected …" line; while a chip's lookup runs every chip is held
+ *   group at most 10rem tall, so the diff editor keeps most of the dialog,
+ *   never whole on one line, a long one running past the footer;
+ * - the chips are a group labeled by the "Detected …" line; while a chip's lookup runs every chip is held
  *   (`aria-disabled`) and that one is busy (`aria-busy`, a spinner), so a
  *   second click looks nothing up (never twice, opening two editors);
  * - the detection walks the run's signal's records (`signal`), and the
@@ -266,7 +259,7 @@ export function CompareViewerDialog({
     Promise.all([loadInputText(), loadOutputText()])
       .then(([input, output]) => {
         if (cancelled) return;
-        // Each file parsed once: printed, and read for the chips, from that one parse (Preflight ruling 8).
+        // Each file parsed once: printed, and read for the chips, from that one parse.
         const parsedInput = parseJsonText(input);
         const parsedOutput = parseJsonText(output);
         setInputText(prettyPrintParsed(parsedInput, input).display);
@@ -294,7 +287,7 @@ export function CompareViewerDialog({
     readOnly: true,
     originalEditable: false,
     renderSideBySide: true,
-    // No minimap: Monaco's diff editor forces it off (Preflight ruling 32).
+    // No minimap: Monaco's diff editor forces it off.
     fontSize: preferences.options.fontSize,
     fontFamily: "'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace",
     fontLigatures: false,

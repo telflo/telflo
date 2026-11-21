@@ -1,7 +1,7 @@
 # ottl-evaluator
 
 The evaluator checks a test run's **validation rules** against the
-collector's output and log (D15a; ADR 0029): text rules, regex rules and
+collector's output and log: text rules, regex rules and
 [OTTL](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/pkg/ottl)
 rules. The platform's API calls it after the tester answers a run, and when a
 rule is saved. Only the API reaches it, on an internal network.
@@ -20,10 +20,10 @@ licenses.
   secret and the request's shape, runs each request's work in a child
   process under its limits, and writes the answer.
 
-Pinned to contrib **v0.162.0**, the catalogue's default collector version
+Pinned to contrib **v0.162.0**, the catalog's default collector version
 (`catalog/distributions/otelcol-contrib.json` at the repository's root):
 `TestOTTLVersionIsTheCatalogueDefault` fails when `go.mod`'s `pkg/ottl` and the
-catalogue's default differ, so they move together.
+catalog's default differ, so they move together.
 
 ## API
 
@@ -105,7 +105,7 @@ evaluate.
 
 ### `POST /ottl/v1/lint`
 
-The platform's public API's OTTL lint (D25): texts parse-checked against one
+The platform's public API's OTTL lint: texts parse-checked against one
 context, never run.
 
 ```json
@@ -126,8 +126,7 @@ follows "OTTL syntax error: ".
 
 Unauthenticated: `{"status": "ok", "ottlVersion": "v0.162.0"}`.
 
-There is no `GET /ottl/v1/functions` (D15a spec decision 10): 404 with the
-secret, 401 without.
+There is no `GET /ottl/v1/functions`: 404 with the secret, 401 without.
 
 ## Limits
 
@@ -222,7 +221,7 @@ GOTOOLCHAIN=local go build -o ottl-evaluator ./cmd/server
 OTTL_EVALUATOR_SECRET_FILE=/path/to/secret ./ottl-evaluator serve
 ```
 
-The license check (ADR 0019, amended by D15a), and its self-test:
+The license check, and its self-test:
 
 ```bash
 ./scripts/check-licenses.sh        # go-licenses v2.0.1 against ../../scripts/license-policy.json
@@ -249,18 +248,16 @@ default), `healthcheck` (the container's health check: there is no curl),
 `evaluate-child`, `validate-child` and `lint-child` (serve's children) and
 `selfcheck`.
 
-The root `docker-compose.yml` runs it as `ottl-evaluator`, locked down
-(D15a Preflight ruling 13): a read-only root, no capabilities,
-`no-new-privileges`, `mem_limit: 3g`, `pids_limit: 256` (threads: serve and
-its 12 children at once peaked at 118, and at 117 with serve at
-`GOMAXPROCS=4`), `stop_grace_period: 45s`, `GOMAXPROCS=4` for serve, the
-secret as a compose secret (`docker/ottl-evaluator/development-secret`,
-development only), alone on its own internal network
-`ottl-evaluator`, which the API joins. Its forwarder,
-`ottl-evaluator-forward`, publishes it on the host's
-`127.0.0.1:51238` for the API run natively (`npm run dev:services` starts
-both and waits for its health). Check a running
-container from the inside with:
+The root `docker-compose.yml` runs it as `ottl-evaluator`, locked down: a
+read-only root, no capabilities, `no-new-privileges`, `mem_limit: 3g`,
+`pids_limit: 256` (threads: serve and its 12 children at once peaked at
+118, and at 117 with serve at `GOMAXPROCS=4`), `stop_grace_period: 45s`,
+`GOMAXPROCS=4` for serve, the secret as a compose secret
+(`docker/ottl-evaluator/development-secret`, development only), alone on its
+own internal network `ottl-evaluator`, which the API joins. Its forwarder,
+`ottl-evaluator-forward`, publishes it on the host's `127.0.0.1:51238` for
+the API run natively (`npm run dev:services` starts both and waits for its
+health). Check a running container from the inside with:
 
 ```bash
 ./scripts/check-container.sh [docker compose options, e.g. -p <project> -f <file>]

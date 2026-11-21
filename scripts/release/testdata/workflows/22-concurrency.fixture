@@ -1,4 +1,4 @@
-# Breaks one rule: a release run cancelled part way.
+# Breaks one rule: a release run canceled part way.
 file: release.yml
 rule: concurrency
 <<<

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# redact.sh: the gates' redaction filter (D36-2 decision 96;
-# docs/conventions/security.md's redaction rules). Standard input to standard
-# output, every line with these replaced by a `[REDACTED]` marker:
+# redact.sh: the gates' redaction filter (docs/conventions/security.md's
+# redaction rules). Standard input to standard output, every line with these
+# replaced by a `[REDACTED]` marker:
 #   - tf_, tqd_ and tll_ tokens (classes widened by base64's + / and =);
 #   - the value of any …SECRET_ACCESS_KEY=, …SIGNING_KEY= or
 #     …SIGNING_KEYS_PREVIOUS= setting;

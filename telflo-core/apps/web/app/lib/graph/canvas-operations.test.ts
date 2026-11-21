@@ -144,7 +144,7 @@ describe("canvas operations", () => {
       expect(layoutSignature(renumbered)).toBe(signature);
     });
 
-    it("changes with a position, a group's size and a pipeline's colour", () => {
+    it("changes with a position, a group's size and a pipeline's color", () => {
       const graph = starter();
       const signature = layoutSignature(graph);
       const [first, ...rest] = graph.nodes;

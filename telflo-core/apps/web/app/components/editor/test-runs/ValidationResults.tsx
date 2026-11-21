@@ -11,48 +11,44 @@ import {
 } from "~/components/editor/validation-pipelines/validation-display.js";
 
 /*
- * A run's rules and their results (D15a decisions 3, 8, 19 and 30; Preflight
- * rulings 5, 26 and 27): the result icons, the grid, its rows, the failure
- * details and their dialog. One row per rule the run
- * copied when it was queued, in its order, each with its result; "Show test
- * details" opens the rule and why it failed.
+ * A run's rules and their results: the result icons, the grid, its rows, the
+ * failure details and their dialog. One row per rule the run copied when it
+ * was queued, in its order, each with its result; "Show test details" opens
+ * the rule and why it failed.
  *
- * Differences (the Parity Notes):
  * - a count line beside the grid's label, "1 of 2 rules passed" ("1 of 1
- *   rule passed"; decision 19);
- * - a rule's error message shows in its details (decision 18; not only in
- *   the row's tooltip, which stays), and so does its
- *   advisory (an `all` or `none` over zero records, a truncated output),
- *   a passed rule's or a failed one's; a
+ *   rule passed");
+ * - a rule's error message shows in its details (and in the row's
+ *   tooltip), and so does its advisory (an `all` or `none` over
+ *   zero records, a truncated output), a passed rule's or a failed one's; a
  *   failed rule with no error and no detail shows its advisory as the
- *   failure's reason (a not-contains regex that matched only empty text),
- *   else "This rule failed; the evaluator gave no further detail." (Ruling
- *   56): "Failure details" is never empty;
- * - a rule the evaluator's time limit cut off ("Not checked: …", decision 30)
+ *   failure's reason (a not-contains regex that matched only empty text), else
+ *   "This rule failed; the evaluator gave no further detail.": "Failure
+ *   details" is never empty;
+ * - a rule the evaluator's time limit cut off ("Not checked: …")
  *   shows as Failed, its words in the tooltip and the details, as the run's
  *   status and the count line treat it; there is no "Skipped" (a rule
  *   deliberately not run) or "Pending" (a result not yet written): every
  *   result here is final;
- * - a not-contains rule's matches name their record, not a line and column
- *   (decision 8): in the output, the element of its records and the JSON
- *   path inside it ("record 2", `resourceLogs[0]…body`); in the collector's
- *   log, the line. "Found more than 100,000 …" when the count stopped;
- * - an OTTL rule's misses are labelled by its context ("log #3"), `any`'s
- *   included (Ruling 34); "… did not"
- *   counts the records that didn't hold the condition, and "Showing the
- *   first n" compares with the evaluator's count of listed records;
- * - replay (ADR 0024): the grid sits inside the results' `ph-no-capture`
- *   region, the dialog's content is `ph-no-capture` too; each row's "Show
- *   test details" is named by hidden text inside the block ("Show test
- *   details for rule 2: SSN guard", `aria-labelledby`, Preflight ruling 27),
- *   not all "Show test details"; the icons are named
- *   Passed and Failed (`role="img"`); closing the details gives the focus
- *   back to the row's button, not to the page.
+ * - a not-contains rule's matches name their record, not a line and column:
+ *   in the output, the element of its records and the JSON path inside it
+ *   ("record 2", `resourceLogs[0]…body`); in the collector's log, the line.
+ *   "Found more than 100,000 …" when the count stopped;
+ * - an OTTL rule's misses are labeled by its context ("log #3"), `any`'s
+ *   included; "… did not" counts the records that didn't hold the
+ *   condition, and "Showing the first n" compares with the evaluator's
+ *   count of listed records;
+ * - replay: the grid sits inside the results' `ph-no-capture` region, the
+ *   dialog's content is `ph-no-capture` too; each row's "Show test
+ *   details" is named by hidden text inside the block ("Show test details
+ *   for rule 2: SSN guard", `aria-labelledby`); the icons are named Passed and Failed (`role="img"`);
+ *   closing the details gives the focus back to the row's button, not to
+ *   the page.
  */
 
 const ICON_CLASS = "inline-flex items-center justify-center w-5 h-5 rounded-full";
 
-/** The result icons: coloured circles with plain glyphs, in the platform's tokens. */
+/** The result icons: colored circles with plain glyphs, in the platform's tokens. */
 function ResultIcon({ passed }: { passed: boolean }) {
   return passed ? (
     <span role="img" aria-label="Passed" className={`${ICON_CLASS} bg-ok-soft text-ok`}>
@@ -203,7 +199,7 @@ function FailureDetailBody({ detail }: { detail: ValidationRuleResultDetail }) {
   }
 }
 
-/** A failed rule the evaluator gave no error, detail or advisory for (D15a Ruling 56): never an empty "Failure details". */
+/** A failed rule the evaluator gave no error, detail or advisory for: never an empty "Failure details". */
 const NO_FAILURE_REASON_MESSAGE = "This rule failed; the evaluator gave no further detail.";
 
 /** Whether a failed result's only reason is its advisory (no error, no detail): the advisory is shown as the failure's. */
@@ -211,10 +207,9 @@ const failsByAdvisoryOnly = (result: ValidationRuleResult) =>
   !result.passed && result.error === null && result.detail === null && result.advisory !== null;
 
 /**
- * Why a failed rule failed, under "Failure details": its details
- * by kind, or its own error (decision 3); with neither, its advisory (a
- * not-contains regex whose only matches were empty text), else
- * NO_FAILURE_REASON_MESSAGE (Ruling 56).
+ * Why a failed rule failed, under "Failure details": its details by kind, or
+ * its own error; with neither, its advisory (a not-contains regex whose only
+ * matches were empty text), else NO_FAILURE_REASON_MESSAGE.
  */
 function FailureDetailSection({ result }: { result: ValidationRuleResult }) {
   return (
@@ -330,7 +325,7 @@ export function ValidationResults({ rules, results }: ValidationResultsProps) {
             >
               <ResultIcon passed={result.passed} />
               <span className="min-w-0 text-[13px] text-foreground truncate">{ruleDisplayName(rule)}</span>
-              {/* The button's name: hidden text inside the results' ph-no-capture block, never an attribute (Preflight ruling 27). */}
+              {/* The button's name: hidden text inside the results' ph-no-capture block, never an attribute. */}
               <span id={nameId} className="sr-only">
                 Show test details for rule {index + 1}: {ruleNameOrSummary(rule)}
               </span>

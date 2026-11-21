@@ -3,11 +3,11 @@ import type { Database, StoredOrganizationCreation } from "@telflo/db";
 import type { Kysely } from "kysely";
 
 /*
- * Who may create a group organization (D36-1 decision 51; Q252, Ruling
- * 359): the product admins' switch, "Only product admins can create
- * organizations", stored in migration 1700000000044's one-row
- * site_settings. On (`product_admins`) by default, in every registration
- * mode (Q259): a fresh install lets only product admins create one.
+ * Who may create a group organization: the product admins' switch, "Only
+ * product admins can create organizations", stored in migration
+ * 1700000000044's one-row site_settings. On (`product_admins`) by default, in
+ * every registration mode: a fresh install lets only product admins create
+ * one.
  *
  * The API's role reads the row here, with no database context (a global
  * table, no row-level security): an organization's create and `/me` read it

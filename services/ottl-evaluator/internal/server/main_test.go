@@ -1,9 +1,9 @@
-// New in D15a Task 2: the server tests' harness. The server runs its
-// children from its own executable, which in a test is the test binary, so
-// TestMain answers the child subcommands before the tests run: the real
-// ones, and a few stand-ins for a child that never ends, one the kernel
-// kills for memory, one the Go runtime kills, and one that crashes. D25
-// Task 3 added lint-child and a lint that finishes one text, then hangs.
+// The server tests' harness. The server runs its children from its own
+// executable, which in a test is the test binary, so TestMain answers the
+// child subcommands before the tests run: the real ones, and a few
+// stand-ins for a child that never ends, one the kernel kills for memory,
+// one the Go runtime kills, and one that crashes, plus lint-child and a
+// lint that finishes one text, then hangs.
 
 package server
 
@@ -32,10 +32,10 @@ const (
 	memoryKillChild   = "test-sigkill-after1" // evaluate: finishes one rule, then SIGKILLs itself
 	runtimeOOMChild   = "test-runtime-oom"    // dies as the Go runtime does out of memory
 	crashChild        = "test-crash"          // exits 7
-	// Added by the follow-up to Task 2's review (the controller's Ruling 33):
+	// Stand-ins for the child's environment, group and reap:
 	reportChild    = "test-report"     // reports its environment and group to a FIFO, starts a grandchild, never ends
 	serveDiesChild = "test-serve-dies" // plays serve: starts a hanging child, prints its pid, then exits at once
-	// Added by D25 Task 3:
+	// A stand-in for the lint:
 	lintOneThenHangChild = "test-lint-one-then-hang" // lint: answers its first text valid, says so on a FIFO, then never ends
 )
 

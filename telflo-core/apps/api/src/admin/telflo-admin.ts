@@ -5,16 +5,16 @@ import { describeFailure, runAdminCommand, type AdminCommandResources } from "./
 
 /*
  * `telflo-admin`: the operator's commands, run beside the API with its
- * settings (D36-1 decision 37). In the API's image a shim runs this file's
+ * settings. In the API's image a shim runs this file's
  * build (`node /app/apps/api/dist/admin/telflo-admin.js`); in development,
  * from telflo-core: `npx tsx apps/api/src/admin/telflo-admin.ts bootstrap
  * --email <email> --organization <name>`; `reset-link --email <email>`
- * prints a fresh set-password link for a person's account (Q258).
+ * prints a fresh set-password link for a person's account.
  *
  * Everything it prints is a fixed line (or the address typed), except the
  * set-password link of `bootstrap` and `reset-link`, stdout's one last line
- * (D36-1 decision 54, Q266; neither sends email): an unexpected failure is
- * reported by its error's name and code only, never its message.
+ * (neither sends email): an unexpected failure is reported by its error's
+ * name and code only, never its message.
  */
 
 const out = (line: string) => void process.stdout.write(`${line}\n`);

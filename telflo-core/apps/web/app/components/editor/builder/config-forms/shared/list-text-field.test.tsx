@@ -13,10 +13,9 @@ import { useEditorStore } from "~/lib/stores/editor-store.js";
 import { builderStore, componentNamed, openText } from "~/test/builder-store.js";
 
 /*
- * ListTextField and NumberListField (D9d Task 2; decision 12; Preflight
- * rulings 5 and 20): what they show, what they write by item, the pause
- * that never drops a typed separator or line break, and what they can't
- * show.
+ * ListTextField and NumberListField: what they show, what they write by
+ * item, the pause that never drops a typed separator or line break, and
+ * what they can't show.
  */
 
 const TEXT = `exporters:
@@ -135,13 +134,13 @@ describe("what it shows", () => {
     // A comma is only a separator in the comma field.
     expect(input("With Comma Lines")).toHaveValue("a,b");
     expect(input("With Comma Lines")).toBeEnabled();
-    // An untrimmed line too (Task 2's review): a line is written trimmed, so it can't be shown as it is.
+    // An untrimmed line too: a line is written trimmed, so it can't be shown as it is.
     for (const name of ["With Comma", "Spaced", "Spaced Lines", "Blank", "Nested", "Lines", "Not A List"]) expect(input(name)).toBeDisabled();
     expect(screen.getAllByText(UNSHOWABLE_VALUE_MESSAGE)).toHaveLength(7);
   });
 });
 
-describe("the pause keeps a typed separator (Preflight ruling 5)", () => {
+describe("the pause keeps a typed separator", () => {
   it("comma: `a,` and a wait keep the comma; `b` then writes two items", () => {
     const calls = spyWrites();
     renderIn("exporters.file/unset", comma(["items"]));
@@ -331,7 +330,7 @@ describe("written by item", () => {
   });
 });
 
-describe("privacy (decision 13)", () => {
+describe("privacy", () => {
   it("no attribute holds an item, either variant; no field sits in a <form>", () => {
     const MARK = "MARKER";
     renderIn(

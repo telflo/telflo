@@ -54,8 +54,8 @@ async function redirectTarget(run: Promise<unknown>): Promise<string> {
 
 /**
  * Renders `url`. The reset form reads its token from the browser's own
- * `location.hash` (D3 Ruling 14), so the document's URL is set to match; the
- * router gets the path and query.
+ * `location.hash`, so the document's URL is set to match; the router gets the
+ * path and query.
  */
 function renderAt(url: string, { strict = false, site }: { strict?: boolean; site?: SiteSettings } = {}) {
   window.history.replaceState(null, "", url);
@@ -221,7 +221,7 @@ describe("signed-in redirects", () => {
     );
   });
 
-  it("shows /login?error=oauth_email_reserved's message on the page (D22 decision 24)", async () => {
+  it("shows /login?error=oauth_email_reserved's message on the page", async () => {
     renderAt("/login?error=oauth_email_reserved");
     expect(await screen.findByRole("alert")).toHaveTextContent("This address can't be used");
   });
@@ -243,7 +243,7 @@ describe("auth routes", () => {
     sessionStorage.clear();
   });
 
-  it("takes a successful registration to the check-your-email page, accepting the site's Terms version (D36-1 decision 32)", async () => {
+  it("takes a successful registration to the check-your-email page, accepting the site's Terms version", async () => {
     const register = vi.spyOn(apiClient, "postRegister").mockResolvedValue({ status: "verification_sent" });
     const user = userEvent.setup();
     renderAt("/register", { site: SAAS_SITE });
@@ -263,7 +263,7 @@ describe("auth routes", () => {
     });
   });
 
-  it("on a site that asks for no Terms, /register shows no agreement and sends no version (D36-1 decision 32)", async () => {
+  it("on a site that asks for no Terms, /register shows no agreement and sends no version", async () => {
     const register = vi.spyOn(apiClient, "postRegister").mockResolvedValue({ status: "verification_sent" });
     const user = userEvent.setup();
     renderAt("/register", { site: { ...SAAS_SITE, terms: { version: "", termsUrl: "", privacyUrl: "", cookiePolicyUrl: "" } } });
@@ -297,7 +297,7 @@ describe("auth routes", () => {
     expect(spy).toHaveBeenCalledWith({ token: "from-the-email" });
   });
 
-  it("takes the verification token out of the address bar as the page mounts (D4 Ruling 14)", async () => {
+  it("takes the verification token out of the address bar as the page mounts", async () => {
     vi.spyOn(apiClient, "postVerifyEmail").mockResolvedValue({ status: "verified" });
     renderAt("/verify-email?token=from-the-email&utm_source=mail");
 
@@ -337,7 +337,7 @@ describe("auth routes", () => {
     expect(spy).not.toHaveBeenCalled();
   });
 
-  it("offers no Sign up where registration isn't open, the open source's default (D36-1 decision 23)", async () => {
+  it("offers no Sign up where registration isn't open, the open source's default", async () => {
     renderAt("/login");
     expect(await screen.findByRole("heading", { name: /sign in to telflo/i })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /sign up/i })).not.toBeInTheDocument();
@@ -345,7 +345,7 @@ describe("auth routes", () => {
   });
 
   it.each(["/register", "/check-your-email", "/verify-email"])(
-    "renders %s inside the auth shell, with a way back to sign-in (D36-1 decision 23: no home page)",
+    "renders %s inside the auth shell, with a way back to sign-in (no home page)",
     async (path) => {
       vi.spyOn(apiClient, "postVerifyEmail").mockReturnValue(new Promise(() => {}));
       renderAt(path);
@@ -413,7 +413,7 @@ describe("auth routes", () => {
   });
 
   it.each(["/login", "/register", "/check-your-email", "/verify-email", "/forgot-password", "/reset-password"])(
-    "has session replay mask all of %s's text: ph-mask on the shell's root and, while shown, on <body> (D4 Ruling 14)",
+    "has session replay mask all of %s's text: ph-mask on the shell's root and, while shown, on <body>",
     async (path) => {
       vi.spyOn(apiClient, "postVerifyEmail").mockReturnValue(new Promise(() => {}));
       const { container, unmount } = renderAt(path);
@@ -428,7 +428,7 @@ describe("auth routes", () => {
   );
 
   it.each(["/login", "/register", "/check-your-email", "/verify-email", "/forgot-password", "/reset-password"])(
-    "masks autocapture's text and attributes while %s is shown (D4 Ruling 16)",
+    "masks autocapture's text and attributes while %s is shown",
     async (path) => {
       vi.spyOn(apiClient, "postVerifyEmail").mockReturnValue(new Promise(() => {}));
       const release = vi.fn();
@@ -471,14 +471,14 @@ function routeFiles(entries: ReadonlyArray<{ file: string; children?: ReadonlyAr
   return entries.flatMap((entry) => [entry.file, ...routeFiles(entry.children ?? [])]);
 }
 
-describe("the auth screens' theme (D21 decision 22)", () => {
+describe("the auth screens' theme", () => {
   it(
     "each of the seven auth routes and the playground's pages are marked remembered, and no other route is",
     async () => {
       // root's Layout renders these routes in the theme this browser was last
       // told (the remembered value, else the telflo_theme cookie); every
       // other page renders the stored theme or dark, never the cookie's.
-      // D31-1 decision 14: the playground's pages and the public editor too
+      // The playground's pages and the public editor are marked too
       // (its two redirects render nothing).
       const marked: string[] = [];
       for (const file of ["root.tsx", ...routeFiles(routes)]) {

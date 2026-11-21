@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-# verify-tag.sh: a release tag is checked before anything builds (D36-2
-# decisions 61, 68, 75 and 76; Q279), in the release workflow's `version`
-# job and in scripts/release/rehearse.sh.
+# verify-tag.sh: a release tag is checked before anything builds, in the
+# release workflow's `version` job and in scripts/release/rehearse.sh.
 #
 #   scripts/release/verify-tag.sh <tag> [--registry <r>] [--expect <sha>]
 #
@@ -15,8 +14,8 @@
 #      is refused, with the `git tag -a` hint), whose own name is <tag> and
 #      which tags a commit. In a workflow only (CI set, not ""/false/0:
 #      oci.sh's rule), when the checkout holds the tag as a lightweight one
-#      (actions/checkout may store an annotated tag so; Ruling 396), GitHub's
-#      API is asked instead, with the job's token (GH_TOKEN, which `gh` reads
+#      (actions/checkout may store an annotated tag so), GitHub's API is
+#      asked instead, with the job's token (GH_TOKEN, which `gh` reads
 #      from the environment: never on argv, in a file or in the output):
 #      GET repos/<GITHUB_REPOSITORY>/git/ref/tags/<tag> must answer that ref
 #      with an object of type `tag`, and GET repos/<repository>/git/tags/
@@ -33,17 +32,16 @@
 #   5. charts/telflo/Chart.yaml at the tag's commit holds the version as
 #      both `version` and `appVersion`;
 #   6. the tag's commit is on main: `git merge-base --is-ancestor <commit>
-#      refs/remotes/origin/main` (only admins tag, Q274; a release is a
-#      commit on main, decision 68);
+#      refs/remotes/origin/main` (only admins tag; a release is a commit on
+#      main);
 #   7. nothing of the version is published: none of the five images
 #      <registry>/telflo/telflo/<api|web|otelcol-validator|otelcol-testing|
 #      ottl-evaluator>:<version> nor the chart
 #      <registry>/telflo/telflo/charts/telflo:<version> exists, each asked
-#      with `crane digest` (Preflight ruling 6): a digest means published
-#      (refused: that version is spent, a fix is the next patch); the
-#      registry's MANIFEST_UNKNOWN or NAME_UNKNOWN means absent; any other
-#      answer can't tell (refused too). Every one is asked, then every
-#      problem named.
+#      with `crane digest`: a digest means published (refused: that version
+#      is spent, a fix is the next patch); the registry's MANIFEST_UNKNOWN
+#      or NAME_UNKNOWN means absent; any other answer can't tell (refused
+#      too). Every one is asked, then every problem named.
 # Then it prints `tag=<tag>`, `version=<version>` and `commit=<sha>`, one a
 # line, and appends the same lines to $GITHUB_OUTPUT when that is set (the
 # job's outputs).
@@ -117,8 +115,8 @@ trap 'rm -rf "$tmp"' EXIT
 LIGHTWEIGHT_HINT="$(telflo_lightweight_hint "$tag")"
 
 # github_tag_object <commit>: in a workflow, the tag as GitHub holds it
-# (Ruling 396, call 4; scripts/release/github-tag.sh, shared with steps.sh
-# github-release). Sets tag_object, or refuses.
+# (scripts/release/github-tag.sh, shared with steps.sh github-release). Sets
+# tag_object, or refuses.
 github_tag_object() {
   local want="$1"
   telflo_github_tag_object "${GITHUB_REPOSITORY:-}" "$tag" "$want" "this checkout's" "$tmp" \

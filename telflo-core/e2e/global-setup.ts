@@ -16,19 +16,18 @@ import { assertNoFakeOtelcolValidatorViolations } from "./support/fake-otelcol-v
 import { assertNoFakeOttlEvaluatorViolations } from "./support/fake-ottl-evaluator.js";
 
 /**
- * Empties telflo_platform_e2e_test once per run, so a run never sees the last one's
- * users, as the tables' owner: the API's own role can't truncate. Tests
- * don't truncate between themselves: each seeds its own users, and they run
- * in parallel. The truncation empties the flows table too, so the seeded
- * flows (migration 1700000000026) are put back after it (D12 Preflight
- * ruling 13); a test that writes flows uses its own `e2e-` slugs. So too the
- * regex library's 35 seeded entries (migration 1700000000031, D15b
- * Preflight ruling 1). The truncation also turns the product admins' switch
- * "Only product admins can create organizations" off (`everyone`): the
- * browser tests' baseline, since many specs create organizations as
- * ordinary accounts, while a freshly migrated database has it on (Q259).
- * organization-creation.e2e.ts, the one spec that turns it on, runs alone
- * and puts this baseline back.
+ * Empties telflo_platform_e2e_test once per run, so a run never sees the last
+ * one's users, as the tables' owner: the API's own role can't truncate. Tests
+ * don't truncate between themselves: each seeds its own users, and they run in
+ * parallel. The truncation empties the flows table too, so the seeded flows
+ * (migration 1700000000026) are put back after it; a test that writes flows
+ * uses its own `e2e-` slugs. So too the regex library's 35 seeded entries
+ * (migration 1700000000031). The truncation also turns the product admins'
+ * switch "Only product admins can create organizations" off (`everyone`): the
+ * browser tests' baseline, since many specs create organizations as ordinary
+ * accounts, while a freshly migrated database has it on.
+ * organization-creation.e2e.ts, the one spec that turns it on, runs alone and
+ * puts this baseline back.
  *
  * The E2E API has already created and migrated the database by now (see
  * start-api.ts): Playwright starts the web servers before global setup.
@@ -38,13 +37,12 @@ import { assertNoFakeOttlEvaluatorViolations } from "./support/fake-ottl-evaluat
  * collector validator, the fake collector tester or the fake OTTL evaluator
  * saw a request from the E2E API (or sent a reply) that broke its contract
  * (support/fake-opamp-server.ts, support/fake-otelcol-validator.ts,
- * support/fake-otelcol-testing.ts, support/fake-ottl-evaluator.ts). It
- * first waits, a bounded number of times, for both E2E APIs' after-response
- * jobs to settle (the default pair's and the SaaS pair's, D36-1 Preflight
- * ruling 16: the count is their sum; an organization's
- * registration, a deleted configuration's clean-up), so one the last test
- * set off has reached the fake before the file is read, and fails the run
- * if they never do (support/after-response.ts, D11b Ruling 25).
+ * support/fake-otelcol-testing.ts, support/fake-ottl-evaluator.ts). It first
+ * waits, a bounded number of times, for both E2E APIs' after-response jobs to
+ * settle (the default pair's and the SaaS pair's: the count is their sum; an
+ * organization's registration, a deleted configuration's clean-up), so one the
+ * last test set off has reached the fake before the file is read, and fails
+ * the run if they never do (support/after-response.ts).
  */
 export default async function globalSetup(): Promise<() => Promise<void>> {
   const db = createDb(createPool(e2eOwnerDatabaseUrl()));

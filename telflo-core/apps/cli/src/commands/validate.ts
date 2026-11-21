@@ -1,15 +1,15 @@
 /*
- * `telflo validate <file|->` (D27 decision 26): checked by the collector validator, nothing stored.
+ * `telflo validate <file|->`: checked by the collector validator, nothing stored.
  *
  * - Logged in (the file, or `TELFLO_TOKEN`): `POST /validate` (route 15),
  *   the organization's variables filled in, as `config push` validates.
- * - Not logged in: the anonymous route (decision 23), no token, no
- *   organization. `--config <id>` reads a stored configuration's pin, so it
- *   needs a login. A server that doesn't offer the anonymous route (D36-1
- *   decision 31: a self-hosted install's default) answers it 404: the CLI
- *   says to log in (exit 3), in fixed words.
+ * - Not logged in: the anonymous route, no token, no organization.
+ *   `--config <id>` reads a stored configuration's pin, so it needs a
+ *   login. A server that doesn't offer the anonymous route (a self-hosted
+ *   install's default) answers it 404: the CLI says to log in (exit 3), in
+ *   fixed words.
  * - Exit 0 valid, 4 invalid (the collector's errors as the output), 2 for
- *   a version or distribution the catalogue doesn't have (a 400), 1 when
+ *   a version or distribution the catalog doesn't have (a 400), 1 when
  *   the validator couldn't check the text (503: not a verdict).
  */
 
@@ -25,13 +25,13 @@ import { describePin, resolvePin } from "../pin.js";
 
 export const CONFIG_NEEDS_LOGIN_MESSAGE =
   "--config reads a stored configuration's pin, so it needs a login: run telflo login (or set TELFLO_TOKEN).";
-/** A logged-out validate the server answers 404 (D36-1 decision 31, Preflight ruling 8): it doesn't validate without a login. */
+/** A logged-out validate the server answers 404: it doesn't validate without a login. */
 export const SIGN_IN_TO_VALIDATE_MESSAGE =
   "This server doesn't validate without a login: run telflo login (or set TELFLO_TOKEN).";
 export const VALIDATION_FAILED_MESSAGE = "The configuration failed validation.";
 export const VALIDATION_UNAVAILABLE_MESSAGE = (message: string): string => `Couldn't validate (not a verdict on the YAML): ${message}`;
 
-/** A 400 about the request itself (the text, the distribution, the version): a usage error (decision 26). */
+/** A 400 about the request itself (the text, the distribution, the version): a usage error. */
 const REQUEST_REFUSED_CODES: ReadonlySet<string> = new Set(["invalid_request", ...COLLECTOR_REFUSED_CODES]);
 
 export interface ValidateOptions {

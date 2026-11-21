@@ -3,7 +3,7 @@ import { ApiError } from "../api-error.js";
 import { EXIT, ExitError } from "../output.js";
 import { renderValidationErrors, rewordedError, validationErrorsOf } from "./validate.js";
 
-/* The collector's errors as a 422 carries them (D27 decision 26), read defensively. */
+/* The collector's errors as a 422 carries them, read defensively. */
 
 describe("validationErrorsOf", () => {
   it("keeps each error's message and component path", () => {
@@ -28,7 +28,7 @@ describe("validationErrorsOf", () => {
   });
 });
 
-describe("rewordedError (Ruling 243)", () => {
+describe("rewordedError", () => {
   it("changes only the message: the exit code, the code and the status are endingOf's", () => {
     const words = (message: string): string => `Before: ${message}`;
     expect(rewordedError(new ApiError(401, "invalid_api_token", "Expired."), words)).toMatchObject({

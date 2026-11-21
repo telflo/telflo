@@ -24,9 +24,9 @@ import type { PaletteComponent } from "~/lib/graph/types.js";
 
 /*
  * The palette-defaults fixture the validator's binary tests run every
- * offered collector over (D13b decision 9, Preflight ruling 22): the
- * committed file is what scripts/palette-defaults.ts produces from the
- * palette and the catalogue today. This test reads it and never writes it.
+ * offered collector over: the committed file is what
+ * scripts/palette-defaults.ts produces from the palette and the catalog
+ * today. This test reads it and never writes it.
  */
 
 const REPOSITORY_ROOT = new URL("../../../../", import.meta.url);
@@ -165,7 +165,7 @@ describe("the palette-defaults fixture", () => {
   });
 });
 
-describe("the catalogue's versions", () => {
+describe("the catalog's versions", () => {
   it("are the offered ones, oldest first, compared as numbers", () => {
     expect(
       offeredVersions([offer("0.10.0"), offer("0.9.0"), offer("0.11.0", true), offer("1.0.0")]).map((entry) => entry.version),
@@ -182,7 +182,7 @@ describe("the catalogue's versions", () => {
     expect(() => readCatalogueVersions({ "x/d.json": [null] })).toThrow("d.json has no valid versions list");
   });
 
-  it("include the committed catalogue's", () => {
+  it("include the committed catalog's", () => {
     expect(Object.keys(CATALOGUE_VERSIONS)).toContain("otelcol-contrib");
   });
 });

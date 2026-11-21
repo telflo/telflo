@@ -6,10 +6,9 @@ import { writeValues } from "./text-edits.js";
 import { nodeAt, readValue } from "./value-view.js";
 
 /*
- * D9b Task 1: what a form shows is read from the text's document (D9b
- * decision 3; Preflight ruling 9): a plain non-string scalar as written, a
- * string as its value, an explicit null as unset, aliases and merged keys
- * resolved.
+ * What a form shows is read from the text's document: a plain non-string
+ * scalar as written, a string as its value, an explicit null as unset, aliases
+ * and merged keys resolved.
  */
 
 const text = [
@@ -52,7 +51,7 @@ const text = [
   "",
 ].join("\n");
 
-describe("readValue (Preflight ruling 9)", () => {
+describe("readValue", () => {
   const { document } = read(text);
   const grpc = (key: string) => readValue(document, ["receivers", "otlp"], ["protocols", "grpc", key]);
 
@@ -92,7 +91,7 @@ describe("readValue (Preflight ruling 9)", () => {
     expect(readValue(document, ["exporters", "otlp"], ["compression"])).toEqual({ kind: "scalar", value: "gzip" });
     expect(readValue(document, ["exporters", "otlp"], ["timeout"])).toEqual({ kind: "scalar", value: "10s" });
     expect(readValue(document, ["exporters", "otlp"], ["headers", 0, "value"])).toEqual({ kind: "scalar", value: 750, source: "0750" });
-    // Written on one line in flow, the list carries its characters too (D9c Preflight ruling 2).
+    // Written on one line in flow, the list carries its characters too.
     expect(readValue(document, ["exporters", "otlp"], ["headers"])).toEqual({
       kind: "list",
       value: [{ name: "a", value: 750 }, { name: "b" }],

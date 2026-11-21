@@ -6,10 +6,9 @@ import { testDefinitionFixture, testSuiteFixture } from "~/test/test-suites.js";
 import { validationPipelineFixture, validationRuleFixture } from "~/test/validation-pipelines.js";
 
 /*
- * The browser client's testing calls (D14a decision 28; Preflight rulings
- * 10, 14 and 15), against a fake API behind a custom axios adapter, as
- * api-client.test.ts does: My Files' list, upload, paste and delete; the
- * queue; a version's runs, a run, and a run's file as bytes.
+ * The browser client's testing calls, against a fake API behind a custom
+ * axios adapter, as api-client.test.ts does: My Files' list, upload, paste
+ * and delete; the queue; a version's runs, a run, and a run's file as bytes.
  */
 
 const analytics = vi.hoisted(() => ({ signedOutLocally: vi.fn() }));
@@ -144,7 +143,7 @@ describe("My Files' calls", () => {
     // browser writes it, and axios's browser adapters drop their default for
     // a FormData body.
     expect(request?.headers["content-type"] ?? "").not.toMatch(/multipart/i);
-    // No name or text in the address (ADR 0024).
+    // No name or text in the address.
     expect(request?.url).toBe(FILES);
   });
 
@@ -199,7 +198,7 @@ describe("My Files' calls", () => {
     await expect(client.deleteTestFile(GROUP_ID, "a/../b")).resolves.toBeUndefined();
   });
 
-  it("reads a file's head (Ruling 43) as its bytes with a GET, never decoded: a UTF-16 head survives", async () => {
+  it("reads a file's head as its bytes with a GET, never decoded: a UTF-16 head survives", async () => {
     const utf16 = new Uint8Array([0xfe, 0xff, 0x00, 0x7b, 0x00, 0x7d]);
     api.routes[`GET ${FILES}/${FILE.id}/head`] = () => ({ status: 200, bytes: utf16 });
 
@@ -322,7 +321,7 @@ describe("the runs' calls", () => {
   });
 });
 
-describe("the suites' and definitions' calls (D14b detail 19)", () => {
+describe("the suites' and definitions' calls", () => {
   const SUITES = `/api/v1/organizations/${GROUP_ID}/configurations/${MINE.id}/versions/${VERSION_ID}/test-suites`;
   const SUITE = testSuiteFixture();
   const DEFINITION = testDefinitionFixture();
@@ -337,7 +336,7 @@ describe("the suites' and definitions' calls (D14b detail 19)", () => {
     expect(api.requests.map((request) => request.headers["x-telflo-csrf"])).toEqual([undefined, undefined]);
   });
 
-  it("carries a signal on the suites', definitions' and templates' reads: an aborted one answers request_aborted, as the hang guard needs (D14b Ruling 50)", async () => {
+  it("carries a signal on the suites', definitions' and templates' reads: an aborted one answers request_aborted, as the hang guard needs", async () => {
     api.routes[`GET ${SUITES}`] = () => ({ status: 200, body: { suites: [SUITE] } });
     api.routes[`GET ${DEFINITIONS}`] = () => ({ status: 200, body: { definitions: [DEFINITION] } });
     api.routes["GET /api/v1/test-templates"] = () => ({ status: 200, body: { templates: [] } });
@@ -393,7 +392,7 @@ describe("the suites' and definitions' calls (D14b detail 19)", () => {
   it.each([
     ["a suite", "test_suite_limit_reached", "A version can have at most 100 test suites."],
     ["a definition", "test_definition_limit_reached", "A test suite can have at most 100 test configurations."],
-  ])("carries the cap's 409 for %s as its code and words (decision 25)", async (what, code, message) => {
+  ])("carries the cap's 409 for %s as its code and words", async (what, code, message) => {
     api.routes[`POST ${SUITES}`] = () => ({ status: 409, body: envelope(code, message) });
     api.routes[`POST ${DEFINITIONS}`] = () => ({ status: 409, body: envelope(code, message) });
 
@@ -411,7 +410,7 @@ describe("the suites' and definitions' calls (D14b detail 19)", () => {
   });
 });
 
-describe("the validation pipelines' and rules' calls (D15a detail 24)", () => {
+describe("the validation pipelines' and rules' calls", () => {
   const PIPELINES = `/api/v1/organizations/${GROUP_ID}/configurations/${MINE.id}/versions/${VERSION_ID}/validation-pipelines`;
   const PIPELINE = validationPipelineFixture();
   const RULE = validationRuleFixture();
@@ -477,7 +476,7 @@ describe("the validation pipelines' and rules' calls (D15a detail 24)", () => {
     ).rejects.toMatchObject({ code, message, status });
   });
 
-  it("carries a 400 validation_rule_invalid's details as the envelope gives them (Ruling 46), and none when it gives none", async () => {
+  it("carries a 400 validation_rule_invalid's details as the envelope gives them, and none when it gives none", async () => {
     const save = () =>
       client.createValidationRule(GROUP_ID, MINE.id, VERSION_ID, PIPELINE.id, {
         kind: "ottl",
@@ -506,7 +505,7 @@ describe("the validation pipelines' and rules' calls (D15a detail 24)", () => {
   });
 });
 
-describe("the product admin's template writes (D14b Task 8)", () => {
+describe("the product admin's template writes", () => {
   const TEMPLATES = "/api/v1/test-templates";
   const TEMPLATE = {
     id: "0199f200-0000-7000-8000-000000000001",
@@ -574,7 +573,7 @@ describe("the product admin's template writes (D14b Task 8)", () => {
   });
 });
 
-describe("the regex library's calls (D15b decision 8)", () => {
+describe("the regex library's calls", () => {
   const TEST_REGEXES = "/api/v1/test-regexes";
   const ENTRY = {
     id: "0199f300-0000-7000-8000-000000000001",

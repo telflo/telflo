@@ -12,7 +12,7 @@ import type { TestDatabases } from "./testing.js";
 import { THROWAWAY_DATABASE_DROP_TIMEOUT } from "./test-database.js";
 import { PLATFORM_CONNECTION_OPTIONS, PLATFORM_MIGRATION_OPTIONS } from "./database-schema.js";
 
-// Migration 019 (ADR 0026): only telflo_platform_runtime's members may connect to
+// Migration 019: only telflo_platform_runtime's members may connect to
 // the platform's database. Roles belong to the whole server, so each role
 // made here has a name of its own and is dropped afterwards.
 
@@ -173,7 +173,7 @@ describe("migration 019: CONNECT only for telflo_platform_runtime", () => {
         await sql`drop database if exists ${sql.id(name)} with (force)`.execute(ownerDb);
       }
     },
-    // create and drop database wait for a checkpoint (D7 Ruling 15, D31-1 Ruling 316).
+    // create and drop database wait for a checkpoint.
     THROWAWAY_DATABASE_DROP_TIMEOUT,
   );
 });

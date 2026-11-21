@@ -23,12 +23,11 @@ import {
 } from "./VariableGroupLink.js";
 
 /*
- * A variable group named in a fleet screen (D20 default 25; Q84): the
- * trigger names the variable group ("Organization values" for
- * none), and its dialog lists every organization variable, the value it
- * takes and where it comes from; here through D20's two levels (the pinned
- * variable group's override, then the collector group's, then the
- * organization's value).
+ * A variable group named in a fleet screen: the trigger names the variable
+ * group ("Organization values" for none), and its dialog lists every
+ * organization variable, the value it takes and where it comes from; here
+ * through the two levels (the pinned variable group's override, then the
+ * collector group's, then the organization's value).
  */
 
 const PINNED_ID = "7b000000-0000-4000-8000-0000000000a1";
@@ -74,7 +73,7 @@ afterEach(() => {
   forgetVariableGroupNames();
 });
 
-describe("VariableGroupLink (default 25; Q84)", () => {
+describe("VariableGroupLink", () => {
   it("resolves a collector's every variable through its pinned variable group, then its group's, then the organization's", async () => {
     const detail = serve();
     const user = userEvent.setup();
@@ -129,7 +128,7 @@ describe("VariableGroupLink (default 25; Q84)", () => {
     expect(await within(dialog).findByText("OTLP_EP")).toBeInTheDocument();
   });
 
-  it("keeps every name, value and description out of attributes and inside ph-no-capture; its title fixed words (Q88)", async () => {
+  it("keeps every name, value and description out of attributes and inside ph-no-capture; its title fixed words", async () => {
     serve();
     vi.mocked(apiClient.getOrganizationVariables).mockResolvedValue([
       organizationVariable({ id: ENDPOINT_ID, name: "CANARY_NAME_1F", value: "value-canary-1f", description: "description-canary-1f" }),
@@ -152,7 +151,7 @@ describe("VariableGroupLink (default 25; Q84)", () => {
   });
 });
 
-describe("VariableGroupLink with the collector's group unknown (Q84: each row's source)", () => {
+describe("VariableGroupLink with the collector's group unknown (each row's source)", () => {
   it("shows the pin's overrides, says the group's variable group couldn't be read, and marks every other row Unknown", async () => {
     const detail = serve();
     const user = userEvent.setup();
@@ -178,7 +177,7 @@ describe("VariableGroupLink with the collector's group unknown (Q84: each row's 
   });
 });
 
-describe("the details' Variable group rows (default 25)", () => {
+describe("the details' Variable group rows", () => {
   it("shows a group's variable group in its details", async () => {
     serve();
     render(

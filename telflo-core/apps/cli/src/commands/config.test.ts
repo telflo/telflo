@@ -19,10 +19,9 @@ import {
 } from "./config.js";
 
 /*
- * The config commands (D27 decision 26) against a stand-in API: each
- * command's requests (paths, queries, bodies) and its output, human and
- * --json. Tokens are made at run time; what the CLI wrote is checked for
- * them with boolean canaries only.
+ * The config commands against a stand-in API: each command's requests (paths,
+ * queries, bodies) and its output, human and --json. Tokens are made at run
+ * time; what the CLI wrote is checked for them with boolean canaries only.
  */
 
 const SERVER = "https://telflo.example";
@@ -68,7 +67,7 @@ function versionId(n: number): string {
 
 let token: string;
 
-/** Whether a text holds a control character but the newline (Ruling 237's stripping). */
+/** Whether a text holds a control character but the newline. */
 function holdsControl(text: string): boolean {
   // eslint-disable-next-line no-control-regex
   return /[\u0000-\u0009\u000b-\u001f\u007f-\u009f]/.test(text);
@@ -192,7 +191,7 @@ describe("telflo config get", () => {
   });
 });
 
-describe("server strings in human lines (Ruling 237)", () => {
+describe("server strings in human lines", () => {
   const ESCAPE = "\u001b]0;owned\u0007\u009b2J";
 
   it("strips control characters from a name, a pin and the validator's errors; pull keeps the YAML byte for byte", async () => {
@@ -396,7 +395,7 @@ describe("telflo config push", () => {
       [`GET /configurations/${ID}/versions`]: { json: { items: [version(4, "draft")], nextCursor: null } },
       [`PATCH /configurations/${ID}/versions/4`]: patched,
     });
-    // --json: the note is one JSON object on stderr (Ruling 249).
+    // --json: the note is one JSON object on stderr.
     const json = await cli(["--json", "config", "push", ID, "-f", file, "--label", "ignored"]);
     expect(json.code).toBe(0);
     expect(JSON.parse(json.stderr)).toEqual({ note: LABEL_NOT_APPLIED_NOTE });
@@ -485,7 +484,7 @@ describe("telflo config push", () => {
     expect(PUSH_NOT_PUBLISHED_MESSAGE(4, "m")).toBe("Saved v4, but couldn't publish it: m");
   });
 
-  it("keeps a publish's 401 and 403 as exit 3 with their words, the version saved (Ruling 243)", async () => {
+  it("keeps a publish's 401 and 403 as exit 3 with their words, the version saved", async () => {
     const answers: Array<[number, string, string, string]> = [
       [401, "invalid_api_token", "Missing or invalid API token", "Run telflo login."],
       [403, "insufficient_access", "This token can't do that.", READ_ONLY_TOKEN_MESSAGE],

@@ -27,14 +27,13 @@ import { E2E_PUBLIC_API_URL } from "./support/environment.js";
 import { expectRefused, fetchedWithoutSession } from "./support/quick-deploy.js";
 import { signInThroughApi, waitForHydration } from "./support/session.js";
 
-// Quick-deploy links (D17c-2 decisions 21 and 34; Preflight rulings 26 and
-// 27), in the browser, against the E2E API and its fake opamp-server: the
-// install dialog's Quick Deploy (the link made, the masked preview, the
-// reveal and its command, the clipboard), the public download fetched with
-// no session and read back with the system `tar`, Install Links' View,
-// Extend and Revoke, and the download's refusals of a revoked, an expired
-// and a token-revoked link. Each test works in an organization of its own
-// (a new user's), so tests and browsers run in parallel. Links the test
+// Quick-deploy links, in the browser, against the E2E API and its fake
+// opamp-server: the install dialog's Quick Deploy (the link made, the masked
+// preview, the reveal and its command, the clipboard), the public download
+// fetched with no session and read back with the system `tar`, Install Links'
+// View, Extend and Revoke, and the download's refusals of a revoked, an
+// expired and a token-revoked link. Each test works in an organization of its
+// own (a new user's), so tests and browsers run in parallel. Links the test
 // isn't about making are made through the API as the page's session
 // (support/collectors.ts); a link is expired in the database
 // (support/database.ts), never waited for.
@@ -80,7 +79,7 @@ const DOWNLOAD_NEEDS_UNTICK = 'The systemd service comes with Quick Deploy. Unti
 const EXTEND_DESCRIPTION = "Set a new expiry, counted from now.";
 const REVOKE_LINK_WORDS =
   'Revoking stops further downloads at once: a host that runs the command afterwards gets "revoked". Collectors already installed keep running. The link stays listed for the record and can\'t be re-enabled: make a new one instead.';
-/** The public download's plain-text refusals (decision 26; the API's quick-deploy/errors.ts), each ending in a line break. */
+/** The public download's plain-text refusals (the API's quick-deploy/errors.ts), each ending in a line break. */
 const REVOKED_TEXT = "This install link is revoked: make a new one.\n";
 const EXPIRED_TEXT = "This install link has expired: extend it under Install links on the Tokens tab, or make a new one.\n";
 const TOKEN_REVOKED_TEXT = "This link's token was revoked: make a new link.\n";
@@ -90,11 +89,11 @@ const TOKEN_REVOKED_TEXT = "This link's token was revoked: make a new link.\n";
  * holds none: its shape can (as install.e2e.ts).
  */
 const BEARER_SHAPED = /[A-Za-z0-9+/]{100,}/;
-/** The placeholder pattern a rendered template must hold none of (D17c-1 Preflight ruling 11). */
+/** The placeholder pattern a rendered template must hold none of. */
 const PLACEHOLDER = /\$\{[A-Z_][A-Z0-9_]*\}/;
-/** The Linux All In One bundle's files (D17c-1 decision 35). */
+/** The Linux All In One bundle's files. */
 const ALL_IN_ONE_FILES = ["README.md", "otelcol-config.yaml", "start_supervisor.sh", "supervisor-config.yaml"];
-/** A version reading one variable, SITE_NAME, which the install dialog offers (D17c-1 decision 43). */
+/** A version reading one variable, SITE_NAME, which the install dialog offers. */
 const SITE_NAME_YAML = ["receivers:", "  otlp:", "    protocols:", "      grpc:", "        endpoint: ${env:SITE_NAME}", ""].join("\n");
 const DAY_MS = 86_400_000;
 
@@ -219,7 +218,7 @@ async function actionsOf(row: Locator): Promise<string[]> {
 /**
  * An instant as the screens show it, formatted in the page (the browser's time zone): to the minute as
  * `formatDateTime` writes the cells and the expiry words, or, `toTheSecond`, as `formatDateTimeToTheSecond` writes a
- * link's actions' names (D17c-2 Ruling 39).
+ * link's actions' names.
  */
 async function formatted(page: Page, iso: string, { toTheSecond = false } = {}): Promise<string> {
   const options = { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit", ...(toTheSecond ? { second: "2-digit" } : {}) };
@@ -227,7 +226,7 @@ async function formatted(page: Page, iso: string, { toTheSecond = false } = {}):
 }
 
 /**
- * A row's action by its whole accessible name: the verb and the link's creation to the second (Ruling 39), never a
+ * A row's action by its whole accessible name: the verb and the link's creation to the second, never a
  * name, path or email. Looked for inside its row: links made through the API one after another can share a second.
  */
 async function linkAction(page: Page, row: Locator, verb: "View" | "Extend" | "Revoke", link: { createdAt: string }): Promise<Locator> {
@@ -326,8 +325,7 @@ test("Quick Deploy from the dialog: the link made, the masked preview, Reveal & 
   const { bearer } = ((await revealReply.json()) as EnrollmentTokenRevealedResponse).token;
   const command = quickDeployCommands({ url: created.url, rootPath: "/opt/telflo", bearer, displayName: name, systemd: true });
   await expect.poll(async () => (await secretBox(dialog).textContent()) === command, { message: "the box holds the command" }).toBe(true);
-  // The command's lines, as the host runs them (decision 29; Preflight ruling 14 as Rulings 32 and 33 amend it). A
-  // failure names the first line that differs, never a line.
+  // The command's lines, as the host runs them. A failure names the first line that differs, never a line.
   const golden = [
     "(",
     `export OPAMP_TOKEN='Bearer ${bearer}' &&`,
@@ -457,7 +455,7 @@ test("Install Links: the rows and their statuses; View shows the variables' name
   page.on("request", (request) => {
     if (request.method() === "POST" && /\/quick-deploy-links\//.test(new URL(request.url()).pathname)) linkWrites.push(request);
   });
-  // By its whole name, the creation to the second (Ruling 39).
+  // By its whole name, the creation to the second.
   const view = await linkAction(page, keptRow, "View", kept.link);
   await view.click();
   const viewDialog = page.getByRole("dialog", { name: "Install link", exact: true });
@@ -562,7 +560,7 @@ test("a revoked, an expired and a token-revoked link each answer the public down
   ]);
 
   // The Tokens tab: Token revoked, and Expired, its token revoked too: no Extend on either (extending can't make
-  // them work; Ruling 39); Revoked (only View).
+  // them work); Revoked (only View).
   await openTokens(page, setup.fleetId);
   const rows = linkRows(page);
   await expect(rows).toHaveCount(3);

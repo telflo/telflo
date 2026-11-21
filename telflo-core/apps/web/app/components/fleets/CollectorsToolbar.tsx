@@ -7,32 +7,30 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~
 import { groupLabel, groupsInFleetOrder } from "~/lib/kubernetes-groups.js";
 
 /*
- * The Collectors tab's toolbar (D17b-1 decisions 3, 21 and 32; Preflight
- * rulings 10 and 15): a search box and a refresh button, and a Group filter
- * beside them.
+ * The Collectors tab's toolbar: a search box and a refresh button, and a Group
+ * filter beside them.
  * - The search box is uncontrolled (`defaultValue` and a ref read on
  *   Enter), so its text never becomes a `value` attribute, which replay
  *   records and can't mask; the `<form>` holds it alone. At most 100
  *   characters; the hook trims what is sent, and an empty box searches
  *   nothing. It searches collectors' names and addresses, not group or
- *   configuration names (a Parity Note).
+ *   configuration names.
  * - The Group filter, outside the form (inside one, Radix's Select adds a
  *   hidden native `<select>` whose options carry the items' values): "All
  *   groups", then the fleet's groups in the API's order, the Default group
- *   first. Its item values are the groups' ids and the sentinel "all",
- *   never a name. On a Kubernetes-supervisor fleet (D17d-1 decision 23;
- *   Preflight ruling 25) "Agent", "Cluster", then the gateways by name
- *   (`groupLabel`, `groupsInFleetOrder`). Disabled until the groups have
- *   been read. A group chosen
- *   shows at once, while its read is under way (the rows still shown are
- *   the earlier filter's); once the read settles the filter shows the
- *   rows' own, so a failed read returns it to theirs.
- * - Refresh reads the page again as a person's read, spinning meanwhile;
- *   it stays enabled (Ruling 32), so the focus stays on it, and a press
- *   during a person's read reads the same page again.
+ *   first. Its item values are the groups' ids and the sentinel "all", never a
+ *   name. On a Kubernetes-supervisor fleet "Agent", "Cluster", then the
+ *   gateways by name (`groupLabel`, `groupsInFleetOrder`). Disabled until the
+ *   groups have been read. A group chosen shows at once, while its read is
+ *   under way (the rows still shown are the earlier filter's); once the read
+ *   settles the filter shows the rows' own, so a failed read returns it to
+ *   theirs.
+ * - Refresh reads the page again as a person's read, spinning meanwhile; it
+ *   stays enabled, so the focus stays on it, and a press during a person's
+ *   read reads the same page again.
  */
 
-/** The search box's bound (decision 21). */
+/** The search box's bound. */
 export const COLLECTORS_SEARCH_MAX_LENGTH = 100;
 
 /** The Group filter's value for "All groups": no group's id. */
@@ -65,7 +63,7 @@ export function CollectorsToolbar({ searchBoxRef, groups, groupId, busy, onSearc
   };
   return (
     <div className="mb-3 flex items-center gap-2">
-      {/* A search's term is configuration text (a collector's name): replay never records the box (D31-1 decision 39, Ruling 303). */}
+      {/* A search's term is configuration text (a collector's name): replay never records the box. */}
       <form onSubmit={submit} className="relative flex-1 ph-no-capture">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input

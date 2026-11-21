@@ -22,9 +22,9 @@ import {
 } from "./NewDefaultTokenDialog.js";
 
 /*
- * A new default token (D17c-1 decisions 4 and 45; Preflight ruling 31), to
- * follow a revoked default token. The tab's side (the button only without a
- * valid default token, the reloads, the focus) is in `TokensTab.test.tsx`.
+ * A new default token, to follow a revoked default token. The tab's side
+ * (the button only without a valid default token, the reloads, the focus)
+ * is in `TokensTab.test.tsx`.
  */
 
 const NEW_ID = "c0ffee00-0000-4000-8000-0000000000d1";
@@ -104,7 +104,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe("NewDefaultTokenDialog (decision 45)", () => {
+describe("NewDefaultTokenDialog", () => {
   it("says what issuing does, with Cancel and Issue token, and sends nothing until asked", async () => {
     const { spy } = serveIssues();
     await renderDialog();
@@ -135,7 +135,7 @@ describe("NewDefaultTokenDialog (decision 45)", () => {
     expect(button("Copy default token")).toBeInTheDocument();
     expect(dialog()).toHaveTextContent(NEW_DEFAULT_RESULT);
     expect(NEW_DEFAULT_RESULT).toBe("It is shown now only; Reveal gives it again. Re-run the install command on each host that used the revoked token.");
-    // Ruling 62: a container host's re-install meets the old container's fixed name.
+    // A container host's re-install meets the old container's fixed name.
     expect(dialog()).toHaveTextContent(CONTAINER_REINSTALL);
     expect(CONTAINER_REINSTALL).toBe(
       "On a container host, remove the old container first (docker rm -f telflo-collector); keep the telflo-opamp volume to keep the same collector.",
@@ -150,7 +150,7 @@ describe("NewDefaultTokenDialog (decision 45)", () => {
     expectNoAttributeHolds(BEARER);
   });
 
-  it("on a Kubernetes-supervisor fleet, speaks of its groups' Helm releases and Install with Helm, whose pods restart with the new token: no install command, no container line, no kubectl (Ruling 55; D17d-2 Preflight ruling 32; D18 decision 30)", async () => {
+  it("on a Kubernetes-supervisor fleet, speaks of its groups' Helm releases and Install with Helm, whose pods restart with the new token: no install command, no container line, no kubectl", async () => {
     serveIssues();
     const { user } = await renderDialog("kubernetes-supervisor");
     expect(dialog()).toHaveAccessibleDescription(NEW_DEFAULT_DESCRIPTION_KUBERNETES);
@@ -225,7 +225,7 @@ describe("NewDefaultTokenDialog (decision 45)", () => {
 
   it.each([
     ["a 503", () => refusal("fleets_unavailable", FLEETS_UNAVAILABLE_MESSAGE, 503)],
-    // Task 1's review: the opamp-server made the token, then failed to mint its bearer (a 500): a valid default token nobody received.
+    // The opamp-server made the token, then failed to mint its bearer (a 500): a valid default token nobody received.
     ["a 500 after the token was made", () => refusal("internal_error", "Something went wrong.", 500)],
     ["no connection", () => new ApiError("network_error", "Could not reach the server.")],
   ])("after %s, shows the 503's words with Try again and reloads the tab; a retry answering 409 says Reveal shows it", async (_why, failure) => {
@@ -322,7 +322,7 @@ describe("NewDefaultTokenDialog (decision 45)", () => {
     ["Escape", "escape"],
     ["a close from outside (the page closes it)", "outside"],
   ] as const)(
-    "gives the bearer up as the dialog closes by %s, while its content is still mounted for the exit animation (the Task 7 review's P1)",
+    "gives the bearer up as the dialog closes by %s, while its content is still mounted for the exit animation",
     async (_how, how) => {
       // Radix's Presence keeps the content while an exit animation runs: one emulated through the computed style.
       const real = window.getComputedStyle.bind(window);

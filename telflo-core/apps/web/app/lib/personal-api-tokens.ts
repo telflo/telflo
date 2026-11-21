@@ -4,14 +4,13 @@ import { ApiError, createPersonalApiToken, revokePersonalApiToken } from "~/lib/
 import type { ApiTokenCalls } from "~/lib/api-tokens.js";
 
 /*
- * Settings › Account's "API tokens": the signed-in person's own `tf_` tokens
- * (D25 decisions 3, 28 and 50). Every word here is fixed: a token, its
- * prefix and its name are visible text in the masked shell only (the token
- * itself only in the reveal dialog, inside ph-no-capture), never a toast,
- * a title or an attribute.
+ * Settings › Account's "API tokens": the signed-in person's own `tf_` tokens.
+ * Every word here is fixed: a token, its prefix and its name are visible text
+ * in the masked shell only (the token itself only in the reveal dialog,
+ * inside ph-no-capture), never a toast, a title or an attribute.
  */
 
-/** The card's title and its fixed sentences (decision 50). */
+/** The card's title and its fixed sentences. */
 export const PERSONAL_API_TOKENS_TITLE = "API tokens";
 export const PERSONAL_API_TOKENS_DESCRIPTION = "Tokens for the Telflo API, the CLI and CI jobs. A token is shown only once when created.";
 export const PERSONAL_API_TOKENS_SCOPE_WORDS =
@@ -37,9 +36,9 @@ export function personalApiTokenFailureMessage(error: unknown, fallback: string)
 }
 
 /**
- * The person's own token calls for the token dialogs (Preflight ruling 22):
- * no organization in them, so an answer belongs on screen while the card is
- * mounted, and no failure leaves the page.
+ * The person's own token calls for the token dialogs: no organization in
+ * them, so an answer belongs on screen while the card is mounted, and no
+ * failure leaves the page.
  */
 export function usePersonalApiTokenCalls(): ApiTokenCalls {
   const mounted = useRef(false);

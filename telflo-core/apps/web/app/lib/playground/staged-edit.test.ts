@@ -11,11 +11,11 @@ import {
 } from "./staged-edit.js";
 
 /*
- * The staged edit (D31-1 decisions 4 and 36, Preflight ruling 4): one key,
- * written by Save, read by the handoff, removed by its Save or Discard, and
- * ignored and removed when older than 7 days, unreadable, or refused by the
- * create's schema. A visitor's text is checked with boolean canaries only:
- * never compared, printed or snapshotted.
+ * The staged edit: one key, written by Save, read by the handoff, removed
+ * by its Save or Discard, and ignored and removed when older than 7 days,
+ * unreadable, or refused by the create's schema. A visitor's text is
+ * checked with boolean canaries only: never compared, printed or
+ * snapshotted.
  */
 
 const NOW = Date.parse("2026-10-27T12:00:00.000Z");

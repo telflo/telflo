@@ -1,7 +1,7 @@
-"""The shared secret (D14a spec decision 13, ADRs 0026 and 0027): a Bearer
-token compared in constant time with the secret in OTELCOL_TESTING_SECRET_FILE
-and each in OTELCOL_TESTING_SECRETS_PREVIOUS_FILE, checked before the body is
-read; no readable secret of 32 bytes, no start (Preflight ruling 4)."""
+"""The shared secret: a Bearer token compared in constant time with the
+secret in OTELCOL_TESTING_SECRET_FILE and each in
+OTELCOL_TESTING_SECRETS_PREVIOUS_FILE, checked before the body is read; no
+readable secret of 32 bytes, no start."""
 
 from __future__ import annotations
 
@@ -218,7 +218,7 @@ def test_settings_refuse_an_unreadable_previous_secrets_file(secret_file: Path, 
 
 
 def test_settings_refuse_the_secret_in_the_environment(secret_file: Path) -> None:
-    """Ruling 4: the secret must be in no environment, since exec makes a
+    """The secret must be in no environment, since exec makes a
     collector dumpable again. The value variable is refused outright, and so
     is the secret's text in any variable."""
     with pytest.raises(SettingsError, match="OTELCOL_TESTING_SECRET is set") as raised:
@@ -340,7 +340,7 @@ def test_the_secret_text_is_never_in_a_repr() -> None:
 
     held = repr(settings) + repr(settings.secrets) + repr(settings.redactions)
     held += repr([getattr(settings.secrets, slot) for slot in Secrets.__slots__])
-    # The answer's scrub holds the secrets' values (Ruling 27, m3).
+    # The answer's scrub holds the secrets' values.
     held += repr(Scrub.for_run(workspace="/tmp/otelcol-run-x", secrets=settings.redactions.values()))
     assert SECRET not in held
     assert PREVIOUS_SECRET not in held

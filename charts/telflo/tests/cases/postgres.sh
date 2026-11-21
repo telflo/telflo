@@ -1,5 +1,5 @@
-# The platform's Postgres (D33-1 decisions 2, 3, 15 and 25; Preflight ruling
-# 2). Sourced by tests/render-tests.sh, which defines every helper used here.
+# The platform's Postgres. Sourced by tests/render-tests.sh, which defines
+# every helper used here.
 
 PG_SS="StatefulSet/telflo-postgres"
 PG_POD="$PG_SS.spec.template.spec"

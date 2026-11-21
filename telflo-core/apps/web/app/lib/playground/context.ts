@@ -3,11 +3,11 @@ import type { CollectorDistribution } from "@telflo/contracts";
 import type { StoredCurrentUser } from "~/lib/stores/user-store.js";
 
 /*
- * The playground's context (D31-1 decisions 23 and 24, Preflight rulings 8
- * and 9). `PlaygroundProvider` (./PlaygroundProvider.tsx) gives it to the
- * playground's pages: the shell's, the full-screen editor and the blank
- * public editor. Outside them it is null, and every hook here answers what
- * a signed-in page always had: no visitor, no lock, no static catalogue.
+ * The playground's context. `PlaygroundProvider` (./PlaygroundProvider.tsx)
+ * gives it to the playground's pages: the shell's, the full-screen editor and
+ * the blank public editor. Outside them it is null, and every hook here
+ * answers what a signed-in page always had: no visitor, no lock, no static
+ * catalog.
  *
  * This module holds no component and imports nothing heavy, so the
  * signed-in hooks that read it (`useCurrentUser`, `useAppTheme`,
@@ -30,8 +30,8 @@ export interface PlaygroundContextValue {
    */
   lock: LockedAction;
   /**
-   * The collector catalogue as the web was built with it (Ruling 277): what
-   * `useCollectorDistributions()` answers here, so no catalogue request is
+   * The collector catalog as the web was built with it: what
+   * `useCollectorDistributions()` answers here, so no catalog request is
    * made.
    */
   catalogue: CollectorDistribution[];
@@ -59,11 +59,11 @@ export function usePlaygroundVisitor(): StoredCurrentUser | null {
 }
 
 /**
- * The lock (decision 24): outside the playground null, so the action runs as
- * always; inside, a function that opens the one sign-up prompt with the
- * action's words ("To {words}, create a free account."). Every locked
- * control asks at its button, passing itself as the opener the prompt's
- * close gives the focus back to:
+ * The lock: outside the playground null, so the action runs as always;
+ * inside, a function that opens the one sign-up prompt with the action's
+ * words ("To {words}, create a free account."). Every locked control asks at
+ * its button, passing itself as the opener the prompt's close gives the focus
+ * back to:
  *
  *   const locked = useLockedAction();
  *   onClick={(event) => (locked ? locked("delete a configuration", event.currentTarget) : openDelete())}

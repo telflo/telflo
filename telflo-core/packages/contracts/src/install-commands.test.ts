@@ -3,8 +3,7 @@ import { containerCommand, containerPreview, OPAMP_VOLUME, type ContainerCommand
 import { INSTALL_MASKED_TOKEN } from "./install.js";
 
 /*
- * The container command, moved from the web's `lib/install.ts` (D25
- * decision 36, Preflight ruling 10) so the public install route and the
+ * The container command, shared so the public install route and the
  * install dialog build the same bytes. The web's own tests (apps/web
  * `lib/install.test.ts`, run unchanged through its re-export) pin every
  * line, quoting and refusal with a real bash; these pin the shared module
@@ -21,7 +20,7 @@ const FACTS: ContainerCommandParts["facts"] = {
   mounts: [{ hostPath: "/var/log/nginx", containerPath: "/var/log/nginx", readOnly: true }],
 };
 
-describe("containerCommand (D17c-1 decision 40; D25 decision 36)", () => {
+describe("containerCommand", () => {
   it("is the dialog's command, one flag a line, every value quoted once", () => {
     expect(OPAMP_VOLUME).toBe("telflo-opamp:/app/opamp");
     expect(containerCommand({ facts: FACTS, bearer: BEARER, displayName: "edge 1", env: [{ name: "NGINX_ENV", value: "it's" }] })).toBe(

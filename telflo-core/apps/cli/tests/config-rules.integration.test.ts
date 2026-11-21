@@ -4,10 +4,10 @@ import { NO_PIPELINES_MESSAGE } from "../src/commands/config-rules.js";
 import { runCli, serviceAccountWithToken, useApiServer, type CliRun } from "./harness.js";
 
 /*
- * telflo config rules against the real API in process (D27 decisions 27
- * and 33, route 13): a read token lists a version's saved pipelines and
- * rules (the latest version by default); another organization's
- * configuration is the API's 404. Tokens: boolean canaries only.
+ * telflo config rules against the real API in process (route 13): a read
+ * token lists a version's saved pipelines and rules (the latest version by
+ * default); another organization's configuration is the API's 404. Tokens:
+ * boolean canaries only.
  */
 
 const api = useApiServer();

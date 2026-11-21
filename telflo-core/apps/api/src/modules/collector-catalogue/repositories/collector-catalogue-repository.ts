@@ -2,37 +2,35 @@ import { sql, type Kysely, type Transaction } from "kysely";
 import type { CollectorRenamedType, CollectorSupportedComponents, Database } from "@telflo/db";
 
 /*
- * The collector catalogue (D13a decisions 2 and 3): the distributions a
- * configuration can be built for and their versions, which the migration
- * step syncs from the catalogue's JSON files. The API reads only the
- * tables, never the files (Preflight ruling 7).
+ * The collector catalog: the distributions a configuration can be built for
+ * and their versions, which the migration step syncs from the catalog's
+ * JSON files. The API reads only the tables, never the files.
  *
- * A global repository (ADR 0008; the resource registry's `kind: "global"`):
- * the catalogue belongs to no organization, so there is no organization
+ * A global repository (the resource registry's `kind: "global"`):
+ * the catalog belongs to no organization, so there is no organization
  * scope and no row-level security, and the API's role may only read it
  * (migration 1700000000023). It reads through the caller's transaction, so
- * a default read here and the rows written with it see the same catalogue.
+ * a default read here and the rows written with it see the same catalog.
  *
- * "Offered" is what a picker shows and a new pin may name (D13a decisions 4
- * and 8): a version that isn't deprecated. A deprecated one still resolves
- * for a pin already on it (the foreign key), but nothing here offers it.
+ * "Offered" is what a picker shows and a new pin may name: a version that isn't
+ * deprecated. A deprecated one still resolves for a pin already on it (the
+ * foreign key), but nothing here offers it.
  */
 
-/** A collector pin: a distribution of the catalogue and one of its versions. */
+/** A collector pin: a distribution of the catalog and one of its versions. */
 export interface CollectorPin {
   distribution: string;
   version: string;
 }
 
 /**
- * Where a version stands in a distribution's catalogue (D13b decision 12):
- * offered (a pin may name it, and the validator holds it), deprecated (a
- * pin may keep it, but nothing checks it: retired), or not one of the
- * distribution's at all.
+ * Where a version stands in a distribution's catalog: offered (a pin may
+ * name it, and the validator holds it), deprecated (a pin may keep it, but
+ * nothing checks it: retired), or not one of the distribution's at all.
  */
 export type CollectorVersionState = "offered" | "deprecated" | "unknown";
 
-/** A version a distribution offers, as the catalogue endpoint lists it (D13a decision 11). */
+/** A version a distribution offers, as the catalog endpoint lists it. */
 export interface OfferedCollectorVersion {
   version: string;
   label: string;
@@ -40,11 +38,11 @@ export interface OfferedCollectorVersion {
   /** The upstream release's day, `YYYY-MM-DD` (the pool reads a `date` as its text). */
   releasedAt: string;
   isDefault: boolean;
-  /** Null for the full palette (Contrib, decision 6). */
+  /** Null for the full palette (Contrib). */
   supportedComponents: CollectorSupportedComponents | null;
 }
 
-/** A distribution with the versions it offers, newest first, and the collector's renames (D13b decision 6). */
+/** A distribution with the versions it offers, newest first, and the collector's renames. */
 export interface OfferedCollectorDistribution {
   id: string;
   label: string;
@@ -52,7 +50,7 @@ export interface OfferedCollectorDistribution {
   icon: string | null;
   isDefault: boolean;
   versions: OfferedCollectorVersion[];
-  /** The catalogue file's `renamedTypes`, in its order; `[]` when it has none. */
+  /** The catalog file's `renamedTypes`, in its order; `[]` when it has none. */
   renamedTypes: CollectorRenamedType[];
 }
 
@@ -62,7 +60,7 @@ export interface CollectorBinary {
   sha256: string;
 }
 
-/** A version's binaries by platform (D17c-1 decisions 35 and 39): `{}` for a container-only distribution. */
+/** A version's binaries by platform: `{}` for a container-only distribution. */
 export interface CollectorVersionBinaries {
   version: string;
   otelcolContrib: Partial<Record<string, CollectorBinary>>;
@@ -71,43 +69,42 @@ export interface CollectorVersionBinaries {
 
 export interface ICollectorCatalogueRepository {
   /**
-   * The catalogue's default distribution and that distribution's default
-   * version (D13a decisions 3 and 9): what a new configuration and its
-   * version 1 get, the sign-up starter included. One default, read from
-   * the tables: no constant anywhere. The sync keeps exactly one of each,
-   * so a missing one is a broken database, and throws.
+   * The catalog's default distribution and that distribution's default
+   * version: what a new configuration and its version 1 get, the sign-up
+   * starter included. One default, read from the tables: no constant
+   * anywhere. The sync keeps exactly one of each, so a missing one is a
+   * broken database, and throws.
    */
   findDefaults(): Promise<CollectorPin>;
   /**
-   * The default version of `distribution` (D13a Preflight ruling 14): what
-   * a configuration created for it gets as its version 1. Undefined when
-   * the catalogue has no such distribution, or it offers no default
-   * version (a default is never deprecated: the table's check).
+   * The default version of `distribution`: what a configuration created for
+   * it gets as its version 1. Undefined when the catalog has no such
+   * distribution, or it offers no default version (a default is never
+   * deprecated: the table's check).
    */
   findDistributionDefault(distribution: string): Promise<CollectorPin | undefined>;
   /**
-   * Whether `distribution` offers `version`: it is in the catalogue and not
-   * deprecated (D13a Preflight ruling 13), so a pin may change to it.
+   * Whether `distribution` offers `version`: it is in the catalog and not
+   * deprecated, so a pin may change to it.
    */
   isOffered(distribution: string, version: string): Promise<boolean>;
   /**
    * Whether `distribution` offers `version`, deprecated it, or doesn't have
-   * it (D13b decision 12): what a validation checks before it asks the
-   * validator. A version of another distribution is `unknown` here.
+   * it: what a validation checks before it asks the validator. A version of
+   * another distribution is `unknown` here.
    */
   findVersionState(distribution: string, version: string): Promise<CollectorVersionState>;
   /**
-   * Every distribution, in the catalogue's order (`sort_order`, then the
-   * id), each with the versions it offers, newest first: each part of
-   * `major.minor.patch` compared as a number, so 0.100.0 comes before
-   * 0.99.0. A distribution
-   * that offers none lists no versions. Each carries its renames, as the
-   * sync stored them (D13b decision 6).
+   * Every distribution, in the catalog's order (`sort_order`, then the id),
+   * each with the versions it offers, newest first: each part of
+   * `major.minor.patch` compared as a number, so 0.100.0 comes before 0.99.0.
+   * A distribution that offers none lists no versions. Each carries its
+   * renames, as the sync stored them.
    */
   listOffered(): Promise<OfferedCollectorDistribution[]>;
   /**
-   * A version's binaries (Preflight ruling 14): the bundle's downloads.
-   * Undefined when `distribution` has no such version, deprecated or not.
+   * A version's binaries: the bundle's downloads. Undefined when
+   * `distribution` has no such version, deprecated or not.
    */
   findVersionBinaries(distribution: string, version: string): Promise<CollectorVersionBinaries | undefined>;
   /**

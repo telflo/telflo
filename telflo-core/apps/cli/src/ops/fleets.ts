@@ -1,13 +1,12 @@
 /*
- * The fleet calls (D27 decision 28; D25 routes 17-20 and 19's install), on
- * the platform's names where the older CLI's differ: a deployment is a
- * collector group, `server-supervisor` is `server`, install's
- * `server_name` is `displayName`, `root_deploy_path` is `rootPath`, its
- * `env` a list of `{ name, value }`. Data only: `commands/fleet.ts` prints.
+ * The fleet calls (routes 17-20 and 19's install), in the platform's names:
+ * collector groups, the `server` type, install's `displayName` and
+ * `rootPath`, its `env` a list of `{ name, value }`. Data only:
+ * `commands/fleet.ts` prints.
  *
  * - A linux install always sends `arch` (default amd64), `rootPath`
  *   (default the web's `DEFAULT_INSTALL_ROOT_PATH`) and `systemd` (default
- *   true): the public route needs all three (Preflight ruling 8).
+ *   true): the public route needs all three.
  * - Install's reply is a SECRET (its `command` holds the fleet's bearer, or
  *   a link's secret): nothing here prints it, logs it or puts it in an
  *   error. A refusal is the API's fixed words, or the CLI's for
@@ -16,7 +15,7 @@
  *   `--env` is named by its position, not echoed).
  *
  * The choices below copy the contracts' (no runtime import from a
- * workspace: decision 13); `fleets.test.ts` checks each against them.
+ * workspace); `fleets.test.ts` checks each against them.
  */
 
 import type {
@@ -51,7 +50,7 @@ export type InstallArch = (typeof INSTALL_ARCHES)[number];
 export const ENV_FLAG_MESSAGE = (position: number): string => `--env expects NAME=value (the --env at position ${position} has no name or no =).`;
 export const LINUX_ONLY_MESSAGE = "--arch, --root-path and --no-systemd are for --platform linux.";
 export const DISPLAY_NAME_PLATFORM_MESSAGE = "--display-name is for --platform docker or linux.";
-/** Preflight ruling 8: a Kubernetes fleet with no group. */
+/** A Kubernetes fleet with no group. */
 export const NO_GROUP_MESSAGE = "This fleet has no group yet: run telflo deploy first.";
 export const SEVERAL_GROUPS_MESSAGE = (groupIds: readonly string[]): string =>
   ["This fleet has several groups: pass --group <id>, one of:", ...groupIds.map((id) => `  ${id}`)].join("\n");
@@ -156,7 +155,7 @@ export async function installFleet(client: ApiClient, fleetId: string, options: 
     return await client.request<PublicInstallReply>("POST", `/fleets/${segment(id)}/install`, { body });
   } catch (error) {
     if (error instanceof ApiError && error.code === "collector_group_required") {
-      // The words reworded only: the exit code, code and status are the refusal's own ending (Ruling 243; an ApiError's ending holds its status).
+      // The words reworded only: the exit code, code and status are the refusal's own ending (an ApiError's ending holds its status).
       const groupIds = groupIdsOf(error.details);
       const ending = endingOf(error);
       throw new ExitError(groupIds.length === 0 ? NO_GROUP_MESSAGE : SEVERAL_GROUPS_MESSAGE(groupIds), ending.exitCode, ending.code, error.status);

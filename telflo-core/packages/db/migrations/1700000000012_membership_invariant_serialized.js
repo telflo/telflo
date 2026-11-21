@@ -1,5 +1,5 @@
 /**
- * The membership invariant, serialized per user (D5 final review, F2).
+ * The membership invariant, serialized per user.
  *
  * Migration 010's ensure_user_has_membership checks, at commit, that every
  * user a transaction may have stranded still has a live membership in a live
@@ -23,7 +23,7 @@
  * held. A restore takes it only here, at commit, while holding the
  * organization and the membership: a new organization -> user wait. It is
  * safe because nothing locks a session and then an organization (the switch
- * locks its target organization before its session, Ruling 22), so every
+ * locks its target organization before its session), so every
  * path goes organization -> user -> session. (This header was corrected
  * after the migration was written; the SQL below is unchanged.)
  *

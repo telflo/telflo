@@ -182,9 +182,9 @@ describe("the application role", () => {
       expect(await currentUser(url)).toBe(role);
     });
 
-    // D33-1 decision 15: in a cluster the tables' owner holds only LOGIN
-    // CREATEROLE. Each test makes such an owner with the suite's superuser,
-    // holding ADMIN on telflo_platform_runtime as migration 009's creator does.
+    // In a cluster the tables' owner holds only LOGIN CREATEROLE. Each test
+    // makes such an owner with the suite's superuser, holding ADMIN on
+    // telflo_platform_runtime as migration 009's creator does.
     describe("as an owner that isn't a superuser", () => {
       // Dropped in reverse: the application login before the owner that
       // granted its membership.

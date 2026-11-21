@@ -149,121 +149,111 @@ import {
 } from "./errors.js";
 
 /*
- * Fleets and their enrollment tokens through the platform (D16b decisions
- * 1, 4 to 6, 13, 15 to 18 and 21; Preflight rulings 8 to 16 and 19). The
- * opamp-server holds them (D16a); this service is its tenant router for the
- * signed-in person's active organization.
+ * Fleets and their enrollment tokens through the platform. The opamp-server
+ * holds them; this service is its tenant router for the signed-in person's
+ * active organization.
  *
- * Every operation, in order: the path's organization the session's active
- * one (else 404 `organization_not_found`, before anything else); each path
- * id a canonical UUID (else its 404, with no call); the platform's own
- * checks (a time in the future); the person's fleet limit (Preflight ruling
- * 12, one count and one in-flight slot per request, released in a
- * `finally`); the call; the audit row (ruling 15). Every member may do all
- * of it (decision 6): there is no role check. No lock is held across a
+ * Every operation, in order: the path's organization the session's active one
+ * (else 404 `organization_not_found`, before anything else); each path id a
+ * canonical UUID (else its 404, with no call); the platform's own checks (a
+ * time in the future); the person's fleet limit (one count and one in-flight
+ * slot per request, released in a `finally`); the call; the audit row. Every
+ * member may do all of it: there is no role check. No lock is held across a
  * call: `authenticate` read the session, the live membership and the live
  * organization, committed, on this request.
  *
  * The actor the opamp-server records is the session's person, never the
  * body's. The organization is the session's, never the body's.
  *
- * Answers (Preflight ruling 8): the person's own refusals passed on (409
- * `fleet_conflict`, `fleet_label_taken`, `fleet_archived`,
- * `enrollment_token_revoked`, `enrollment_token_expired`,
- * `enrollment_token_default_exists`; 404
+ * Answers: the person's own refusals passed on (409 `fleet_conflict`,
+ * `fleet_label_taken`, `fleet_archived`, `enrollment_token_revoked`,
+ * `enrollment_token_expired`, `enrollment_token_default_exists`; 404
  * `fleet_not_found`, `enrollment_token_not_found`); 400 `invalid_request`
  * for a list's cursor or a time the opamp-server refused (when the request
- * sent one, the cursor or the time); an organization
- * the opamp-server doesn't know holds no fleets (an empty list, a
- * `fleet_not_found`); every other outcome one 503 `fleets_unavailable`,
- * logged with ids and the result's kind (describeResult), never a body, a
- * URL, a label or a bearer. A write's 503 can follow a change the
- * opamp-server made (a reply lost after its commit): its message says so.
+ * sent one, the cursor or the time); an organization the opamp-server
+ * doesn't know holds no fleets (an empty list, a `fleet_not_found`); every
+ * other outcome one 503 `fleets_unavailable`, logged with ids and the
+ * result's kind (describeResult), never a body, a URL, a label or a
+ * bearer. A write's 503 can follow a change the opamp-server made (a reply
+ * lost after its commit): its message says so.
  *
  * Bearers go only into the create's, the reveal's, the rotation's and a new
- * default token's (D17c-1) replies, and the public install's command (D25
- * decision 38: `installCommand`, which also carries a link's secret); labels
- * only into replies. Neither reaches a log line or an audit row (ADR 0024).
+ * default token's replies, and the public install's command
+ * (`installCommand`, which also carries a link's secret); labels only into
+ * replies. Neither reaches a log line or an audit row.
  *
- * Collector groups, collectors and a configuration's fleet usage
- * (Task 4; decisions 3, 13, 14 and 21, Preflight rulings 5, 8, 9 and 12)
- * follow the same order, with the platform's reads between the path's ids
- * and the limit: an assignment's or a pin's configuration version resolved
- * to its published copy's id, or the usage's configuration found visible,
- * in one short committed transaction (404 `configuration_version_not_found`
- * or `configuration_not_found`, 422 `configuration_version_not_published`,
- * with no call). A group's create, and its update carrying a name or
- * annotations, reads the fleet's type first, within the request's count and
- * slot, and checks the group against it (D17d-1 decisions 17 and 18,
- * Preflight ruling 13: refusalForFleetType), nothing written on a refusal.
- * After the call, every publication id the
- * reply names is looked up in one query, the platform's configuration and
- * version put beside it (null for none). Their own refusals: 409
- * `collector_group_name_taken`, `collector_group_is_default`,
- * `collector_name_taken`; 404 `collector_group_not_found`,
- * `collector_not_found`. A 422
- * `publication_not_found` for a version the platform resolved is the two
- * sides disagreeing: the one 503, logged at error.
+ * Collector groups, collectors and a configuration's fleet usage follow the
+ * same order, with the platform's reads between the path's ids and the limit:
+ * an assignment's or a pin's configuration version resolved to its published
+ * copy's id, or the usage's configuration found visible, in one short
+ * committed transaction (404 `configuration_version_not_found` or
+ * `configuration_not_found`, 422 `configuration_version_not_published`, with
+ * no call). A group's create, and its update carrying a name or annotations,
+ * reads the fleet's type first, within the request's count and slot, and
+ * checks the group against it (refusalForFleetType), nothing written on a
+ * refusal. After the call, every publication id the reply names is looked up
+ * in one query, the platform's configuration and version put beside it (null
+ * for none). Their own refusals: 409 `collector_group_name_taken`,
+ * `collector_group_is_default`, `collector_name_taken`; 404
+ * `collector_group_not_found`, `collector_not_found`. A 422
+ * `publication_not_found` for a version the platform resolved is the two sides
+ * disagreeing: the one 503, logged at error.
  *
- * D20's bindings (decisions 4, 5 and 7; Preflight ruling 39; Q103): a
- * group's create and update pass `variableGroupId`, a collector's update
- * and the bulk pin `pinnedVariableGroupId` (the bulk pin's `pin` and
- * `pinnedVariableGroupId` each optional, at least one, a field left out
- * leaving each collector's as it is). The opamp-server's 422s map to the
- * person's: a variable group the organization doesn't hold is 404
+ * Variable-group bindings: a group's create and update pass `variableGroupId`,
+ * a collector's update and the bulk pin `pinnedVariableGroupId` (the bulk
+ * pin's `pin` and `pinnedVariableGroupId` each optional, at least one, a field
+ * left out leaving each collector's as it is). The opamp-server's 422s map to
+ * the person's: a variable group the organization doesn't hold is 404
  * `variable_group_not_found` (as a missing version is 404
  * `configuration_version_not_found`), and a published version referencing
- * names no variable has is 422 `variables_undefined` with the names (at
- * most 100, their total exact: Q102) in its details, never in a log line.
- * A binding's change is unaudited, as assignments and pins are (decision 15). None of these writes is
- * audited (decision 18). A group's or a collector's name, a reported
- * attribute, an error text and a collector list's `q` reach replies only,
- * never a log line. A pin names a configuration version only (D16c removed
- * importing): the contract refuses any other kind (400, no call).
+ * names no variable has is 422 `variables_undefined` with the names (at most
+ * 100, their total exact) in its details, never in a log line. A binding's
+ * change is unaudited, as assignments and pins are. None of these writes is
+ * audited. A group's or a collector's name, a reported attribute, an error
+ * text and a collector list's `q` reach replies only, never a log line. A pin
+ * names a configuration version only: the contract refuses any other kind
+ * (400, no call).
  *
- * Installing (D17c-1 decisions 38 and 39, Preflight ruling 14): an
- * install's facts (one read admission) and a Linux bundle (one write) read
- * the fleet and the group from the opamp-server, then the group's
- * published version's YAML and collector and the catalogue in one short
- * committed transaction (`installable`'s order of refusals). The bundle is
- * rendered from the request's validated fields, the settings and the
- * catalogue only (install/render.ts), its templates read again from the
- * directory (install/templates.ts), and audited
+ * Installing: an install's facts (one read admission) and a Linux bundle
+ * (one write) read the fleet and the group from the opamp-server, then the
+ * group's published version's YAML and collector and the catalog in one
+ * short committed transaction (`installable`'s order of refusals). The
+ * bundle is rendered from the request's validated fields, the settings and
+ * the catalog only (install/render.ts), its templates read again from
+ * the directory (install/templates.ts), and audited
  * `fleet.install_bundle_downloaded` with ids, the method and the arch.
  * Neither carries a bearer; a configuration's YAML, a template's text, a
  * render's output and the request's paths and values reach no log line or
  * audit row.
  *
- * Quick-deploy links (D17c-2 decisions 4 to 7, 10, 11, 22 and 25;
- * Preflight rulings 3, 9, 13, 20 and 25): every member makes (a write), lists
- * (a read), extends and revokes (writes) any link of the organization's
- * fleets. A create checks what the bundle would (`installable`, the
- * variables offered, the binaries for the arch), then that the fleet holds
- * a valid default token (the command carries its bearer; else 409
+ * Quick-deploy links: every member makes (a write), lists (a read),
+ * extends and revokes (writes) any link of the organization's fleets. A
+ * create checks what the bundle would (`installable`, the variables
+ * offered, the binaries for the arch), then that the fleet holds a valid
+ * default token (the command carries its bearer; else 409
  * `enrollment_token_default_missing`), and makes the link, its values
  * sealed, within the fleet's cap, audited in the same transaction
  * (create-link.ts); its reply alone carries the link's `url` (the secret),
  * `no-store`. A link of another fleet or organization is 404
  * `quick_deploy_link_not_found`. A fleet's delete removes its links after
  * the opamp-server's success, and after its 404 too (the retry of a delete
- * that outlasted the platform's wait; Ruling 49).
+ * that outlasted the platform's wait).
  *
  * The public download renders through `quickDeployBundle` (a service the
  * public route builds with `withOrganizationTransaction`: the link's
  * organization, no person): `installable` and `renderBundle` as the signed-in
  * bundle, with no actor and no audit (the route counts and audits).
  *
- * The Helm install (D17d-2 decisions 15, 20 and 21; Preflight rulings 1 to
- * 4, 9, 11 and 13): `installable` takes the install's path, so a
+ * The Helm install: `installable` takes the install's path, so a
  * Kubernetes-supervisor fleet's group answers its Helm facts
  * (`helmFactsOf`: the chart, the image's repository, the group's release,
  * role, namespace, replicas and volumes; no bearer) and makes a Helm values
  * link, while the Linux bundle and a Linux link keep refusing it
  * (`fleet_type_not_installable`, each direction's words). Either link's
  * create needs the organization's "Public install links" switch on (409
- * `public_install_links_disabled`), read `for share` in its transaction.
- * A Helm values link's public download (`quickDeployHelmValues`) renders
- * the group's current Helm facts and a bearer of the link's default token
+ * `public_install_links_disabled`), read `for share` in its transaction. A
+ * Helm values link's public download (`quickDeployHelmValues`) renders the
+ * group's current Helm facts and a bearer of the link's default token
  * revealed LAST, with no actor (the opamp-server's `viewed` event names no
  * person): `values.yaml`, which holds it, reaches no log line (a builder's
  * refusal is logged with ids and the field only).
@@ -272,30 +262,30 @@ import {
 /**
  * The repositories a unit of work of the fleet routes uses, bound to one
  * transaction that carries the request's database context: the active
- * organization (a create's name to register, and its re-check, Preflight
- * ruling 13) and the audit trail.
+ * organization (a create's name to register, and its re-check) and the audit
+ * trail.
  */
 export interface FleetsTransaction {
   organization: Pick<IActiveOrganizationRepository, "findActive" | "findActiveForShare" | "findSettingsForShare">;
   audit: IAuditRepository;
-  /** The person's configurations (D11b's draft rules): a fleet usage's configuration. */
+  /** The person's configurations (another member's draft is not one): a fleet usage's configuration. */
   configurations: Pick<IConfigurationRepository, "find">;
-  /** A configuration version and its published copy, both ways (decision 14, Preflight ruling 5). */
+  /** A configuration version and its published copy, both ways. */
   publishedVersions: IPublishedVersionRepository;
-  /** The collector catalogue (global): an install's version state and binaries (D17c-1 Preflight ruling 14). */
+  /** The collector catalog (global): an install's version state and binaries. */
   catalogue: Pick<ICollectorCatalogueRepository, "findVersionState" | "findVersionBinaries" | "listOfferedBinaries">;
-  /** The organization's quick-deploy links (D17c-2 decision 22). */
+  /** The organization's quick-deploy links. */
   quickDeployLinks: IQuickDeployLinkRepository;
 }
 
 /**
  * The repositories the public download uses, bound to one transaction in a
- * link's organization with no person (D17c-2 Preflight ruling 9: the
- * published version read with no viewer, in database/context.ts' context
- * of an organization with no person).
+ * link's organization with no person (the published version read with no
+ * viewer, in database/context.ts' context of an organization with no
+ * person).
  */
 export interface QuickDeployDownloadTransaction {
-  /** The link's organization's "Public install links" switch (D17d-2 Preflight ruling 10): read, then re-read `for share` at the count. */
+  /** The link's organization's "Public install links" switch: read, then re-read `for share` at the count. */
   organization: Pick<IActiveOrganizationRepository, "findSettings" | "findSettingsForShare">;
   quickDeployLinks: IQuickDeployLinkRepository;
   publishedVersions: IPublishedVersionRepository;
@@ -309,7 +299,7 @@ export type WithOrganizationTransaction = <Result>(
   work: (transaction: QuickDeployDownloadTransaction) => Promise<Result>,
 ) => Promise<Result>;
 
-/** An install's reads (the published version, the catalogue) in one short committed transaction: a member's, or the public download's. */
+/** An install's reads (the published version, the catalog) in one short committed transaction: a member's, or the public download's. */
 type InstallRead = <Result>(work: (transaction: Pick<FleetsTransaction, "publishedVersions" | "catalogue">) => Promise<Result>) => Promise<Result>;
 
 /** What a bundle is rendered from: the request's validated fields, or a link's stored choices and opened values. */
@@ -336,23 +326,23 @@ export interface FleetsServiceDependencies {
   opampServer: OpampServerClient;
   limiter: FleetLimiter;
   /**
-   * The organization's delete hook (D11a decision 20): a fleet's create
-   * that finds its organization deleted meanwhile asks the opamp-server to
-   * delete it again (Preflight ruling 13; Task 6 makes the hook retry).
+   * The organization's delete hook: a fleet's create that finds its
+   * organization deleted meanwhile asks the opamp-server to delete it
+   * again.
    */
   opampRegistration: Pick<OpampRegistration, "deleted">;
   /** The platform's clock: a time in a request must be after it; a bundle's files are dated by it. */
   now: () => Date;
-  /** What an install writes (D17c-1 decision 34). */
+  /** What an install writes. */
   install: InstallSettings;
-  /** The install templates, read on every render (D17c-1 decision 36). */
+  /** The install templates, read on every render. */
   installTemplates: InstallTemplateLoader;
-  /** Where a link points and the keys sealing its values (D17c-2 decision 24). */
+  /** Where a link points and the keys sealing its values. */
   quickDeploy: QuickDeploySettings;
   /**
    * The public download's transactions, in a link's organization with no
-   * person (D17c-2 Preflight ruling 9): only the public route's service has
-   * them (modules/quick-deploy/routes.ts); `quickDeployBundle` needs them.
+   * person: only the public route's service has them
+   * (modules/quick-deploy/routes.ts); `quickDeployBundle` needs them.
    */
   withOrganizationTransaction?: WithOrganizationTransaction;
   log: Pick<FastifyBaseLogger, "warn" | "error">;
@@ -375,7 +365,7 @@ export interface IFleetsService {
     fleetId: string,
     rotation: RotateEnrollmentTokenRequest,
   ): Promise<{ id: string; bearer: string; expiresAt: string | null; predecessorId: string | null }>;
-  /** A new default token once the fleet's default tokens are all revoked (D17c-1 decision 29). */
+  /** A new default token once the fleet's default tokens are all revoked. */
   issueDefaultToken(
     actor: Actor,
     organizationId: string,
@@ -418,9 +408,9 @@ export interface IFleetsService {
     query: PageQuery,
   ): Promise<CollectorErrorsPage>;
   fleetUsage(actor: Actor, organizationId: string, configurationId: string): Promise<ConfigurationFleetUsage>;
-  /** An install's facts (D17c-1 decision 38): no bearer. A Kubernetes group's are its Helm facts (D17d-2 decision 15). */
+  /** An install's facts: no bearer. A Kubernetes group's are its Helm facts. */
   installFacts(actor: Actor, organizationId: string, fleetId: string, groupId: string): Promise<InstallFacts | HelmInstallFacts>;
-  /** A Linux bundle (D17c-1 decision 39), rendered from the request's validated fields only: no bearer. */
+  /** A Linux bundle, rendered from the request's validated fields only: no bearer. */
   installBundle(
     actor: Actor,
     organizationId: string,
@@ -429,9 +419,8 @@ export interface IFleetsService {
     request: InstallBundleRequest,
   ): Promise<{ fileName: string; archive: Buffer }>;
   /**
-   * The public install's ready command (D25 decisions 37 and 38; Preflight
-   * ruling 10, Rulings 160 and 161), for the group named or the fleet's
-   * default one, built by the shared builders only: docker's container
+   * The public install's ready command, for the group named or the
+   * fleet's default one, built by the shared builders only: docker's container
    * command (the facts, a reveal of the default token), linux's All In One
    * Quick Deploy command (a new link, a reveal) or kubernetes' Helm Quick
    * Deploy command (a new values link). Every platform spends one bearer
@@ -440,10 +429,9 @@ export interface IFleetsService {
    */
   installCommand(actor: Actor, organizationId: string, fleetId: string, request: PublicInstallRequest): Promise<PublicInstallReply>;
   /**
-   * A quick-deploy link for the group (D17c-2 decision 25), by kind: a Linux
-   * link on a server fleet's group, a Helm values link on a Kubernetes
-   * fleet's (D17d-2 decision 21). The link and its `url`, the one copy of
-   * its secret.
+   * A quick-deploy link for the group, by kind: a Linux link on a server
+   * fleet's group, a Helm values link on a Kubernetes fleet's. The link and
+   * its `url`, the one copy of its secret.
    */
   createQuickDeployLink(
     actor: Actor,
@@ -459,8 +447,7 @@ export interface IFleetsService {
    * Every extend is decided under the cap's lock, as a create is: refused
    * (409 `quick_deploy_link_limit_reached`) when the fleet's OTHER active
    * links are already at the cap, which is normally an expired link's
-   * extend (an active link of a full fleet has one fewer others; Rulings 36
-   * and 40).
+   * extend (an active link of a full fleet has one fewer others).
    */
   extendQuickDeployLink(
     actor: Actor,
@@ -472,27 +459,25 @@ export interface IFleetsService {
   /**
    * Revoked once; a repeat answers the link as it is (and is audited again).
    * The revoke is written before the group's name is asked for, and stands
-   * when the opamp-server can't answer (the reply's name null, Ruling 36).
+   * when the opamp-server can't answer (the reply's name null).
    */
   revokeQuickDeployLink(actor: Actor, organizationId: string, fleetId: string, linkId: string): Promise<QuickDeployLinkReply>;
   /**
-   * The public download's render (D17c-2 decisions 6, 7 and 26; Preflight
-   * rulings 9 and 10), for a link the route found active, with no person:
-   * `installable` in the link's organization, the stored variables still
-   * offered, the link's default token still valid, the values opened
+   * The public download's render, for a link the route found active, with no
+   * person: `installable` in the link's organization, the stored variables
+   * still offered, the link's default token still valid, the values opened
    * (`openValues`), then `renderBundle`. Refused in the download's terms
    * (quick-deploy/errors.ts). No count and no audit: the route's.
    */
   quickDeployBundle(link: StoredQuickDeployLink, openValues: (link: StoredQuickDeployLink) => EnvValue[]): Promise<Buffer>;
   /**
-   * A Helm values link's public render (D17d-2 decision 21; Preflight
-   * ruling 9), with no person, in this order: `installable` for a Helm
-   * install in the link's organization, the group's Helm facts (its
-   * settings readable), the stored variables still offered, the values
-   * opened, then the link's default token's bearer revealed with no actor
-   * (revoked, expired or unknown 410), and `helmValuesYaml`. The file holds
-   * the bearer: never logged. Refused in the download's terms. No count and
-   * no audit: the route's.
+   * A Helm values link's public render, with no person, in this order:
+   * `installable` for a Helm install in the link's organization, the group's
+   * Helm facts (its settings readable), the stored variables still offered,
+   * the values opened, then the link's default token's bearer revealed with no
+   * actor (revoked, expired or unknown 410), and `helmValuesYaml`. The file
+   * holds the bearer: never logged. Refused in the download's terms. No count
+   * and no audit: the route's.
    */
   quickDeployHelmValues(link: StoredQuickDeployLink, openValues: (link: StoredQuickDeployLink) => EnvValue[]): Promise<string>;
 }
@@ -522,7 +507,7 @@ interface FleetIds {
   versionId?: string;
   publicationId?: string;
   linkId?: string;
-  /** D20: a group's or a pin's variable group. */
+  /** A group's or a pin's variable group. */
   variableGroupId?: string;
 }
 
@@ -574,9 +559,9 @@ export function toFleetDetail(fleet: Opamp.FleetDetail): FleetDetail {
 }
 
 /**
- * A collector group, its assignment's configuration and version beside it
- * (decision 14). A fleet's create makes its Default group unassigned, so
- * the create passes null; the group routes (Task 4) look the version up.
+ * A collector group, its assignment's configuration and version beside it.
+ * A fleet's create makes its Default group unassigned, so the create
+ * passes null; the group routes look the version up.
  */
 export function toCollectorGroup(group: Opamp.CollectorGroup, assignedVersion: CollectorGroup["assignedVersion"]): CollectorGroup {
   return {
@@ -606,7 +591,7 @@ function toEnrollmentToken(token: Opamp.EnrollmentToken): EnrollmentToken {
   };
 }
 
-/** Each publication id's configuration and version (decision 14), or null where the platform holds no live version recording it. */
+/** Each publication id's configuration and version, or null where the platform holds no live version recording it. */
 type VersionOf = (publicationId: string | null) => PublishedVersion | null;
 
 /** A collector's pin under the platform's names (contracts/fleets.ts maps them): a version's re-sendable as a pin's request. */
@@ -656,7 +641,7 @@ function toCollector(collector: Opamp.CollectorInstance, versionOf: VersionOf): 
     lastSeenAt: collector.lastSeenAt,
     liveness: collector.liveness,
     // The opamp-server's `sync` (0.2.4) is the platform contract's `drift`,
-    // same values (D36-1 decision 15).
+    // same values.
     drift: collector.sync,
     createdAt: collector.createdAt,
     updatedAt: collector.updatedAt,
@@ -682,19 +667,17 @@ function telfloAnnotationsOf(annotations: Record<string, unknown> | null | undef
 }
 
 /**
- * D17d-1 decisions 17 and 18, Preflight ruling 13: a group's write against
- * its fleet's type, once the fleet is read. A `server` fleet's group takes
- * no `telflo.kubernetes`. A `kubernetes-supervisor` fleet's group takes no
- * `telflo.dockerMounts` and no rename (any `name`: 409
- * `collector_group_name_fixed`, without reading the group's current name);
- * its create is named `cluster` (the Cluster) or a gateway's name, and
- * carries `telflo.kubernetes` naming its role (collectorGroupRole). An
- * update carrying `annotations` carries `telflo.kubernetes` too (Ruling 48:
- * once written, a Kubernetes group's settings are never dropped), naming
- * the group's role, which `roleOfGroup` reads (the Default group's is
- * `node`); an update without `annotations` (an assignment) reads nothing
- * more. The Default group of a Kubernetes fleet may hold no `kubernetes`
- * key until its first save. The
+ * A group's write against its fleet's type, once the fleet is read. A `server`
+ * fleet's group takes no `telflo.kubernetes`. A `kubernetes-supervisor`
+ * fleet's group takes no `telflo.dockerMounts` and no rename (any `name`: 409
+ * `collector_group_name_fixed`, without reading the group's current name); its
+ * create is named `cluster` (the Cluster) or a gateway's name, and carries
+ * `telflo.kubernetes` naming its role (collectorGroupRole). An update carrying
+ * `annotations` carries `telflo.kubernetes` too (once written, a Kubernetes
+ * group's settings are never dropped), naming the group's role, which
+ * `roleOfGroup` reads (the Default group's is `node`); an update without
+ * `annotations` (an assignment) reads nothing more. The Default group of a
+ * Kubernetes fleet may hold no `kubernetes` key until its first save. The
  * trims are the browser's: the contract already refused a name with an edge
  * space.
  */
@@ -733,10 +716,10 @@ async function refusalForFleetType(
 function opampGroupFields(request: CreateCollectorGroupRequest | UpdateCollectorGroupRequest, assignedPublicationId: string | null | undefined) {
   return {
     ...(assignedPublicationId === undefined ? {} : { assignedPublicationId }),
-    // On any fleet's group (D17c-1 decision 30): the whole object the
-    // contract checked (a Kubernetes group's settings within it), or null.
+    // On any fleet's group: the whole object the contract checked (a
+    // Kubernetes group's settings within it), or null.
     ...(request.annotations === undefined ? {} : { annotations: request.annotations }),
-    // D20 decision 5: the variable group its collectors' text is filled in with, or null for none.
+    // The variable group its collectors' text is filled in with, or null for none.
     ...(request.variableGroupId === undefined ? {} : { variableGroupId: lowerOrNull(request.variableGroupId) }),
   };
 }
@@ -752,9 +735,9 @@ function variableGroupIdsOf(variableGroupId: string | null | undefined): Pick<Fl
 }
 
 /**
- * The bulk pin as the opamp-server takes it (Q103): each choice given, a
- * field left out leaving each collector's as it is. The contract refuses a
- * request with neither.
+ * The bulk pin as the opamp-server takes it: each choice given, a field left
+ * out leaving each collector's as it is. The contract refuses a request with
+ * neither.
  */
 function opampBulkPin(
   collectorIds: string[],
@@ -781,10 +764,9 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
   const { withTransaction, opampServer, limiter, opampRegistration, now, log, install, installTemplates, quickDeploy } = deps;
 
   /**
-   * Preflight ruling 12: the person's count of `kind` and an in-flight slot
-   * in the organization, taken just before the first call and given back
-   * once the request's work is done; 429 `rate_limited` with Retry-After
-   * when either is spent.
+   * The person's count of `kind` and an in-flight slot in the organization,
+   * taken just before the first call and given back once the request's work
+   * is done; 429 `rate_limited` with Retry-After when either is spent.
    */
   async function admitted<Result>(actor: Actor, kind: FleetRequestKind, work: () => Promise<Result>): Promise<Result> {
     const admission = limiter.admit(actor.context.userId, actor.context.organizationId, kind);
@@ -801,8 +783,8 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
    * doesn't document, ids that aren't the request's) is the one 503, logged
    * at error with the client's message, which names the operation and the
    * status only (never a URL, a body or the secret). Any other throw is the
-   * one 503 too (Ruling 34; decision 19), logged at error with its name
-   * only, since its message could quote anything.
+   * one 503 too, logged at error with its name only, since its message could
+   * quote anything.
    */
   async function call<Result>(operation: string, ids: FleetIds, send: () => Promise<Result>): Promise<Result> {
     try {
@@ -836,11 +818,11 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
   }
 
   /**
-   * A create's or a rotation's 400 `invalid_request` (Ruling 22): with a
-   * time sent, the opamp-server's clock refused it (clock skew, or a time it
-   * can't keep), which is the person's 400. Without one, the contract
-   * checked everything the opamp-server would refuse: the one 503, logged
-   * at warn with the ids and the code (never its message).
+   * A create's or a rotation's 400 `invalid_request`: with a time sent, the
+   * opamp-server's clock refused it (clock skew, or a time it can't keep),
+   * which is the person's 400. Without one, the contract checked everything
+   * the opamp-server would refuse: the one 503, logged at warn with the ids
+   * and the code (never its message).
    */
   function refusedTime(
     operation: string,
@@ -860,10 +842,10 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
   }
 
   /**
-   * Preflight ruling 15: the row, after the opamp-server's success, in its
-   * own transaction, with the actor's email, address and user agent. Ids,
-   * a kind, a type, a status and field names only: never a label or a
-   * bearer. A failed write is an error log with the ids; the change stands.
+   * The row, after the opamp-server's success, in its own transaction, with
+   * the actor's email, address and user agent. Ids, a kind, a type, a
+   * status and field names only: never a label or a bearer. A failed write
+   * is an error log with the ids; the change stands.
    */
   async function audit(
     actor: Actor,
@@ -884,11 +866,10 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
   }
 
   /**
-   * D17c-2 Preflight ruling 9: after a fleet's delete in the opamp-server,
-   * one transaction removes its quick-deploy links and writes the
-   * `fleet.deleted` row. A failure is an error log with the ids, as any
-   * failed row's; the delete stands, and the links left answer 410 (their
-   * fleet is gone).
+   * After a fleet's delete in the opamp-server, one transaction removes
+   * its quick-deploy links and writes the `fleet.deleted` row. A failure
+   * is an error log with the ids, as any failed row's; the delete stands,
+   * and the links left answer 410 (their fleet is gone).
    */
   async function removedWithLinks(actor: Actor, ids: FleetIds & { fleetId: string }): Promise<void> {
     try {
@@ -898,8 +879,8 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
         return links;
       });
     } catch (error) {
-      // The words and fields of every fleet change's failed row (audit()'s), so D16b's readers see it alike;
-      // the links stay with it (rolled back together) and answer 410, their fleet being gone.
+      // The words and fields of every fleet change's failed row (audit()'s), so readers see it alike; the links stay
+      // with it (rolled back together) and answer 410, their fleet being gone.
       log.error(
         { action: "fleet.deleted", organizationId: ids.organizationId, subjectId: ids.fleetId, fleetId: ids.fleetId, error: errorName(error) },
         "the fleet change's audit row wasn't written: the change stands",
@@ -908,14 +889,14 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
   }
 
   /**
-   * Ruling 49: a fleet's delete answered 404 (the fleet, or the
-   * organization, unknown to the opamp-server) may be the retry of a delete
-   * that the opamp-server carried out after the platform stopped waiting
-   * (the first answer a 503): its links went with nothing, so the 404
-   * removes them, in the person's context and with no audit row (the
-   * opamp-server's own record holds the delete; a fleet never known has
-   * none to remove). A failure is an error log with the ids; the 404
-   * stands, and the links left answer 410, their fleet being gone.
+   * A fleet's delete answered 404 (the fleet, or the organization, unknown
+   * to the opamp-server) may be the retry of a delete that the opamp-server
+   * carried out after the platform stopped waiting (the first answer a
+   * 503): its links went with nothing, so the 404 removes them, in the
+   * person's context and with no audit row (the opamp-server's own record
+   * holds the delete; a fleet never known has none to remove). A failure is
+   * an error log with the ids; the 404 stands, and the links left answer
+   * 410, their fleet being gone.
    */
   async function linksOfGoneFleetRemoved(actor: Actor, ids: FleetIds & { fleetId: string }): Promise<void> {
     try {
@@ -965,12 +946,11 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
   }
 
   /**
-   * Decision 14, Preflight ruling 5: the published copy's id of a version of
-   * a live configuration the person can see, read in a short committed
-   * transaction before the limit and any call. None: 404
-   * `configuration_version_not_found` (another organization's, another
-   * member's draft, a deleted configuration's, an unknown one); a draft:
-   * 422 `configuration_version_not_published`.
+   * The published copy's id of a version of a live configuration the person
+   * can see, read in a short committed transaction before the limit and any
+   * call. None: 404 `configuration_version_not_found` (another
+   * organization's, another member's draft, a deleted configuration's, an
+   * unknown one); a draft: 422 `configuration_version_not_published`.
    */
   async function publicationIdOf(actor: Actor, versionId: string): Promise<string> {
     const resolved = await withTransaction(actor.context, (transaction) =>
@@ -989,9 +969,8 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
   }
 
   /**
-   * Decision 14, Preflight ruling 5: the platform's configuration and
-   * version of each publication id a reply names, from one query (none when
-   * it names none).
+   * The platform's configuration and version of each publication id a reply
+   * names, from one query (none when it names none).
    */
   async function versionsOf(actor: Actor, publicationIds: (string | null)[]): Promise<VersionOf> {
     const ids = publicationIds.filter((id): id is string => id !== null);
@@ -1003,10 +982,10 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
   }
 
   /**
-   * Preflight ruling 8: a 422 `publication_not_found` for a version the
-   * platform resolved means the two sides disagree (a published copy the
-   * opamp-server lost), which isn't the person's to fix: the one 503,
-   * logged at error with the ids (nothing heals it yet).
+   * A 422 `publication_not_found` for a version the platform resolved means
+   * the two sides disagree (a published copy the opamp-server lost), which
+   * isn't the person's to fix: the one 503, logged at error with the ids
+   * (nothing heals it yet).
    */
   function disagreed(operation: string, ids: FleetIds): never {
     log.error(
@@ -1017,11 +996,10 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
   }
 
   /**
-   * Preflight ruling 13 (D16b's rulings 8 and 9 before it): before a
-   * group's create, or its update carrying a name or annotations, the
-   * fleet's type (it never changes), read within the request's count and
-   * slot. The fleet unknown (or the organization, to the opamp-server): 404
-   * `fleet_not_found`. Any other failure: the one 503.
+   * Before a group's create, or its update carrying a name or annotations,
+   * the fleet's type (it never changes), read within the request's count
+   * and slot. The fleet unknown (or the organization, to the opamp-server):
+   * 404 `fleet_not_found`. Any other failure: the one 503.
    */
   async function fleetTypeOf(ids: FleetIds & { fleetId: string }): Promise<FleetType> {
     const result = await call("getFleet", ids, () => opampServer.getFleet(ids.organizationId, ids.fleetId));
@@ -1037,11 +1015,11 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
   }
 
   /**
-   * A Kubernetes fleet's group's role, for an update carrying its settings
-   * (Preflight ruling 13): the group read within the request's slot (its
-   * name and whether it is the Default group, neither of which changes on a
-   * Kubernetes fleet). Unknown: 404 `collector_group_not_found`; the fleet
-   * unknown: 404 `fleet_not_found`; any other failure: the one 503.
+   * A Kubernetes fleet's group's role, for an update carrying its settings:
+   * the group read within the request's slot (its name and whether it is
+   * the Default group, neither of which changes on a Kubernetes fleet).
+   * Unknown: 404 `collector_group_not_found`; the fleet unknown: 404
+   * `fleet_not_found`; any other failure: the one 503.
    */
   async function kubernetesRoleOf(ids: FleetIds & { fleetId: string; groupId: string }, type: FleetType): Promise<KubernetesRole | null> {
     const result = await call("getCollectorGroup", ids, () => opampServer.getCollectorGroup(ids.organizationId, ids.fleetId, ids.groupId));
@@ -1070,15 +1048,14 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
   }
 
   /**
-   * Preflight ruling 13: after a create's success (201 or 200), the
-   * organization taken `for share`. Gone (deleted while the create ran, its
-   * delete's DELETE possibly landed before the ensure registered it again):
-   * the delete hook runs again, and 404 `organization_not_found`. Live: the
-   * 201's `fleet.created` row in the same transaction; the organization's
-   * delete takes the row `for no key update`, so it waits, and its DELETE
-   * then removes the fleet. A transaction that fails otherwise is an error
-   * log with the ids, and the create's answer stands (its bearers come
-   * only once).
+   * After a create's success (201 or 200), the organization taken `for share`.
+   * Gone (deleted while the create ran, its delete's DELETE possibly landed
+   * before the ensure registered it again): the delete hook runs again, and
+   * 404 `organization_not_found`. Live: the 201's `fleet.created` row in the
+   * same transaction; the organization's delete takes the row
+   * `for no key update`, so it waits, and its DELETE then removes the fleet. A
+   * transaction that fails otherwise is an error log with the ids, and the
+   * create's answer stands (its bearers come only once).
    */
   async function recheckOrganization(actor: Actor, ids: Required<Pick<FleetIds, "organizationId" | "fleetId">>, created?: { type: string }) {
     let isGone: boolean;
@@ -1107,20 +1084,19 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
   }
 
   /**
-   * D17c-1 Preflight ruling 14: what an install needs of the group, within
-   * the request's count and slot, refused in this order: the fleet unknown
-   * (404), archived (409 `fleet_archived`), not the install's fleet type
-   * (409 `fleet_type_not_installable`, D17d-2 Preflight ruling 2: `path`
-   * "server", the Linux bundle and link, refuses a Kubernetes-supervisor
-   * fleet with FLEET_TYPE_NOT_INSTALLABLE_MESSAGE; "helm", a Helm values
-   * link, refuses a server fleet with FLEET_TYPE_NOT_HELM_INSTALLABLE_MESSAGE;
-   * "any", the facts, neither); the group unknown (404); no published
-   * version (409 `collector_group_unassigned`); a version the platform holds
-   * no live one of, a deleted configuration's (409
-   * `collector_group_assignment_deleted`); one built for another
-   * distribution than the image's and the bundles' (otelcol-contrib), or for
-   * a collector version the catalogue doesn't offer (409
-   * `collector_version_not_offered`, Ruling 47).
+   * What an install needs of the group, within the request's count and slot,
+   * refused in this order: the fleet unknown (404), archived (409
+   * `fleet_archived`), not the install's fleet type (409
+   * `fleet_type_not_installable`: `path` "server", the Linux bundle and link,
+   * refuses a Kubernetes-supervisor fleet with
+   * FLEET_TYPE_NOT_INSTALLABLE_MESSAGE; "helm", a Helm values link, refuses a
+   * server fleet with FLEET_TYPE_NOT_HELM_INSTALLABLE_MESSAGE; "any", the
+   * facts, neither); the group unknown (404); no published version (409
+   * `collector_group_unassigned`); a version the platform holds no live one
+   * of, a deleted configuration's (409 `collector_group_assignment_deleted`);
+   * one built for another distribution than the image's and the bundles'
+   * (otelcol-contrib), or for a collector version the catalog doesn't offer
+   * (409 `collector_version_not_offered`).
    */
   async function installable(
     read: InstallRead,
@@ -1172,12 +1148,11 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
   }
 
   /**
-   * A Helm values link's variables (D17d-2 Preflight ruling 4): none the
-   * chart sets itself (HELM_CHART_ENV_NAMES, in their own words: Ruling
-   * 41), and only those the group's Helm facts offer (as the bundle's), each
-   * 400 at its index, in that order; a YAML 1.1 word is a name like any
-   * other (the platform's chart quotes the keys: D18 decision 23). The
-   * details name each index, never the name.
+   * A Helm values link's variables: none the chart sets itself
+   * (HELM_CHART_ENV_NAMES, in their own words), and only those the group's
+   * Helm facts offer (as the bundle's), each 400 at its index, in that order;
+   * a YAML 1.1 word is a name like any other (the platform's chart quotes the
+   * keys). The details name each index, never the name.
    */
   function refuseHelmVariables(facts: HelmInstallFacts, env: readonly EnvValue[]): void {
     const chartSet = new Set<string>(HELM_CHART_ENV_NAMES);
@@ -1189,11 +1164,11 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
   }
 
   /**
-   * The bearer a Helm values link's download carries (D17d-2 Preflight
-   * ruling 9): the link's default token revealed afresh with no actor (the
-   * opamp-server records a `viewed` event naming no person). Revoked,
-   * expired or unknown: 410 (decision 26's words); the fleet or the
-   * organization gone: 410; anything else the one 503. Never logged.
+   * The bearer a Helm values link's download carries: the link's default token
+   * revealed afresh with no actor (the opamp-server records a `viewed` event
+   * naming no person). Revoked, expired or unknown: 410
+   * (downloadTokenRevoked's words); the fleet or the organization gone: 410;
+   * anything else the one 503. Never logged.
    */
   async function revealedBearer(ids: FleetIds & { fleetId: string }, tokenId: string): Promise<string> {
     const result = await call("revealEnrollmentToken", ids, () =>
@@ -1214,7 +1189,7 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
     }
   }
 
-  /** Only the variables the facts offer (D17c-1 decision 39): the details name each index, never the name. */
+  /** Only the variables the facts offer: the details name each index, never the name. */
   function refuseVariablesNotOffered(version: InstallableVersion, env: readonly EnvValue[]): void {
     const offered = new Set(requiredEnvVarNames(version.yaml));
     const notOffered = env.flatMap((variable, index) => (offered.has(variable.name) ? [] : [index]));
@@ -1224,7 +1199,7 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
   /**
    * The version's binaries for the arch (and the offered supervisors, for
    * own-binary): a version with none for the arch is the person's 409,
-   * before anything is rendered (Ruling 47).
+   * before anything is rendered.
    */
   async function binariesOf(read: InstallRead, version: InstallableVersion, method: BundleChoices["method"], arch: BundleChoices["arch"]) {
     const { binaries, offeredBinaries } = await read(async (transaction) => ({
@@ -1243,9 +1218,9 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
   /**
    * A token's bearer revealed for `actor` (the opamp-server records a
    * `viewed` event naming them), audited `enrollment_token.revealed` with
-   * ids and its kind, and `extra` beside them (D25 decision 38: the public
-   * install's `via` and `platform`), never the bearer. The caller holds the
-   * bearer admission.
+   * ids and its kind, and `extra` beside them (the public install's `via`
+   * and `platform`), never the bearer. The caller holds the bearer
+   * admission.
    */
   async function revealedFor(
     actor: Actor,
@@ -1281,11 +1256,10 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
   }
 
   /**
-   * A Linux bundle (D17c-1 decision 39; D17c-2 Preflight ruling 9), for
-   * `installable`'s group and version: the method's templates read now, the
-   * binaries for the arch, every placeholder filled from `choices` (validated
-   * fields only), the settings and the catalogue. No actor, no audit: the
-   * caller's.
+   * A Linux bundle, for `installable`'s group and version: the method's
+   * templates read now, the binaries for the arch, every placeholder filled
+   * from `choices` (validated fields only), the settings and the catalog.
+   * No actor, no audit: the caller's.
    */
   async function renderBundle(
     read: InstallRead,
@@ -1339,9 +1313,8 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
   }
 
   /**
-   * The fleet's groups' names by id (Preflight ruling 20: one call for a
-   * page of links). The fleet gone: no names (its links read "a deleted
-   * group").
+   * The fleet's groups' names by id (one call for a page of links). The fleet
+   * gone: no names (its links read "a deleted group").
    */
   async function groupNamesOf(ids: FleetIds & { fleetId: string }): Promise<Map<string, string>> {
     const result = await call("listCollectorGroups", ids, () => opampServer.listCollectorGroups(ids.organizationId, ids.fleetId));
@@ -1371,15 +1344,15 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
     }
   }
 
-  /** A link's audit row with the member (Preflight ruling 13): ids and the preset only. */
+  /** A link's audit row with the member: ids and the preset only. */
   function linkAuditEvent(actor: Actor, action: string, linkId: string, metadata: Record<string, unknown>) {
     return auditEvent(actor, action, { type: QUICK_DEPLOY_LINK_SUBJECT, id: linkId }, metadata);
   }
 
   /**
-   * A method's templates, read now (decision 36). A set that can't be used
-   * is the 503 `install_unavailable`, logged with the method, the file's
-   * relative path and the platform's reason only, never the template's text.
+   * A method's templates, read now. A set that can't be used is the 503
+   * `install_unavailable`, logged with the method, the file's relative path
+   * and the platform's reason only, never the template's text.
    */
   async function templatesOf(ids: FleetIds, method: InstallBundleRequest["method"], operation: string): Promise<TemplateFile[]> {
     try {
@@ -1395,12 +1368,11 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
   }
 
   /**
-   * A quick-deploy link's create for the group (D17c-2 decision 25; D17d-2
-   * decision 21), within the caller's write admission: what the bundle or
-   * the Helm install would refuse, the fleet's valid default token (else
-   * 409), then the link in one transaction (create-link.ts). `beside`, when
-   * given, writes in that same transaction once the link is made (D25
-   * Ruling 161: the Kubernetes install's reveal-like audit row).
+   * A quick-deploy link's create for the group, within the caller's write
+   * admission: what the bundle or the Helm install would refuse, the fleet's
+   * valid default token (else 409), then the link in one transaction
+   * (create-link.ts). `beside`, when given, writes in that same transaction
+   * once the link is made (the Kubernetes install's reveal-like audit row).
    */
   async function linkCreated(
     actor: Actor,
@@ -1412,15 +1384,15 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
     let group: Opamp.CollectorGroup;
     let choices: QuickDeployLinkToCreate["choices"];
     if (request.kind === "helm") {
-      // A Helm values link (D17d-2 decision 21; Preflight ruling 13): a Kubernetes fleet's group, its settings
-      // readable, the variables its Helm facts offer; choices from the server's state only.
+      // A Helm values link: a Kubernetes fleet's group, its settings readable, the variables its Helm facts offer;
+      // choices from the server's state only.
       const found = await installable(read, ids, "helm");
       const facts = helmFactsOf(found.group, found.version, install);
       refuseHelmVariables(facts, request.env);
       group = found.group;
       choices = { kind: "helm", role: facts.helm.role, release: facts.helm.release, namespace: facts.helm.namespace };
     } else {
-      // What the bundle would refuse (D17c-1's facts and bundle checks), before anything is stored.
+      // What the bundle would refuse (the install facts' and the bundle's checks), before anything is stored.
       const found = await installable(read, ids, "server");
       refuseVariablesNotOffered(found.version, request.env);
       await binariesOf(read, found.version, request.method, request.arch);
@@ -1433,7 +1405,7 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
         systemd: request.systemd,
       };
     }
-    // The command carries the fleet's default token's bearer (decision 10): one valid now, else 409.
+    // The command carries the fleet's default token's bearer: one valid now, else 409.
     const at = now();
     const defaultToken = (await fleetTokens(ids)).find((token) => token.kind === "default" && tokenValidAt(token, at));
     if (defaultToken === undefined) throw enrollmentTokenDefaultMissing();
@@ -1467,7 +1439,7 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
 
   /**
    * A link the public install made revoked again, its command never given
-   * (D25 Ruling 174: the reveal after it failed), as a member's revoke does
+   * (the reveal after it failed), as a member's revoke does
    * (revokeQuickDeployLink): revoked by the actor, audited
    * `quick_deploy_link.revoked` with ids, in one transaction. A failure is
    * an error log with the ids; the caller's refusal stands, and the link
@@ -1490,7 +1462,7 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
   }
 
   /**
-   * The group a public install joins (D25 decision 37): the one named (404
+   * The group a public install joins: the one named (404
    * `collector_group_not_found` when the fleet doesn't hold it), else a
    * server fleet's Default group, or a Kubernetes fleet's only group (422
    * `collector_group_required`, its ids in the details, when it holds
@@ -1536,7 +1508,7 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
     }
   }
 
-  /** Only the variables the facts offer (D17c-1 decision 39), each 400 at its index, never its name. */
+  /** Only the variables the facts offer, each 400 at its index, never its name. */
   function refuseFactsVariables(offeredNames: readonly string[], env: readonly EnvValue[]): void {
     const offered = new Set(offeredNames);
     const notOffered = env.flatMap((variable, index) => (offered.has(variable.name) ? [] : [index]));
@@ -1559,7 +1531,7 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
           case "page":
             return { fleets: result.page.fleets.map(toFleetDetail), nextCursor: result.page.nextCursor };
           case "organization_not_found":
-            // An organization the opamp-server doesn't know holds no fleets (decision 15).
+            // An organization the opamp-server doesn't know holds no fleets.
             return { fleets: [], nextCursor: null };
           case "invalid":
             // Only the cursor is the browser's to get wrong: the rest the contract checked.
@@ -1574,7 +1546,7 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
     async create(actor, organizationId, request) {
       assertActiveOrganization(actor, organizationId);
       if (request.rotateExpiresAt !== null && !isAfter(request.rotateExpiresAt, now())) throw invalidTime("rotateExpiresAt");
-      // The browser's id makes a retry safe (decision 15); else the platform's.
+      // The browser's id makes a retry safe; else the platform's.
       const ids = { organizationId: actor.context.organizationId, fleetId: request.id?.toLowerCase() ?? randomUUID() };
       // The name to register under, read committed (no lock across a call).
       const organization = await withTransaction(actor.context, (transaction) => transaction.organization.findActive());
@@ -1658,7 +1630,7 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
         );
         switch (result.kind) {
           case "updated":
-            // The fields sent: the reply doesn't say what changed (ruling 15).
+            // The fields sent: the reply doesn't say what changed.
             await audit(actor, "fleet.updated", { type: "fleet", id: ids.fleetId }, {
               fleetId: ids.fleetId,
               fields: Object.keys(changes).filter((field) => field === "label" || field === "status").sort(),
@@ -1794,8 +1766,8 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
       });
     },
 
-    // D17c-1 decisions 29 and 45: one bearer admission (the reply carries
-    // one); audited `enrollment_token.issued` with ids only.
+    // One bearer admission (the reply carries one); audited
+    // `enrollment_token.issued` with ids only.
     async issueDefaultToken(actor, organizationId, fleetIdParam) {
       assertActiveOrganization(actor, organizationId);
       const ids: FleetIds & { fleetId: string } = { organizationId: actor.context.organizationId, fleetId: fleetIdOf(fleetIdParam) };
@@ -1849,7 +1821,7 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
         switch (result.kind) {
           case "revoked":
             // Every revoke asked, an already revoked token's included: the
-            // row records the person's request (ruling 15).
+            // row records the person's request.
             await audit(actor, "enrollment_token.revoked", { type: "enrollment_token", id: ids.tokenId }, {
               fleetId: ids.fleetId,
               tokenId: ids.tokenId,
@@ -1867,7 +1839,7 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
     },
 
     // -----------------------------------------------------------------------
-    // Collector groups (Task 4).
+    // Collector groups.
 
     async listGroups(actor, organizationId, fleetIdParam) {
       assertActiveOrganization(actor, organizationId);
@@ -2026,7 +1998,7 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
     },
 
     // -----------------------------------------------------------------------
-    // Collectors (Task 4).
+    // Collectors.
 
     async listCollectors(actor, organizationId, fleetIdParam, query) {
       assertActiveOrganization(actor, organizationId);
@@ -2064,7 +2036,7 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
     async pinCollectors(actor, organizationId, fleetIdParam, request) {
       assertActiveOrganization(actor, organizationId);
       const fleetIds = { organizationId: actor.context.organizationId, fleetId: fleetIdOf(fleetIdParam) };
-      // Q103: either choice left out leaves each collector's as it is.
+      // Either choice left out leaves each collector's as it is.
       const pinned = request.pin === undefined ? undefined : await opampPinOf(actor, request.pin);
       const ids = { ...fleetIds, ...pinned?.ids, ...variableGroupIdsOf(request.pinnedVariableGroupId) };
       return admitted(actor, "write", async () => {
@@ -2137,7 +2109,7 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
             ...(changes.name === undefined ? {} : { name: changes.name }),
             ...(changes.groupId === undefined ? {} : { groupId: changes.groupId.toLowerCase() }),
             ...(pinned === undefined ? {} : { pin: pinned.pin }),
-            // D20 decision 4: independent of the pin; null returns it to its group's.
+            // Independent of the pin; null returns it to its group's.
             ...(changes.pinnedVariableGroupId === undefined ? {} : { pinnedVariableGroupId: lowerOrNull(changes.pinnedVariableGroupId) }),
           }),
         );
@@ -2230,16 +2202,16 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
     },
 
     // -----------------------------------------------------------------------
-    // A configuration's fleet usage (Task 4; decision 13).
+    // A configuration's fleet usage.
 
     async installFacts(actor, organizationId, fleetIdParam, groupIdParam) {
       assertActiveOrganization(actor, organizationId);
       const ids = { organizationId: actor.context.organizationId, fleetId: fleetIdOf(fleetIdParam), groupId: groupIdOf(groupIdParam) };
       return admitted(actor, "read", async () => {
         const { fleetType, group, version } = await installable(readAs(actor), ids, "any");
-        // A Kubernetes group's facts are its Helm install's (D17d-2 decision 15): no mounts.
+        // A Kubernetes group's facts are its Helm install's: no mounts.
         if (fleetType === "kubernetes-supervisor") return helmFactsOf(group, version, install);
-        // Unreadable mounts (another client's "telflo" shape) are none here, and the facts say so (Ruling 62).
+        // Unreadable mounts (another client's "telflo" shape) are none here, and the facts say so.
         const { readable: mountsReadable, mounts } = dockerMountsOf(group.annotations);
         return {
           imageTag: `${install.collectorImageRepository}:${version.collectorVersion}`,
@@ -2262,7 +2234,7 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
         const { group, version } = await installable(read, ids, "server");
         refuseVariablesNotOffered(version, request.env);
         const archive = await renderBundle(read, ids, group, version, request, "installBundle");
-        // Ids, the method and the arch only: never a path, a name or a value (decision 39).
+        // Ids, the method and the arch only: never a path, a name or a value.
         await audit(actor, "fleet.install_bundle_downloaded", { type: "fleet", id: ids.fleetId }, {
           fleetId: ids.fleetId,
           groupId: ids.groupId,
@@ -2274,7 +2246,7 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
     },
 
     // -----------------------------------------------------------------------
-    // The public install (D25 decisions 37 and 38; Preflight ruling 10; Rulings 160 and 161).
+    // The public install.
 
     async installCommand(actor, organizationId, fleetIdParam, request) {
       assertActiveOrganization(actor, organizationId);
@@ -2282,20 +2254,20 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
       const namedGroupId = request.groupId === undefined ? undefined : groupIdOf(request.groupId);
       const { platform } = request;
       const env = request.env ?? [];
-      // One bearer admission on every platform (decision 38), taken first: a spent budget refuses before a link is
-      // made or a bearer revealed. The facts (a read) and a link (a write) take their own admissions within it.
+      // One bearer admission on every platform, taken first: a spent budget refuses before a link is made or a bearer
+      // revealed. The facts (a read) and a link (a write) take their own admissions within it.
       return admitted(actor, "bearer", async () => {
         const fleetType = await fleetTypeOf(fleetIds);
         if ((platform === "kubernetes") !== (fleetType === "kubernetes-supervisor")) throw installPlatformNotSuited();
         const group = await installGroupOf(fleetIds, fleetType, namedGroupId);
         const ids = { ...fleetIds, groupId: group.id.toLowerCase() };
-        // What the dialog reads first (D17c-1 Ruling 61): its refusals (archived, unassigned, a version not offered)
-        // come before anything is made or revealed.
+        // What the dialog reads first: its refusals (archived, unassigned, a version not offered) come before
+        // anything is made or revealed.
         const facts = await service.installFacts(actor, ids.organizationId, ids.fleetId, ids.groupId);
         const given = new Set(env.map((variable) => variable.name));
         const notGiven = facts.envVarNames.filter((name) => !given.has(name));
         const reply = { fleetId: ids.fleetId, fleetType, platform, groupId: ids.groupId, groupName: group.name };
-        // The reveal's existing metadata gains these two (decision 38): ids and fixed words only.
+        // The reveal's existing metadata gains these two: ids and fixed words only.
         const via: Readonly<Record<string, string>> = { via: "public_api_install", platform };
         if (request.platform === "docker") {
           if ("helm" in facts) throw new Error("a server fleet's group answered Helm facts");
@@ -2317,7 +2289,7 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
           try {
             ({ bearer } = await revealedFor(actor, { ...ids, tokenId: link.defaultTokenId.toLowerCase() }, via));
           } catch (error) {
-            // Ruling 174: no command, so the link just made goes too (a retry after a 503 never piles links toward the cap).
+            // No command, so the link just made goes too (a retry after a 503 never piles links toward the cap).
             await linkWithdrawn(actor, { ...ids, linkId: link.id });
             throw error;
           }
@@ -2331,8 +2303,8 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
           return { ...reply, command, notes: installNotes("linux", notGiven), expiresAt: link.expiresAt };
         }
         if (!("helm" in facts)) throw new Error("a Kubernetes fleet's group answered server facts");
-        // Ruling 161: no reveal (the command holds the values link's secret, whose download answers the bearer), so
-        // the reveal's audit row is written in the link's own transaction, naming the link's default token.
+        // No reveal (the command holds the values link's secret, whose download answers the bearer), so the reveal's
+        // audit row is written in the link's own transaction, naming the link's default token.
         const { link, url } = await admitted(actor, "write", () =>
           linkCreated(actor, ids, { kind: "helm", env }, async (transaction, created) => {
             await transaction.audit.record(
@@ -2353,7 +2325,7 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
     },
 
     // -----------------------------------------------------------------------
-    // Quick-deploy links (D17c-2 decisions 4 to 7, 10, 11, 22 and 25).
+    // Quick-deploy links.
 
     async createQuickDeployLink(actor, organizationId, fleetIdParam, groupIdParam, request) {
       assertActiveOrganization(actor, organizationId);
@@ -2372,7 +2344,7 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
           transaction.quickDeployLinks.list(ids.fleetId, { limit: query.limit + 1, ...(after === undefined ? {} : { after }) }),
         );
         const page = rows.slice(0, query.limit);
-        // An unknown fleet holds no links: no call (ruling 25).
+        // An unknown fleet holds no links: no call.
         const names = page.length === 0 ? new Map<string, string>() : await groupNamesOf(ids);
         const at = now();
         const last = page.at(-1);
@@ -2392,11 +2364,11 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
         if (found.revokedAt !== null) throw quickDeployLinkRevoked();
         // The reply's group name, read before the write: a 503 here changes nothing.
         const groupName = await groupNameOf({ ...ids, groupId: found.groupId });
-        // Counted from now (decision 5, Preflight ruling 25), never from the old expiry.
+        // Counted from now, never from the old expiry.
         const at = now();
         const expiresAt = quickDeployLinkExpiryAfter(by, at);
-        // Every extend decided under the cap's lock, in this one transaction: refused when the fleet's OTHER active links
-        // are at the cap, normally an expired link's (Rulings 36 and 40).
+        // Every extend decided under the cap's lock, in this one transaction: refused when the fleet's OTHER active
+        // links are at the cap, normally an expired link's.
         const result = await withTransaction(actor.context, async (transaction) => {
           const extended = await transaction.quickDeployLinks.extend(ids.fleetId, ids.linkId, expiresAt, at);
           if (extended.kind === "extended") {
@@ -2429,7 +2401,7 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
       assertActiveOrganization(actor, organizationId);
       const ids = { organizationId: actor.context.organizationId, fleetId: fleetIdOf(fleetIdParam), linkId: linkIdOf(linkIdParam) };
       return admitted(actor, "write", async () => {
-        // The revoke first (Ruling 36): it stands whatever the opamp-server answers after.
+        // The revoke first: it stands whatever the opamp-server answers after.
         const at = now();
         const revoked = await withTransaction(actor.context, async (transaction) => {
           const link = await transaction.quickDeployLinks.revoke(ids.fleetId, ids.linkId, actor.context.userId, at);
@@ -2453,14 +2425,14 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
       const { choices } = link;
       if (choices.kind === "helm") throw new Error("a Helm values link renders through quickDeployHelmValues");
       const ids = { organizationId: link.organizationId, fleetId: link.fleetId, groupId: link.groupId, linkId: link.id };
-      // The link's organization, no person: the published version read with no viewer (Preflight ruling 9).
+      // The link's organization, no person: the published version read with no viewer.
       const read: InstallRead = (work) => withOrganization(link.organizationId, work);
       try {
-        // The group's CURRENT version, templates and catalogue (decision 6), refused as D17c-1's bundle.
+        // The group's CURRENT version, templates and catalog, refused as the signed-in bundle.
         const { group, version } = await installable(read, ids, "server");
         const offered = new Set(requiredEnvVarNames(version.yaml));
         if (!link.choices.envNames.every((name) => offered.has(name))) throw downloadVariablesChanged();
-        // The default token the link's command carries, still valid (decision 6): a revoked one is 410.
+        // The default token the link's command carries, still valid: a revoked one is 410.
         const at = now();
         const tokens = await fleetTokens(ids);
         if (!tokens.some((token) => token.id.toLowerCase() === link.defaultTokenId.toLowerCase() && tokenValidAt(token, at))) {
@@ -2492,10 +2464,10 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
           );
         } catch (error) {
           if (!(error instanceof InstallRenderError)) throw error;
-          // A refusal by its cause (D17d-2 Rulings 43 and 48), as the Helm values' below: the link's own data (a
-          // value stored before Ruling 36's lone-surrogate check, say) at warn; the operator's (the catalogue, the
-          // templates, the endpoint, the group's id, the collector version) at error. Ids, the cause and the
-          // rule's fixed words only (an InstallRenderError names no value), no stack.
+          // A refusal by its cause, as the Helm values' below: the link's own data (a value stored before the
+          // lone-surrogate check, say) at warn; the operator's (the catalog, the templates, the endpoint, the
+          // group's id, the collector version) at error. Ids, the cause and the rule's fixed words only (an
+          // InstallRenderError names no value), no stack.
           const fields = { operation: "quickDeployBundle", ...ids, source: error.source, reason: error.message };
           const message = "the quick-deploy link's bundle couldn't be rendered";
           if (error.source === "choices") log.warn(fields, message);
@@ -2517,7 +2489,7 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
       const ids = { organizationId: link.organizationId, fleetId: link.fleetId, groupId: link.groupId, linkId: link.id };
       const read: InstallRead = (work) => withOrganization(link.organizationId, work);
       try {
-        // The group's CURRENT version and settings (decision 21), refused as the signed-in Helm install.
+        // The group's CURRENT version and settings, refused as the signed-in Helm install.
         const { group, version } = await installable(read, ids, "helm");
         const facts = helmFactsOf(group, version, install);
         const offered = new Set(facts.envVarNames);
@@ -2531,15 +2503,15 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
           log.error({ operation: "quickDeployHelmValues", ...ids, reason: error.reason }, "the quick-deploy link's values can't be opened");
           throw downloadUnavailable();
         }
-        // The bearer last, once nothing else can refuse (Preflight ruling 9): each reveal is a `viewed` event.
+        // The bearer last, once nothing else can refuse: each reveal is a `viewed` event.
         const bearer = await revealedBearer(ids, link.defaultTokenId);
         try {
           return helmValuesYaml(helmValuesInputOf(facts, bearer, values));
         } catch (error) {
-          // The file holds the bearer: the field only (HelmBuildError names no value), or the error's name, never
-          // a stack. The builder's refusal by its cause, as the bundle's above (D17d-2 Rulings 43 and 48): the
-          // link's typed variables at warn; the operator's fields (the image, the endpoint, the group's id and
-          // settings, the token) at error; anything else, unexpected, at error.
+          // The file holds the bearer: the field only (HelmBuildError names no value), or the error's name, never a
+          // stack. The builder's refusal by its cause, as the bundle's above: the link's typed variables at warn; the
+          // operator's fields (the image, the endpoint, the group's id and settings, the token) at error; anything
+          // else, unexpected, at error.
           const message = "the Helm values link's values.yaml couldn't be built";
           if (!(error instanceof HelmBuildError)) log.error({ operation: "quickDeployHelmValues", ...ids, error: errorName(error) }, message);
           else if (error.source === "choices") log.warn({ operation: "quickDeployHelmValues", ...ids, source: error.source, field: error.field }, message);
@@ -2556,7 +2528,7 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
       const configurationId = canonicalIdOf(configurationIdParam);
       if (configurationId === undefined) throw configurationNotFound();
       const ids = { organizationId: actor.context.organizationId, configurationId };
-      // Only a configuration the person can see (D11b's draft rules): another member's draft is a 404, with no call.
+      // Only a configuration the person can see: another member's draft is a 404, with no call.
       const configuration = await withTransaction(actor.context, (transaction) => transaction.configurations.find(configurationId));
       if (configuration === undefined) throw configurationNotFound();
       // Never published: the opamp-server holds nothing of it, so there is nothing to ask (no call, no limit spent).
@@ -2585,7 +2557,7 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
             };
           }
           case "organization_not_found":
-            // An organization the opamp-server doesn't know holds no fleets (decision 15).
+            // An organization the opamp-server doesn't know holds no fleets.
             return { configurationId: ids.configurationId, inUse: false, publishedVersions: [] };
           default:
             return unavailable("getConfigurationUsage", ids, result);
@@ -2597,9 +2569,9 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
 }
 
 /**
- * The public install's notes (D25 decision 37): fixed words for the
- * platform, and the variables the group's published version reads that the
- * request didn't set, by name (the reply only: never a log line).
+ * The public install's notes: fixed words for the platform, and the
+ * variables the group's published version reads that the request didn't
+ * set, by name (the reply only: never a log line).
  */
 function installNotes(platform: PublicInstallPlatform, notGiven: readonly string[]): string[] {
   const where = {
@@ -2638,22 +2610,21 @@ function errorName(error: unknown): string {
 }
 
 /**
- * A Kubernetes group's Helm facts (D17d-2 decision 15; Preflight rulings 1,
- * 3 and 4), for the facts route and the public download alike, from
- * `installable`'s group and version and the settings: the server facts'
- * image, endpoint, insecure flag, collector and id; the version's variables
- * but the chart's own (HELM_CHART_ENV_NAMES); and the Helm install: the
- * chart and its version, the image's repository, the release
- * (`helmReleaseName`), the Agent's and the Cluster's `fullnameOverride` (D18
- * decision 21: `helmFullnameOverride` from the group's fleet id and name;
- * null for a gateway), the role (collectorGroupRole: never the stored one),
- * the namespace, a gateway's replicas (1 when unset; null for the Agent and
- * the Cluster) and the volumes. The Agent before its first save installs
- * with the defaults (telflo-collectors, no volumes). 409
+ * A Kubernetes group's Helm facts, for the facts route and the public download
+ * alike, from `installable`'s group and version and the settings: the server
+ * facts' image, endpoint, insecure flag, collector and id; the version's
+ * variables but the chart's own (HELM_CHART_ENV_NAMES); and the Helm install:
+ * the chart and its version, the image's repository, the release
+ * (`helmReleaseName`), the Agent's and the Cluster's `fullnameOverride`
+ * (`helmFullnameOverride` from the group's fleet id and name; null for a
+ * gateway), the role (collectorGroupRole: never the stored one), the
+ * namespace, a gateway's replicas (1 when unset; null for the Agent and the
+ * Cluster) and the volumes. The Agent before its first save installs with the
+ * defaults (telflo-collectors, no volumes). 409
  * `collector_group_settings_unreadable` for settings kubernetesOf can't read,
  * a stored role that isn't the group's, a Cluster or a gateway without
- * settings, or a gateway whose name isn't one (written around the
- * platform): nothing is installed from them.
+ * settings, or a gateway whose name isn't one (written around the platform):
+ * nothing is installed from them.
  */
 export function helmFactsOf(group: Opamp.CollectorGroup, version: InstallableVersion, install: InstallSettings): HelmInstallFacts {
   const role = collectorGroupRole(group, "kubernetes-supervisor") ?? "node";
@@ -2697,10 +2668,10 @@ function linkStatusAt(link: StoredQuickDeployLink, at: Date): QuickDeployLinkRep
 }
 
 /**
- * A link as the routes answer it (Preflight ruling 20): ids, the group's
- * name (null once it is gone), the default token's id, the creator, the
- * choices, the times, the downloads and the status. Each field copied by
- * name: never the hash, the sealed values or a value.
+ * A link as the routes answer it: ids, the group's name (null once it is
+ * gone), the default token's id, the creator, the choices, the times, the
+ * downloads and the status. Each field copied by name: never the hash, the
+ * sealed values or a value.
  */
 function toQuickDeployLinkReply(link: StoredQuickDeployLink, groupName: string | null, at: Date): QuickDeployLinkReply {
   const { choices } = link;
@@ -2710,7 +2681,7 @@ function toQuickDeployLinkReply(link: StoredQuickDeployLink, groupName: string |
     groupName,
     defaultTokenId: link.defaultTokenId,
     createdBy: link.createdBy === null ? null : { userId: link.createdBy.userId, email: link.createdBy.email },
-    // By kind (D17d-2 Preflight ruling 11): a Linux link's reply never gains `kind`.
+    // By kind: a Linux link's reply never gains `kind`.
     choices:
       choices.kind === "helm"
         ? { kind: "helm", role: choices.role, release: choices.release, namespace: choices.namespace, envNames: [...choices.envNames] }

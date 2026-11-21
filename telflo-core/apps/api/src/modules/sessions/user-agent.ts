@@ -2,7 +2,7 @@ import type { SessionBrowser, SessionSystem } from "@telflo/contracts";
 
 /**
  * How much of a user agent the parser reads: every token it looks for sits
- * well inside it, and a longer string costs no more (Preflight ruling 17).
+ * well inside it, and a longer string costs no more.
  */
 export const USER_AGENT_PARSED_LENGTH = 512;
 
@@ -10,12 +10,12 @@ export const USER_AGENT_PARSED_LENGTH = 512;
 type Rule<Family> = readonly [family: Family, tokens: readonly string[]];
 
 /**
- * Checked in order, first match wins (D21 decision 40). Edge and Opera, and
- * the Chromium family's others, carry `Chrome/` too, so they come before
- * Chrome; Chrome and Firefox on iOS, and every Chromium, carry `Safari/`, so
- * Safari comes last and needs `Version/` as well (below). `Edge/` is
- * legacy (EdgeHTML) Edge; `OPT/` (Opera Touch) and `OPiOS/` (Opera Mini) are
- * Opera on iOS, whose strings would otherwise read as Safari.
+ * Checked in order, first match wins. Edge and Opera, and the Chromium
+ * family's others, carry `Chrome/` too, so they come before Chrome; Chrome
+ * and Firefox on iOS, and every Chromium, carry `Safari/`, so Safari comes
+ * last and needs `Version/` as well (below). `Edge/` is legacy (EdgeHTML)
+ * Edge; `OPT/` (Opera Touch) and `OPiOS/` (Opera Mini) are Opera on iOS,
+ * whose strings would otherwise read as Safari.
  */
 const BROWSER_RULES: readonly Rule<SessionBrowser | "safari_candidate">[] = [
   ["edge", ["Edg/", "EdgA/", "EdgiOS/", "Edge/"]],
@@ -49,12 +49,11 @@ function firstMatch<Family>(text: string, rules: readonly Rule<Family>[]): Famil
 }
 
 /**
- * A session's user agent as the two families the sessions list shows (D21
- * decision 40): our own table of fixed tokens, plain substring tests on the
- * first 512 characters, so nothing can backtrack whatever the string. No
- * dependency: ua-parser-js v2 is AGPL (ADR 0019). Anything unrecognised,
- * no user agent included, is `other`. The raw string never leaves the API
- * and is never logged: only these two words do.
+ * A session's user agent as the two families the sessions list shows: our own
+ * table of fixed tokens, plain substring tests on the first 512 characters, so
+ * nothing can backtrack whatever the string. No dependency: ua-parser-js v2 is
+ * AGPL. Anything unrecognized, no user agent included, is `other`. The raw
+ * string never leaves the API and is never logged: only these two words do.
  */
 export function parseUserAgent(userAgent: string | null): { browser: SessionBrowser; os: SessionSystem } {
   const text = (userAgent ?? "").slice(0, USER_AGENT_PARSED_LENGTH);

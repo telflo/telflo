@@ -16,12 +16,11 @@ import { MINE, PERSONAL_ID, signedInMember } from "~/test/configurations.js";
 import { TAIL_SAMPLING, makeFlow } from "~/test/flows.js";
 
 /*
- * "Use this flow" (D12 Preflight ruling 12): it instantiates the flow on its
- * own distribution (the create sends the flow's distribution and pin, and
- * the editor opens) and quotes the flow's own pin. There are no ClickStack
- * cases (decision 14) and no "Select an organization first" (there is
- * always an active organization). Ruling 16's deprecated pin and D7's
- * create behaviours are covered too.
+ * "Use this flow": it instantiates the flow on its own distribution (the
+ * create sends the flow's distribution and pin, and the editor opens) and
+ * quotes the flow's own pin. There are no ClickStack cases and no "Select an
+ * organization first" (there is always an active organization). The
+ * deprecated pin and the create behaviors are covered too.
  */
 
 function Landed() {
@@ -91,7 +90,7 @@ describe("UseFlowDialog", () => {
       collectorVersion: "0.162.0",
       sourceFlowSlug: TAIL_SAMPLING.slug,
     });
-    // config_created, with no properties: no flow's name or text in an event (ADR 0024).
+    // config_created, with no properties: no flow's name or text in an event.
     expect(captureEvent.mock.calls).toEqual([["config_created"]]);
   });
 
@@ -116,7 +115,7 @@ describe("UseFlowDialog", () => {
     expect(screen.getByRole("button", { name: "Cancel" })).toBeEnabled();
   });
 
-  describe("a pin the catalogue no longer offers (D12 decision 16)", () => {
+  describe("a pin the catalog no longer offers", () => {
     it("quotes the default the copy will use, says why, and creates on it", async () => {
       const createConfiguration = vi.spyOn(apiClient, "createConfiguration").mockResolvedValue({ configuration: MINE });
       const { user } = renderDialog(makeFlow({ collectorVersion: RETIRED_VERSION }));
@@ -131,7 +130,7 @@ describe("UseFlowDialog", () => {
       expect(createConfiguration.mock.calls[0]![1]).toMatchObject({ collectorVersion: "0.162.0" });
     });
 
-    it("sends the flow's pin while the catalogue is unread, and toasts the API's refusal", async () => {
+    it("sends the flow's pin while the catalog is unread, and toasts the API's refusal", async () => {
       vi.spyOn(apiClient, "getCollectorDistributions").mockRejectedValue(
         new ApiError("network_error", "Could not reach the server. Check your connection."),
       );
@@ -202,7 +201,7 @@ describe("UseFlowDialog", () => {
     expect(await screen.findByLabelText("Configuration name")).toHaveValue(TAIL_SAMPLING.name);
   });
 
-  it("refuses a flow D9a's parser can't read with its fixed words, and creates nothing", async () => {
+  it("refuses a flow the parser can't read with its fixed words, and creates nothing", async () => {
     const createConfiguration = vi.spyOn(apiClient, "createConfiguration");
     const captureEvent = vi.spyOn(analytics, "captureEvent");
     const error = vi.spyOn(toast, "error");

@@ -6,9 +6,9 @@ import { registerConfigCommands } from "./commands/config.js";
 import { COMMAND_NEEDED_MESSAGE, createProgram, jsonRequested, main } from "./program.js";
 import { VERSION } from "./version.js";
 
-/* The root command: its options, its exits, every area registered (D27 decisions 11 and 18, Preflight ruling 22). */
+/* The root command: its options, its exits, every area registered. */
 
-// Task 4a's and 4c's areas, as spies: the config command program.ts hands them.
+// The two config areas, as spies: the config command program.ts hands them.
 vi.mock("./commands/config.js", () => ({ registerConfigCommands: vi.fn() }));
 vi.mock("./commands/config-rules.js", () => ({ registerConfigRulesCommand: vi.fn() }));
 
@@ -57,7 +57,7 @@ describe("the root command", () => {
     expect(result.stdout).toBe("");
   });
 
-  it("with --json, commander's own usage errors are the one JSON error on stderr, exit 2 (Ruling 254)", async () => {
+  it("with --json, commander's own usage errors are the one JSON error on stderr, exit 2", async () => {
     const token = `tf_${randomBytes(32).toString("base64url")}`;
     for (const [args, message] of [
       [["--json", "whoami", "extra"], "too many arguments for 'whoami'. Expected 0 arguments but got 1."],
@@ -96,7 +96,7 @@ describe("the root command", () => {
     expect((await runCli(["whoami"])).stderr.startsWith("error: ")).toBe(true);
   });
 
-  it("creates the config command and hands it to Task 4a's and 4c's areas", () => {
+  it("creates the config command and hands it to the two config areas", () => {
     vi.mocked(registerConfigCommands).mockClear();
     vi.mocked(registerConfigRulesCommand).mockClear();
     const program = createProgram();

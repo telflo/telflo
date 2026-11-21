@@ -4,8 +4,8 @@ import type { StoredCurrentUser } from "~/lib/stores/user-store.js";
 import { SAMPLE_ORGANIZATION_ID } from "~/lib/workspace-reads.js";
 
 /*
- * The sample workspace's shared facts (D31-1 decision 10, Preflight rulings
- * 6 and 7): "Acme Observability", its people, its fixed ids and its times.
+ * The sample workspace's shared facts: "Acme Observability", its people, its
+ * fixed ids and its times.
  *
  * Every object of the sample is in the platform's shapes, parsed by its
  * contracts schema in sample.test.ts. Ids are fixed, stable, lowercase,
@@ -28,7 +28,7 @@ export const SAMPLE_SRE = { userId: "00000000-0000-4000-8000-0000000000a2", emai
 export const SAMPLE_SECURITY = { userId: "00000000-0000-4000-8000-0000000000a3", email: "security@acme.example" } as const;
 export const SAMPLE_VISITOR = { userId: SAMPLE_VISITOR_USER_ID, email: SAMPLE_VISITOR_EMAIL } as const;
 
-/** The pins the sample spreads across: the Contrib versions the platform offers, newest first (Preflight ruling 7). */
+/** The pins the sample spreads across: the Contrib versions the platform offers, newest first. */
 export const SAMPLE_PINS = ["0.162.0", "0.161.0", "0.160.0", "0.159.0"] as const;
 
 /** A new or blank configuration's pin, and the public editor's Example's: the newest offered. */
@@ -76,7 +76,7 @@ export function clockAt(now: number): SampleClock {
 /**
  * The sample's answer for an id it doesn't hold: the API's own refusal
  * (its code, status and words), so every page shows its own "not found"
- * (the editor's `EditorUnavailable`, `FleetNotFound`; decision 25).
+ * (the editor's `EditorUnavailable`, `FleetNotFound`).
  */
 export function sampleNotFound(code: string, message: string): ApiError {
   return new ApiError(code, message, { status: 404 });
@@ -85,7 +85,7 @@ export function sampleNotFound(code: string, message: string): ApiError {
 /** One sample configuration as the editor's read answers it: the configuration, the version it opens and every version's summary. */
 export interface SampleConfiguration {
   configuration: Configuration;
-  /** The version it opens: always a draft (D11b's lock would make a published one read-only; Ruling 276). */
+  /** The version it opens: always a draft (a published one would be read-only). */
   version: ConfigurationVersion;
   /** Every version, highest number first; a published configuration's older published version among them. */
   versions: ConfigurationVersionSummary[];

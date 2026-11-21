@@ -1,7 +1,6 @@
-// New in D15a Task 2 (plan Preflight ruling 8): a rule's own checks, which
-// validate answers as problems and evaluate as a rule's error, the prechecks
-// a client would otherwise make before sending a rule included (plan
-// Preflight ruling 14).
+// A rule's own checks, which validate answers as problems and evaluate as
+// a rule's error, the prechecks a client would otherwise make before sending
+// a rule included.
 
 package rules
 
@@ -95,7 +94,7 @@ func TestNestingIsCappedAtTwelve(t *testing.T) {
 	if problems := checkAll("logs", ottlRule("log", "all", `body == "`+strings.Repeat("([{", 20)+`"`)); len(problems) != 0 {
 		t.Errorf("brackets in a string: %v", problems)
 	}
-	// The preflight's parse that took 37 s, refused before it is parsed.
+	// A parse measured at 37 s, refused before it is parsed.
 	parsed := false
 	invalid := strings.Repeat("Concat([", 20)
 	Check("logs", ottlRule("log", "all", invalid), false, func(string) { parsed = true })

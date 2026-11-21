@@ -1,6 +1,6 @@
 /*
- * The CLI's side of `/cli-auth` (D27 decision 20, Ruling 234): a one-shot
- * HTTP listener on `127.0.0.1` that takes the token the page hands over.
+ * The CLI's side of `/cli-auth`: a one-shot HTTP listener on `127.0.0.1` that
+ * takes the token the page hands over.
  *
  * - It binds `127.0.0.1` on a free port and serves one path, `/callback`.
  * - It accepts only `POST /callback` with `Origin` equal to the server's
@@ -19,7 +19,7 @@
  *   or five minutes.
  *
  * It never logs, and never says why a request was refused. It imports only
- * node's built-ins: the browser tests import it (Preflight ruling 17).
+ * node's built-ins: the browser tests import it.
  */
 
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
@@ -28,7 +28,7 @@ import type { AddressInfo } from "node:net";
 
 /** The one path the listener serves. */
 export const CALLBACK_PATH = "/callback";
-/** How long the listener waits for the page (decision 20). */
+/** How long the listener waits for the page. */
 export const LISTENER_TIMEOUT_MS = 5 * 60 * 1000;
 /** Refused requests that stop the listener. */
 export const MAXIMUM_REFUSALS = 10;
@@ -70,7 +70,7 @@ export function newState(): string {
   return randomBytes(32).toString("base64url");
 }
 
-/** The page's address with the listener's parameters in its fragment (Preflight ruling 13). */
+/** The page's address with the listener's parameters in its fragment. */
 export function cliAuthUrl(server: string, parameters: { state: string; port: number; host: string }): string {
   return `${server}/cli-auth#state=${parameters.state}&port=${parameters.port}&host=${parameters.host}`;
 }

@@ -1,6 +1,5 @@
 /*
- * The login a command runs with, and the client for it (D27 decisions 10,
- * 12 and 15).
+ * The login a command runs with, and the client for it.
  *
  * - `TELFLO_TOKEN` (scripts) wins over the file, and pairs with
  *   `TELFLO_SERVER` only: never the stored server. Without

@@ -14,14 +14,13 @@ import { withDatabaseContext, withOrganizationContext } from "../../../database/
 import { createPublishedVersionRepository } from "./published-version-repository.js";
 
 /*
- * D16b decision 5 and Preflight ruling 5 (Ruling 23): a published version
- * resolves, and is described, only from the organization's own versions.
- * Row-level security is the backstop behind the code's own organization
- * filter (the organization scope); these tests pin the filter itself, so
- * most run as the tables' owner, whom row-level security doesn't constrain.
- * The case that needs the filter: a person who belongs to two
- * organizations, whose own published version in one is asked for while
- * acting in the other.
+ * A published version resolves, and is described, only from the
+ * organization's own versions. Row-level security is the backstop behind
+ * the code's own organization filter (the organization scope); these tests
+ * pin the filter itself, so most run as the tables' owner, whom row-level
+ * security doesn't constrain. The case that needs the filter: a person who
+ * belongs to two organizations, whose own published version in one is asked
+ * for while acting in the other.
  */
 describe("published version repository", () => {
   /** The API's own role, which row-level security constrains. */
@@ -88,11 +87,11 @@ describe("published version repository", () => {
       versionId: world.version.id,
       versionNumber: world.version.version_number,
       versionLabel: "B's label",
-      // D17c-1 decision 33: the collector the version is built for, from its own row.
+      // The collector the version is built for, from its own row.
       collectorDistribution: world.version.collector_distribution,
       collectorVersion: world.version.collector_version,
     });
-    // A version pinned to a collector version other than the catalogue's default reads its own.
+    // A version pinned to a collector version other than the catalog's default reads its own.
     const other = await ownerDb
       .selectFrom("collector_versions")
       .select("version")
@@ -143,7 +142,7 @@ describe("published version repository", () => {
     expect((await asOwner(inB, (repository) => repository.describe([world.publicationId]))).size).toBe(0);
   });
 
-  it("with no viewer (D17c-2's public download, Preflight ruling 9): only a published configuration's version, never a draft's, even where row-level security would show the draft", async () => {
+  it("with no viewer (the public download): only a published configuration's version, never a draft's, even where row-level security would show the draft", async () => {
     const world = await personInTwoOrganizations();
     // The person's draft in B: with no viewer, only the filter itself (isPublished) keeps its version out of resolve.
     const draft = await addConfiguration(ownerDb, { organizationId: world.b, created_by_user_id: world.userId });
@@ -188,7 +187,7 @@ describe("published version repository", () => {
     expect((await run(world.a, (repository) => repository.describe([world.publicationId]))).size).toBe(0);
   });
 
-  it("finds a published version for an install (D17c-1 Preflight ruling 8): its YAML and collector, under the same organization and visibility filter", async () => {
+  it("finds a published version for an install: its YAML and collector, under the same organization and visibility filter", async () => {
     const world = await personInTwoOrganizations();
     const colleague = await createUserWithOrganization(ownerDb);
     await addMembership(ownerDb, { userId: colleague.user.id, organizationId: world.b });

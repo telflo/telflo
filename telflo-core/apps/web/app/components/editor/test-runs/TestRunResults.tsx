@@ -50,7 +50,7 @@ interface StatusSpec {
   spin?: boolean;
 }
 
-/** The status header circles, in the platform's tokens, "Validation Failed" (D15a decision 3) included. */
+/** The status header circles, in the platform's tokens, "Validation Failed" included. */
 const HEADER_BY_STATUS: Record<TestRunStatus, StatusSpec> = {
   queued: { icon: Clock, className: "bg-muted text-muted-foreground" },
   running: { icon: Loader2, className: "bg-brand-soft text-brand", spin: true },
@@ -77,7 +77,7 @@ function StatusHeader({ run }: { run: TestRunSummary }) {
 
 interface FileRowProps {
   label: string;
-  /** The file's name, shown as text only (ADR 0024). */
+  /** The file's name, shown as text only. */
   fileName: string;
   onOpen: () => void;
   onDownload: () => void;
@@ -85,7 +85,7 @@ interface FileRowProps {
 
 /**
  * A run's file: download, its label, and its name, which opens it. The name
- * is text, never an attribute (ADR 0024): the download button is named by
+ * is text, never an attribute: the download button is named by
  * hidden text through `aria-labelledby`, never `Download <name>` in
  * `aria-label` or `title`.
  */
@@ -259,7 +259,7 @@ function CompatibilitySection({ issues, runDurationSeconds }: { issues: TestRunC
   );
 }
 
-/** A failed run's message (decision 1: the tester's or the dispatcher's words for the person). */
+/** A failed run's message (the tester's or the dispatcher's words for the person). */
 function ErrorSection({ message }: { message: string | null }) {
   const text = message !== null && message.trim().length > 0 ? message : "(no error message captured)";
   return (
@@ -272,7 +272,7 @@ function ErrorSection({ message }: { message: string | null }) {
   );
 }
 
-/** A labelled link with its help, the results rows. */
+/** A labeled link with its help, the results rows. */
 function LinkRow({
   icon: Icon,
   label,
@@ -341,9 +341,9 @@ export function noValidationPipelineMessage(pipeline: string): string {
 export const RESOLVE_PIPELINE_FAILED_MESSAGE = "Failed to resolve validation pipeline";
 
 /**
- * The rule editor Compare's chip opened (Preflight ruling 13): the version
- * and validation pipeline it saves to, its prefill, made once per click, and
- * the run whose Compare it came from.
+ * The rule editor Compare's chip opened: the version and validation pipeline
+ * it saves to, its prefill, made once per click, and the run whose Compare
+ * it came from.
  */
 interface RuleDraft {
   target: RunTarget;
@@ -353,68 +353,61 @@ interface RuleDraft {
 }
 
 /**
- * The selected run's results (D14a decisions 1, 22 and 23; D15a decisions 3
- * and 19; D15b decisions 5 and 6), with Compare's rule editor (the
- * validation parts are ValidationResults'), and no `output_check` branch. The
- * status, then, once the run has ended and been read in full (once): its
- * compatibility findings,
- * pipeline, the text submitted and the text run, the mutations, the logs,
- * its input and output with their viewers and downloads, Compare, and a
- * failed run's Error or else the Validation grid of the
- * rules it copied when it was queued (none for a run without rules). A run
- * the rule evaluator couldn't check ended Error (`rules_unavailable`,
- * decision 3): its message under Error, its output, logs and text as any
- * other's.
+ * The selected run's results, with Compare's rule editor (the validation parts
+ * are ValidationResults'), and no `output_check` branch. The status, then,
+ * once the run has ended and been read in full (once): its compatibility
+ * findings, pipeline, the text submitted and the text run, the mutations, the
+ * logs, its input and output with their viewers and downloads, Compare, and a
+ * failed run's Error or else the Validation grid of the rules it copied when
+ * it was queued (none for a run without rules). A run the rule evaluator
+ * couldn't check ended Error (`rules_unavailable`): its message under Error,
+ * its output, logs and text as any other's.
  *
- * Differences (the Parity Notes):
  * - the files are the run's own (`GET …/test-runs/:runId/files/…`), read as
  *   bytes: a download keeps them exactly (downloadBlob, a detached anchor:
  *   no file name in the page), and a viewer decodes UTF-8 or UTF-16;
- * - the input's name is the run's snapshot, always there (never looked up,
- *   "Loading…", "(deleted file)");
+ * - the input's name is the run's snapshot, always there;
  * - the output row is "Output File" whether or not the run produced one
- *   ("no output produced"), never "Test Results File";
+ *   ("no output produced");
  * - Compare reads the decoded input the tester sent (an OTLP run's) and the
  *   output; it is enabled only with both;
  * - a failed run's "Error" shows the run's error message, and the
  *   collector's logs stay under "Logs" (stderr isn't shown in both);
  * - the "Original YAML" is the text the run was queued with, organization
- *   variables substituted (decision 20);
- * - replay (ADR 0024): the panel and every dialog are `ph-no-capture`; no
+ *   variables substituted;
+ * - replay: the panel and every dialog are `ph-no-capture`; no
  *   file name, text, log or finding reaches an attribute, and of a rule only
  *   its error does, as the row's tooltip inside the panel's block
  *   (ValidationResults);
- * - Compare's chip (D15b decisions 5 and 6; Preflight rulings 13 and 14)
- *   finds the run's validation pipeline itself, by the run's version and
- *   pipeline, read from the API whatever the Validation subtab's store
- *   holds (aborted after 10 s), every chip held and the one pressed busy
+ * - Compare's chip finds the run's validation pipeline itself, by the run's
+ *   version and pipeline, read from the API whatever the Validation subtab's
+ *   store holds (aborted after 10 s), every chip held and the one pressed busy
  *   meanwhile; an answer once Compare has closed, another run shows or the
- *   results have gone (a version or organization left, Ruling 26) does
- *   nothing. None: the toast `No validation pipeline exists for
- *   "<p>" yet. Create one in the Validation tab first.`, Compare kept open;
- *   a failed lookup toasts the API's words, else "Failed to resolve
- *   validation pipeline"; both blocked from replay (`ph-no-capture`), as
- *   they carry the pipeline's name. Found: Compare closes (not left open
- *   under the editor) and the rule editor opens on it, prefilled:
- *   OTTL condition, the run's signal's record context (logs → log, traces
- *   → span, metrics → datapoint, never a store's leftover), the chip's
- *   Require and Condition, Name and Description empty. Its Save is D15a's,
- *   through the store's `createRule`; a save toasts "Rule added to
- *   {pipeline}". The editor is held here,
- *   beside the results, so a Play all's answer selecting another run, or
- *   another run's selection, leaves it open; leaving the version closes it.
- *   As it closes the focus goes back to the Compare link while the run is
- *   still the one selected and the link can be pressed, else to the list's
- *   selected row; its save's answer once it has gone (a version or
- *   organization left) does nothing (RuleEditorDialog's session, Ruling 26);
+ *   results have gone (a version or organization left) does nothing. None: the
+ *   toast `No validation pipeline exists for "<p>" yet. Create one in the
+ *   Validation tab first.`, Compare kept open; a failed lookup toasts the API's
+ *   words, else "Failed to resolve validation pipeline"; both blocked from
+ *   replay (`ph-no-capture`), as they carry the pipeline's name. Found:
+ *   Compare closes (not left open under the editor) and the rule editor opens
+ *   on it, prefilled: OTTL condition, the run's signal's record context (logs
+ *   → log, traces → span, metrics → datapoint, never a store's leftover), the
+ *   chip's Require and Condition, Name and Description empty. Its Save is the
+ *   Validation subtab's, through the store's `createRule`; a save toasts "Rule
+ *   added to {pipeline}". The editor is held here, beside the results, so a
+ *   Play all's answer selecting another run, or another run's selection,
+ *   leaves it open; leaving the version closes it. As it closes the focus goes
+ *   back to the Compare link while the run is still the one selected and the
+ *   link can be pressed, else to the list's selected row; its save's answer
+ *   once it has gone (a version or organization left) does nothing
+ *   (RuleEditorDialog's session);
  * - Compare closed with Escape or Close gives the focus back to the Compare
- *   link while it can be pressed, else the list's selected row (Ruling 26:
- *   with no Radix trigger, Radix's own went to the body).
- * - in the playground (D31-1 decisions 12 and 31; Ruling 280), the run's
- *   files are the sample's (`readsFor`: its input and output open, viewed and
- *   downloaded, as reads), and Compare opens the sign-up prompt at its link
- *   (`useLockedAction`). Compare's pipeline lookup reads
- *   through `readsFor` too: unreachable there, a backstop (Ruling 291).
+ *   link while it can be pressed, else the list's selected row (with no Radix
+ *   trigger, Radix's own went to the body).
+ * - in the playground, the run's files are the sample's (`readsFor`: its
+ *   input and output open, viewed and downloaded, as reads), and Compare
+ *   opens the sign-up prompt at its link (`useLockedAction`). Compare's
+ *   pipeline lookup reads through `readsFor` too: unreachable there, a
+ *   backstop.
  */
 export function TestRunResults({ run, focusFallback, onRuleEditorShown }: TestRunResultsProps) {
   const locked = useLockedAction();
@@ -427,7 +420,7 @@ export function TestRunResults({ run, focusFallback, onRuleEditorShown }: TestRu
   const [viewer, setViewer] = useState<Viewer>(null);
   /** The place of Compare's chip whose validation pipeline is being looked up; null for none. */
   const [lookingUp, setLookingUp] = useState<number | null>(null);
-  /** The rule editor a chip opened, kept beside the results (not in `renderEnded`), and whether it shows (Preflight ruling 13). */
+  /** The rule editor a chip opened, kept beside the results (not in `renderEnded`), and whether it shows. */
   const [ruleDraft, setRuleDraft] = useState<RuleDraft | null>(null);
   const [ruleEditorOpen, setRuleEditorOpen] = useState(false);
   const compareLinkRef = useRef<HTMLButtonElement>(null);
@@ -439,7 +432,7 @@ export function TestRunResults({ run, focusFallback, onRuleEditorShown }: TestRu
    * run shown, the results unmounting (a version or organization left: the
    * list shows its placeholder). A lookup's answer acts only on its own; one
    * arriving once Compare has closed, another run shows or the results have
-   * gone does nothing (Ruling 26).
+   * gone does nothing.
    */
   const lookupSession = useRef(0);
   /** The session of the lookup under way, if any: a second chip press meanwhile looks nothing up. */
@@ -462,7 +455,7 @@ export function TestRunResults({ run, focusFallback, onRuleEditorShown }: TestRu
     endLookup();
   }, [detail?.id]);
 
-  // Gone (a version or organization left): a lookup under way toasts nothing over what shows next (Ruling 26).
+  // Gone (a version or organization left): a lookup under way toasts nothing over what shows next.
   useEffect(
     () => () => {
       lookupSession.current += 1;
@@ -476,15 +469,18 @@ export function TestRunResults({ run, focusFallback, onRuleEditorShown }: TestRu
       ? null
       : { organizationId, configurationId: shownConfigurationId, versionId: shownVersionId };
 
-  // Leaving the version closes the rule editor (as D15a's card editors close): it isn't reopened on coming back.
+  // Leaving the version closes the rule editor (as the Validation subtab's card editors close): it isn't reopened on
+  // coming back.
   useEffect(() => {
     if (ruleDraft !== null && !sameTarget(ruleDraft.target, shownTarget)) setRuleEditorOpen(false);
   }, [organizationId, shownConfigurationId, shownVersionId, ruleDraft]);
 
   const ruleEditorShown = ruleDraft !== null && ruleEditorOpen && sameTarget(ruleDraft.target, shownTarget);
 
-  // The list's focus requests wait on this (Ruling 32): a Play all's, served under the editor, would have Radix pull
-  // the focus back into it, selecting the field's text. A child's effect: it runs before the list's in the same commit.
+  // The list's focus requests wait on this: a Play all's, served under the
+  // editor, would have Radix pull the focus back into it, selecting the
+  // field's text. A child's effect: it runs before the list's in the same
+  // commit.
   useEffect(() => {
     onRuleEditorShown?.(ruleEditorShown);
   }, [ruleEditorShown, onRuleEditorShown]);
@@ -541,9 +537,8 @@ export function TestRunResults({ run, focusFallback, onRuleEditorShown }: TestRu
 
   /**
    * A chip pressed: the run's validation pipeline, by its version and
-   * pipeline, read from the API (Preflight ruling 14); found, Compare closes
-   * and the editor opens prefilled; none, a toast, Compare kept
-   * open.
+   * pipeline, read from the API; found, Compare closes and the editor opens
+   * prefilled; none, a toast, Compare kept open.
    */
   const createRuleFrom = async (candidate: RuleCandidate, index: number) => {
     if (detail === undefined || organizationId === null || lookupUnderWay.current !== null) return;
@@ -559,14 +554,14 @@ export function TestRunResults({ run, focusFallback, onRuleEditorShown }: TestRu
       if (at !== lookupSession.current) return;
       const found = validationPipelines.find((each) => each.pipeline === ended.pipeline);
       if (found === undefined) {
-        // The pipeline's name is configuration text: the toast is blocked from replay (ADR 0024).
+        // The pipeline's name is configuration text: the toast is blocked from replay.
         toast.error(noValidationPipelineMessage(ended.pipeline), { className: "ph-no-capture" });
         return;
       }
       setRuleDraft({
         target: { organizationId, configurationId: ended.configurationId, versionId: ended.versionId },
         validationPipeline: found,
-        // The run's signal's record context, never the Validation subtab's store's (decision 6; D15a Ruling 45).
+        // The run's signal's record context, never the Validation subtab's store's.
         initial: { context: recordContextForSignal(ended.signal), quantifier: candidate.quantifier, condition: candidate.condition },
         runId: ended.id,
       });
@@ -590,8 +585,7 @@ export function TestRunResults({ run, focusFallback, onRuleEditorShown }: TestRu
    * Compare closed. For the editor: the focus is left to the editor. Else
    * (Escape, Close): back to the Compare link while it is there and can be
    * pressed; else the list's selected row (`focusFallback`); else nothing.
-   * Radix's own would go nowhere: Compare has no Radix trigger to go back to
-   * (Ruling 26).
+   * Radix's own would go nowhere: Compare has no Radix trigger to go back to.
    */
   const focusAfterCompare = (event: Event) => {
     if (comparingForEditor.current) {
@@ -802,7 +796,7 @@ export function TestRunResults({ run, focusFallback, onRuleEditorShown }: TestRu
   return (
     <div role="region" aria-label="Test results" className="h-full rounded-md border border-border bg-card p-4 overflow-auto ph-no-capture">
       {renderBody()}
-      {/* Beside the results, not in renderEnded, and untouched by a change of run: a Play all's answer leaves it open (Preflight ruling 13). */}
+      {/* Beside the results, not in renderEnded, and untouched by a change of run: a Play all's answer leaves it open. */}
       {ruleDraft !== null && (
         <RuleEditorDialog
           open={ruleEditorShown}

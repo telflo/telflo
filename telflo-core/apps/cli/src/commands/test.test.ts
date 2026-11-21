@@ -29,7 +29,7 @@ import {
 } from "./test.js";
 
 /*
- * telflo test (D27 decision 27): each request's body, the statuses' exit codes, results by
+ * telflo test: each request's body, the statuses' exit codes, results by
  * position (inline) and by id (saved), --save's body, the refusals named,
  * on a stub fetch and a fake clock. The token is checked with boolean
  * canaries only.
@@ -44,7 +44,7 @@ const SAVED_B = "7a5d3e4f-6c7b-4d8e-8f9a-1b2c3d4e5f6a";
 const PIPELINES = `/configurations/${CONFIGURATION}/versions/3/validation-pipelines`;
 
 const SPEC = `
-name: the older CLI's pipeline name
+name: a pipeline name
 signal: logs
 pipeline: logs/in
 sample_text: '{"resourceLogs":[]}'
@@ -167,7 +167,7 @@ afterEach(() => {
 });
 
 describe("telflo test on a text (-f)", () => {
-  it("queues the spec's converted rules in D25's fields, polls to succeeded and names results by position (exit 0)", async () => {
+  it("queues the spec's converted rules in the public API's fields, polls to succeeded and names results by position (exit 0)", async () => {
     use(routes([run("queued"), run("running"), run("succeeded", ENDED_RESULTS)]));
     const result = await cli(["test", "--spec", specFile(), "-f", yamlFile()]);
     expect(result.code).toBe(0);
@@ -235,7 +235,7 @@ describe("telflo test on a text (-f)", () => {
     expect(human.stdout).toBe(`Run ${RUN}: failed (1234 ms)\nError: The collector exited.\n`);
   });
 
-  it("no server string reaches the terminal with a control character (Ruling 237): escape sequences are stripped", async () => {
+  it("no server string reaches the terminal with a control character: escape sequences are stripped", async () => {
     const escape = "\u001b[2J\u009b31m";
     use(
       routes([
@@ -282,7 +282,7 @@ describe("telflo test on a text (-f)", () => {
     expect((await cli(["test", "--spec", specFile(), "-f", yamlFile(), "--output", output])).code).toBe(0);
     expect(readFileSync(output).equals(Buffer.from("the output"))).toBe(true);
 
-    // The output's bytes exactly (Ruling 238): a BOM, an invalid UTF-8 byte, no newline translation.
+    // The output's bytes exactly: a BOM, an invalid UTF-8 byte, no newline translation.
     const bytes = Buffer.from([0xef, 0xbb, 0xbf, 0x61, 0xff, 0x62, 0x0a]);
     use(
       routes([run("succeeded", ENDED_RESULTS)], {
@@ -531,7 +531,7 @@ describe("telflo test's refusals", () => {
     expect(result.stderr.startsWith("Rate limited: retrying in 12 s.\n")).toBe(true);
   });
 
-  it("a collector the catalogue doesn't offer is exit 2, as validate's, its code and status kept (Ruling 249)", async () => {
+  it("a collector the catalog doesn't offer is exit 2, as validate's, its code and status kept", async () => {
     for (const code of ["collector_version_unknown", "collector_version_retired", "collector_distribution_unknown"]) {
       use(routes([], { "POST /test-runs": { status: 400, json: envelope(code, "That collector isn't in the catalogue.") } }));
       const human = await cli(["test", "--spec", specFile(), "-f", yamlFile(), "--collector-version", "0.1.0"]);
@@ -546,7 +546,7 @@ describe("telflo test's refusals", () => {
     expect((await cli(["test", "--spec", specFile(), "-f", yamlFile()])).code).toBe(1);
   });
 
-  it("--json keeps stderr JSON only: the --saved note, the 429's wait and the --output warning are one JSON object a line (Ruling 249)", async () => {
+  it("--json keeps stderr JSON only: the --saved note, the 429's wait and the --output warning are one JSON object a line", async () => {
     let posts = 0;
     use(
       routes([run("succeeded", [ruleResult(SAVED_A, true)])], {
@@ -645,10 +645,10 @@ describe("the helpers", () => {
         ?.message,
     ).toBe("test spec: rules[1] isn't a valid rule (count.value): the server's rule check refused it.");
     expect(ruleRefusalOf(new ApiError(400, "invalid_request", "m", [{ path: ["rules", 0, "ottl", "count", "value2"] }]))).toBeInstanceOf(ExitError);
-    // A 401 or 403 is never reworded as a rule's refusal: endingOf keeps it exit 3 (Ruling 243).
+    // A 401 or 403 is never reworded as a rule's refusal: endingOf keeps it exit 3.
     expect(ruleRefusalOf(new ApiError(401, "invalid_api_token", "m", [{ path: ["rules", 0, "kind"] }]))).toBeUndefined();
     expect(ruleRefusalOf(new ApiError(403, "insufficient_access", "m", { ruleIndex: 0 }))).toBeUndefined();
-    // The refusal's HTTP status is kept for --json (Ruling 239).
+    // The refusal's HTTP status is kept for --json.
     expect(ruleRefusalOf(new ApiError(400, "invalid_request", "m", [{ path: ["rules", 0, "kind"] }]))?.status).toBe(400);
     expect(ruleRefusalOf(new ApiError(400, "validation_rule_invalid", "m", { ruleIndex: 0 }))?.status).toBe(400);
     expect(configurationRefusalOf(new Error("x"))).toBeUndefined();

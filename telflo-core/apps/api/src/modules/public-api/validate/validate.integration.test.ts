@@ -24,21 +24,20 @@ import { validatePublicReply } from "../../../testing/public-api-openapi.js";
 import { apiTokenHash } from "../../service-accounts/tokens.js";
 
 /*
- * POST /api/public/v1/validate (D25 decision 17's route 15; decisions 33,
- * 34 and 53; Preflight rulings 9 and 17), on the real server through real
+ * POST /api/public/v1/validate, on the real server through real
  * service-account tokens, with the OpenAPI-checked fake validator: the
- * catalogue's defaults, a named distribution and version, the catalogue's
+ * catalog's defaults, a named distribution and version, the catalog's
  * three 400s, the validator's 503, the organization's variables' 503, the
  * person's validation limit, the body's limit, and every reply checked
  * against the public OpenAPI document. Its distributions of its own and its
  * deprecated versions are fixture rows it adds to the test database's
- * catalogue and removes (as the public configurations' tests add a retired
+ * catalog and removes (as the public configurations' tests add a retired
  * version), each marked TEST_CATALOGUE_FIXTURE_NOTE, so a run cut short
  * leaves nothing the next run's global setup doesn't remove before its
- * catalogue sync (Ruling 179). It used to run on a throwaway database: dropping one forces a
- * checkpoint that took 5 to 11 s after the other public-api files had
- * written, past its after-hook's limit under load (the suite failing with
- * no failing test). Tokens are built at run time and never printed: the
+ * catalog sync. It doesn't run on a throwaway database: dropping one
+ * forces a checkpoint that took 5 to 11 s after the other public-api files
+ * had written, past its after-hook's limit under load (the suite failing
+ * with no failing test). Tokens are built at run time and never printed: the
  * canaries are booleans.
  */
 
@@ -57,7 +56,7 @@ const RETIRED = `0.1.${parseInt(runId, 16)}`;
 const FIXTURE = `${FIXTURE_PREFIX}${runId}`;
 const FIXTURE_DEFAULT = "9.9.1";
 const FIXTURE_OTHER = "9.9.0";
-/** A distribution with no default: one offered version that isn't the default, and a deprecated one (Ruling 168). */
+/** A distribution with no default: one offered version that isn't the default, and a deprecated one. */
 const NO_DEFAULT = `${FIXTURE_PREFIX}no-default-${runId}`;
 const NO_DEFAULT_OFFERED = "8.0.0";
 const NO_DEFAULT_RETIRED = "7.0.0";
@@ -67,7 +66,7 @@ const TEXT_MARKER = "validate-text-marker-41c7";
 const REFUSED_TYPE = "unknown_validatemarker";
 const textWith = (extra = "") => `receivers:\n  otlp:\n    protocols:\n      grpc: {}\n# ${TEXT_MARKER}\nexporters:\n  debug: {}\n${extra}`;
 
-describe("POST /api/public/v1/validate (D25 decision 34)", () => {
+describe("POST /api/public/v1/validate", () => {
   let settings: AppSettings;
   let db: Kysely<Database>;
   let ownerDb: Kysely<Database>;
@@ -205,7 +204,7 @@ describe("POST /api/public/v1/validate (D25 decision 34)", () => {
     expect(response.json<{ error: { code: string } }>().error.code).toBe(code);
   };
 
-  it("checks the text with the catalogue's default distribution and version, through a read token, no-store, stored nowhere", async () => {
+  it("checks the text with the catalog's default distribution and version, through a read token, no-store, stored nowhere", async () => {
     const { token, organizationId } = await liveToken("read");
     const response = checked(await validate(token, { yaml: textWith() }), token);
     expect(response.statusCode).toBe(200);
@@ -240,7 +239,7 @@ describe("POST /api/public/v1/validate (D25 decision 34)", () => {
     ]);
   });
 
-  it("refuses a distribution or version the catalogue doesn't have, and a retired version, with 400, asking nothing", async () => {
+  it("refuses a distribution or version the catalog doesn't have, and a retired version, with 400, asking nothing", async () => {
     const { token } = await liveToken();
     const cases: Array<[Record<string, unknown>, string]> = [
       [{ distribution: "no-such-build" }, "collector_distribution_unknown"],
@@ -254,7 +253,7 @@ describe("POST /api/public/v1/validate (D25 decision 34)", () => {
     expect(validator.fake.takeRequests()).toEqual([]);
   });
 
-  it("checks a distribution's existence and the named version's state directly: one with no default answers by its versions (Ruling 168)", async () => {
+  it("checks a distribution's existence and the named version's state directly: one with no default answers by its versions", async () => {
     const { token } = await liveToken();
     expect(checked(await validate(token, { yaml: textWith(), distribution: NO_DEFAULT, collectorVersion: NO_DEFAULT_OFFERED }), token).json()).toEqual({
       valid: true,

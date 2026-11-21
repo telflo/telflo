@@ -2,10 +2,10 @@ import { OTTL_LINT_UNAVAILABLE_MESSAGE, type PublicApiErrorCode } from "@telflo/
 import { AppError } from "../../errors.js";
 
 /*
- * The OTTL lint's own refusals (D25 decisions 20 and 33). Their words are
- * fixed: never the YAML, an expression, the parser's message or the
- * evaluator's. A YAML that doesn't parse is the public surface's shared
- * `configurationInvalid` (public-api/shared-errors.ts, Ruling 168).
+ * The OTTL lint's own refusals. Their words are fixed: never the YAML, an
+ * expression, the parser's message or the evaluator's. A YAML that doesn't
+ * parse is the public surface's shared `configurationInvalid`
+ * (public-api/shared-errors.ts).
  */
 
 /** The OTTL evaluator couldn't lint, whatever the reason (down, busy, refusing the secret, a malformed answer): 503. */

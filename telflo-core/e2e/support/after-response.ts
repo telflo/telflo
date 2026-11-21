@@ -1,21 +1,19 @@
 import type { RunAfterResponse } from "../../apps/api/src/http/after-response.js";
 
-// The E2E API's after-response jobs, counted (D11b Ruling 25). The API runs
-// some of its calls to the opamp-server after the response (an
-// organization's registration, a deleted configuration's snapshots' clean-up:
-// D11a decision 20, D11b decision 12), so the last test can end before they
-// reach the fake. global-setup.ts's teardown reads the fake's violations
-// file then, and a job that lands later would go unchecked. start-api.ts
-// (never the API itself) wraps the runner it gives the server in
+// The E2E API's after-response jobs, counted. The API runs some of its calls
+// to the opamp-server after the response (an organization's registration, a
+// deleted configuration's snapshots' clean-up), so the last test can end
+// before they reach the fake. global-setup.ts's teardown reads the fake's
+// violations file then, and a job that lands later would go unchecked.
+// start-api.ts (never the API itself) wraps the runner it gives the server in
 // createCountingRunner and answers the count on
 // E2E_AFTER_RESPONSE_PENDING_PATH; the teardown waits for it to reach 0
 // (waitForAfterResponseDrain) before it reads the file.
 //
 // The count holds each attempt while it runs, not the wait between
 // attempts: an organization's delete that failed waits on its own unref'd
-// timer (D16b decision 20, Preflight ruling 14) before its next attempt is
-// handed to the runner, and in that wait the count can read 0, so a retry
-// still to come is not waited for.
+// timer before its next attempt is handed to the runner, and in that wait
+// the count can read 0, so a retry still to come is not waited for.
 
 /** The E2E API's route answering `{ pending: <jobs scheduled and not yet settled> }`. Registered by start-api.ts only. */
 export const E2E_AFTER_RESPONSE_PENDING_PATH = "/__e2e/after-response-pending";

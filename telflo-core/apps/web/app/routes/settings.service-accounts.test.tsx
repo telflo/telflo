@@ -22,8 +22,7 @@ import {
 } from "~/test/service-accounts.js";
 
 /*
- * Settings › Service Accounts' routes (D22 decisions 41, 48 and 49;
- * Preflight rulings 20 and 25-28): the list's guard and its leaving when
+ * Settings › Service Accounts' routes: the list's guard and its leaving when
  * management is lost, and the privacy of both pages and their dialogs.
  */
 
@@ -81,7 +80,7 @@ describe("the Service Accounts list's route (/settings/service-accounts)", () =>
   });
 });
 
-describe("the Service Accounts pages' privacy (decisions 48 and 49)", () => {
+describe("the Service Accounts pages' privacy", () => {
   const NAME = "Canary Robot 5D1";
   const SLUG = "canary-robot-5d1";
   const ADDRESS = `${SLUG}-0e0e0e0e@service-accounts.telflo.invalid`;
@@ -211,8 +210,8 @@ describe("the Service Accounts pages' privacy (decisions 48 and 49)", () => {
     expect(document.body.innerHTML.includes(token), "the token in the DOM after Done").toBe(false);
     expect(anyStateHolds(token), "the token in a component's state after Done").toBe(false);
 
-    // The token's row: its name and prefix as text.
-    // Booleans from here on (Ruling 102): were Done to fail, the token would still be on the page.
+    // The token's row: its name and prefix as text. Booleans from here on:
+    // were Done to fail, the token would still be on the page.
     await waitFor(() => expect(showsText(TOKEN_NAME), "the token's name listed").toBe(true));
     const listed = [...document.querySelectorAll("td span")].some((cell) => cell.textContent === `${prefix}…`);
     expect(listed, "the prefix listed as text").toBe(true);
@@ -235,7 +234,7 @@ describe("the Service Accounts pages' privacy (decisions 48 and 49)", () => {
     await waitFor(() => expect(showsText("No service accounts yet."), "the account deleted").toBe(true));
     expectOnlyAsText("the list, after the delete");
 
-    // No toast and no storage held a canary (booleans first: Ruling 99); every toast was fixed words.
+    // No toast and no storage held a canary (booleans first); every toast was fixed words.
     for (const secret of [...names, token, prefix]) {
       expect(holdsText([success.mock.calls, error.mock.calls], secret), "a toast holding a canary").toBe(false);
       expect(holdsText(setItem.mock.calls, secret), "a storage write holding a canary").toBe(false);

@@ -18,37 +18,36 @@ import { abortAfter, RUNS_REQUEST_TIMEOUT_MS } from "~/lib/stores/testing-store.
 import { receiverTypeLabel, signalLabel } from "~/lib/test-templates/labels.js";
 
 /*
- * Product admin's Test Templates page (D14b decisions 3, 13 and 14; pulled
- * forward from D29, as the flows page was): its header, "New Template", the
- * table (Name, which opens the edit; Receiver Type; Signal Type; Actions,
- * Delete), "Loading templates...", the empty row "No test templates yet", and
- * its toasts. Per the D14b Parity Notes:
+ * Product admin's Test Templates page: its header, "New Template", the table
+ * (Name, which opens the edit; Receiver Type; Signal Type; Actions, Delete),
+ * "Loading templates...", the empty row "No test templates yet", and its
+ * toasts:
  * - the templates come from the API (`GET /api/v1/test-templates`, which a
- *   product admin reads without the current terms, D14b Ruling 35, as the
- *   flows admin list), and every write goes through it; only the latest
- *   read is shown, so a slow earlier one can't overwrite a later one; a
- *   read that never answers is aborted after 10 s, as the Testing tab's
- *   reads are, and toasts as a failure (D14b Ruling 50);
+ *   product admin reads without the current terms, as the flows admin
+ *   list), and every write goes through it; only the latest read is shown,
+ *   so a slow earlier one can't overwrite a later one; a read that never
+ *   answers is aborted after 10 s, as the Testing tab's reads are, and
+ *   toasts as a failure;
  * - Receiver Type and Signal Type show the palette's labels and "Traces",
- *   "Logs", "Metrics", each raw value as a fallback (Preflight ruling 12);
+ *   "Logs", "Metrics", each raw value as a fallback;
  * - a 403 `product_admin_required` (the flag cleared since the page
  *   opened) goes to `/app`, replacing the page in the history, as the
  *   flows page's;
  * - a template deleted since the list was read (404
- *   `test_template_not_found`, another admin's doing): its delete counts
- *   as done, "Template deleted", as the flows page's does; an edit of it
- *   closes the dialog, shows the API's words and reads the list again, so its
- *   row goes (D14b Ruling 43): there is nothing left to edit;
+ *   `test_template_not_found`, another admin's doing): its delete counts as
+ *   done, "Template deleted", as the flows page's does; an edit of it closes
+ *   the dialog, shows the API's words and reads the list again, so its row
+ *   goes: there is nothing left to edit;
  * - every dialog's close (Cancel, Escape, a create, an edit) gives the
  *   focus back to the button that opened it: "New Template", the row's
- *   name, the row's Delete (D14b Ruling 46), where the dialogs, opened
- *   without a Radix trigger, left it on the body; when that row has gone by
- *   the time it closes (a delete, or an edit or delete answered 404, the
- *   list read again), to "New Template" (D14b Ruling 45);
- * - no name reaches an attribute (ADR 0024): the Name column's button
- *   opens the edit by the template's id and is named by its text; each
- *   Delete is described by the name's text (`aria-describedby`). The page
- *   sits under the signed-in app's `ph-mask` (Preflight ruling 19).
+ *   name, the row's Delete, where the dialogs, opened without a Radix
+ *   trigger, would leave it on the body; when that row has gone by the time
+ *   it closes (a delete, or an edit or delete answered 404, the list read
+ *   again), to "New Template";
+ * - no name reaches an attribute: the Name column's button opens the edit
+ *   by the template's id and is named by its text; each Delete is
+ *   described by the name's text (`aria-describedby`). The page sits
+ *   under the signed-in app's `ph-mask`.
  */
 
 /** What the page says when the templates can't be read (the toast's words). */
@@ -78,13 +77,13 @@ export function TestTemplatesPage() {
 
   const load = useCallback(async () => {
     const read = ++reads.current;
-    // A read that never answers ends after the hang guard, as a failure (D14b Ruling 50).
+    // A read that never answers ends after the hang guard, as a failure.
     const timeout = abortAfter(RUNS_REQUEST_TIMEOUT_MS);
     try {
       const { templates: listed } = await getTestTemplates({ signal: timeout.signal });
       if (read === reads.current) setTemplates(listed);
     } catch (error) {
-      // The session is over: the session-ended handler, or Logout, has the page (D12 Ruling 39).
+      // The session is over: the session-ended handler, or Logout, has the page.
       if (read === reads.current && !isSessionEnded(error)) toast.error(TEMPLATES_ADMIN_LOAD_FAILED_MESSAGE);
     } finally {
       timeout.clear();
@@ -98,7 +97,7 @@ export function TestTemplatesPage() {
 
   // Each throws to its dialog, which shows the API's words, or goes to /app
   // on a 403. An edit of a template deleted meanwhile doesn't throw: the
-  // dialog closes (D14b Ruling 43).
+  // dialog closes.
   const handleCreate = async (upload: TestTemplateUpload) => {
     await createTestTemplate(upload);
     toast.success("Template created");
@@ -110,7 +109,7 @@ export function TestTemplatesPage() {
       await updateTestTemplate(templateId, changes);
     } catch (error) {
       if (!isTemplateNotFound(error)) throw error;
-      // Deleted since the list was read: the dialog closes on the API's words, and the row goes (D14b Ruling 43).
+      // Deleted since the list was read: the dialog closes on the API's words, and the row goes.
       toast.error(error.message);
       await load();
       return;
@@ -150,11 +149,11 @@ export function TestTemplatesPage() {
 
   /**
    * As a dialog closes, however it closes: back to the button that opened
-   * it, explicitly (D14b Ruling 46): the dialogs have no Radix trigger, so
-   * Radix's own handling would leave the focus on the body, and a click
-   * doesn't focus a button in every browser. When the template's row went
-   * on the list's re-read (which ends before either dialog closes), so did
-   * that button, and the focus goes to "New Template" (D14b Ruling 45).
+   * it, explicitly: the dialogs have no Radix trigger, so Radix's own
+   * handling would leave the focus on the body, and a click doesn't focus
+   * a button in every browser. When the template's row went on the list's
+   * re-read (which ends before either dialog closes), so did that button,
+   * and the focus goes to "New Template".
    */
   const returnFocus = (event: Event) => {
     event.preventDefault();

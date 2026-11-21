@@ -25,14 +25,13 @@ import { sampleConfigurations } from "./configurations.js";
 import { SAMPLE_COLLECTOR_IDS, SAMPLE_FLEET_IDS, SAMPLE_FLEET_READS, SAMPLE_GROUP_IDS, sampleFleets } from "./fleets.js";
 
 /*
- * The fleets sample (D31-1 decisions 10 and 35, Preflight ruling 6): every
- * object parses with its contracts schema; the sample's counts, with the
- * platform's groups; summaries that agree with the collectors and tokens;
- * every published version named is one of the sample configurations'; fixed
- * ids; no secret-shaped field; and the reads answer every fleet read from
- * it, as the API applies its queries, never calling the API client.
- * sample.test.ts searches the whole sample (this one included) for
- * secret-shaped strings.
+ * The fleets sample: every object parses with its contracts schema; the
+ * sample's counts, with the platform's groups; summaries that agree with
+ * the collectors and tokens; every published version named is one of the
+ * sample configurations'; fixed ids; no secret-shaped field; and the reads
+ * answer every fleet read from it, as the API applies its queries, never
+ * calling the API client. sample.test.ts searches the whole sample (this
+ * one included) for secret-shaped strings.
  */
 
 const NOW = Date.parse("2026-10-27T12:00:00.000Z");

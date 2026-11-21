@@ -1,8 +1,8 @@
 /*
- * Ids as the API compares them (D27 decision 15, Preflight ruling 23): the
- * API's own `canonicalIdOf` (`organizations/service.ts`), copied because
- * the CLI imports nothing from a workspace at run time. Every id typed or
- * stored goes through it before it's compared or sent.
+ * Ids as the API compares them: the API's own `canonicalIdOf`
+ * (`organizations/service.ts`), copied because the CLI imports nothing
+ * from a workspace at run time. Every id typed or stored goes through it
+ * before it's compared or sent.
  */
 
 import { EXIT, ExitError } from "./output.js";

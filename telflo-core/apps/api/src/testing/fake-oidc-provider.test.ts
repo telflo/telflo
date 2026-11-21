@@ -4,9 +4,9 @@ import { createOidcProviderRegistry } from "../modules/oidc/providers.js";
 import { startFakeOidcProvider, type FakeOidcProvider } from "./fake-oidc-provider.js";
 import { authorizeAtProvider, exchangeCode, startAuthorization, TEST_REDIRECT_URI } from "./oidc-grant.js";
 
-// The fake provider (D2c Task 2), driven by the real openid-client
-// configuration the API uses: discovery, the authorization-code grant with
-// PKCE, and every switch Task 3's tests rely on.
+// The fake provider, driven by the real openid-client configuration the
+// API uses: discovery, the authorization-code grant with PKCE, and every
+// switch the sign-in tests rely on.
 
 let fake: FakeOidcProvider;
 let config: Configuration;

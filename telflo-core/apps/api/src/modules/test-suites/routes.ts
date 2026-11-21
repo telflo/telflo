@@ -54,13 +54,13 @@ const errorResponses = {
   404: ErrorResponseSchema,
 };
 
-/** A create's refusals: a read's, and 409 past the cap (Preflight ruling 23). */
+/** A create's refusals: a read's, and 409 past the cap. */
 const createErrorResponses = { ...errorResponses, 409: ErrorResponseSchema };
 
-/** A definition's create: a create's, and 429 for the person's uploads (Preflight ruling 22). */
+/** A definition's create: a create's, and 429 for the person's uploads. */
 const definitionCreateErrorResponses = { ...createErrorResponses, 429: ErrorResponseSchema };
 
-/** Any string for every id: one naming nothing the caller can see is the same 404, never a 400 (D5 decision 7). */
+/** Any string for every id: one naming nothing the caller can see is the same 404, never a 400. */
 const VersionParamsSchema = z.object({ organizationId: z.string(), configurationId: z.string(), versionId: z.string() });
 const SuiteParamsSchema = VersionParamsSchema.extend({ suiteId: z.string() });
 const DefinitionParamsSchema = SuiteParamsSchema.extend({ definitionId: z.string() });
@@ -69,7 +69,7 @@ const SUITES_ROUTE =
   "/api/v1/organizations/:organizationId/configurations/:configurationId/versions/:versionId/test-suites";
 const DEFINITIONS_ROUTE = `${SUITES_ROUTE}/:suiteId/definitions`;
 
-/** A suite's names go only into a response body (ADR 0024). */
+/** A suite's names go only into a response body. */
 function toSuiteResponseBody(suite: TestSuite): TestSuiteResponseBody {
   return {
     id: suite.id,
@@ -83,7 +83,7 @@ function toSuiteResponseBody(suite: TestSuite): TestSuiteResponseBody {
   };
 }
 
-/** A definition's names and its input's go only into a response body (ADR 0024). */
+/** A definition's names and its input's go only into a response body. */
 function toDefinitionResponseBody(definition: TestDefinition): TestDefinitionResponseBody {
   return {
     id: definition.id,
@@ -100,19 +100,18 @@ function toDefinitionResponseBody(definition: TestDefinition): TestDefinitionRes
 }
 
 /**
- * The test suites and definitions endpoints (D14b detail 19; Preflight
- * rulings 7, 10 and 22 to 24). Each needs a session and the current terms;
- * each re-reads the caller's membership under the organization's lock, and
- * each write then locks the configuration (service.ts); each answers 404
- * for anything the caller can't see, as the runs do. Each transaction
- * carries the request's `AuthContext`, so row-level security on the suites,
- * definitions and inputs admits the same rows the repositories do.
+ * The test suites and definitions endpoints. Each needs a session and the
+ * current terms; each re-reads the caller's membership under the
+ * organization's lock, and each write then locks the configuration
+ * (service.ts); each answers 404 for anything the caller can't see, as the
+ * runs do. Each transaction carries the request's `AuthContext`, so
+ * row-level security on the suites, definitions and inputs admits the same
+ * rows the repositories do.
  *
  * A definition's create and its input's head count against the person's
- * uploads in the organization (RATE_LIMITS' testFileUploadsPerUser,
- * Preflight ruling 22): each
+ * uploads in the organization (RATE_LIMITS' testFileUploadsPerUser): each
  * reads or copies up to 10 MiB, as an upload or a test file's head does.
- * Suite writes have no limit of their own (ruling 24).
+ * Suite writes have no limit of their own.
  *
  * Names, descriptions and the input's name travel only in the JSON bodies:
  * never in a URL, a log line or an audit row.
@@ -245,10 +244,9 @@ export function registerTestSuitesRoutes(
     },
   );
 
-  // The first 64 KiB of a definition's input (Play one's fixture-shape
-  // check), as a test file's head (D14a Ruling 43) and a run's input's
-  // (Ruling 46): bytes, never sniffed, under no file name, never cached,
-  // counted with the uploads.
+  // The first 64 KiB of a definition's input (Play one's fixture-shape check),
+  // as a test file's head and a run's input's: bytes, never sniffed, under no
+  // file name, never cached, counted with the uploads.
   typed.get(
     `${DEFINITIONS_ROUTE}/:definitionId/input/head`,
     // No response schema: the answer is a stream, and a refusal the envelope.

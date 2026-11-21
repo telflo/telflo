@@ -11,7 +11,7 @@ const { Pool, types } = pg;
 // source of bugs, so parse them as numbers.
 types.setTypeParser(types.builtins.INT8, (value: string) => Number.parseInt(value, 10));
 
-// A `date` (collector_versions.released_at, D13a) is a calendar day, not an
+// A `date` (collector_versions.released_at) is a calendar day, not an
 // instant: node-postgres would make it a Date at local midnight, which
 // shifts to the previous day in any timezone west of UTC once it is
 // serialized. Read it as its `YYYY-MM-DD` text instead.

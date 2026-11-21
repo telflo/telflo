@@ -2,8 +2,8 @@ import type { TestRunStatus, TestRunSummary } from "@telflo/contracts";
 import { CheckCircle2, Clock, Loader2, ShieldX, XCircle } from "lucide-react";
 
 /*
- * A run's status in words and as a badge (D14a decisions 1, 11 and 18; D15a
- * decision 3), "Validation Failed" included, in the platform's tokens.
+ * A run's status in words and as a badge, "Validation Failed" included, in the
+ * platform's tokens.
  */
 
 interface BadgeSpec {
@@ -22,7 +22,7 @@ const BY_STATUS: Record<TestRunStatus, BadgeSpec> = {
   failed: { icon: XCircle, label: "Error", className: "border-fail/25 bg-fail-soft text-fail" },
 };
 
-/** A run's status in words: "Queued (n ahead)" while it waits with its place known (decisions 1 and 11). */
+/** A run's status in words: "Queued (n ahead)" while it waits with its place known. */
 export function statusLabel(run: Pick<TestRunSummary, "status" | "ahead">): string {
   const { label } = BY_STATUS[run.status];
   return run.status === "queued" && run.ahead !== null ? `${label} (${run.ahead} ahead)` : label;

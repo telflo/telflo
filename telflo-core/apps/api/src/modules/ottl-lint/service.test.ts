@@ -6,11 +6,10 @@ import type { Actor } from "../organizations/service.js";
 import { createOttlLintService, OTTL_LINTS_IN_FLIGHT_PER_USER } from "./service.js";
 
 /*
- * The lint service on its own (D25 decision 33; Ruling 168), with a fake
- * actor and an in-process evaluator: the person's limits are kept per
- * organization (one person in two organizations), their in-flight places,
- * and a YAML's over-long expression answered here, the rest sent with
- * their indexes kept.
+ * The lint service on its own, with a fake actor and an in-process
+ * evaluator: the person's limits are kept per organization (one person in
+ * two organizations), their in-flight places, and a YAML's over-long
+ * expression answered here, the rest sent with their indexes kept.
  */
 
 const silent = { info: () => undefined, warn: () => undefined };
@@ -39,7 +38,7 @@ function validEverything(): { client: OttlEvaluatorClient; requests: LintTextsRe
 
 const one = { context: "log" as const, conditions: ["true"] };
 
-describe("the person's lints are kept per organization (Ruling 168)", () => {
+describe("the person's lints are kept per organization", () => {
   it("one user in two organizations has a budget in each: the second organization's first lint passes after the first's are spent", async () => {
     const evaluator = validEverything();
     const service = createOttlLintService({ evaluator: evaluator.client, limiter: createPerUserLimiter({ max: 1, windowMs: 60_000 }), log: silent });
@@ -55,7 +54,7 @@ describe("the person's lints are kept per organization (Ruling 168)", () => {
   });
 });
 
-describe("the person's lints in flight (Ruling 168)", () => {
+describe("the person's lints in flight", () => {
   it("lets two of a person's lints in an organization wait on the evaluator; a third is 429 rate_limited with Retry-After 1, counting nothing", async () => {
     let releaseAll!: () => void;
     const held = new Promise<void>((resolve) => (releaseAll = resolve));
@@ -95,7 +94,7 @@ describe("the person's lints in flight (Ruling 168)", () => {
     await expect(service.lintExpressions(actor, organization, one)).rejects.toMatchObject({ statusCode: 429 });
   });
 
-  it("gives the place back when the evaluator fails, an expressions lint's and a YAML's (Ruling 170)", async () => {
+  it("gives the place back when the evaluator fails, an expressions lint's and a YAML's", async () => {
     const base = validEverything();
     let isDown = true;
     const flaky: OttlEvaluatorClient = {
@@ -119,7 +118,7 @@ describe("the person's lints in flight (Ruling 168)", () => {
   });
 });
 
-describe("a YAML's expression over 8,192 characters (Ruling 168)", () => {
+describe("a YAML's expression over 8,192 characters", () => {
   const configuration = (long: string) => `
 processors:
   filter:

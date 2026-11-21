@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # check-readme-quick-start.sh: the README's Quick start is one the archive
-# smoke can run as written (D36-2 decisions 94 and 98).
+# smoke can run as written.
 #
 #   scripts/release/check-readme-quick-start.sh       (no argument; from anywhere)
 #

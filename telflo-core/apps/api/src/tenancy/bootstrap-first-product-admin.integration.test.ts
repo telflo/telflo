@@ -14,15 +14,14 @@ import {
 } from "@telflo/db/testing";
 
 /*
- * Migration 1700000000043's bootstrap_first_product_admin (D36-1 decision
- * 36, Preflight ruling 2) from the API's own role, telflo_platform: the one way
- * that role makes a product admin without being one. Once: refused while
- * any user holds the flag, deleted or not, a service account included; only
- * for a live human; nulls refused; the flag and the audit row written
- * together. Concurrent calls run one after the other under its advisory
- * lock, so two bootstraps never make two admins. The owner-only trigger
- * still refuses the API's role a direct change. Seeded addresses are
- * @example.com fixtures; nothing here prints one.
+ * Migration 1700000000043's bootstrap_first_product_admin from the API's own
+ * role, telflo_platform: the one way that role makes a product admin without
+ * being one. Once: refused while any user holds the flag, deleted or not, a
+ * service account included; only for a live human; nulls refused; the flag
+ * and the audit row written together. Concurrent calls run one after the
+ * other under its advisory lock, so two bootstraps never make two admins.
+ * The owner-only trigger still refuses the API's role a direct change.
+ * Seeded addresses are @example.com fixtures; nothing here prints one.
  */
 
 describe("bootstrap_first_product_admin (migration 1700000000043) as the API's role", () => {
@@ -285,7 +284,7 @@ describe("the bootstrap function's callers", () => {
       return /\.(?:[cm]?[jt]s|tsx|jsx)$/.test(entry.name) && !/\.timestamp-\d+-[0-9a-f]+\.mjs$/.test(entry.name) ? [path] : [];
     });
 
-  it("names bootstrap_first_product_admin only in user-repository.ts and the migrations (D36-1 Preflight ruling 3): no other code calls it through raw SQL", () => {
+  it("names bootstrap_first_product_admin only in user-repository.ts and the migrations: no other code calls it through raw SQL", () => {
     const namers = ["apps", "packages"]
       .flatMap((directory) => sources(join(workspaceRoot, directory)))
       .map((path) => relative(workspaceRoot, path).split(sep).join("/"))

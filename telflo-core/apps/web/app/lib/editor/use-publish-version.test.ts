@@ -5,13 +5,13 @@ import { PUBLISH_FAILED_MESSAGE } from "~/lib/editor/publishing.js";
 import { refusalMessage } from "./use-publish-version.js";
 
 /*
- * D20 Rulings 55 and 71: the API refuses a publish whose text references an
- * organization variable name over 128 characters with 400
- * `invalid_request`, its details naming `yaml`; the editor says why, in the
- * contracts' fixed words. Any other 400 keeps the generic words.
+ * The API refuses a publish whose text references an organization variable
+ * name over 128 characters with 400 `invalid_request`, its details naming
+ * `yaml`; the editor says why, in the contracts' fixed words. Any other 400
+ * keeps the generic words.
  */
 
-/** A detail as the API's 400s give one (Ruling 31's shape). */
+/** A detail as the API's 400s give one. */
 const detailAt = (instancePath: string) => ({
   keyword: "custom",
   instancePath,

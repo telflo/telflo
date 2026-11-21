@@ -4,14 +4,14 @@ import { createMemoryRouter, RouterProvider } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 /*
- * Logout with the configurations list's read in flight, on a real router
- * (D12 Ruling 39; the FW2 review's M1). The client is the real one, with
- * axios answering through a fake API, as use-logout.test.tsx does; the page
- * is the real list hook and the real Logout. Logout navigates to `/login`,
- * whose data is held, so the `/app` page is still mounted when the read's
- * stray 401 arrives, as in a browser where the 401 beats `/login.data`. The
- * list must not toast "Failed to load configuration": that toast would
- * follow the browser onto `/login`, under "Logged out successfully".
+ * Logout with the configurations list's read in flight, on a real router.
+ * The client is the real one, with axios answering through a fake API, as
+ * use-logout.test.tsx does; the page is the real list hook and the real
+ * Logout. Logout navigates to `/login`, whose data is held, so the `/app`
+ * page is still mounted when the read's stray 401 arrives, as in a browser
+ * where the 401 beats `/login.data`. The list must not toast "Failed to
+ * load configuration": that toast would follow the browser onto `/login`,
+ * under "Logged out successfully".
  */
 
 const toast = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
@@ -98,7 +98,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe("Logout with the configurations list's read in flight (D12 Ruling 39)", () => {
+describe("Logout with the configurations list's read in flight", () => {
   it("the read's stray 401, arriving before /login's data, toasts nothing: only 'Logged out successfully', then /login", async () => {
     const read = held();
     routes[CONFIGURATIONS] = read.route;

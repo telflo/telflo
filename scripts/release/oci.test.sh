@@ -98,7 +98,7 @@ copy "$good" "$A"
 check "a good archive gets past every check to 'crane push <layout> <ref>' (the wrapper refuses it), the layout removed" \
   "[ $rc -eq 1 ] && has 'crane push to 127.0.0.1:5999/telflo/telflo/x:1.0.0 failed' && grep -qE '^push [^ ]+/work/layout 127\.0\.0\.1:5999/telflo/telflo/x:1\.0\.0 \$' '$logs/crane-calls.log' && [ ! -e '$tmp/work/layout' ]"
 
-# A tag already there (Ruling 408): the same digest is skipped; another digest is refused, never overwritten.
+# A tag already there: the same digest is skipped; another digest is refused, never overwritten.
 # shellcheck disable=SC2016 # expanded by the inner shell
 decide() { "$shell" -c '. "$1"; shift; telflo_digest_decision "$@"' _ "$root/scripts/release/oci.sh" "$@"; }
 check "telflo_digest_decision: absent (3) push; the same digest skip; another digest refuse; can't tell refuse" \

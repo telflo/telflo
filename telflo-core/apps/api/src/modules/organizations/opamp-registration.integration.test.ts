@@ -31,12 +31,13 @@ import { UNCALLED_TESTING } from "../../testing/otelcol-testing.js";
 import { TEST_TERMS_VERSION } from "../../testing/site.js";
 
 /*
- * D11a decision 20, through the routes, against the real database and the
- * OpenAPI-checked fake opamp-server: each way an organization is created
- * (password, Google and invitation sign-up, and "New organization") registers
- * it after the response, and a rename and a delete follow it there. The
- * request never waits for the opamp-server and never fails for it; a miss is
- * a warning that names neither the organization nor its owner.
+ * The opamp-server's registry of organizations, through the routes, against
+ * the real database and the OpenAPI-checked fake opamp-server: each way an
+ * organization is created (password, Google and invitation sign-up, and "New
+ * organization") registers it after the response, and a rename and a delete
+ * follow it there. The request never waits for the opamp-server and never
+ * fails for it; a miss is a warning that names neither the organization nor
+ * its owner.
  */
 
 const csrfHeaders = { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE };
@@ -199,7 +200,7 @@ describe("the opamp-server's registry, kept by the platform's routes", () => {
       payload: { organizationId: id },
     });
     expect(switched.statusCode).toBe(200);
-    // A no-op when the sign-in already landed there (D36-1 decision 56): no new cookie, the token sent stands.
+    // A no-op when the sign-in already landed there: no new cookie, the token sent stands.
     return { id, name, access: (switched.headers["set-cookie"] === undefined ? access : cookieValue(switched, "telflo_access")) };
   };
 
@@ -377,13 +378,13 @@ describe("the opamp-server's registry, kept by the platform's routes", () => {
         }),
       ]);
       const log = lines.join("\n");
-      // The personal organization's name is the email (Q263): one check covers both.
+      // The personal organization's name is the email: one check covers both.
       expect(log).not.toContain(personal.name);
       expect(log).not.toContain(email);
       expect(log).not.toContain(fake.secret);
     });
 
-    it("deletes all the same, retries the opamp-server's delete, and at the server's close logs it as pending (D16b Preflight ruling 14)", async () => {
+    it("deletes all the same, retries the opamp-server's delete, and at the server's close logs it as pending", async () => {
       const { id, access } = await newOrganizationActive();
       await runner.settle();
       const down = await serverWith({

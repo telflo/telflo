@@ -11,7 +11,7 @@ import type { ISessionRepository } from "../sessions/repositories/session-reposi
 import type { IPasswordResetTokenRepository } from "./repositories/password-reset-token-repository.js";
 
 /**
- * How long a reset link works (D3 decision 4). A constant, not a setting.
+ * How long a reset link works. A constant, not a setting.
  */
 export const PASSWORD_RESET_TOKEN_TTL_MINUTES = 60;
 const PASSWORD_RESET_TOKEN_TTL_MILLISECONDS = PASSWORD_RESET_TOKEN_TTL_MINUTES * 60 * 1000;
@@ -66,8 +66,8 @@ export interface IssueResetLinkInput extends RequestOrigin {
   email: string;
   /**
    * The operator's command that asked, recorded in the audit row's
-   * metadata: `telflo-admin reset-link` (D36-1 decision 54, Q258). Absent
-   * for `telflo-admin bootstrap`'s link, whose account it just made.
+   * metadata: `telflo-admin reset-link`. Absent for
+   * `telflo-admin bootstrap`'s link, whose account it just made.
    */
   via?: "admin_command";
 }
@@ -91,8 +91,7 @@ export interface IPasswordResetService {
   requestReset(input: RequestResetInput): Promise<void>;
   /**
    * requestReset's token, handed back as its link instead of mailed
-   * (`telflo-admin bootstrap` and `telflo-admin reset-link`, D36-1
-   * decision 54, Q266): the same
+   * (`telflo-admin bootstrap` and `telflo-admin reset-link`): the same
    * hashed row, 60 minutes and single use, the earlier links consumed; no
    * email is sent. `undefined` when no live account has the address. The
    * link is a secret: the caller shows it to the one person who asked and
@@ -122,7 +121,7 @@ function invalidResetToken(): AppError {
 export function createPasswordResetService(deps: PasswordResetServiceDependencies): IPasswordResetService {
   const { users, audit, mailer, settings, now, withTransaction } = deps;
 
-  /** The link to the reset page: the token in its fragment (D3 Ruling 14). */
+  /** The link to the reset page: the token in its fragment. */
   const resetUrlOf = (token: string) => `${settings.publicWebUrl}/reset-password#token=${token}`;
 
   /** The audit row of a request for an account (its outcome added by the caller). */
@@ -142,16 +141,15 @@ export function createPasswordResetService(deps: PasswordResetServiceDependencie
    * a soft-deleted account gets nothing, like no account at all (audited
    * `no_account`, and `undefined`).
    *
-   * Only the newest link works (D3 decision 4): the earlier ones are
-   * consumed in the same transaction that writes the new one. The user's
-   * row is locked first, so two requests for one user run one after the
-   * other: the second consumes the first's token rather than missing it
-   * (D3 Ruling 16). The partial unique index
+   * Only the newest link works: the earlier ones are consumed in the same
+   * transaction that writes the new one. The user's row is locked first, so
+   * two requests for one user run one after the other: the second consumes
+   * the first's token rather than missing it. The partial unique index
    * uq_password_reset_tokens_one_live_per_user backs this up.
    *
-   * Lock order, the same in completeReset (D3 Ruling 17): the user's row,
-   * then token rows, then sessions. Taking them in any other order lets a
-   * request and a completion for one user deadlock.
+   * Lock order, the same in completeReset: the user's row, then token
+   * rows, then sessions. Taking them in any other order lets a request
+   * and a completion for one user deadlock.
    */
   async function issue(input: IssueResetLinkInput): Promise<{ user: User; token: string } | undefined> {
     const user = await users.findByEmail(input.email);
@@ -181,13 +179,13 @@ export function createPasswordResetService(deps: PasswordResetServiceDependencie
 
   return {
     /**
-     * Runs after the response (D3 decision 2), so nothing here can change
-     * what the requester sees, and the response time is the same whether or
-     * not an account exists. `findByEmail` skips soft-deleted users, so a
+     * Runs after the response, so nothing here can change what the
+     * requester sees, and the response time is the same whether or not an
+     * account exists. `findByEmail` skips soft-deleted users, so a
      * soft-deleted account gets nothing, like no account at all.
      *
-     * An unverified account gets a link too (D3 decision 3): opening it
-     * proves the user controls the mailbox.
+     * An unverified account gets a link too: opening it proves the user
+     * controls the mailbox.
      */
     async requestReset(input: RequestResetInput): Promise<void> {
       const issued = await issue(input);
@@ -196,9 +194,9 @@ export function createPasswordResetService(deps: PasswordResetServiceDependencie
 
       // After the commit: an email must never carry a token that rolled back.
       // The token goes in the link's fragment, which the browser never sends
-      // to a server, so no access log records it (D3 Ruling 14).
+      // to a server, so no access log records it.
       // A failed send is audited, then rethrown for the runner to log: the
-      // requester was already told to check their email (D3 decision 2).
+      // requester was already told to check their email.
       const message = buildPasswordResetEmail({ resetUrl: resetUrlOf(token) });
       try {
         await mailer.send({ to: user.email, ...message });
@@ -222,16 +220,16 @@ export function createPasswordResetService(deps: PasswordResetServiceDependencie
     },
 
     /**
-     * D3 decision 5. The password is hashed before the transaction opens, so
-     * no row is locked for Argon2id's duration; an invalid token therefore
-     * pays for one hash too, which the per-IP limit bounds.
+     * The password is hashed before the transaction opens, so no row is
+     * locked for Argon2id's duration; an invalid token therefore pays for one
+     * hash too, which the per-IP limit bounds.
      *
-     * Lock order, the same as requestReset's (D3 Ruling 17): the user's row,
-     * then token rows, then sessions. So the token's user is found first by
-     * a read that locks nothing, and the user's row is locked before the
-     * token is consumed. Consuming first would hold the token's row while
-     * waiting for the user's, the reverse of a concurrent request, which
-     * holds the user's row while it consumes the user's tokens: a deadlock.
+     * Lock order, the same as requestReset's: the user's row, then token rows,
+     * then sessions. So the token's user is found first by a read that locks
+     * nothing, and the user's row is locked before the token is consumed.
+     * Consuming first would hold the token's row while waiting for the user's,
+     * the reverse of a concurrent request, which holds the user's row while it
+     * consumes the user's tokens: a deadlock.
      *
      * `consume` is the atomic gate: of two completions with one token,
      * exactly one sees `consumed`, and the other sees `already_consumed` once

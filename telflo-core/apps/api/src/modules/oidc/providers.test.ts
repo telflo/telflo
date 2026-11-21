@@ -158,7 +158,7 @@ describe("the OIDC provider registry", () => {
     });
   });
 
-  describe("the ID token's signature (Ruling 2)", () => {
+  describe("the ID token's signature", () => {
     it("accepts an ID token signed with the provider's published key", async () => {
       const config = await createOidcProviderRegistry({ oidcProviders: [googleAtFake()] }).get("google")!.configuration();
       fake.nextSignIn({ sub: "signed-by-the-provider" });
@@ -179,7 +179,7 @@ describe("the OIDC provider registry", () => {
     });
   });
 
-  describe("email authority (Ruling 7)", () => {
+  describe("email authority", () => {
     it.each([
       ["a @gmail.com address", { email: "someone@gmail.com" }],
       ["a @gmail.com address in capitals", { email: "Someone@GMAIL.COM" }],
@@ -224,7 +224,7 @@ describe("the OIDC provider registry", () => {
       expect(google.isEmailAuthoritative({ email: "someone@company.example", hd: "company.example" })).toBe(true);
     });
 
-    it("trusts no email under the id google from an https issuer that isn't Google's (Ruling 17)", () => {
+    it("trusts no email under the id google from an https issuer that isn't Google's", () => {
       const impostor = createOidcProviderRegistry({
         oidcProviders: [{ ...googleAtFake(), issuer: "https://idp.telflo.example" }],
       }).get("google")!;
@@ -242,7 +242,7 @@ describe("the OIDC provider registry", () => {
     });
   });
 
-  describe("relinksByEmail (Q126, Ruling 92)", () => {
+  describe("relinksByEmail", () => {
     it("is true for a configured provider with an email-authority rule: Google at Google's issuer or the fake", () => {
       expect(createOidcProviderRegistry({ oidcProviders: [googleAtFake()] }).relinksByEmail("google")).toBe(true);
       const atGoogle = createOidcProviderRegistry({

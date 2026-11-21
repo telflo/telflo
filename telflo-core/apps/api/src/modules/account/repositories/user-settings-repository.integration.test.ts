@@ -6,9 +6,9 @@ import { createUserWithOrganization, openTestDatabases, truncateAll, type TestDa
 import { createUserSettingsRepository, type IUserSettingsRepository } from "./user-settings-repository.js";
 
 /*
- * The user settings repository (D21 decisions 4, 19 and 20; Preflight ruling
- * 3), against the test database as the API's role: the lazy row read as the
- * defaults, the one-statement merge, and two writers racing on it.
+ * The user settings repository, against the test database as the API's
+ * role: the lazy row read as the defaults, the one-statement merge, and two
+ * writers racing on it.
  */
 
 const APPLICATION_NAME = "user-settings-repository-test";

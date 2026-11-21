@@ -126,7 +126,7 @@ async function loaded(groups: CollectorGroup[] = GROUPS) {
   return { ...hook, served };
 }
 
-describe("useGroupsTab (D17b-2 decisions 10 and 32, Preflight ruling 10)", () => {
+describe("useGroupsTab", () => {
   it("reads the active organization's fleet's groups under a hang guard, as a person's read", async () => {
     const served = serve();
     const { result } = render();
@@ -271,7 +271,7 @@ describe("useGroupsTab (D17b-2 decisions 10 and 32, Preflight ruling 10)", () =>
     expect(result.current).toMatchObject({ groups: GROUPS, failed: false, personsRead: false });
   });
 
-  it("quiet (a second reader's: the setup checklist, D17c-1 Ruling 61): keeps the rows with no toast when a person's read fails over them", async () => {
+  it("quiet (a second reader's: the setup checklist): keeps the rows with no toast when a person's read fails over them", async () => {
     const error = vi.spyOn(toast, "error");
     const served = serve();
     const { result } = renderHook(() => useGroupsTab(FLEET_ID, { onFleetGone, quiet: true }));

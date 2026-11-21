@@ -8,13 +8,13 @@ import { productAdminRequired, userDeleteBlocked, userDeleteBusy, userDeleteSelf
 import type { ISystemRepository, ProductAdminActor } from "./repositories/system-repository.js";
 
 /*
- * Users (D29 decisions 3, 9, 11, 29 to 31): the list and the delete, on the
- * SystemRepository, which audits each call in its transaction.
+ * Users: the list and the delete, on the SystemRepository, which audits each
+ * call in its transaction.
  *
  *   * list: a page of live people, newest first, ADMIN_USERS_PAGE_SIZE at
  *     most, after the cursor; the repository reads one more row to know
  *     whether another page follows (`hasMore`: `nextCursor` is the last row
- *     shown, else null) and audits the rows returned (Ruling 264). The term
+ *     shown, else null) and audits the rows returned. The term
  *     goes to the database only: never a log line, an error or the cursor.
  *   * delete: the id through canonicalIdOf (a non-canonical one is 404,
  *     never reaching the database); the repository's refusals as the

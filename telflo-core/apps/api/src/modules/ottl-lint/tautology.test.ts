@@ -2,8 +2,7 @@ import { describe, expect, it } from "vitest";
 import { findTautology, TAUTOLOGY_MAXIMUM_LENGTH } from "./tautology.js";
 
 /*
- * The tautology check (D25 decision 33): its shapes, its words, and its
- * length bound.
+ * The tautology check: its shapes, its words, and its length bound.
  */
 
 describe("findTautology, its cases", () => {
@@ -48,7 +47,7 @@ describe("findTautology, its cases", () => {
   });
 });
 
-describe("findTautology's bound (the port's change; Ruling 168)", () => {
+describe("findTautology's bound", () => {
   it("looks only at a condition of at most 1,024 characters as written, before any normalizing", () => {
     expect(TAUTOLOGY_MAXIMUM_LENGTH).toBe(1_024);
     const side = "x".repeat(509);

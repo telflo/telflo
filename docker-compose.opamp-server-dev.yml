@@ -1,9 +1,9 @@
 # The opamp-server built from a sibling checkout, for a change to it that
-# isn't released yet (D26 decisions 5 and 37). docker-compose.yml runs the
-# release vendor/opamp-server/PIN names; this override builds the server
-# instead, from OPAMP_SERVER_SRC (default ../opamp-server, beside the
-# platform; a relative path resolves against the platform's root), and
-# bootstraps its database with that checkout's deploy/bootstrap.sql.
+# isn't released yet. docker-compose.yml runs the release
+# vendor/opamp-server/PIN names; this override builds the server instead,
+# from OPAMP_SERVER_SRC (default ../opamp-server, beside the platform; a
+# relative path resolves against the platform's root), and bootstraps its
+# database with that checkout's deploy/bootstrap.sql.
 # docs/conventions/opamp-server.md is the guide: pulling a merged change,
 # building, the contract files (scripts/check-opamp-server-pin.sh --refresh),
 # going back to the pin (--restore) and releasing.

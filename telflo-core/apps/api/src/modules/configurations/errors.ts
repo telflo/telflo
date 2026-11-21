@@ -6,29 +6,27 @@ import {
 import { AppError } from "../../errors.js";
 
 /*
- * The configuration endpoints' own refusals (D7 decisions 5 and 6, D8
- * decision 4, D10 decision 4, D11b decisions 2, 4, 9 and 11, D13a decision
- * 11, D13b decision 12, D16b decision 19). The organization's (`organization_not_found`) are the organization
- * module's, so both answer alike.
+ * The configuration endpoints' own refusals. The organization's
+ * (`organization_not_found`) are the organization module's, so both answer
+ * alike.
  */
 
 /**
  * An unknown configuration, a deleted one, one in another organization,
- * another member's draft (D11b decision 1), and an id that isn't a
- * canonical UUID, all alike (decision 5). A version is
- * found only through its configuration, so for D8's save an unknown version,
- * one of another configuration and a malformed version id are this too (D8
- * decision 4, which D10 leaves as it is).
+ * another member's draft, and an id that isn't a canonical UUID, all alike.
+ * A version is found only through its configuration, so for a version's save
+ * an unknown version, one of another configuration and a malformed version
+ * id are this too.
  */
 export function configurationNotFound(): AppError {
   return new AppError("configuration_not_found" satisfies ConfigurationErrorCode, "Configuration not found", 404);
 }
 
 /**
- * D10 decision 4: a version that isn't one of the live configuration's (an
- * unknown one, another configuration's, an id that isn't a canonical UUID),
- * named in a version's read or rename path, as a create's source, or as a
- * selection. Its own code, so the editor can offer the latest version.
+ * A version that isn't one of the live configuration's (an unknown one,
+ * another configuration's, an id that isn't a canonical UUID), named in a
+ * version's read or rename path, as a create's source, or as a selection.
+ * Its own code, so the editor can offer the latest version.
  */
 export function configurationVersionNotFound(): AppError {
   return new AppError(
@@ -39,11 +37,11 @@ export function configurationVersionNotFound(): AppError {
 }
 
 /**
- * D11b decision 4: a save or a rename of a published version, which can't
- * be changed. The service checks it under the configuration's lock before it
- * writes, so the database's immutability trigger (migration 020) is never
- * what refuses it. Publishing an already published version has its own
- * message (Preflight ruling 15): `configurationVersionAlreadyPublished`.
+ * A save or a rename of a published version, which can't be changed. The
+ * service checks it under the configuration's lock before it writes, so the
+ * database's immutability trigger (migration 020) is never what refuses it.
+ * Publishing an already published version has its own message:
+ * `configurationVersionAlreadyPublished`.
  */
 export function configurationVersionPublished(): AppError {
   return new AppError(
@@ -54,9 +52,9 @@ export function configurationVersionPublished(): AppError {
 }
 
 /**
- * D11b decision 9 and Preflight ruling 15: publishing a version that is
- * published already, found by the publish's checks or by its record
- * touching no row. Names the version's number only: never its label.
+ * Publishing a version that is published already, found by the publish's
+ * checks or by its record touching no row. Names the version's number only:
+ * never its label.
  */
 export function configurationVersionAlreadyPublished(versionNumber: number): AppError {
   return new AppError(
@@ -67,11 +65,11 @@ export function configurationVersionAlreadyPublished(versionNumber: number): App
 }
 
 /**
- * D11b Preflight ruling 8, Rulings 29 and 30: the version was saved since
- * the caller's tab saw it (refused before any call), or saved with other
- * text or renamed between the publish's checks and its record, so the
- * snapshot the opamp-server took isn't what the version holds. Nothing is
- * recorded, and the snapshot is removed after the response (Ruling 29).
+ * The version was saved since the caller's tab saw it (refused before any
+ * call), or saved with other text or renamed between the publish's checks
+ * and its record, so the snapshot the opamp-server took isn't what the
+ * version holds. Nothing is recorded, and the snapshot is removed after
+ * the response.
  */
 export function configurationVersionChanged(): AppError {
   return new AppError(
@@ -82,10 +80,10 @@ export function configurationVersionChanged(): AppError {
 }
 
 /**
- * D25 Ruling 165 and 169: the public API's version PATCH with
- * `?validate=true`, when the version was saved between its validation and
- * the write: the text validated isn't what the version holds, so nothing is
- * saved. `configurationVersionChanged`'s code, with its own words.
+ * The public API's version PATCH with `?validate=true`, when the version
+ * was saved between its validation and the write: the text validated isn't
+ * what the version holds, so nothing is saved.
+ * `configurationVersionChanged`'s code, with its own words.
  */
 export function configurationVersionChangedWhileValidating(): AppError {
   return new AppError(
@@ -96,8 +94,8 @@ export function configurationVersionChangedWhileValidating(): AppError {
 }
 
 /**
- * D11b Preflight ruling 9: a version whose saved YAML is exactly empty,
- * which the opamp-server would refuse. Refused before any call to it.
+ * A version whose saved YAML is exactly empty, which the opamp-server would
+ * refuse. Refused before any call to it.
  */
 export function configurationVersionEmpty(): AppError {
   return new AppError(
@@ -108,10 +106,9 @@ export function configurationVersionEmpty(): AppError {
 }
 
 /**
- * D11b decision 11: the opamp-server couldn't be asked (a 5xx, a network
- * error, its timeout), or an organization vanished from its registry
- * mid-publish (Preflight ruling 15). Nothing is recorded: the version stays
- * a draft.
+ * The opamp-server couldn't be asked (a 5xx, a network error, its timeout),
+ * or an organization vanished from its registry mid-publish. Nothing is
+ * recorded: the version stays a draft.
  */
 export function publishingUnavailable(): AppError {
   return new AppError(
@@ -122,9 +119,9 @@ export function publishingUnavailable(): AppError {
 }
 
 /**
- * D11b decision 2: a delete by a member who is neither the configuration's
- * author nor an organization admin. Only for a configuration they can see:
- * one they can't is 404 `configuration_not_found` first.
+ * A delete by a member who is neither the configuration's author nor an
+ * organization admin. Only for a configuration they can see: one they
+ * can't is 404 `configuration_not_found` first.
  */
 export function configurationDeleteForbidden(): AppError {
   return new AppError(
@@ -135,11 +132,10 @@ export function configurationDeleteForbidden(): AppError {
 }
 
 /**
- * D16b decision 19 and Preflight ruling 6: a delete of a configuration one
- * of whose published versions a collector group is assigned or a
- * collector is pinned to, archived fleets' included, as the opamp-server
- * answered just before. Nothing is deleted. Its message names nothing of
- * the fleet's (ADR 0024).
+ * A delete of a configuration one of whose published versions a collector
+ * group is assigned or a collector is pinned to, archived fleets' included,
+ * as the opamp-server answered just before. Nothing is deleted. Its message
+ * names nothing of the fleet's.
  */
 export function configurationInUse(): AppError {
   return new AppError(
@@ -150,21 +146,20 @@ export function configurationInUse(): AppError {
 }
 
 /**
- * D16b Preflight rulings 6 and 19: a delete whose fleet usage the
- * opamp-server couldn't answer (down, slow, oversized, refusing the
- * secret, an answer it doesn't document). The fleets' one 503 code, with
- * the delete's own words: the check runs before anything is deleted.
+ * A delete whose fleet usage the opamp-server couldn't answer (down, slow,
+ * oversized, refusing the secret, an answer it doesn't document). The fleets'
+ * one 503 code, with the delete's own words: the check runs before anything
+ * is deleted.
  */
 export function fleetsUnavailableAtDelete(): AppError {
   return new AppError("fleets_unavailable" satisfies FleetErrorCode, FLEETS_UNAVAILABLE_AT_DELETE_MESSAGE, 503);
 }
 
 /**
- * D13a decision 11 and Preflight rulings 13 and 16: a save or a create
- * changing a version's collector version to one its configuration's
- * distribution doesn't offer (not in the catalogue, or deprecated). A pin
- * equal to the one stored, or to the source's, is never this, even if
- * deprecated since (decision 4). Nothing is written.
+ * A save or a create changing a version's collector version to one its
+ * configuration's distribution doesn't offer (not in the catalog, or
+ * deprecated). A pin equal to the one stored, or to the source's, is
+ * never this, even if deprecated since. Nothing is written.
  */
 export function collectorVersionUnknown(): AppError {
   return new AppError(
@@ -175,9 +170,8 @@ export function collectorVersionUnknown(): AppError {
 }
 
 /**
- * D13a Preflight ruling 14: a create naming a distribution the catalogue
- * doesn't have, or one with no version to offer as its default. Nothing is
- * written.
+ * A create naming a distribution the catalog doesn't have, or one with
+ * no version to offer as its default. Nothing is written.
  */
 export function collectorDistributionUnknown(): AppError {
   return new AppError(
@@ -188,10 +182,9 @@ export function collectorDistributionUnknown(): AppError {
 }
 
 /**
- * D13b decision 12 and Preflight ruling 18: the collector validator couldn't
- * check the text, whatever the reason (down, slow, busy, missing the
- * version, refusing the platform's secret, a malformed answer). Never the
- * reason itself: the log has it.
+ * The collector validator couldn't check the text, whatever the reason
+ * (down, slow, busy, missing the version, refusing the platform's secret,
+ * a malformed answer). Never the reason itself: the log has it.
  */
 export function validationUnavailable(): AppError {
   return new AppError(
@@ -202,8 +195,8 @@ export function validationUnavailable(): AppError {
 }
 
 /**
- * D13b decision 12: the caller's checks in the last minute are used up.
- * `retryAfterSeconds` is when their window ends.
+ * The caller's checks in the last minute are used up. `retryAfterSeconds` is
+ * when their window ends.
  */
 export function validationRateLimited(retryAfterSeconds: number): AppError {
   return new AppError(
@@ -216,9 +209,9 @@ export function validationRateLimited(retryAfterSeconds: number): AppError {
 }
 
 /**
- * Ruling 37: two of the caller's checks are waiting on the validator
- * already. The same code as the minute's limit, so the editor treats both
- * alike (unavailable, retried after `Retry-After`); its own message.
+ * Two of the caller's checks are waiting on the validator already. The
+ * same code as the minute's limit, so the editor treats both alike
+ * (unavailable, retried after `Retry-After`); its own message.
  */
 export function validationsInFlight(retryAfterSeconds: number): AppError {
   return new AppError(
@@ -231,8 +224,8 @@ export function validationsInFlight(retryAfterSeconds: number): AppError {
 }
 
 /**
- * A list cursor that doesn't decode to a timestamp and a UUID (decision 6):
- * the envelope's shared code and message, as a query that fails its schema
+ * A list cursor that doesn't decode to a timestamp and a UUID: the
+ * envelope's shared code and message, as a query that fails its schema
  * gets.
  */
 export function invalidCursor(): AppError {
@@ -240,10 +233,10 @@ export function invalidCursor(): AppError {
 }
 
 /**
- * A save's graph that the table's checks refuse though the contract allowed
- * it (D9a Preflight ruling 3: Postgres prints jsonb longer than JSON, `1e300`
- * as 301 digits): the envelope's shared code and message, as a graph the
- * contract refuses gets. No details: the database's say what was stored.
+ * A save's graph that the table's checks refuse though the contract allowed it
+ * (Postgres prints jsonb longer than JSON, `1e300` as 301 digits): the
+ * envelope's shared code and message, as a graph the contract refuses gets. No
+ * details: the database's say what was stored.
  */
 export function invalidGraph(): AppError {
   return new AppError("invalid_request", "The request was not valid.", 400);

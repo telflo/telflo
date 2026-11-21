@@ -1,9 +1,8 @@
 /*
  * `telflo deploy --fleet --config [--version] [--group | --name]
- * [--replicas] [--namespace] [--role]` (D27 decisions 11 and 28), the
- * older CLI's `--deployment` renamed `--group`:
- * updates the one group of the fleet serving the configuration, or creates
- * one named `--name` (`ops/deploy.ts`).
+ * [--replicas] [--namespace] [--role]`: updates the one group of the fleet
+ * serving the configuration (or the `--group` named), or creates one named
+ * `--name` (`ops/deploy.ts`).
  */
 
 import { InvalidArgumentError, Option, type Command } from "commander";

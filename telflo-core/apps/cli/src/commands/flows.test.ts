@@ -8,9 +8,9 @@ import { deleteCredentials, saveCredentials } from "../credentials.js";
 import { NO_FLOWS_MESSAGE } from "./flows.js";
 
 /*
- * telflo flows list|get|pull (D27 decision 26) against a stand-in API, with
- * D25's names: `authorName`, `distribution`, `collectorVersion`,
- * `sourceUrl`. Tokens are made at run time and checked as booleans only.
+ * telflo flows list|get|pull against a stand-in API, with the public API's
+ * names: `authorName`, `distribution`, `collectorVersion`, `sourceUrl`.
+ * Tokens are made at run time and checked as booleans only.
  */
 
 const SERVER = "https://telflo.example";
@@ -36,7 +36,7 @@ const DETAIL = { ...FLOW, description: "# Why\n\nBecause.\n", yaml: "receivers: 
 
 let token: string;
 
-/** Whether a text holds a control character but the newline (Ruling 237's stripping). */
+/** Whether a text holds a control character but the newline. */
 function holdsControl(text: string): boolean {
   // eslint-disable-next-line no-control-regex
   return /[\u0000-\u0009\u000b-\u001f\u007f-\u009f]/.test(text);
@@ -135,7 +135,7 @@ describe("telflo flows get", () => {
   });
 });
 
-describe("server strings in human lines (Ruling 237)", () => {
+describe("server strings in human lines", () => {
   it("strips control characters from get's every line, and pull -o's message; pull keeps the YAML byte for byte", async () => {
     const e = "\u001b[31m\u0007";
     const flow = {
@@ -152,7 +152,7 @@ describe("server strings in human lines (Ruling 237)", () => {
     const get = await cli(["flows", "get", "otel-to-clickstack"]);
     expect(holdsControl(get.stdout.replaceAll("\t", ""))).toBe(false);
     expect(get.stdout.includes("d1[31m\nd2[31m\n")).toBe(true);
-    // Tabs are kept, every other control character goes (Ruling 239).
+    // Tabs are kept, every other control character goes.
     expect(get.stdout.includes('y1: "[31m"\ny2:\t2\n')).toBe(true);
     const out = join(process.env.HOME!, "escaped.yaml");
     const written = await cli(["flows", "pull", "otel-to-clickstack", "-o", out]);

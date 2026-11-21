@@ -1,4 +1,4 @@
-# List items that own anchors, aliased in later components (ruling 32).
+# List items that own anchors, aliased in later components.
 receivers:
   otlp:
     protocols:

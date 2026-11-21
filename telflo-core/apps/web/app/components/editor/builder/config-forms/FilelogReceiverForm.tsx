@@ -22,76 +22,72 @@ import type { ValueView } from "~/lib/graph/value-view.js";
 import type { ValuesResult } from "~/lib/stores/editor-store.js";
 
 /*
- * The filelog receiver's form (ADR 0018), over the form's fields (D9c
- * decision 2, D9b's contract): each field writes its own key. Collector
- * claims cite contrib v0.162.0 (`pkg/stanza/fileconsumer/` unless named).
+ * The filelog receiver's form, over the form's fields: each field writes its
+ * own key. Collector claims cite contrib v0.162.0 (`pkg/stanza/fileconsumer/`
+ * unless named).
  *
- * - Kept (Parity Notes): Add Path and Add Exclusion append seeds,
- *   `/var/log/*.log` and `/var/log/excluded/*.log` (`MultiValueField`'s
- *   `addValue`); removing the last row removes the key. Clearing a row
- *   writes `""`. Include is required (`matcher/matcher.go:63-65`): the
- *   asterisk is hand-made.
- * - Kept: the multiline box is on while a `multiline` block is there;
- *   ticking it writes `{line_start_pattern: ""}` (the collector splits on
- *   newlines while both patterns are empty, `split/split.go:57-59`), and
- *   unticking removes the block. Typing one pattern removes the other in
- *   the same change (`TextField`'s `excludes`; the collector refuses both,
+ * - Add Path and Add Exclusion append seeds, `/var/log/*.log` and
+ *   `/var/log/excluded/*.log` (`MultiValueField`'s `addValue`); removing the
+ *   last row removes the key. Clearing a row writes `""`. Include is required
+ *   (`matcher/matcher.go:63-65`): the asterisk is hand-made.
+ * - The multiline box is on while a `multiline` block is there; ticking it
+ *   writes `{line_start_pattern: ""}` (the collector splits on newlines
+ *   while both patterns are empty, `split/split.go:57-59`), and unticking
+ *   removes the block. Typing one pattern removes the other in the same
+ *   change (`TextField`'s `excludes`; the collector refuses both,
  *   `split.go:77`), and a pattern is disabled while the other is set and it
  *   isn't (with both in the text, both stay editable, so either can be
  *   kept; the seed's empty start pattern disables nothing). Cleared, a
  *   pattern removes its key. The box's state is read from the text, so a
  *   YAML edit adding or removing the block shows.
- * - Fixed (D9c decisions 3 and 9): Resource and Log Attributes are
- *   `KeyValueMapField`s (`"rows"`): Add holds a row until its key is typed
- *   (never writing `"": ""`), a key is renamed in place on blur or Enter,
- *   and a key another row has is refused under the row with "An attribute
- *   with this key already exists." (never collapsing the two). Both are
- *   read from the text, never from refs taken once, so the next attribute
- *   edit never writes a stale map back over a YAML edit.
- * - Fixed (D9c decision 7): the collector refuses Delete file after reading
- *   with `start_at: end` (`config.go:246-253`), and a multiline pattern with
- *   the `nop` encoding (`split/split.go:47-55`). Ticking Delete file after
- *   reading sets Start Position to Beginning when it isn't, choosing End
- *   unticks Delete file after reading (writes `false`, as unticking does),
- *   choosing "No validation (raw bytes)" removes the multiline block when it
- *   holds a pattern (an empty one splits nothing; Ruling 76), and ticking
- *   the multiline box or typing a pattern while the encoding is raw bytes
- *   removes the encoding (UTF-8, the collector's default; Ruling 75), each
- *   in the same change (one undo entry), with a toast saying what changed
- *   (D9d decision 7: D9c's inline alerts became toasts).
- * - The "Deletes source files" alert is a hint under Delete file after
- *   reading, always shown (D9d decision 7, `DELETE_HINT`).
- * - Copy (D9c decision 4): ASCII is "ASCII (read as UTF-8)": the collector
- *   decodes `ascii` as UTF-8 (`internal/coreinternal/textutils/encoding.go:23-24`).
- * - Unset shows the collector's default (D9b decision 3; `config.go:60-78`,
- *   `reader/factory.go:30-31`, `scanner/scanner.go:15`): Start Position
- *   End, Encoding UTF-8, Compression None, File name ticked
+ * - Resource and Log Attributes are `KeyValueMapField`s (`"rows"`): Add
+ *   holds a row until its key is typed (never writing `"": ""`), a key is
+ *   renamed in place on blur or Enter, and a key another row has is
+ *   refused under the row with "An attribute with this key already
+ *   exists." (never collapsing the two). Both are read from the text,
+ *   never from refs taken once, so the next attribute edit never writes a
+ *   stale map back over a YAML edit.
+ * - The collector refuses Delete file after reading with `start_at: end`
+ *   (`config.go:246-253`), and a multiline pattern with the `nop` encoding
+ *   (`split/split.go:47-55`). Ticking Delete file after reading sets Start
+ *   Position to Beginning when it isn't, choosing End unticks Delete file
+ *   after reading (writes `false`, as unticking does), choosing "No
+ *   validation (raw bytes)" removes the multiline block when it holds a
+ *   pattern (an empty one splits nothing), and ticking the multiline box or
+ *   typing a pattern while the encoding is raw bytes removes the encoding
+ *   (UTF-8, the collector's default), each in the same change (one undo
+ *   entry), with a toast saying what changed.
+ * - Delete file after reading has a hint under it, always shown
+ *   (`DELETE_HINT`).
+ * - Copy: ASCII is "ASCII (read as UTF-8)": the collector decodes `ascii` as
+ *   UTF-8 (`internal/coreinternal/textutils/encoding.go:23-24`).
+ * - Unset shows the collector's default (`config.go:60-78`,
+ *   `reader/factory.go:30-31`, `scanner/scanner.go:15`): Start Position End,
+ *   Encoding UTF-8, Compression None, File name ticked
  *   (`IncludeFileName: true`), the rest unticked, as placeholders and
- *   "Default" hints, never as values. Clearing a field removes its key;
- *   None removes `compression`, whose unset shows the placeholder "None"
- *   (the collector's `""`, README), with no "Default" hint.
- *   The numbers are D9b's number fields: `0` can be written and shows, and
- *   no `NaN`.
- * - The Operators section is the operator framework (Task 5) over
- *   `operators`, from file (decision 8).
+ *   "Default" hints, never as values. Clearing a field removes its key; None
+ *   removes `compression`, whose unset shows the placeholder "None" (the
+ *   collector's `""`, README), with no "Default" hint. The numbers are number
+ *   fields: `0` can be written and shows, and no `NaN`.
+ * - The Operators section is the operator framework over `operators`, from
+ *   file.
  *
- * Ids are fixed (`start-at`, `attr-file-name`, …); map rows
- * are keyed by their items, not by index (D9c Ruling 68); no value reaches
- * an attribute (decision 10).
+ * Ids are fixed (`start-at`, `attr-file-name`, …); map rows are keyed by
+ * their items, not by index; no value reaches an attribute.
  */
 
-/** Toasted once ticking Delete file after reading set Start Position (decision 7). */
+/** Toasted once ticking Delete file after reading set Start Position. */
 export const START_AT_SET = "Start Position set to Beginning: deleting files needs it.";
-/** Toasted once choosing End unticked Delete file after reading (decision 7). */
+/** Toasted once choosing End unticked Delete file after reading. */
 export const DELETE_UNTICKED = "Unticked Delete file after reading: it needs Start Position: Beginning.";
-/** Toasted once choosing raw bytes removed the multiline block (decision 7). */
+/** Toasted once choosing raw bytes removed the multiline block. */
 export const MULTILINE_REMOVED = "Removed the multiline patterns: raw bytes can't be split by pattern.";
-/** Toasted once ticking the multiline box or typing a pattern removed the raw-bytes encoding (decision 7; Ruling 75). */
+/** Toasted once ticking the multiline box or typing a pattern removed the raw-bytes encoding. */
 export const ENCODING_RESET = "Encoding set to UTF-8: raw bytes can't be split by pattern.";
 
 /**
- * The hint under Delete file after reading, always shown (D9d decision 7):
- * the gate is at stage beta, on by default, at v0.162.0
+ * The hint under Delete file after reading, always shown: the gate is at
+ * stage beta, on by default, at v0.162.0
  * (`pkg/stanza/fileconsumer/internal/metadata/generated_feature_gates.go`).
  */
 export const DELETE_HINT = "Deletes each file once it's read. Needs the filelog.allowFileDeletion feature gate (on by default).";
@@ -101,7 +97,7 @@ function isNop(view: ValueView): boolean {
   return view.kind === "scalar" && typeof view.value === "string" && view.value.toLowerCase() === "nop";
 }
 
-/** Resource and Log Attributes: their rows' words (decision 9). */
+/** Resource and Log Attributes: their rows' words. */
 export const ATTRIBUTE_NOUNS: KeyValueNouns = {
   key: "key",
   value: "value",
@@ -159,7 +155,7 @@ export function FilelogReceiverForm() {
   const metadataCount = keyCount(form.read(["resource"])) + keyCount(form.read(["attributes"]));
   const deleting = form.read(["delete_after_read"]).value === true;
 
-  /** decision 7: End can't be used with Delete file after reading (`config.go:250-252`). */
+  /** End can't be used with Delete file after reading (`config.go:250-252`). */
   const chooseStartAt = (value: string) => {
     const changes: ValueChange[] = [{ path: ["start_at"], value }];
     const unticks = value === "end" && deleting;
@@ -168,7 +164,7 @@ export function FilelogReceiverForm() {
     if (unticks) adjustments.note([DELETE_UNTICKED], result);
   };
 
-  /** decision 7: deleting files needs Start Position: Beginning (`config.go:246-253`). */
+  /** Deleting files needs Start Position: Beginning (`config.go:246-253`). */
   const toggleDelete = (on: boolean) => {
     const startAt = form.read(["start_at"]);
     const sets = on && !(startAt.kind === "scalar" && startAt.value === "beginning");
@@ -178,7 +174,7 @@ export function FilelogReceiverForm() {
     if (sets) adjustments.note([START_AT_SET], result);
   };
 
-  /** decision 7: raw bytes can't be split by a pattern (`split/split.go:47-55`); an empty pattern splits nothing (Ruling 76). */
+  /** Raw bytes can't be split by a pattern (`split/split.go:47-55`); an empty pattern splits nothing. */
   const chooseEncoding = (value: string) => {
     const changes: ValueChange[] = [{ path: ["encoding"], value }];
     const removes =
@@ -407,13 +403,13 @@ export function FilelogReceiverForm() {
 }
 
 /**
- * Multiline Parsing: the box is on while a `multiline` block is there
- * (read from the text); a
- * `multiline` that isn't a mapping is read-only with decision 3's hint.
+ * Multiline Parsing: the box is on while a `multiline` block is there (read
+ * from the text); a `multiline` that isn't a mapping is read-only with
+ * `UNSHOWABLE_VALUE_MESSAGE`.
  */
 function MultilineSection({ adjustments }: { adjustments: Adjustments }) {
   const form = useForm();
-  /** decision 7 (Ruling 75): a pattern can't be used with raw bytes (`split/split.go:47-55`): the encoding goes with it. */
+  /** A pattern can't be used with raw bytes (`split/split.go:47-55`): the encoding goes with it. */
   const withEncodingReset = (changes: ValueChange[]): ValuesResult => {
     const resets = isNop(form.read(["encoding"]));
     const result = form.apply(resets ? [...changes, { path: ["encoding"], remove: true }] : changes);

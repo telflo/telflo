@@ -1,8 +1,7 @@
 #!/bin/bash
-# Refusal-only self-test for scripts/smoke-test-stack.sh (D36-2 decisions 96,
-# 97 and 109; Ruling 407): the site and the project are checked before
-# anything runs, and each refusal exits 2 having started nothing. No stack is
-# started: stand-in docker, curl, node, psql and jq come first on PATH, each
+# Refusal-only self-test for scripts/smoke-test-stack.sh: the site and the
+# project are checked before anything runs, and each refusal exits 2 having
+# started nothing. No stack is started: stand-in docker, curl, node, psql and jq come first on PATH, each
 # logging any call and failing (exit 97), and every case asserts the log is
 # empty. The script runs with a clean environment (env -i: only PATH, HOME,
 # TMPDIR and the case's own settings), its URLs pointed at a closed port, so

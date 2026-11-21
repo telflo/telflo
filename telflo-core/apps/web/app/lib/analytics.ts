@@ -5,7 +5,7 @@ import { isCliAuthDocument } from "~/lib/cli-auth.js";
 import { CONSENT_CHANGED_EVENT, getConsentStatus } from "~/lib/cookie-consent.js";
 
 /*
- * Product analytics: PostHog, switched on by a setting (D4 decision 8; ADR 0024).
+ * Product analytics: PostHog, switched on by a setting.
  *
  * No key is built into the bundle, and no host name turns it on: the web
  * server reads TELFLO_POSTHOG_KEY at request time and root's loader passes
@@ -15,52 +15,46 @@ import { CONSENT_CHANGED_EVENT, getConsentStatus } from "~/lib/cookie-consent.js
  * never arrives.
  *
  * With it, posthog-js is imported in the browser only, from an effect, and
- * everything waits on the one client its init produces (Preflight ruling 2):
- * the signed-in layout's effects run before root's, so an identify can come
- * before the init has even started.
+ * everything waits on the one client its init produces: the signed-in
+ * layout's effects run before root's, so an identify can come before the
+ * init has even started.
  *
- * The consent calls (Preflight ruling 3), and what posthog-js really does
- * with them: with `cookieless_mode: 'on_reject'` and no choice yet, it
- * captures nothing at all, not even cookielessly. Init still loads its flags and remote
- * configuration (PostHog's config.js runs on this origin), sending a random
- * id made for this page load and never stored, the timezone and the origin:
- * no email, no URL, no storage, no capture (Ruling 14). Accepting opts in:
- * capture starts, with its cookies and storage, and so does session replay,
- * except on a local host. Rejecting clears the opt-in, back to capturing
- * nothing.
+ * The consent calls, and what posthog-js really does with them: with
+ * `cookieless_mode: 'on_reject'` and no choice yet, it captures nothing at
+ * all, not even cookielessly. Init still loads its flags and remote
+ * configuration (PostHog's config.js runs on this origin), sending a random id
+ * made for this page load and never stored, the timezone and the origin: no
+ * email, no URL, no storage, no capture. Accepting opts in: capture starts,
+ * with its cookies and storage, and so does session replay, except on a local
+ * host. Rejecting clears the opt-in, back to capturing nothing.
  *
- * Whatever is captured after accepting carries no emailed link's token
- * (Ruling 14): the reset and verification pages take theirs out of the
- * address bar before this starts, and stripTokens drops any fragment and any
- * `token` parameter from the URLs an event or a recording carries. On the
- * flows library's page (`/flows`), they lose `q` too, what the visitor typed
- * into its search (D12 Ruling 35): every URL-valued property (the page's
- * address, the referrers, `$set`'s and `$set_once`'s), heatmaps' keys, and
- * replay's page addresses and recorded requests; its `signals` and `tags`
- * stay. A URL or path that may hold a quick-deploy link's secret is
- * replaced whole by `/quick-deploy/[redacted]` (D17c-2 decision 32; behind
- * the gateway a link typed without `/api/` is nginx's own 404, never the
- * web app's, Ruling 44; on the dev server it renders root's ErrorBoundary,
- * where PostHog is never imported: the check is a backstop), and so is a clicked
- * element's description that may hold one (`$elements_chain`); PostHog
- * never starts at all in a page whose own address or referrer may hold
- * one (startAnalytics). A URL or path whose path or query holds an API
- * token's prefix, `tf_` (D22 decision 40; Ruling 106), is replaced whole by
- * `/[redacted]` after its origin, as the API's request log replaces it, and
- * PostHog never starts in a page whose address (its fragment too) or
- * referrer holds it either, nor on the CLI's sign-in page (`/cli-auth`, or
- * `/login` on the way to it: D27 Preflight ruling 14). A
- * request replay records to the API (`/api/` in its path) loses its whole
- * query, which can hold a search, and a request for an organization's logo
- * its whole path, which names the organization (withoutTokensInRequest;
- * D23-2 Ruling 145). Replay masks every input,
- * and all text inside the signed-in app and the auth screens (their roots
- * carry `ph-mask`); it never records a request's
- * headers or body, or the console, whatever PostHog's project settings say.
- * While one of those shells is shown,
- * autocapture sends no element's text or attributes, except a clicked link's
- * `href` (setAnalyticsMasked,
- * Ruling 16).
+ * Whatever is captured after accepting carries no emailed link's token: the
+ * reset and verification pages take theirs out of the address bar before this
+ * starts, and stripTokens drops any fragment and any `token` parameter from
+ * the URLs an event or a recording carries. On the flows library's page
+ * (`/flows`), they lose `q` too, what the visitor typed into its search: every
+ * URL-valued property (the page's address, the referrers, `$set`'s and
+ * `$set_once`'s), heatmaps' keys, and replay's page addresses and recorded
+ * requests; its `signals` and `tags` stay. A URL or path that may hold a
+ * quick-deploy link's secret is replaced whole by `/quick-deploy/[redacted]`
+ * (behind the gateway a link typed without `/api/` is nginx's own 404, never
+ * the web app's; on the dev server it renders root's ErrorBoundary, where
+ * PostHog is never imported: the check is a backstop), and so is a clicked
+ * element's description that may hold one (`$elements_chain`); PostHog never
+ * starts at all in a page whose own address or referrer may hold one
+ * (startAnalytics). A URL or path whose path or query holds an API token's
+ * prefix, `tf_`, is replaced whole by `/[redacted]` after its origin, as the
+ * API's request log replaces it, and PostHog never starts in a page whose
+ * address (its fragment too) or referrer holds it either, nor on the CLI's
+ * sign-in page (`/cli-auth`, or `/login` on the way to it). A request replay
+ * records to the API (`/api/` in its path) loses its whole query, which can
+ * hold a search, and a request for an organization's logo its whole path,
+ * which names the organization (withoutTokensInRequest). Replay masks every
+ * input, and all text inside the signed-in app and the auth screens (their
+ * roots carry `ph-mask`); it never records a request's headers or body, or the
+ * console, whatever PostHog's project settings say. While one of those shells
+ * is shown, autocapture sends no element's text or attributes, except a
+ * clicked link's `href` (setAnalyticsMasked).
  */
 
 /** What root's loader passes on when TELFLO_POSTHOG_KEY is set. */
@@ -72,7 +66,7 @@ export interface AnalyticsSettings {
 }
 
 let resolveClient!: (client: PostHog) => void;
-/** The one client, once posthog-js is imported and initialised. */
+/** The one client, once posthog-js is imported and initialized. */
 const clientReady = new Promise<PostHog>((resolve) => {
   resolveClient = resolve;
 });
@@ -85,11 +79,12 @@ function withClient(use: (client: PostHog) => void): void {
 
 /**
  * How many of the surfaces that show private data are on the page: the
- * signed-in app's shell and the auth screens'. Replay masks their text by `ph-mask`, but autocapture
- * ignores it everywhere (Radix's portals sit outside the shells, in `<body>`), and never
- * masks an attribute. So while any of them is shown, autocapture (and dead
- * clicks) send no element's text and no attributes, except a clicked link's
- * `href`, which posthog-js always sends (Ruling 16).
+ * signed-in app's shell and the auth screens'. Replay masks their text by
+ * `ph-mask`, but autocapture ignores it everywhere (Radix's portals sit
+ * outside the shells, in `<body>`), and never masks an attribute. So while any
+ * of them is shown, autocapture (and dead clicks) send no element's text and
+ * no attributes, except a clicked link's `href`, which posthog-js always
+ * sends.
  */
 let maskedSurfaces = 0;
 
@@ -147,7 +142,7 @@ let resetPending = false;
 /**
  * Tells PostHog who the signed-in user is, once the visitor has accepted.
  * posthog-js sends an identify's id and email even when nothing else is
- * captured, so none is sent before the choice (Preflight ruling 2).
+ * captured, so none is sent before the choice.
  */
 function identifyIfAccepted(client: PostHog): void {
   if (signedInUser === null || identifiedId === signedInUser.id) return;
@@ -170,7 +165,7 @@ function syncConsent(client: PostHog): void {
     client.stopSessionRecording();
     // PostHog drops its storage, and with it whom it was told about, so an
     // accept after this identifies the user again. Its session storage
-    // outlives the clear (Ruling 14).
+    // outlives the clear.
     identifiedId = null;
     removePostHogSessionStorage();
   }
@@ -192,15 +187,13 @@ const URL_PROPERTY = /url|referrer|href|pathname/i;
 /**
  * A quick-deploy link's secret's prefix, `tqd_`, in any case and with any of
  * its characters percent-encoded (`%74qd_`, `t%71d_`, `tqd%5F`). The
- * gateway's access log (docker/gateway/default.conf) matches these
- * spellings in the raw request line and Referer, but decodes neither
- * (its once-decoded path, `$uri`, is searched only for `tqd_` and a
- * `/quick-deploy/` segment as spelt), where
- * mayHoldQuickDeploySecret also tests each spelling percent-decoded once:
- * nginx logs as sent a prefix encoded twice (`%2574qd_`), in the request
- * line or a Referer, and a hand-encoded `quick-deploy` (`/%71uick-deploy/…`,
- * `%2Fquick-deploy%2F…`) in a Referer, residues recorded in the review of
- * D17c-2 decision 32.
+ * gateway's access log (docker/gateway/default.conf) matches these spellings
+ * in the raw request line and Referer, but decodes neither (its once-decoded
+ * path, `$uri`, is searched only for `tqd_` and a `/quick-deploy/` segment
+ * as spelt), where mayHoldQuickDeploySecret also tests each spelling
+ * percent-decoded once: nginx logs as sent a prefix encoded twice
+ * (`%2574qd_`), in the request line or a Referer, and a hand-encoded
+ * `quick-deploy` (`/%71uick-deploy/…`, `%2Fquick-deploy%2F…`) in a Referer.
  */
 const QUICK_DEPLOY_SECRET_PREFIX = /(t|%74|%54)(q|%71|%51)(d|%64|%44)(_|%5f)/i;
 
@@ -212,16 +205,16 @@ const REDACTED_QUICK_DEPLOY_PATH = "/quick-deploy/[redacted]";
 
 /**
  * Whether `url` (absolute or relative, up to its fragment, which is dropped
- * anyway) may hold a quick-deploy link's secret (D17c-2 decision 32): `tqd_`
- * in its path or its query, as spelt or percent-decoded once, or a
- * `/quick-deploy/` segment in its path, as the browser resolves it (dot
- * segments) and percent-decoded, runs of `/` made one. A link typed without
- * `/api/` (`/quick-deploy/tqd_…`) never reaches the web app behind the
- * gateway (nginx answers its own 404, Ruling 44); on the dev server it
- * renders root's ErrorBoundary, where PostHog is never imported. This is
- * the backstop for any page that would hold one anyway, whose address
- * posthog-js would otherwise send whole. The links' own routes
- * (`/quick-deploy-links`) don't count.
+ * anyway) may hold a quick-deploy link's secret: `tqd_` in its path or its
+ * query, as spelt or percent-decoded once, or a `/quick-deploy/` segment in
+ * its path, as the browser resolves it (dot segments) and percent-decoded,
+ * runs of `/` made one. A link typed without `/api/`
+ * (`/quick-deploy/tqd_…`) never reaches the web app behind the gateway
+ * (nginx answers its own 404); on the dev server it renders root's
+ * ErrorBoundary, where PostHog is never imported. This is the backstop for
+ * any page that would hold one anyway, whose address posthog-js would
+ * otherwise send whole. The links' own routes (`/quick-deploy-links`) don't
+ * count.
  */
 function mayHoldQuickDeploySecret(url: string): boolean {
   const beforeHash = url.split("#", 1)[0] ?? "";
@@ -268,11 +261,10 @@ function redactedUrl(url: string, path: string): string {
 }
 
 /**
- * A library link's prefix, `tll_` (D23-2 decisions 4 and 55; Preflight
- * ruling 23), in any case and with any of its characters percent-encoded
- * (`%74ll_`, `t%6cl_`, `tll%5F`): the gateway's spellings (decision 50).
- * mayHoldLibraryLink also tests each spelling percent-decoded once, so a
- * prefix encoded twice counts too.
+ * A library link's prefix, `tll_`, in any case and with any of its
+ * characters percent-encoded (`%74ll_`, `t%6cl_`, `tll%5F`): the gateway's
+ * spellings. mayHoldLibraryLink also tests each spelling percent-decoded
+ * once, so a prefix encoded twice counts too.
  */
 const LIBRARY_LINK_PREFIX = /(t|%74|%54)(l|%6c|%4c)(l|%6c|%4c)(_|%5f)/i;
 
@@ -284,15 +276,15 @@ const REDACTED_LIBRARY_LINK_PATH = "/library-links/[redacted]";
 
 /**
  * Whether `url` (absolute or relative, up to its fragment, which is dropped
- * anyway) may hold a library link (D23-2 decision 55): `tll_` in its path
- * or its query, as spelt or percent-decoded once, or a `/library-links/`
- * segment in its path, as the browser resolves it (dot segments) and
- * percent-decoded, runs of `/` made one, as mayHoldQuickDeploySecret reads
- * a quick-deploy link. The link is only ever on the clipboard and in its
- * `201`'s body; this is the backstop for a page whose address would hold one
- * anyway (a link opened in the browser, `/library-links/…` typed without
- * `/api/`), whose address posthog-js would otherwise send whole. The
- * library's own routes (`/library`, `/api/v1/library-files/…`) don't count.
+ * anyway) may hold a library link: `tll_` in its path or its query, as spelt
+ * or percent-decoded once, or a `/library-links/` segment in its path, as
+ * the browser resolves it (dot segments) and percent-decoded, runs of `/`
+ * made one, as mayHoldQuickDeploySecret reads a quick-deploy link. The link
+ * is only ever on the clipboard and in its `201`'s body; this is the
+ * backstop for a page whose address would hold one anyway (a link opened in
+ * the browser, `/library-links/…` typed without `/api/`), whose address
+ * posthog-js would otherwise send whole. The library's own routes
+ * (`/library`, `/api/v1/library-files/…`) don't count.
  */
 function mayHoldLibraryLink(url: string): boolean {
   const beforeHash = url.split("#", 1)[0] ?? "";
@@ -311,10 +303,10 @@ function mayHoldLibraryLink(url: string): boolean {
 }
 
 /**
- * An API token's prefix, `tf_` (D22 decisions 7 and 40), in any case and
- * with any of its characters percent-encoded once (`%74f_`, `t%66_`,
- * `tf%5F`). mayHoldApiToken also tests the URL percent-decoded once, so a
- * prefix encoded twice counts too.
+ * An API token's prefix, `tf_`, in any case and with any of its
+ * characters percent-encoded once (`%74f_`, `t%66_`, `tf%5F`).
+ * mayHoldApiToken also tests the URL percent-decoded once, so a prefix
+ * encoded twice counts too.
  */
 const API_TOKEN_PREFIX = /(t|%74|%54)(f|%66|%46)(_|%5f)/i;
 
@@ -323,15 +315,14 @@ const REDACTED_API_TOKEN_PATH = "/[redacted]";
 
 /**
  * Whether `url` (absolute or relative, or anything else) may hold an API
- * token (D22 decision 40; Ruling 106): `tf_`, case aside, in its path or its
- * query, as spelt or percent-decoded once. A token never belongs in a URL
- * (it travels in the `Authorization` header); this covers one pasted into
- * the address bar. The fragment, which every URL sent loses anyway, is left
- * out unless `withFragment` (startAnalytics: posthog-js stores the page's
- * address before any before_send sees it). False positives (a search for
- * `tf_`; an emailed link's token holding it, though those pages take their
- * token out of the address bar before the root starts analytics) only lose
- * a URL.
+ * token: `tf_`, case aside, in its path or its query, as spelt or
+ * percent-decoded once. A token never belongs in a URL (it travels in the
+ * `Authorization` header); this covers one pasted into the address bar. The
+ * fragment, which every URL sent loses anyway, is left out unless
+ * `withFragment` (startAnalytics: posthog-js stores the page's address
+ * before any before_send sees it). False positives (a search for `tf_`; an
+ * emailed link's token holding it, though those pages take their token out
+ * of the address bar before the root starts analytics) only lose a URL.
  */
 function mayHoldApiToken(url: string, { withFragment = false } = {}): boolean {
   const spelt = withFragment ? url : (url.split("#", 1)[0] ?? "");
@@ -352,18 +343,17 @@ function decodedOnce(text: string): string {
 }
 
 /**
- * `url` without its fragment and without any `token` query parameter, the
- * two places an emailed link carries its token (`/reset-password#token=…`,
+ * `url` without its fragment and without any `token` query parameter, the two
+ * places an emailed link carries its token (`/reset-password#token=…`,
  * `/verify-email?token=…`, `/accept-invitation#token=…`), and, on the flows
- * library's own path, without its `q`: what the visitor typed into its
- * search (D12 Ruling 35). The library's other parameters, its `signals` and
- * `tags` chips, stay. Anything that is not a URL (`$direct`, a path) comes
- * back as it was, less the same parts. A URL or path that may hold a
- * quick-deploy link's secret comes back as `/quick-deploy/[redacted]`, after
- * its origin if it has one (mayHoldQuickDeploySecret), one that may hold a
- * library link as `/library-links/[redacted]` (mayHoldLibraryLink, D23-2
- * decision 55), and one that may hold an API token as `/[redacted]`, the
- * same way (mayHoldApiToken).
+ * library's own path, without its `q`: what the visitor typed into its search.
+ * The library's other parameters, its `signals` and `tags` chips, stay.
+ * Anything that is not a URL (`$direct`, a path) comes back as it was, less
+ * the same parts. A URL or path that may hold a quick-deploy link's secret
+ * comes back as `/quick-deploy/[redacted]`, after its origin if it has one
+ * (mayHoldQuickDeploySecret), one that may hold a library link as
+ * `/library-links/[redacted]` (mayHoldLibraryLink), and one that may hold an
+ * API token as `/[redacted]`, the same way (mayHoldApiToken).
  */
 export function withoutTokens(url: string): string {
   if (mayHoldQuickDeploySecret(url)) return redactedQuickDeployUrl(url);
@@ -388,10 +378,10 @@ export function withoutTokens(url: string): string {
 
 /**
  * Whether `beforeQuery` (a URL, absolute or relative, up to its query) is the
- * flows library's page, `/flows`, which holds its search in `q` (D12
- * decision 1). React Router matches a path case-insensitively, with a
- * trailing slash or without, and percent-decoded, so those all count. Only
- * the library: a flow's page, `/flows/<slug>`, has no search.
+ * flows library's page, `/flows`, which holds its search in `q`. React Router
+ * matches a path case-insensitively, with a trailing slash or without, and
+ * percent-decoded, so those all count. Only the library: a flow's page,
+ * `/flows/<slug>`, has no search.
  *
  * If `/flows` ever gets a loader, the browser will fetch `/flows.data?q=…`
  * itself: withoutTokensInRequest would then need that path too, since a
@@ -477,7 +467,7 @@ function withoutTokensInRecording(recorded: unknown): unknown {
 /** What stands for a clicked element's description that may hold a link's secret. */
 const REDACTED_QUICK_DEPLOY_ELEMENTS_CHAIN = `a:href="${REDACTED_QUICK_DEPLOY_PATH}"`;
 
-/** What stands for a clicked element's description that may hold a library link (D23-2 decision 55). */
+/** What stands for a clicked element's description that may hold a library link. */
 const REDACTED_LIBRARY_LINK_ELEMENTS_CHAIN = `a:href="${REDACTED_LIBRARY_LINK_PATH}"`;
 
 /**
@@ -500,7 +490,7 @@ function elementValueMayHoldLibraryLink(value: string): boolean {
  * secret: the clicked element and its ancestors as one string
  * (`a.button:attr__href="/quick-deploy/tqd_…"href="…"nth-child="1";div…`),
  * which carries a clicked link's `href` even while the attributes are
- * masked (Ruling 16), and the elements' text when they aren't. It may if
+ * masked, and the elements' text when they aren't. It may if
  * the prefix is anywhere in it, in any of its spellings, or if any of its
  * quoted values may hold one as a URL would (mayHoldQuickDeploySecret).
  * Each value is read on its own: read whole, the string would be cut at
@@ -544,13 +534,12 @@ function elementsMayHoldSecret(
  * An autocapture event's properties with the clicked element's description
  * replaced by a fixed one when any of its forms may hold a link's secret:
  * `$elements_chain`, when it is sent, becomes
- * REDACTED_QUICK_DEPLOY_ELEMENTS_CHAIN, and the same elements' other
- * forms, `$elements` (posthog-js's older array, sent until PostHog's remote
+ * REDACTED_QUICK_DEPLOY_ELEMENTS_CHAIN, and the same elements' other forms,
+ * `$elements` (posthog-js's older array, sent until PostHog's remote
  * configuration says otherwise) and `$el_text`, are dropped. Any one of the
  * three holding it is enough (elementsMayHoldSecret). One that may hold a
- * library link instead (`tll_`, however spelt, or a `/library-links/` path;
- * D23-2 decision 55) goes the same way, its chain
- * REDACTED_LIBRARY_LINK_ELEMENTS_CHAIN.
+ * library link instead (`tll_`, however spelt, or a `/library-links/` path)
+ * goes the same way, its chain REDACTED_LIBRARY_LINK_ELEMENTS_CHAIN.
  */
 function withoutSecretInElements(properties: Record<string, unknown>): Record<string, unknown> {
   const chain = properties.$elements_chain;
@@ -562,7 +551,7 @@ function withoutSecretInElements(properties: Record<string, unknown>): Record<st
     (typeof chain === "string" && elementsChainMayHoldLibraryLink(chain)) ||
     elementsMayHoldSecret(properties, elementValueMayHoldLibraryLink)
   ) {
-    // A library link (D23-2 decision 55), the same way.
+    // A library link, the same way.
     redactedChain = REDACTED_LIBRARY_LINK_ELEMENTS_CHAIN;
   } else {
     return properties;
@@ -575,24 +564,22 @@ function withoutSecretInElements(properties: Record<string, unknown>): Record<st
 }
 
 /**
- * posthog-js's `before_send`: the last look at every event and every batch
- * of replay before it leaves the page (Ruling 14). posthog-js records
- * `location.href` whole, fragment and query included, as `$current_url`,
- * in the initial URL it keeps for the person, in replay's Meta event, as
- * `$heatmap_data`'s keys and inside nested events (web vitals). Every URL
- * property, at any depth of the event's plain objects (its `$set` and
- * `$set_once` among them), every URL key, and every page address in a
- * `$snapshot`'s recording, loses its fragment and any `token` parameter
- * (Rulings 14 and 16), and, on the flows library's path, its `q` (D12
- * Ruling 35). One that may hold a quick-deploy link's secret (`tqd_`,
- * however spelt, or a `/quick-deploy/` path) is replaced whole by
- * `/quick-deploy/[redacted]` (D17c-2 decision 32), and so is a clicked
- * element's description that may hold one (withoutSecretInElements); one
- * that may hold a library link (`tll_`, however spelt, or a
- * `/library-links/` path) by `/library-links/[redacted]` (D23-2 decision
- * 55), the same way. Last, every string value anywhere in the event, arrays
- * included, that may hold a library link or names an organization's logo is
- * replaced whole (withoutLibraryLinksOrLogosIn, D23-2 Ruling 148).
+ * posthog-js's `before_send`: the last look at every event and every batch of
+ * replay before it leaves the page. posthog-js records `location.href` whole,
+ * fragment and query included, as `$current_url`, in the initial URL it keeps
+ * for the person, in replay's Meta event, as `$heatmap_data`'s keys and inside
+ * nested events (web vitals). Every URL property, at any depth of the event's
+ * plain objects (its `$set` and `$set_once` among them), every URL key, and
+ * every page address in a `$snapshot`'s recording, loses its fragment and any
+ * `token` parameter and, on the flows library's path, its `q`. One that may
+ * hold a quick-deploy link's secret (`tqd_`, however spelt, or a
+ * `/quick-deploy/` path) is replaced whole by `/quick-deploy/[redacted]`, and
+ * so is a clicked element's description that may hold one
+ * (withoutSecretInElements); one that may hold a library link (`tll_`, however
+ * spelt, or a `/library-links/` path) by `/library-links/[redacted]`, the same
+ * way. Last, every string value anywhere in the event, arrays included, that
+ * may hold a library link or names an organization's logo is replaced whole
+ * (withoutLibraryLinksOrLogosIn).
  */
 export function stripTokens(event: CaptureResult | null): CaptureResult | null {
   if (event === null) return null;
@@ -612,29 +599,28 @@ export function stripTokens(event: CaptureResult | null): CaptureResult | null {
     return cleaned;
   } catch {
     // Anything that can't be cleaned (a cycle, a toJSON that throws) is dropped, never sent as it was:
-    // posthog-js (1.376) calls before_send with no try/catch of its own (D23-2 Ruling 153).
+    // posthog-js (1.376) calls before_send with no try/catch of its own.
     return null;
   }
 }
 
 /**
  * `value` with every string in it, at any depth of plain objects AND arrays,
- * that may hold a library link or names an organization's logo replaced
- * whole (D23-2 Ruling 148, the invariant of Rulings 137 and 145 for every
- * event property): a link by `/library-links/[redacted]`, a logo's address
- * by `/api/v1/organization-logos/[redacted]`, each after the string's origin
- * if it is an absolute URL (valueMayHoldLibraryLink, valueNamesOrganizationLogo).
- * Not only URL properties: a `$web_vitals_LCP_event`'s `entries[].url` (and
- * its attribution's, with posthog-js's attribution build) is the largest
- * image's address, which may be a logo once the PostHog project turns web
- * vitals on. Those entries are the browser's PerformanceEntry objects, not
- * plain ones: an object with a `toJSON` (plain or not) is read by what it
- * returns, what posthog-js will send, and kept as it is unless that
- * changes; a `toJSON` that returns the object itself is read by its own
- * properties, as JSON.stringify then reads it (Ruling 153). Anything
- * unchanged keeps its identity. A cycle (an object met again inside
- * itself, which JSON can't send anyway) throws, and stripTokens drops the
- * event; an object shared by two places is read in each.
+ * that may hold a library link or names an organization's logo replaced whole,
+ * for every event property: a link by `/library-links/[redacted]`, a logo's
+ * address by `/api/v1/organization-logos/[redacted]`, each after the string's
+ * origin if it is an absolute URL (valueMayHoldLibraryLink,
+ * valueNamesOrganizationLogo). Not only URL properties: a
+ * `$web_vitals_LCP_event`'s `entries[].url` (and its attribution's, with
+ * posthog-js's attribution build) is the largest image's address, which may be
+ * a logo once the PostHog project turns web vitals on. Those entries are the
+ * browser's PerformanceEntry objects, not plain ones: an object with a
+ * `toJSON` (plain or not) is read by what it returns, what posthog-js will
+ * send, and kept as it is unless that changes; a `toJSON` that returns the
+ * object itself is read by its own properties, as JSON.stringify then reads
+ * it. Anything unchanged keeps its identity. A cycle (an object met again
+ * inside itself, which JSON can't send anyway) throws, and stripTokens drops
+ * the event; an object shared by two places is read in each.
  */
 function withoutLibraryLinksOrLogosIn(value: unknown, open: WeakSet<object> = new WeakSet()): unknown {
   if (typeof value === "string") return withoutLibraryLinkOrLogo(value);
@@ -678,12 +664,12 @@ function escapesDecoded(text: string): string {
 }
 
 /**
- * The cheap check before the full one (Ruling 153): whether `text` holds
- * `tll_` (in any spelling) or one of the words, as spelt or with its `%XX`
- * escapes decoded once. A string with no hit (a stylesheet's percentages,
- * rrweb's inlined `_cssText`) never reaches decodeURIComponent or a URL
- * parse. Every string the full checks would find passes it: they look for
- * the same prefix and words, as spelt or decoded once.
+ * The cheap check before the full one: whether `text` holds `tll_` (in any
+ * spelling) or one of the words, as spelt or with its `%XX` escapes
+ * decoded once. A string with no hit (a stylesheet's percentages, rrweb's
+ * inlined `_cssText`) never reaches decodeURIComponent or a URL parse.
+ * Every string the full checks would find passes it: they look for the
+ * same prefix and words, as spelt or decoded once.
  */
 function mayNameLinkOrLogo(text: string): boolean {
   if (LIBRARY_LINK_PREFIX.test(text) || LINK_OR_LOGO_WORD.test(text)) return true;
@@ -751,7 +737,7 @@ function isApiRequest(url: string): boolean {
   }
 }
 
-/** An `/organization-logos/` segment, or a path that ends in `/organization-logos`: a logo's public route (D23-2 decision 3). */
+/** An `/organization-logos/` segment, or a path that ends in `/organization-logos`: a logo's public route. */
 const ORGANIZATION_LOGO_SEGMENT = /\/organization-logos(\/|$)/i;
 
 /** What stands for a recorded request for an organization's logo: its route, never the ids. */
@@ -759,13 +745,13 @@ const REDACTED_ORGANIZATION_LOGO_PATH = "/api/v1/organization-logos/[redacted]";
 
 /**
  * Whether `url` (absolute or relative) is a request for an organization's
- * logo (D23-2 Ruling 145): an `/organization-logos/` segment in its path, as
- * spelt or percent-decoded once, as the browser resolves it (dot segments),
- * runs of `/` made one, as mayHoldLibraryLink reads `/library-links/`. A
- * logo's address names the organization and its logo by id, and appears
- * only as the `src` of an `<img>` inside `ph-no-capture` (Ruling 137); the
- * image's load is a request replay records once the PostHog project turns
- * network capture on, which the client doesn't pin.
+ * logo: an `/organization-logos/` segment in its path, as spelt or
+ * percent-decoded once, as the browser resolves it (dot segments), runs of
+ * `/` made one, as mayHoldLibraryLink reads `/library-links/`. A logo's
+ * address names the organization and its logo by id, and appears only as
+ * the `src` of an `<img>` inside `ph-no-capture`; the image's load is a
+ * request replay records once the PostHog project turns network capture on,
+ * which the client doesn't pin.
  */
 function isOrganizationLogoRequest(url: string): boolean {
   const beforeQuery = (url.split("#", 1)[0] ?? "").split("?", 1)[0] ?? "";
@@ -782,18 +768,18 @@ function isOrganizationLogoRequest(url: string): boolean {
 
 /**
  * Replay's addresses outside events: each recorded request's URL, and the
- * page addresses the recorder adds itself (`$url_changed`, `$pageview`).
- * A request to the API (an `/api/` segment in its path, whether the URL is
+ * page addresses the recorder adds itself (`$url_changed`, `$pageview`). A
+ * request to the API (an `/api/` segment in its path, whether the URL is
  * absolute or relative) loses its whole query and its fragment: the query
  * can hold what a member typed, such as the configurations list's search
- * (`q`, ADR 0024; D7). Any other URL loses its fragment and any `token`
- * parameter, and the flows library's address its `q`, as stripTokens does
- * (withoutTokens; a `/flows` loader would add `/flows.data?q=…`, which it
- * would then have to cover). A URL that may hold a quick-deploy link's
- * secret, a library link (D23-2 decision 55) or an API token is replaced
- * whole, as stripTokens replaces it; a request for an organization's logo
- * keeps its entry, named `/api/v1/organization-logos/[redacted]` after its
- * origin (isOrganizationLogoRequest, D23-2 Ruling 145).
+ * (`q`). Any other URL loses its fragment and any `token` parameter, and
+ * the flows library's address its `q`, as stripTokens does (withoutTokens;
+ * a `/flows` loader would add `/flows.data?q=…`, which it would then have
+ * to cover). A URL that may hold a quick-deploy link's secret, a library
+ * link or an API token is replaced whole, as stripTokens replaces it; a
+ * request for an organization's logo keeps its entry, named
+ * `/api/v1/organization-logos/[redacted]` after its origin
+ * (isOrganizationLogoRequest).
  */
 function withoutTokensInRequest(request: CapturedNetworkRequest): CapturedNetworkRequest {
   const { name } = request;
@@ -807,14 +793,13 @@ function withoutTokensInRequest(request: CapturedNetworkRequest): CapturedNetwor
 
 /**
  * posthog-js's options. Replay's are pinned here, since a client-side value
- * wins over the PostHog project's (Ruling 14): every input masked, all text
- * masked inside an element with `ph-mask` (the signed-in app's root and the
- * auth screens'), no request
- * headers or bodies, and no console, even if the project turns them on.
- * Each recorded request's URL loses its fragment and `token`, and, for a
- * request to the API, its whole query (withoutTokensInRequest).
- * Autocapture's masking starts as the surfaces shown so far want it
- * (setAnalyticsMasked).
+ * wins over the PostHog project's: every input masked, all text masked
+ * inside an element with `ph-mask` (the signed-in app's root and the auth
+ * screens'), no request headers or bodies, and no console, even if the
+ * project turns them on. Each recorded request's URL loses its fragment and
+ * `token`, and, for a request to the API, its whole query
+ * (withoutTokensInRequest). Autocapture's masking starts as the surfaces
+ * shown so far want it (setAnalyticsMasked).
  */
 export function initOptions(settings: AnalyticsSettings): Partial<PostHogConfig> {
   const options: Partial<PostHogConfig> = {
@@ -833,14 +818,13 @@ export function initOptions(settings: AnalyticsSettings): Partial<PostHogConfig>
     enable_recording_console_log: false,
     // posthog-js's own masking of the URLs it stores for the person, with
     // `token` among the parameters it masks; stripTokens then removes them.
-    // `q` too (D12 Ruling 39): posthog-js keeps the page's address, `q`
-    // and all, in its own storage (`$initial_person_info`'s and
-    // `$client_session_props`' `u`, in localStorage and its `ph_…` cookie),
-    // which no before_send sees. Masked here, a shared `/flows?q=…` link's
-    // search is never stored; it is masked on every path, and only the
-    // flows library's page holds a `q` in its address. The masking matches
-    // a parameter's name exactly, and leaves the stored referrer (`r`) as
-    // it is.
+    // `q` too: posthog-js keeps the page's address, `q` and all, in its own
+    // storage (`$initial_person_info`'s and `$client_session_props`' `u`,
+    // in localStorage and its `ph_…` cookie), which no before_send sees.
+    // Masked here, a shared `/flows?q=…` link's search is never stored; it
+    // is masked on every path, and only the flows library's page holds a
+    // `q` in its address. The masking matches a parameter's name exactly,
+    // and leaves the stored referrer (`r`) as it is.
     mask_personal_data_properties: true,
     custom_personal_data_properties: ["token", "q"],
     before_send: stripTokens,
@@ -859,33 +843,31 @@ export function initOptions(settings: AnalyticsSettings): Partial<PostHogConfig>
 let blocked: boolean | undefined;
 
 /**
- * Imports and initialises posthog-js, once, and keeps capture in step with
+ * Imports and initializes posthog-js, once, and keeps capture in step with
  * the visitor's choice. Returns the cleanup for the effect that calls it.
  *
- * Never in a document whose address or referrer may hold a quick-deploy
- * link's secret (a link typed without `/api/`, `?s=tqd_…` on any page, a
- * page opened from one), a library link (`tll_` or a `/library-links/` path,
- * D23-2 decision 55), or an API token (`tf_` pasted anywhere in the
- * address, its fragment too, or in the referrer: mayHoldApiToken; D22
- * Ruling 106), nor on the CLI's sign-in page, `/cli-auth`, or `/login` with
- * a `redirectTo` naming it (isCliAuthDocument; D27 Preflight ruling 14: its
- * fragment holds the CLI's listener's state and the machine's name, and
- * replay records the sign-in buttons' links): posthog-js stores the page's address and
+ * Never in a document whose address or referrer may hold a quick-deploy link's
+ * secret (a link typed without `/api/`, `?s=tqd_…` on any page, a page opened
+ * from one), a library link (`tll_` or a `/library-links/` path), or an API
+ * token (`tf_` pasted anywhere in the address, its fragment too, or in the
+ * referrer: mayHoldApiToken), nor on the CLI's sign-in page, `/cli-auth`, or
+ * `/login` with a `redirectTo` naming it (isCliAuthDocument: its fragment
+ * holds the CLI's listener's state and the machine's name, and replay records
+ * the sign-in buttons' links): posthog-js stores the page's address and
  * `document.referrer` in its own storage (`$initial_person_info` and
- * `$client_session_props`, in localStorage and its `ph_…` cookie) before
- * any before_send sees them. Decided once per document, at the first
- * start: a later accept, a client-side navigation to a clean page or App
- * mounted again (after a root error) never starts it. What that leaves
- * undone in such a document: a sign-out's reset (Ruling 16) isn't applied
- * (it waits for a client that never arrives, and is gone with the
- * document), and useFeatureFlag reads false (useFeatureFlagWithLoading
- * undefined, once its wait is over).
+ * `$client_session_props`, in localStorage and its `ph_…` cookie) before any
+ * before_send sees them. Decided once per document, at the first start: a
+ * later accept, a client-side navigation to a clean page or App mounted again
+ * (after a root error) never starts it. What that leaves undone in such a
+ * document: a sign-out's reset isn't applied (it waits for a client that never
+ * arrives, and is gone with the document), and useFeatureFlag reads false
+ * (useFeatureFlagWithLoading undefined, once its wait is over).
  *
- * So `/cli-auth` must stay unlinked inside the app (D27 Ruling 240): a
- * client-side navigation to it, in a document where PostHog already runs,
- * would send its path and the listener's loopback URL (never the state, the
- * host or the token: those are in the fragment of the address `telflo
- * login` opens, a new document, which this rule blocks).
+ * So `/cli-auth` must stay unlinked inside the app: a client-side
+ * navigation to it, in a document where PostHog already runs, would send
+ * its path and the listener's loopback URL (never the state, the host or
+ * the token: those are in the fragment of the address `telflo login` opens,
+ * a new document, which this rule blocks).
  */
 function startAnalytics(settings: AnalyticsSettings): () => void {
   blocked ??=
@@ -940,14 +922,14 @@ export function identifyUser(id: string, email: string): void {
  * into the next person's session on a shared browser.
  *
  * `reset(true)` also gives the browser a new device id, so the next person
- * isn't linked to this one (Ruling 14). posthog-js's reset forgets the
- * opt-in too, so the stored choice is applied again: it wins. Whoever signs
- * in next is identified afresh, once the visitor has accepted.
+ * isn't linked to this one. posthog-js's reset forgets the opt-in too, so
+ * the stored choice is applied again: it wins. Whoever signs in next is
+ * identified afresh, once the visitor has accepted.
  *
  * Before root has started PostHog, the reset waits for its init, however
  * many sign-outs come first (a page's client loader runs before root's
  * effect); without the setting it never happens, and nothing waits for a
- * client that never arrives (Ruling 16).
+ * client that never arrives.
  */
 export function signedOutLocally(): void {
   signedInUser = null;
@@ -973,10 +955,9 @@ function useAnalyticsEnabled(): boolean {
 }
 
 /**
- * A feature flag's value (ported; nothing uses it yet, D4 decision 8). Without
- * analytics every flag is on.
- * Whether analytics is on comes from root's loader, so the server and the
- * browser render the same first value.
+ * A feature flag's value (nothing uses it yet). Without analytics every
+ * flag is on. Whether analytics is on comes from root's loader, so the
+ * server and the browser render the same first value.
  */
 export function useFeatureFlag(flag: string): boolean {
   const enabled = useAnalyticsEnabled();

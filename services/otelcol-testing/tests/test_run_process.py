@@ -1,10 +1,10 @@
-"""Each run is its own process group under one budget (D14a spec decision 5,
-Preflight ruling 2; the validator's D13b rulings 26, 27 and 33): the run's
-child and its collector are killed together at the run's deadline (57 + d s),
-when the request's budget (64 + d s) runs out, when the request is cancelled
-and when the client goes away; the workspace is removed before the slot is
-released; at most the cap's runs hold slots, and a request that finds none
-within 5 s answers 503 `tester_busy`. The event loop parses nothing.
+"""Each run is its own process group under one budget, as the validator's
+checks are: the run's child and its collector are killed together at the
+run's deadline (57 + d s), when the request's budget (64 + d s) runs out,
+when the request is canceled and when the client goes away; the workspace is
+removed before the slot is released; at most the cap's runs hold slots, and a
+request that finds none within 5 s answers 503 `tester_busy`. The event loop
+parses nothing.
 
 Processes are followed by pid: each fake collector records its own pid, a
 child's it started and its parent's (the run's child). Every test that kills
@@ -122,8 +122,7 @@ def _kill_recorded(record: Path) -> Callable[[], None]:
 @pytest.fixture
 def record(tmp_path: Path):
     """Where a stubborn collector records its processes; whatever the test
-    does (an assertion failing included), they are killed at teardown
-    (Ruling 27, m4)."""
+    does (an assertion failing included), they are killed at teardown."""
     path = tmp_path / "record"
     yield path
     _kill_recorded(path)()
@@ -205,7 +204,7 @@ def test_the_service_kills_at_57_plus_d_and_the_request_at_64_plus_d(binary_dir:
 
 def test_the_requests_budget_kills_the_group_and_answers_timed_out(binary_dir: Path, tmp_path: Path, record: Path) -> None:
     """The request's budget (lowered to d, the run's deadline left far off)
-    runs out: the run is cancelled, its whole group killed, and the answer
+    runs out: the run is canceled, its whole group killed, and the answer
     is 200 `failed`, `timed_out`."""
     _stubborn(binary_dir, record)
     settings = make_settings(binary_dir, request_budget_base_seconds=0, run_deadline_base_seconds=600)
@@ -414,8 +413,8 @@ async def test_acquire_slot_waits_and_gives_up_only_at_its_bound() -> None:
 def test_a_full_tester_answers_503_tester_busy_after_its_5_second_wait(
     binary_dir: Path, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    """The wait is the settings' 5 s (ruling 2), passed to the slot's
-    acquire; the clock is a fake that says it ran out, so nothing waits."""
+    """The wait is the settings' 5 s, passed to the slot's acquire; the clock
+    is a fake that says it ran out, so nothing waits."""
     marker = tmp_path / "collector-ran"
     write_collector(binary_dir, VERSION, f"touch {marker}\nexec sleep 600\n")
     waits: list[float] = []
@@ -451,7 +450,7 @@ def test_the_cap_defaults_to_four_slots(binary_dir: Path) -> None:
 
 def test_the_service_process_never_parses_the_text(binary_dir: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Every parse and splice, broken in the service's process: the run still
-    neutralises (R-105), so they all ran in the child."""
+    neutralizes (R-105), so they all ran in the child."""
 
     def forbidden(*args, **kwargs):
         raise AssertionError("ran in the service's process")
@@ -568,7 +567,7 @@ def test_a_collector_that_cannot_be_run_is_503(binary_dir: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Ruling 27: only the collector's exec is "unavailable"; every error is the
+# Only the collector's exec is "unavailable"; every error is the
 # envelope; the findings' ids are the contract's
 # ---------------------------------------------------------------------------
 
@@ -576,7 +575,7 @@ def test_a_collector_that_cannot_be_run_is_503(binary_dir: Path) -> None:
 def test_an_os_error_escaping_the_run_is_500_not_unavailable(binary_dir: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """A TimeoutError (or ENOSPC, any OSError) escaping the run is a failure
     of the tester, answered 500: only the collector's exec failing is 503
-    ``version_unavailable`` (m2)."""
+    ``version_unavailable``."""
     write_fake_collector(binary_dir, VERSION)
     failing_child = (
         f"# {guard.CHILD_MARK} with a run that times out\n"
@@ -625,7 +624,7 @@ def test_only_the_collectors_exec_failing_marks_the_answer_unavailable() -> None
 
 
 # ---------------------------------------------------------------------------
-# Ruling 29: "unavailable" only for the exec's own errnos
+# "Unavailable" only for the exec's own errnos
 # ---------------------------------------------------------------------------
 
 EXEC_TEXT = (
@@ -692,7 +691,7 @@ def test_the_execs_own_errnos_mark_the_answer_unavailable(
 def test_a_fork_or_pipe_that_fails_is_a_plain_failure_not_unavailable(
     binary_dir: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, code: int, kind: str
 ) -> None:
-    """Ruling 29: a fork (EAGAIN, ENOMEM) or a pipe (EMFILE, ENFILE) that
+    """A fork (EAGAIN, ENOMEM) or a pipe (EMFILE, ENFILE) that
     fails is the tester's own trouble: the child answers a plain failure,
     which the service answers 500, never 503 ``version_unavailable``."""
     from app import run_child
@@ -706,7 +705,7 @@ def test_a_fork_or_pipe_that_fails_is_a_plain_failure_not_unavailable(
 def test_a_child_that_cannot_be_started_is_500_not_unavailable(
     binary_dir: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Ruling 29: ChildNotStarted (the run's own child process couldn't be
+    """ChildNotStarted (the run's own child process couldn't be
     started: here, no descriptor left for its pipes) is 500 ``internal_error``."""
 
     async def no_descriptors() -> None:
@@ -723,7 +722,7 @@ def test_a_child_that_cannot_be_started_is_500_not_unavailable(
 
 def test_an_unexpected_error_is_answered_in_the_envelope(binary_dir: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """No handler expected it: still the JSON envelope, never a plain-text
-    500 or a traceback (Ruling 27's nit)."""
+    500 or a traceback."""
     from app import main as main_module
 
     def broken(body: bytes) -> dict:

@@ -5,7 +5,7 @@ import { DurationInput, isCollectorDuration } from "./duration-input.js";
 
 const ERROR = "Invalid duration format. Use: 1ns, 1us, 1ms, 1s, 1m, or 1h";
 
-describe("DurationInput (decision 4)", () => {
+describe("DurationInput", () => {
   it.each(["", "0", "+0", "-0", "1m30s", "1.5h", ".5s", "1.s", "300ms", "2h45m0.5s", "-5s", "1ns", "1us", "1µs", "1μs", "${env:TIMEOUT}", "${org:T}s"])(
     "the collector takes %j",
     (value) => {

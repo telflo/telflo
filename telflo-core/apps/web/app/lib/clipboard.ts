@@ -1,6 +1,6 @@
 /**
  * Copies text to the clipboard from a promise while keeping the click's user
- * activation (D17c-1 Preflight ruling 24): the install dialog's "Reveal &
+ * activation: the install dialog's "Reveal &
  * copy command", whose text (the command with its bearer) arrives only after
  * the tokens' read and the reveal.
  *

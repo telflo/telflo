@@ -6,41 +6,39 @@ import { InlineAlert } from "./InlineAlert.js";
 import type { ValueView } from "~/lib/graph/value-view.js";
 
 /*
- * The probabilistic sampler's form (ADR 0018), over the form's fields
- * (D9d decision 2, D9b's contract): each field writes its own key.
- * Collector claims are contrib v0.162.0's
+ * The probabilistic sampler's form, over the form's fields: each field writes
+ * its own key. Collector claims are contrib v0.162.0's
  * `processor/probabilisticsamplerprocessor`.
  *
- * - Kept (the controller's ruling): Sampling Percentage is marked required
- *   (the README calls it required, `README.md:306`), though the factory
- *   leaves it 0, which rejects everything (`config.go:32`): unset shows the
- *   placeholder 0 and "Default 0".
- * - Changed (decision 4): Sampling Mode unset is blank with the placeholder
- *   Hash Seed, "Default hash_seed" and hash_seed's description: an unset
- *   mode runs as `hash_seed` (`sampler_mode.go:69-70, 381-397`; the
- *   README's reference agrees, `README.md:305`), not
- *   proportional. Hash Seed and its "Seed must match" alert show while the
- *   mode is unset or hash_seed, the mode the collector runs.
- * - Changed (decision 2): the number fields write what is typed, as typed;
- *   cleared, the key is removed (never 0, and the precision isn't clamped:
- *   `config.go:125-129` refuses 0 and 15+, which D13 reports). Unset shows
- *   the collector's defaults: Hash Seed 0, Precision 4 (`factory.go:20,
- *   32-39`).
- * - Changed (decision 3 display): Attribute Source unset is blank with the
- *   placeholder TraceID and "Default traceID" (`factory.go:34`).
- * - Changed (the controller's ruling): From Attribute shows while it is set
- *   or the source is `record`: the collector reads it under traceID too, as
- *   a fallback for a record with no trace ID (`config.go:90-92`;
- *   `logsprocessor.go:128-136`), so a value in the text can be seen and
- *   removed. Cleared, From Attribute and Sampling Priority remove their
- *   keys (never `""`). Once shown, From Attribute stays shown
- *   for the form's session (D9d Ruling 43), until another component (or
- *   load) is shown: cleared under traceID, it doesn't vanish mid-edit.
- * - Kept: Fail Closed ticked while unset (`factory.go:32-39`), writing
+ * - Sampling Percentage is marked required (the README calls it required,
+ *   `README.md:306`), though the factory leaves it 0, which rejects
+ *   everything (`config.go:32`): unset shows the placeholder 0 and
+ *   "Default 0".
+ * - Sampling Mode unset is blank with the placeholder Hash Seed, "Default
+ *   hash_seed" and hash_seed's description: an unset mode runs as
+ *   `hash_seed` (`sampler_mode.go:69-70, 381-397`; the README's reference
+ *   agrees, `README.md:305`), not proportional. Hash Seed and its "Seed
+ *   must match" alert show while the mode is unset or hash_seed, the mode
+ *   the collector runs.
+ * - The number fields write what is typed, as typed; cleared, the key is
+ *   removed (never 0, and the precision isn't clamped: `config.go:125-129`
+ *   refuses 0 and 15+, which the config validation reports). Unset shows
+ *   the collector's defaults: Hash Seed 0, Precision 4
+ *   (`factory.go:20, 32-39`).
+ * - Attribute Source unset is blank with the placeholder TraceID and
+ *   "Default traceID" (`factory.go:34`).
+ * - From Attribute shows while it is set or the source is `record`: the
+ *   collector reads it under traceID too, as a fallback for a record with
+ *   no trace ID (`config.go:90-92`; `logsprocessor.go:128-136`), so a value
+ *   in the text can be seen and removed. Cleared, From Attribute and
+ *   Sampling Priority remove their keys (never `""`). Once shown, From
+ *   Attribute stays shown for the form's session, until another component
+ *   (or load) is shown: cleared under traceID, it doesn't vanish mid-edit.
+ * - Fail Closed ticked while unset (`factory.go:32-39`), writing
  *   `true` or `false`. No cascades: a mode or source switch leaves the
  *   other keys.
  *
- * Ids are fixed; no value reaches an attribute (decision 13).
+ * Ids are fixed; no value reaches an attribute.
  */
 
 const MODES = [
@@ -75,7 +73,7 @@ export function ProbabilisticSamplerForm() {
   const hashSeedShown = runningMode === "hash_seed";
   const source = written(form.read(["attribute_source"]));
   const fromAttributeWanted = source === "record" || form.read(["from_attribute"]).kind !== "absent";
-  // Once shown, kept for the session: the Configuration tab is keyed by the load and the node (D9d Ruling 43).
+  // Once shown, kept for the session: the Configuration tab is keyed by the load and the node.
   const [fromAttributeKept, setFromAttributeKept] = useState(false);
   if (fromAttributeWanted && !fromAttributeKept) setFromAttributeKept(true);
   const fromAttributeShown = fromAttributeWanted || fromAttributeKept;

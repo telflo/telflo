@@ -1,9 +1,9 @@
 import { developerEnv } from "./environment.js";
 
 // Reads what the E2E API sent, from Mailpit's API. The API sends the email
-// endpoints' mail after it has answered (D3 decision 2), so a test polls for
-// its message rather than expecting it to be there already. Each test sends
-// to its own address and searches by it, so nothing ever clears Mailpit.
+// endpoints' mail after it has answered, so a test polls for its message
+// rather than expecting it to be there already. Each test sends to its own
+// address and searches by it, so nothing ever clears Mailpit.
 
 const DEFAULT_MAILPIT_API_URL = "http://localhost:58025";
 const WAIT_FOR_EMAIL_TIMEOUT_MS = 10_000;
@@ -75,7 +75,7 @@ export async function emailSubjectsTo(to: string): Promise<string[]> {
 /**
  * The first URL in `text` whose path is `path`, e.g. "/reset-password", as
  * written: its query or fragment included. A reset link carries its token in
- * the fragment, `#token=…` (D3 Ruling 14); a verify link, in the query.
+ * the fragment, `#token=…`; a verify link, in the query.
  */
 export function linkFrom(text: string, path: string): string {
   for (const candidate of text.match(/https?:\/\/\S+/g) ?? []) {

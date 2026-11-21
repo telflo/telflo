@@ -55,14 +55,14 @@ beforeEach(() => {
   fake.modelOptions = { tabSize: 2, indentSize: 2 };
 });
 
-describe("the sample editor (D14a decision 16): the person's editor preferences (D21 decisions 27 and 28)", () => {
+describe("the sample editor: the person's editor preferences", () => {
   it("takes the theme and all four preferences from the store", async () => {
     choose("navy", { tabSize: 4, fontSize: 16, lineNumbers: false, minimap: true });
     await renderEditor();
 
     expect(fake.props?.theme).toBe("telflo-navy");
     expect(fake.props?.options).toMatchObject({ fontSize: 16, lineNumbers: "off", minimap: { enabled: true } });
-    // The tab size is the model's, never an option (Preflight ruling 30).
+    // The tab size is the model's, never an option.
     expect(fake.props?.options).not.toHaveProperty("tabSize");
     expect(fake.modelOptions).toMatchObject({ tabSize: 4, indentSize: 4 });
   });
@@ -80,7 +80,7 @@ describe("the sample editor (D14a decision 16): the person's editor preferences 
     expect(fake.mounts).toBe(1);
   });
 
-  it("the sample editor's tab size and minimap follow the preferences, no longer fixed at 2 and off", async () => {
+  it("the sample editor's tab size and minimap follow the preferences", async () => {
     choose("dark", { tabSize: 4, minimap: true });
     await renderEditor();
     expect(fake.props?.options).toMatchObject({ minimap: { enabled: true } });

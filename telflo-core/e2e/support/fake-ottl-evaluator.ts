@@ -2,16 +2,16 @@ import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { dirname } from "node:path";
 import { startFakeOttlEvaluator, type FakeOttlEvaluator } from "../../apps/api/src/testing/fake-ottl-evaluator.js";
 
-// The browser tests' OTTL evaluator (D15a Task 5, Preflight ruling 28): the
-// OpenAPI-checked fake from apps/api/src/testing, which
-// start-fake-ottl-evaluator.ts runs as a Playwright web server. It checks
-// every request the E2E API sends it, and every reply it sends, against
-// services/ottl-evaluator/openapi.yaml, and answers by the request, so tests
-// running in parallel each get the answer their own rules ask for: a rule
-// passes by default; a marker `fake-ottl-evaluator: <marker>` in its pattern
-// or in an OTTL string literal makes it fail (`fail`), err (`error`), be
-// refused at Save (`invalid`), or the whole request busy (`busy`) or
-// unanswered (`unavailable`) (fakeOttlEvaluatorMarker).
+// The browser tests' OTTL evaluator: the OpenAPI-checked fake from
+// apps/api/src/testing, which start-fake-ottl-evaluator.ts runs as a
+// Playwright web server. It checks every request the E2E API sends it, and
+// every reply it sends, against services/ottl-evaluator/openapi.yaml, and
+// answers by the request, so tests running in parallel each get the answer
+// their own rules ask for: a rule passes by default; a marker
+// `fake-ottl-evaluator: <marker>` in its pattern or in an OTTL string
+// literal makes it fail (`fail`), err (`error`), be refused at Save
+// (`invalid`), or the whole request busy (`busy`) or unanswered
+// (`unavailable`) (fakeOttlEvaluatorMarker).
 //
 // As with the fake tester (support/fake-otelcol-testing.ts), it runs in a
 // process of its own, so each violation, as the fake sees it, is written to

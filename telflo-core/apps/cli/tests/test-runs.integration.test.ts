@@ -32,14 +32,14 @@ import { RULES_FAILED_MESSAGE } from "../src/commands/test.js";
 import { runCli, useApiServer, type CliRun } from "./harness.js";
 
 /*
- * telflo test against the real API in process (D27 decisions 27 and 33):
- * the api's fake tester and fake OTTL evaluator, a local file store, and
- * the dispatcher carrying every waiting run each time the CLI sleeps
- * between polls (an operation, never a timer). A YAML run, a version's run
- * with inline rules and with saved rules (--save, --saved), the refusals
- * (a rule the server refuses, a pipeline the text lacks, no saved rules, a
- * full queue, a read token). Tokens are checked with boolean canaries; no
- * log line holds a token or the run's configuration text (Q168).
+ * telflo test against the real API in process: the api's fake tester and
+ * fake OTTL evaluator, a local file store, and the dispatcher carrying
+ * every waiting run each time the CLI sleeps between polls (an operation,
+ * never a timer). A YAML run, a version's run with inline rules and with
+ * saved rules (--save, --saved), the refusals (a rule the server refuses,
+ * a pipeline the text lacks, no saved rules, a full queue, a read token).
+ * Tokens are checked with boolean canaries; no log line holds a token or
+ * the run's configuration text.
  */
 
 const tester = useFakeOtelcolTesting();
@@ -68,7 +68,7 @@ afterAll(async () => {
   if (root !== undefined) await rm(root, { recursive: true, force: true });
 });
 
-/** Markers no log line may hold: the text, the sample and the rules are configuration text (Q168). */
+/** Markers no log line may hold: the text, the sample and the rules are configuration text. */
 const YAML_MARKER = "cli-yaml-marker-4e1d";
 const SAMPLE_MARKER = "cli-sample-marker-8a2f";
 const RULE_MARKER = "cli-rule-marker-c07b";

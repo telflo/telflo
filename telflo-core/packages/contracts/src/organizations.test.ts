@@ -17,7 +17,7 @@ import {
 import { REGISTRATION_MODES } from "./site.js";
 
 describe("OrganizationRoleSchema", () => {
-  it("is admin and contributor only: viewer is retired (D7 decision 2)", () => {
+  it("is admin and contributor only: viewer is retired", () => {
     expect(OrganizationRoleSchema.options).toEqual(["admin", "contributor"]);
     expect(OrganizationRoleSchema.safeParse("viewer").success).toBe(false);
   });
@@ -72,7 +72,7 @@ describe.each([
   });
 });
 
-describe("ChangeOrganizationRequestSchema (D23-2 decisions 9 and 33)", () => {
+describe("ChangeOrganizationRequestSchema", () => {
   it("accepts removeLogo: true beside the name", () => {
     expect(ChangeOrganizationRequestSchema.parse({ name: " Acme ", removeLogo: true })).toEqual({
       name: "Acme",
@@ -90,7 +90,7 @@ describe("ChangeOrganizationRequestSchema (D23-2 decisions 9 and 33)", () => {
 });
 
 describe("ORGANIZATION_PART_NAMES", () => {
-  it("is the name, then the file, last (D23-2 decision 33)", () => {
+  it("is the name, then the file, last", () => {
     expect(ORGANIZATION_PART_NAMES).toEqual(["name", "file"]);
   });
 });
@@ -102,7 +102,7 @@ describe("OrganizationResponseSchema", () => {
     expect(OrganizationResponseSchema.safeParse({ organization }).success).toBe(true);
   });
 
-  it("requires logoId (D23-2 decision 13): a logo's id or null, never a URL", () => {
+  it("requires logoId: a logo's id or null, never a URL", () => {
     const { logoId: _omitted, ...withoutLogo } = organization;
     expect(OrganizationResponseSchema.safeParse({ organization: withoutLogo }).success).toBe(false);
     expect(
@@ -161,7 +161,7 @@ describe("MemberSchema", () => {
     expect(MemberSchema.safeParse({ ...member, status: "active" }).success).toBe(false);
   });
 
-  it("is listed as { items } with no nextCursor (decision 7)", () => {
+  it("is listed as { items } with no nextCursor", () => {
     expect(MembersResponseSchema.safeParse({ items: [member] }).success).toBe(true);
     expect(MembersResponseSchema.safeParse({ items: [] }).success).toBe(true);
     expect(MembersResponseSchema.safeParse({ items: [member], nextCursor: null }).success).toBe(false);
@@ -173,7 +173,7 @@ describe("ChangeMemberRoleRequestSchema", () => {
     expect(ChangeMemberRoleRequestSchema.parse({ role })).toEqual({ role });
   });
 
-  it("refuses viewer, which is retired (D7 decision 2)", () => {
+  it("refuses viewer, which is retired", () => {
     expect(ChangeMemberRoleRequestSchema.safeParse({ role: "viewer" }).success).toBe(false);
   });
 
@@ -186,7 +186,7 @@ describe("ChangeMemberRoleRequestSchema", () => {
 });
 
 describe("ORGANIZATION_ERROR_CODES", () => {
-  it("lists every code of D5 decisions 7, 8 and 10, of D6 decisions 8 and 9, D22 decision 30's, D23-2 decision 34's and D36-1 decisions 51's and 57's", () => {
+  it("lists every code of the organization endpoints, switching and invitations, in order", () => {
     expect(ORGANIZATION_ERROR_CODES).toEqual([
       "organization_not_found",
       "organization_name_taken",
@@ -220,7 +220,7 @@ describe("ORGANIZATION_ERROR_CODES", () => {
   });
 });
 
-// D36-1 decision 57 (Q268): a personal workspace invites only while registration is open.
+// A personal workspace invites only while registration is open.
 describe("mayInviteFrom", () => {
   it("lets a group organization invite in every mode, and a personal one only while registration is open", () => {
     const answers = REGISTRATION_MODES.map((mode) => ({
@@ -236,7 +236,7 @@ describe("mayInviteFrom", () => {
   });
 });
 
-// D17d-2 decision 20, Preflight ruling 15: the "Public install links" switch, the GET's reply and the PATCH's body.
+// The "Public install links" switch, the GET's reply and the PATCH's body.
 describe("OrganizationSettingsSchema", () => {
   it("is publicInstallLinks, a boolean", () => {
     expect(OrganizationSettingsSchema.parse({ publicInstallLinks: true })).toEqual({ publicInstallLinks: true });

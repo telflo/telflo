@@ -14,11 +14,11 @@ import {
 import type { TestDatabases } from "./testing.js";
 
 /**
- * configuration_version_selections (D10 decision 3, migration
- * 1700000000018): its constraints and its two composite foreign keys, as the
- * owner; its row-level security, as the API's role (`db`), which the
- * policies constrain. The migration itself is tested in
- * schema.integration.test.ts, which has the throwaway database it needs.
+ * configuration_version_selections (migration 1700000000018): its constraints
+ * and its two composite foreign keys, as the owner; its row-level security, as
+ * the API's role (`db`), which the policies constrain. The migration itself is
+ * tested in schema.integration.test.ts, which has the throwaway database it
+ * needs.
  */
 describe("configuration_version_selections", () => {
   let databases: TestDatabases;
@@ -489,7 +489,7 @@ describe("configuration_version_selections", () => {
       expect(await selectionRow(inB.id)).toEqual(inB);
     });
 
-    describe("drafts are private (D11b decision 1, migration 1700000000021)", () => {
+    describe("drafts are private (migration 1700000000021)", () => {
       /**
        * The author's draft with their selection of it, their published
        * configuration (v1 published), and a teammate.

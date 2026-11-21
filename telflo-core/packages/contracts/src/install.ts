@@ -2,17 +2,16 @@ import { z } from "zod";
 import { DockerMountSchema } from "./fleets.js";
 
 /*
- * Installing collectors into a `server` fleet's group (D17c-1 decisions 16,
- * 24, 38 to 41; Preflight rulings 11, 14 and 26): the install's facts,
- * read by the install dialog (no bearer), and the Linux bundle's request,
- * which the API renders from these validated fields only.
+ * Installing collectors into a `server` fleet's group: the install's
+ * facts, read by the install dialog (no bearer), and the Linux bundle's
+ * request, which the API renders from these validated fields only.
  *
  *   GET  …/fleets/{fleetId}/groups/{groupId}/install         InstallFactsSchema
  *   POST …/fleets/{fleetId}/groups/{groupId}/install-bundle  InstallBundleRequestSchema
  *        → 200 application/gzip, `attachment; filename="{installBundleFileName}"`
  *
  * The facts' environment variable names, a bundle request's paths and
- * values are configuration text (ADR 0024): never logged, audited or put in
+ * values are configuration text: never logged, audited or put in
  * a URL. A Kubernetes group's facts and its Helm install are `helm.ts`'s.
  */
 
@@ -24,9 +23,9 @@ export type InstallMethod = (typeof INSTALL_METHODS)[number];
 export type InstallArch = (typeof INSTALL_ARCHES)[number];
 
 /**
- * The bundle's file name (Preflight ruling 26), the API's
- * Content-Disposition and the web's save alike: the method and the arch,
- * never the fleet's label or the group's name.
+ * The bundle's file name, the API's Content-Disposition and the web's save
+ * alike: the method and the arch, never the fleet's label or the group's
+ * name.
  */
 export function installBundleFileName(method: InstallMethod, arch: InstallArch): string {
   return `telflo-collector-${method}-${arch}.tar.gz`;
@@ -53,7 +52,7 @@ export const INSTALL_ENV_VALUE_MAXIMUM_LENGTH = 4096;
 /** A root path's or an executable path's most characters, its trailing `/` removed. */
 export const INSTALL_PATH_MAXIMUM_LENGTH = 200;
 
-/** The dialog's defaults (decision 42). */
+/** The dialog's defaults. */
 export const DEFAULT_INSTALL_ROOT_PATH = "/etc/otelcol";
 export const DEFAULT_INSTALL_EXECUTABLE_PATH = "/usr/bin/otelcol-contrib";
 
@@ -65,11 +64,11 @@ export function withoutTrailingSlash(path: string): string {
 }
 
 /**
- * A bundle path's problem, or null (decision 39): absolute, of letters,
- * digits, dots, dashes, underscores and `/`, no `.` or `..` segment, at
- * most 200 characters once its trailing `/` is removed, and not the root
- * (`/`, empty once its trailing `/` goes). Such a path is one shell word
- * and one YAML scalar with nothing to escape.
+ * A bundle path's problem, or null: absolute, of letters, digits, dots,
+ * dashes, underscores and `/`, no `.` or `..` segment, at most 200 characters
+ * once its trailing `/` is removed, and not the root (`/`, empty once its
+ * trailing `/` goes). Such a path is one shell word and one YAML scalar with
+ * nothing to escape.
  */
 export function installPathProblem(path: string): string | null {
   if (path === "") return "Type a path.";
@@ -88,11 +87,10 @@ const CONTROL_CHARACTER = /[\u0000-\u001f\u007f-\u009f]/;
 const LONE_SURROGATE = /[\uD800-\uDFFF]/u;
 
 /**
- * An environment variable's value's problem, or null (decision 39; D17d-2
- * Ruling 36): 1 to 4,096 characters (code points), no control character, no
- * lone surrogate (half of a pair: no UTF-8 file, YAML parser or shell
- * carries it, so neither the bundle nor Helm's values could). The words
- * never hold the value.
+ * An environment variable's value's problem, or null: 1 to 4,096 characters
+ * (code points), no control character, no lone surrogate (half of a pair: no
+ * UTF-8 file, YAML parser or shell carries it, so neither the bundle nor
+ * Helm's values could). The words never hold the value.
  */
 export function installEnvValueProblem(value: string): string | null {
   if (value === "") return "Type a value or untick it.";
@@ -103,10 +101,9 @@ export function installEnvValueProblem(value: string): string | null {
 }
 
 /*
- * The install commands' shared pieces (D17c-1 decisions 40 to 42; D17c-2
- * decision 29): the web's commands and the Quick Deploy command
- * (`quick-deploy-command.ts`) quote with them, check the display name with
- * them and mask the bearer with them.
+ * The install commands' shared pieces: the web's commands and the Quick Deploy
+ * command (`quick-deploy-command.ts`) quote with them, check the display name
+ * with them and mask the bearer with them.
  */
 
 /** POSIX single-quoting: any string as one shell word, nothing in it expanded (a `'` written `'\''`). */
@@ -122,11 +119,11 @@ const INSTALL_DISPLAY_NAME_PATTERN = /^[A-Za-z0-9 ._-]+$/;
 export const INSTALL_DISPLAY_NAME_RULE = "Use letters, digits, spaces, dots, dashes and underscores.";
 
 /**
- * The display name's problem, or null (D17c-1 decision 41): trimmed, empty
- * is no name (an automatic one), else 1 to 80 letters, digits, spaces,
- * dots, dashes and underscores (a `'` is refused, never stripped). The
- * name used is the trimmed one. Nothing in it is special to a shell's `'…'`,
- * a systemd unit's `"…"` or its specifiers (no `%`, no `$`).
+ * The display name's problem, or null: trimmed, empty is no name (an
+ * automatic one), else 1 to 80 letters, digits, spaces, dots, dashes and
+ * underscores (a `'` is refused, never stripped). The name used is the
+ * trimmed one. Nothing in it is special to a shell's `'…'`, a systemd unit's
+ * `"…"` or its specifiers (no `%`, no `$`).
  */
 export function installDisplayNameProblem(raw: string): string | null {
   const name = raw.trim();
@@ -199,11 +196,10 @@ export function bundleRequestIssues(
 }
 
 /**
- * A Linux bundle's request (decision 39, Preflight ruling 11; strict):
- * the method and arch, the root path, the executable path for own-binary
- * only (refused for All In One), and up to 50 variables, each named once.
- * The API also refuses a name the facts don't offer (400, at
- * `env.N.name`).
+ * A Linux bundle's request (strict): the method and arch, the root path,
+ * the executable path for own-binary only (refused for All In One), and
+ * up to 50 variables, each named once. The API also refuses a name the
+ * facts don't offer (400, at `env.N.name`).
  */
 export const InstallBundleRequestSchema = InstallBundleFieldsSchema.superRefine(bundleRequestIssues);
 
@@ -212,12 +208,12 @@ export type InstallBundleRequest = z.infer<typeof InstallBundleRequestSchema>;
 export type InstallBundleRequestInput = z.input<typeof InstallBundleRequestSchema>;
 
 /**
- * The install's facts (decision 38; `no-store`, no bearer): the image the
+ * The install's facts (`no-store`, no bearer): the image the
  * group's published version's collector version picks, the agent endpoint
  * and whether insecure connections are allowed, the collector, the
  * variables the version's YAML reads with `${env:NAME}` (no default, not
  * one of the five reserved), the group's mounts, whether those mounts
- * could be read (Ruling 62: false when the group's "telflo" annotation holds
+ * could be read (false when the group's "telflo" annotation holds
  * what the platform can't read; `mounts` is then empty and the dialog says
  * the mounts are left out), and its id.
  */
@@ -247,8 +243,8 @@ export const InstallFactsSchema = z
 export type InstallFacts = z.infer<typeof InstallFactsSchema>;
 
 /**
- * The words of the install's refusals (decisions 36 and 38). The retired
- * version's names its version.
+ * The words of the install's refusals. The retired version's names its
+ * version.
  */
 export const INSTALL_UNAVAILABLE_MESSAGE =
   "Installing isn't available right now: the install templates can't be read. Ask your administrator.";
@@ -257,10 +253,9 @@ export const COLLECTOR_GROUP_UNASSIGNED_MESSAGE =
 export const COLLECTOR_GROUP_ASSIGNMENT_DELETED_MESSAGE =
   "This group's published version belongs to a deleted configuration. Assign another first.";
 /**
- * `fleet_type_not_installable`'s words, per direction (D17d-2 decision 15;
- * Preflight ruling 2): a Kubernetes-supervisor fleet asked for a Linux
- * bundle or a Linux link, and a server fleet's group asked for a Helm
- * install.
+ * `fleet_type_not_installable`'s words, per direction: a
+ * Kubernetes-supervisor fleet asked for a Linux bundle or a Linux link, and a
+ * server fleet's group asked for a Helm install.
  */
 export const FLEET_TYPE_NOT_INSTALLABLE_MESSAGE = "A Kubernetes-supervisor fleet's collectors are installed with Helm: use Install with Helm.";
 export const FLEET_TYPE_NOT_HELM_INSTALLABLE_MESSAGE = "A server fleet's groups have no Helm install: use Install collector.";
@@ -273,7 +268,7 @@ export function collectorDistributionNotInstallableMessage(distribution: string)
   return `Collector distribution ${distribution} can't be installed here. Publish a version built for ${INSTALL_DISTRIBUTION}, then assign it.`;
 }
 
-/** A version the catalogue holds no binaries of for the arch (`collector_version_not_offered`). */
+/** A version the catalog holds no binaries of for the arch (`collector_version_not_offered`). */
 export function collectorBinariesMissingMessage(version: string, arch: string): string {
   return `Collector v${version} has no ${arch} binaries to install. Choose the other arch, or publish a version that has them.`;
 }

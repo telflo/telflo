@@ -1,5 +1,4 @@
-"""The tester's HTTP API (D14a spec decisions 1, 5 and 13; Preflight rulings
-1, 2, 4 and 5; `openapi.yaml` is its contract):
+"""The tester's HTTP API (`openapi.yaml` is its contract):
 
   GET  /testing/v1/health — the service and kwok, no secret
   POST /testing/v1/runs   — run one test: its text, settings and input in,
@@ -13,12 +12,11 @@ path answers the same 401. Errors answer the platform's envelope
 At start, before the secret's file is read, the process makes itself
 non-dumpable (app/hardening.py). It refuses to start without a readable
 secret of 32 bytes or more, or with the secret in its environment. It then
-listens and starts kwok's cluster in the background (Ruling 26: three
-attempts; a run is refused 503 while kwok starts or after it failed, and
-once every attempt has failed the process exits with status 1, so its
-restart policy starts it afresh). Once up, the cluster's liveness is
-re-checked on health and before each run; a cluster that stopped answering
-is failed the same way (Ruling 29).
+listens and starts kwok's cluster in the background (three attempts; a run is
+refused 503 while kwok starts or after it failed, and once every attempt has
+failed the process exits with status 1, so its restart policy starts it
+afresh). Once up, the cluster's liveness is re-checked on health and before
+each run; a cluster that stopped answering is failed the same way.
 
 Run it with `uvicorn app.main:app --host 0.0.0.0 --port 8002` from the
 service's directory.
@@ -72,11 +70,11 @@ RUNS_PATH = "/testing/v1/runs"
 
 
 class _HealthAccessFilter(logging.Filter):
-    """Drops uvicorn's access line for a probe's `GET /testing/v1/health`
-    (D33-1 decision 18): probes call it every few seconds. uvicorn logs each
-    request as `'%s - "%s %s HTTP/%s" %d'` with (client, method, path with
-    query, HTTP version, status); every other line, and every other request's,
-    logs as before."""
+    """Drops uvicorn's access line for a probe's `GET /testing/v1/health`:
+    probes call it every few seconds. uvicorn logs each request as
+    `'%s - "%s %s HTTP/%s" %d'` with (client, method, path with query, HTTP
+    version, status); every other line, and every other request's, logs as
+    before."""
 
     def filter(self, record: logging.LogRecord) -> bool:
         args = record.args
@@ -93,16 +91,16 @@ class _HealthAccessFilter(logging.Filter):
 logging.getLogger("uvicorn.access").addFilter(_HealthAccessFilter())
 # httpx2 logs every request at INFO ("HTTP Request: GET https://…"). In this
 # process its one caller is kwok's liveness probe (KwokCluster.is_alive), on
-# every health check and before each run: a line per probe, every few seconds
-# (D33-1 Ruling 335). Its warnings and errors still log. (The executors' calls
+# every health check and before each run: a line per probe, every few
+# seconds. Its warnings and errors still log. (The executors' calls
 # run in the run's child, whose stderr goes nowhere.)
 logging.getLogger("httpx2").setLevel(logging.WARNING)
-# Ruling 1: a request is at most 16 MiB, refused (413) as soon as it is
+# A request is at most 16 MiB, refused (413) as soon as it is
 # declared or read past that.
 MAX_BODY_BYTES = 16 * 1024 * 1024
 # The platform's limit on a configuration's text, in characters.
 MAX_YAML_CHARACTERS = 262_144
-# A run's input, decoded, at most (decision 16: 10 MB uploads), and its
+# A run's input, decoded, at most (the platform's uploads are 10 MB), and its
 # base64 spelling's length.
 MAX_INPUT_BYTES = 10 * 1024 * 1024
 MAX_INPUT_BASE64_CHARACTERS = 4 * ((MAX_INPUT_BYTES + 2) // 3)
@@ -239,7 +237,7 @@ def _decoded_length(encoded: str) -> int:
 
 
 def parse_request(body: bytes) -> dict:
-    """The body's fields, each checked (ruling 1): 400 `invalid_request` for
+    """The body's fields, each checked: 400 `invalid_request` for
     anything the contract refuses, 413 for a text or an input past its
     limit. The input stays base64 here (`decode_input` decodes it)."""
     try:
@@ -304,7 +302,7 @@ def decode_input(encoded: str) -> bytes:
 async def _watch_disconnect(receive: Receive, handler: asyncio.Task) -> bool:
     """Once the body is read, the next message a server sends is the
     client's disconnect (or nothing until the answer is sent). On one, the
-    request's handler is cancelled, which kills the run's group."""
+    request's handler is canceled, which kills the run's group."""
     while True:
         message = await receive()
         if message["type"] == "http.disconnect":
@@ -312,7 +310,7 @@ async def _watch_disconnect(receive: Receive, handler: asyncio.Task) -> bool:
             return True
 
 
-# The process's exit status when kwok failed for good (Ruling 26): compose's
+# The process's exit status when kwok failed for good: compose's
 # restart policy starts the tester afresh.
 EXIT_KWOK_FAILED = 1
 
@@ -334,16 +332,16 @@ def create_app(
 ) -> FastAPI:
     """The application. Settings are read from the environment at startup
     unless given (the tests give them); a missing, unreadable or short
-    secret, or an unreadable catalogue, stops the startup.
+    secret, or an unreadable catalog, stops the startup.
 
     ``kwok_starter`` brings kwok's cluster up (none by default: the tests'
     app); with ``exit_on_kwok_failure``, a cluster that fails every attempt
-    ends the process with a non-zero status (Ruling 26). The service's own
+    ends the process with a non-zero status. The service's own
     app (``app`` below) has both."""
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-        # Before the secret's file is read (ruling 4).
+        # Before the secret's file is read.
         hardening.make_not_dumpable()
         loaded = settings if settings is not None else Settings.from_environment(os.environ)
         catalog = Catalog.load(loaded.catalog_dir)
@@ -421,13 +419,13 @@ def create_app(
     @app.exception_handler(Exception)
     async def _unexpected(_: Request, error: Exception) -> JSONResponse:
         # Anything no handler expected: the envelope too, never a traceback
-        # or a plain-text 500 (Ruling 27). The type only is logged.
+        # or a plain-text 500. The type only is logged.
         logger.error("a request failed unexpectedly: %s", type(error).__name__)
         return error_response(500, "internal_error", MESSAGES["internal_error"])
 
     @app.get(HEALTH_PATH)
     async def health(request: Request) -> JSONResponse:
-        # A ready cluster's liveness is re-checked (Ruling 29).
+        # A ready cluster's liveness is re-checked.
         state: KwokState = await request.app.state.kwok.check_alive()
         if state is KwokState.READY:
             return JSONResponse({"status": "ok", "kwok": "ready"})
@@ -441,9 +439,8 @@ def create_app(
         catalog: Catalog = request.app.state.catalog
         supervisor: KwokSupervisor = request.app.state.kwok
         # Refusals before the body is read. A run is never served without
-        # kwok (Ruling 26), and a ready cluster's liveness is re-checked
-        # before each run (Ruling 29): one that stopped answering is
-        # `failed`, and the service exits.
+        # kwok, and a ready cluster's liveness is re-checked before each run:
+        # one that stopped answering is `failed`, and the service exits.
         state = await supervisor.check_alive()
         if state is KwokState.STARTING:
             raise ApiError(503, "tester_starting", MESSAGES["tester_starting"])
@@ -454,8 +451,8 @@ def create_app(
         version = document["version"]
         state = catalog.state(DISTRIBUTION, version)
         if state is VersionState.UNKNOWN:
-            # Its own code (D14a Ruling 50): the platform ends the run as
-            # version_retired, not as a request it got wrong.
+            # Its own code: the platform ends the run as version_retired, not
+            # as a request it got wrong.
             raise ApiError(400, "version_unknown", MESSAGES["version_unknown"])
         if state is VersionState.RETIRED:
             raise ApiError(409, "version_retired", MESSAGES["version_retired"])
@@ -475,7 +472,7 @@ def create_app(
         del body, document
         cluster = supervisor.endpoint
         # The run's workspace, as the runner makes it: the answer's every
-        # field is scrubbed of it (Ruling 27), not only what the child scrubs.
+        # field is scrubbed of it, not only what the child scrubs.
         workspaces: list[str] = []
 
         handler = asyncio.current_task()
@@ -510,7 +507,7 @@ def create_app(
             logger.warning("run %s refused: every slot stayed busy", job.run_id)
             raise ApiError(503, "tester_busy", MESSAGES["tester_busy"]) from None
         except ChildNotStarted as error:
-            # The tester's own trouble, not the version's (Ruling 29).
+            # The tester's own trouble, not the version's.
             logger.error("run %s: the run's child process could not be started: %s", job.run_id, error.kind)
             raise ApiError(500, "internal_error", MESSAGES["internal_error"]) from None
         except CollectorUnavailable as error:
@@ -553,5 +550,5 @@ def create_app(
     return app
 
 
-# The service: kwok's cluster started from the image (Ruling 26).
+# The service: kwok's cluster started from the image.
 app = create_app(kwok_starter=start_from_environment, exit_on_kwok_failure=True)

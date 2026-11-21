@@ -24,46 +24,43 @@ import type { ConfigurationVersionSummary } from "./repositories/configuration-v
 import { auditEvent, lockAsMember, lockedConfiguration, type WithConfigurationTransaction } from "./service.js";
 
 /*
- * Publishing a version (D11b decisions 9 to 11, Preflight rulings 8, 9 and
- * 15; D11a decision 12's order), and removing a deleted configuration's
- * snapshots (decision 12).
+ * Publishing a version, and removing a deleted configuration's snapshots.
  *
  * A publish runs in four steps, and holds no lock across the opamp-server's
- * calls (decision 9):
+ * calls:
  *
  * 1. the checks, in a transaction of their own that commits before any
  *    call: the configuration and the version are ones the caller can see,
  *    the version is a draft, it is the save the caller's tab last saw (when
- *    the tab says which, by its `updatedAt`: Ruling 30), and its saved YAML
- *    isn't empty; then, before any call, that its text holds no live
+ *    the tab says which, by its `updatedAt`), and its saved YAML isn't
+ *    empty; then, before any call, that its text holds no live
  *    `${org:NAME}` to a name over 128 characters, which no organization
- *    variable can have (D20 Ruling 55, the platform side of Ruling 51: 400
- *    `invalid_request` naming `yaml`, nothing written on either side);
- * 2. the organization ensured in the opamp-server's registry (D11a decision
- *    20): created, or renamed when it is registered under another name;
+ *    variable can have (400 `invalid_request` naming `yaml`, nothing
+ *    written on either side);
+ * 2. the organization ensured in the opamp-server's registry: created, or
+ *    renamed when it is registered under another name;
  * 3. the snapshot put under a fresh publication id, so a failure after the
  *    opamp-server took it leaves at worst an unused snapshot, never a record
  *    pointing at nothing;
- * 4. the record, in a new transaction in D10's lock order: one statement
- *    that publishes the version only if it is still a draft holding exactly
- *    the YAML, the label and the collector version put (`recordPublish`;
- *    D13a Preflight ruling 3). A concurrent publish that recorded first, or
- *    a save or a rename since the checks, leaves it unwritten.
+ * 4. the record, in a new transaction in the lock order (organization, then
+ *    configuration): one statement that publishes the version only if it is
+ *    still a draft holding exactly the YAML, the label and the collector
+ *    version put (`recordPublish`). A concurrent publish that recorded first,
+ *    or a save or a rename since the checks, leaves it unwritten.
  *
- * When the record fails for any reason after the put, the snapshot just put
- * is removed after the response, best effort (Ruling 29): unless a version
- * records its id after all (a commit whose answer was lost), the
- * opamp-server is asked to delete it by its id. Only when that clean-up
- * fails does it stay, an orphan, with a warning naming ids only (decision
- * 9; a reconciliation that removes them is not built yet).
+ * When the record fails for any reason after the put, the snapshot just put is
+ * removed after the response, best effort: unless a version records its id
+ * after all (a commit whose answer was lost), the opamp-server is asked to
+ * delete it by its id. Only when that clean-up fails does it stay, an orphan,
+ * with a warning naming ids only (a reconciliation that removes them is not
+ * built yet).
  *
- * The YAML, the configuration's name, the version's label, the caller's
- * email and the opamp-server's secret go only to the opamp-server: never
- * into a log line, an error's message or the audit row (ADR 0024; D11a
- * decision 12). The log lines name ids, the operation and the result's kind
- * (with a reason, a status or a code) only.
+ * The YAML, the configuration's name, the version's label, the caller's email
+ * and the opamp-server's secret go only to the opamp-server: never into a log
+ * line, an error's message or the audit row. The log lines name ids, the
+ * operation and the result's kind (with a reason, a status or a code) only.
  *
- * Exported for D25's public API, whose publish endpoint calls this service.
+ * Exported for the public API, whose publish endpoint calls this service.
  */
 
 export interface PublishingDependencies {
@@ -71,7 +68,7 @@ export interface PublishingDependencies {
   /** One read per publish: the snapshot's `publishedAt` and the record's `published_at`. */
   now: () => Date;
   opampServer: OpampServerClient;
-  /** buildServer's runner: an unrecorded publish's snapshot is removed on it (Ruling 29). */
+  /** buildServer's runner: an unrecorded publish's snapshot is removed on it. */
   runAfterResponse: RunAfterResponse;
   log: Pick<FastifyBaseLogger, "warn" | "error">;
 }
@@ -79,11 +76,11 @@ export interface PublishingDependencies {
 /** What a caller may add to a publish. */
 export interface PublishOptions {
   /**
-   * The version's `updatedAt` as the caller's tab last loaded or saved it
-   * (Ruling 30, the owner's): a version saved since is refused with 409
-   * `configuration_version_changed` before any call. Compared to the
-   * millisecond, as a summary reports it. Left out by a caller with no tab
-   * (D25's public API), which publishes what is saved.
+   * The version's `updatedAt` as the caller's tab last loaded or saved it: a
+   * version saved since is refused with 409 `configuration_version_changed`
+   * before any call. Compared to the millisecond, as a summary reports it.
+   * Left out by a caller with no tab (the public API), which publishes what is
+   * saved.
    */
   expectedUpdatedAt?: Date;
 }
@@ -92,23 +89,22 @@ export interface IPublishingService {
   /**
    * Publishes the version and answers its summary, now published. 404
    * `configuration_not_found` for a configuration the caller can't see (a
-   * malformed id included), then 404 `configuration_version_not_found` for
-   * a version that isn't one of its own; 409
-   * `configuration_version_published` for one published already (before
-   * any call, or found by the record), 409 `configuration_version_changed`
-   * for one saved since the caller's tab saw it (`expectedUpdatedAt`,
-   * before any call), 409 `configuration_version_empty` for empty saved
-   * YAML (before any call), 409 `configuration_version_changed` for one
-   * saved or renamed between the checks and the record; 400
-   * `invalid_request` naming `yaml` for a text referencing an organization
-   * variable name over 128 characters (before any call), or a text the
-   * opamp-server refuses `invalid_request` (D20 Rulings 55 and 71); 503
+   * malformed id included), then 404 `configuration_version_not_found` for a
+   * version that isn't one of its own; 409 `configuration_version_published`
+   * for one published already (before any call, or found by the record), 409
+   * `configuration_version_changed` for one saved since the caller's tab saw
+   * it (`expectedUpdatedAt`, before any call), 409
+   * `configuration_version_empty` for empty saved YAML (before any call), 409
+   * `configuration_version_changed` for one saved or renamed between the
+   * checks and the record; 400 `invalid_request` naming `yaml` for a text
+   * referencing an organization variable name over 128 characters (before any
+   * call), or a text the opamp-server refuses `invalid_request`; 503
    * `publishing_unavailable` when the opamp-server can't be asked or an
    * organization vanished from its registry mid-publish. A conflict, or a
-   * put's other `invalid` codes, rejects with an `OpampServerAnswerError`, and a
-   * misconfiguration with the client's `OpampServerMisconfigurationError`:
-   * both are a 500. Only a 200 records anything; any refusal after the
-   * put removes the snapshot after the response (Ruling 29).
+   * put's other `invalid` codes, rejects with an `OpampServerAnswerError`, and
+   * a misconfiguration with the client's `OpampServerMisconfigurationError`:
+   * both are a 500. Only a 200 records anything; any refusal after the put
+   * removes the snapshot after the response.
    */
   publishVersion(
     actor: Actor,
@@ -120,11 +116,12 @@ export interface IPublishingService {
 }
 
 /**
- * An answer of the opamp-server's that the API documents but a publish
- * can't go on from, and that a retry wouldn't change: a `conflict`, an
+ * An answer of the opamp-server's that the API documents but a publish can't
+ * go on from, and that a retry wouldn't change: a `conflict`, an
  * organization's `invalid` at the ensure, or a put's `invalid` but
- * `invalid_request` (that one is Ruling 55's 400, Ruling 71). A 500. Its message names the operation, the result's kind and
- * an invalid's code only, never the server's own text.
+ * `invalid_request` (that one is the over-long reference's 400). A 500. Its
+ * message names the operation, the result's kind and an invalid's code only,
+ * never the server's own text.
  */
 export class OpampServerAnswerError extends Error {
   constructor(operation: string, result: { kind: string; code?: string }) {
@@ -138,8 +135,7 @@ export class OpampServerAnswerError extends Error {
 /**
  * What a publish read in its checks, and sends: the names, the YAML and the
  * collector as they are now. The snapshot's collector is the configuration's
- * distribution (fixed for its life, D13a decision 5) and the version's pin
- * (decision 8), never a default (D13a decision 7).
+ * distribution (fixed for its life) and the version's pin, never a default.
  */
 interface PublishTarget {
   organization: { id: string; name: string };
@@ -163,7 +159,7 @@ export function createPublishingService(deps: PublishingDependencies): IPublishi
     throw publishingUnavailable();
   }
 
-  /** Step 1: what to publish, read in a transaction that commits before any call (decision 9). */
+  /** Step 1: what to publish, read in a transaction that commits before any call. */
   async function check(
     actor: Actor,
     configurationId: string,
@@ -175,24 +171,24 @@ export function createPublishingService(deps: PublishingDependencies): IPublishi
       // them first; the organization's name is the one to register.
       const { organization } = await lockAsMember(transaction, actor);
       // The configuration first, so one the caller can't see is
-      // configuration_not_found whatever the version (Preflight ruling 15).
+      // configuration_not_found whatever the version.
       const configuration = await transaction.configurations.find(configurationId);
       if (!configuration) throw configurationNotFound();
       const version =
         versionId === undefined ? undefined : await transaction.versions.find(configuration.id, versionId);
       if (!version) throw configurationVersionNotFound();
       if (version.publishedAt !== null) throw configurationVersionAlreadyPublished(version.versionNumber);
-      // Ruling 30: a save the caller's tab didn't see (a teammate's, or its
-      // own from another tab) is refused, so a clean tab never publishes
-      // text it isn't showing; the editor reloads the version. Before the
-      // empty check, since the newer save is what the caller needs to see.
-      // To the millisecond, as the summary the tab read reports it.
+      // A save the caller's tab didn't see (a teammate's, or its own from
+      // another tab) is refused, so a clean tab never publishes text it
+      // isn't showing; the editor reloads the version. Before the empty
+      // check, since the newer save is what the caller needs to see. To
+      // the millisecond, as the summary the tab read reports it.
       if (expectedUpdatedAt !== undefined && version.updatedAt.getTime() !== expectedUpdatedAt.getTime()) {
         throw configurationVersionChanged();
       }
       // Exactly empty, as every new configuration's version 1 is: the
-      // opamp-server refuses it (Preflight ruling 9). Only whitespace or
-      // comments is D13's validation.
+      // opamp-server refuses it. Only whitespace or comments is left to the
+      // validation.
       if (version.yamlContent === "") throw configurationVersionEmpty();
       return {
         organization: { id: organization.id, name: organization.name },
@@ -213,18 +209,18 @@ export function createPublishingService(deps: PublishingDependencies): IPublishi
   }
 
   /**
-   * Ruling 29: after the response, best effort, the snapshot a failed record
-   * left is deleted by its id. First, in a transaction of its own, whether a
-   * version records the id after all: a record whose commit's answer was
-   * lost (the connection dropped) may have committed, and deleting its
-   * snapshot would leave a record pointing at nothing, the one outcome the
-   * order of the steps avoids. Row-level security can't hide a recorded
-   * one: its configuration is then published, which the caller's context
-   * sees, a removed member's included. When that read fails, the snapshot
-   * is kept. Any answer of the delete's but `deleted` or `not_found` leaves
-   * an orphan, with a warning; a misconfiguration is an error with its
-   * message, which names no secret, and anything else an error with its
-   * name. Ids only, never the YAML, a name, a label or an email.
+   * After the response, best effort, the snapshot a failed record left is
+   * deleted by its id. First, in a transaction of its own, whether a version
+   * records the id after all: a record whose commit's answer was lost (the
+   * connection dropped) may have committed, and deleting its snapshot would
+   * leave a record pointing at nothing, the one outcome the order of the
+   * steps avoids. Row-level security can't hide a recorded one: its
+   * configuration is then published, which the caller's context sees, a
+   * removed member's included. When that read fails, the snapshot is kept.
+   * Any answer of the delete's but `deleted` or `not_found` leaves an
+   * orphan, with a warning; a misconfiguration is an error with its message,
+   * which names no secret, and anything else an error with its name. Ids
+   * only, never the YAML, a name, a label or an email.
    */
   function removeUnrecordedSnapshot(actor: Actor, ids: PublishIds, publicationId: string): void {
     const operation = "deletePublication";
@@ -244,8 +240,8 @@ export function createPublishingService(deps: PublishingDependencies): IPublishi
       try {
         const result = await opampServer.deletePublication(ids.organizationId, publicationId);
         if (result.kind === "in_use") {
-          // D16a decision 31: a collector group or a collector uses it, so
-          // the opamp-server kept it. A warning naming ids only.
+          // A collector group or a collector uses it, so the opamp-server
+          // kept it. A warning naming ids only.
           log.warn(
             { operation, ...ids, publicationId, result: result.kind },
             "the unrecorded publish's snapshot is in use in the opamp-server: it was kept",
@@ -284,7 +280,7 @@ export function createPublishingService(deps: PublishingDependencies): IPublishi
       const id = canonicalIdOf(configurationId);
       if (id === undefined) throw configurationNotFound();
       const target = await check(actor, id, canonicalIdOf(versionId), options.expectedUpdatedAt);
-      // D20 Ruling 55: a reference no variable can satisfy is refused before anything is written, on either side.
+      // A reference no variable can satisfy is refused before anything is written, on either side.
       if (references(target.version.yaml).some((name) => name.length > VARIABLE_NAME_MAXIMUM_LENGTH)) throw variableReferenceTooLong();
       const ids: PublishIds = {
         organizationId: target.organization.id,
@@ -292,19 +288,19 @@ export function createPublishingService(deps: PublishingDependencies): IPublishi
         versionId: target.version.id,
       };
 
-      // Step 2: the organization registered under its current name (D11a
-      // decision 20; ensureOrganization). A refusal (`invalid`) is a 500;
-      // the opamp-server unreachable, or the organization gone mid-ensure,
-      // a 503: a retry registers it again.
+      // Step 2: the organization registered under its current name
+      // (ensureOrganization). A refusal (`invalid`) is a 500; the
+      // opamp-server unreachable, or the organization gone mid-ensure, a
+      // 503: a retry registers it again.
       const ensured = await ensureOrganization(opampServer, target.organization);
       if (ensured.kind === "failed") {
         if (ensured.result.kind === "invalid") throw new OpampServerAnswerError(ensured.operation, ensured.result);
         return unavailable(ensured.operation, ids, ensured.result);
       }
 
-      // Step 3: a fresh id per attempt (D11a decision 12), and one clock
-      // read for the snapshot and the record (Preflight ruling 15). The
-      // API's clock holds whole milliseconds, which the opamp-server keeps.
+      // Step 3: a fresh id per attempt, and one clock read for the snapshot
+      // and the record. The API's clock holds whole milliseconds, which the
+      // opamp-server keeps.
       const publicationId = randomUUID();
       const publishedAt = now();
       const snapshot: PublicationRequest = {
@@ -314,7 +310,7 @@ export function createPublishingService(deps: PublishingDependencies): IPublishi
         sha256: sha256Hex(target.version.yaml),
         publishedBy: { id: actor.context.userId, email: actor.email },
         publishedAt: publishedAt.toISOString(),
-        // D13a decision 7: what the checks read, as the record re-checks it.
+        // What the checks read, as the record re-checks it.
         collector: {
           distribution: target.configuration.collectorDistribution,
           version: target.version.collectorVersion,
@@ -329,12 +325,12 @@ export function createPublishingService(deps: PublishingDependencies): IPublishi
         case "organization_not_found":
           return unavailable("postPublication", ids, posted);
         case "invalid":
-          // Ruling 55's backstop, as Ruling 71 narrows it: the snapshot is
-          // otherwise always valid, so the opamp-server's 400
-          // `invalid_request` is its refusal of the text's over-128
-          // reference (Ruling 51). It wrote nothing. Logged with the ids and
-          // the code only, never the text. Any other code (a hash that
-          // doesn't match, a body too large) is the platform's own bug: a 500.
+          // The over-long reference's backstop: the snapshot is otherwise
+          // always valid, so the opamp-server's 400 `invalid_request` is its
+          // refusal of the text's over-128 reference. It wrote nothing. Logged
+          // with the ids and the code only, never the text. Any other code (a
+          // hash that doesn't match, a body too large) is the platform's own
+          // bug: a 500.
           if (posted.code !== "invalid_request") throw new OpampServerAnswerError("postPublication", posted);
           log.warn({ operation: "postPublication", ...ids, ...describeResult(posted) }, "publishing refused: the opamp-server refused the version's text");
           throw variableReferenceTooLong();
@@ -342,7 +338,7 @@ export function createPublishingService(deps: PublishingDependencies): IPublishi
           throw new OpampServerAnswerError("postPublication", posted);
       }
 
-      // Step 4, in D10's lock order: the organization `for share`, the
+      // Step 4, in the lock order: the organization `for share`, the
       // membership re-read, then the configuration `for update`, so the
       // record and a save of this version have exactly one order.
       try {
@@ -364,8 +360,7 @@ export function createPublishingService(deps: PublishingDependencies): IPublishi
             if (!found) throw configurationVersionNotFound();
             if (found.publishedAt !== null) throw configurationVersionAlreadyPublished(found.versionNumber);
             // Saved or renamed since the checks: the snapshot holds text, a
-            // label or a collector version the version no longer has
-            // (Preflight ruling 8, Ruling 29, D13a Preflight ruling 3).
+            // label or a collector version the version no longer has.
             if (
               found.yamlContent !== target.version.yaml ||
               found.label !== target.version.label ||
@@ -381,13 +376,13 @@ export function createPublishingService(deps: PublishingDependencies): IPublishi
             );
           }
           // The configuration moves to the top of the list, as a save does;
-          // the version's `updatedAt` stays its last save (D10). Its own
+          // the version's `updatedAt` stays its last save. Its own
           // clock read: a save between the checks and here may have moved
           // it past `publishedAt`. Live under the lock just taken: this
           // can't miss.
           if (!(await transaction.configurations.touch(current.id, now()))) throw configurationNotFound();
           // Ids and the number only: never the YAML, the names, the label
-          // or an email (Preflight ruling 15).
+          // or an email.
           await transaction.audit.record(
             auditEvent(actor, current.id, "configuration.version_published", {
               versionId: recorded.id,
@@ -402,7 +397,7 @@ export function createPublishingService(deps: PublishingDependencies): IPublishi
         // point at it: whatever the reason (a concurrent publish recorded
         // first, a save or a rename since the checks, the configuration or
         // the membership gone, a failure in the transaction), it is removed
-        // after the response (Ruling 29). The answer stays the record's.
+        // after the response. The answer stays the record's.
         log.warn({ ...ids, publicationId }, "the publish wasn't recorded: its snapshot will be removed");
         removeUnrecordedSnapshot(actor, ids, publicationId);
         throw error;
@@ -419,14 +414,14 @@ export interface PublicationsCleanupDependencies {
 }
 
 /**
- * D11b decision 12: once a configuration's soft delete has committed, its
- * snapshots are removed from the opamp-server after the response, best
- * effort. The delete never waits for it nor fails because of it. Any result
- * but `deleted` is a warning, `organization_not_found` included (an
- * organization the registry missed holds no snapshots), and `in_use` (a
- * collector group or a collector uses one, D16a decision 31: they are kept
- * until D16b refuses such a delete first); a misconfiguration is an error
- * with its message, which names no secret. Ids only.
+ * Once a configuration's soft delete has committed, its snapshots are
+ * removed from the opamp-server after the response, best effort. The delete
+ * never waits for it nor fails because of it. Any result but `deleted` is a
+ * warning, `organization_not_found` included (an organization the registry
+ * missed holds no snapshots), and `in_use` (a collector group or a
+ * collector uses one, so they are kept: one assigned after the delete's
+ * usage check); a misconfiguration is an error with its message, which
+ * names no secret. Ids only.
  */
 export function createPublicationsCleanup(
   deps: PublicationsCleanupDependencies,
@@ -438,9 +433,9 @@ export function createPublicationsCleanup(
       try {
         const result = await opampServer.deleteConfigurationPublications(organizationId, configurationId);
         if (result.kind === "in_use") {
-          // D16a decision 31: a collector group or a collector uses one of
-          // them, so the opamp-server kept them all, until D16b refuses the
-          // configuration's delete first. A warning naming ids only.
+          // A collector group or a collector uses one of them (assigned
+          // after the delete's usage check), so the opamp-server kept them
+          // all. A warning naming ids only.
           log.warn(
             { operation, organizationId, configurationId, result: result.kind },
             "the opamp-server kept the configuration's publications: a collector group or a collector uses one",

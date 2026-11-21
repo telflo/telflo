@@ -39,28 +39,28 @@ import { versionPath } from "./support/versions-page.js";
 import { canaryVariableValue, filledInValue } from "./support/privacy.js";
 import { createVariableThroughApi, uniqueVariableName } from "./support/variables.js";
 
-// Test runs (D14a), in the browser: the editor's Testing tab, its run
-// dialog, the version's runs and their results, against the E2E API's
-// dispatcher and the OpenAPI-checked fake tester (start-fake-otelcol-testing.ts).
+// Test runs, in the browser: the editor's Testing tab, its run dialog, the
+// version's runs and their results, against the E2E API's dispatcher and the
+// OpenAPI-checked fake tester (start-fake-otelcol-testing.ts).
 //
 // - The fake answers by the text: none of its markers, a success whose
 //   output (and decoded input) is the input's own bytes; `slow`, held
 //   unanswered until the test releases it through the fake's control route
-//   (support/fake-otelcol-testing.ts, D14a Ruling 36). Each test's text
-//   carries a token of its own, so it releases only its own runs: the
-//   browsers' workers share the fake.
-// - The E2E API runs 16 at once (Preflight ruling 20), so a run is claimed
-//   at once: "Queued" is what the queue's answer shows until the first read
-//   of the list, which these tests hold with page.route until they have seen
-//   it. "n ahead" is the API suite's.
-// - The tester down is a page.route answering the queue 503 (Preflight
-//   ruling 20): the real down state is global, and would refuse every
-//   worker's runs. The real refusal is the API suite's.
+//   (support/fake-otelcol-testing.ts). Each test's text carries a token of
+//   its own, so it releases only its own runs: the browsers' workers share
+//   the fake.
+// - The E2E API runs 16 at once, so a run is claimed at once: "Queued" is
+//   what the queue's answer shows until the first read of the list, which
+//   these tests hold with page.route until they have seen it. "n ahead" is
+//   the API suite's.
+// - The tester down is a page.route answering the queue 503: the real down
+//   state is global, and would refuse every worker's runs. The real refusal is
+//   the API suite's.
 // - Downloads are read back from the browser's own file, byte for byte.
 // - Every Monaco here (the viewers, Compare, the paste editor) puts its
 //   screen-reader live region in the app shell's one `ph-no-capture` host,
-//   which outlives every viewer (Preflight ruling 14, Ruling 48): checked
-//   with each one open, and after they close.
+//   which outlives every viewer: checked with each one open, and after
+//   they close.
 // Each test works in organizations of its own, so tests and browsers run in
 // parallel. A second person is a second browser context.
 
@@ -154,15 +154,15 @@ function partOf(body: Buffer, boundary: string, name: string): { headers: string
 }
 
 /**
- * Expects a real browser's multipart upload (D14a Ruling 43(4)): the content
- * type the browser wrote, with its boundary (the client never sets it), and
- * the API's 201 for it, naming the file, its type and its exact bytes (size
- * and SHA-256). Where the browser exposes the body to Playwright, the parts
- * are checked too: in the API's order, the file part named and typed.
- * Chromium exposes no multipart body; Firefox exposes it whole, the file's
- * bytes included; WebKit exposes its parts without the file part's bytes
- * (probed in each, D14a Ruling 47). The bytes themselves are checked by the
- * API's size and SHA-256 in every browser.
+ * Expects a real browser's multipart upload: the content type the browser
+ * wrote, with its boundary (the client never sets it), and the API's 201
+ * for it, naming the file, its type and its exact bytes (size and SHA-256).
+ * Where the browser exposes the body to Playwright, the parts are checked
+ * too: in the API's order, the file part named and typed. Chromium exposes
+ * no multipart body; Firefox exposes it whole, the file's bytes included;
+ * WebKit exposes its parts without the file part's bytes (probed in each).
+ * The bytes themselves are checked by the API's size and SHA-256 in every
+ * browser.
  */
 async function expectMultipartUpload(
   request: Request,
@@ -213,8 +213,8 @@ test("an upload runs: Queued, then Running, then Success, with its results, and 
   await openRunDialog(page);
   const upload = multipartRequest(page, "/test-files");
   await uploadAndSelect(page, file);
-  // D14a Ruling 43(4): the browser writes the content type with its boundary
-  // (the client never sets it), and the parts go in the API's order.
+  // The browser writes the content type with its boundary (the client never
+  // sets it), and the parts go in the API's order.
   await expectMultipartUpload(await upload, { fileName: file.name, contentType: "application/json", bytes: file.buffer, displayName: file.name });
 
   const list = await holdRunsList(page);
@@ -264,7 +264,7 @@ test("a pasted sample is saved to My Files, selected and run, sent as a multipar
   const saved = multipartRequest(page, "/test-files/samples");
   await pasteAndSelect(page, name, sample);
   await expectMultipartUpload(await saved, { fileName: `${name}.json`, contentType: "application/json", bytes: Buffer.from(sample), displayName: name });
-  // The paste editor's live region is the page's one, in the shell's replay-blocked host (Ruling 48).
+  // The paste editor's live region is the page's one, in the shell's replay-blocked host.
   expect(await ariaContainers(page)).toEqual([{ blocked: true, inShellHost: true }]);
 
   await clickRun(page);
@@ -316,15 +316,13 @@ test("a fixture that doesn't suit the pipeline asks first: Cancel queues nothing
 test("each viewer and Compare open with no page error, Monaco's live region in the shell's block, and download the exact bytes, UTF-16 too", async ({
   page,
 }) => {
-  // Each viewer's and Compare's Monaco, and their downloads: 13.2-18.6 s in
-  // D14b Task 9's full runs (five workers), 12.7-22.7 s in D14b's final fix
-  // wave's runs of the four files it touched, up to 76% of the 30 s
-  // per-test limit. Slow triples the limit, a hang guard; every wait inside
-  // keeps its own bound.
+  // Each viewer's and Compare's Monaco, and their downloads: 12.7-22.7 s in
+  // measured runs (five workers), up to 76% of the 30 s per-test limit. Slow
+  // triples the limit, a hang guard; every wait inside keeps its own bound.
   test.slow();
   const errors = pageErrors(page);
   const seeded = await openSeededTestingTab(page);
-  // UTF-16LE with its byte-order mark: kept as bytes end to end (Preflight ruling 14).
+  // UTF-16LE with its byte-order mark: kept as bytes end to end.
   const text = otlpLogs(`utf-16 ${randomUUID()} é ✓`);
   const utf16: PickedFile = {
     name: `utf16-${randomUUID()}.json`,
@@ -355,8 +353,8 @@ test("each viewer and Compare open with no page error, Monaco's live region in t
   };
   /**
    * The Monaco inside `dialog` shows `words`, and the page's one live region
-   * is in the shell's replay-blocked host (Ruling 48), not in the dialog,
-   * which takes its own with it when it closes.
+   * is in the shell's replay-blocked host, not in the dialog, which takes
+   * its own with it when it closes.
    */
   const monacoShows = async (dialog: ReturnType<typeof resultsDialog>, words: string) => {
     await expect(dialog.locator(".monaco-editor .view-lines")).toContainText(words);
@@ -472,10 +470,9 @@ test("a teammate sees nothing of a draft's runs, and everything once it is publi
   browser,
 }) => {
   // Two people, each opening the editor, a run, a viewer's Monaco and a
-  // re-run: 15.4-22.7 s in D14b Task 9's full runs (five workers), and once
-  // 32.2 s; 19.3-35.7 s in D14b's final fix wave's runs of the four files it
-  // touched, three times past the 30 s per-test limit. Slow triples the
-  // limit, a hang guard; every wait inside keeps its own bound.
+  // re-run: 15.4-35.7 s in measured runs (five workers), several times past
+  // the 30 s per-test limit. Slow triples the limit, a hang guard; every
+  // wait inside keeps its own bound.
   test.slow();
   const authorErrors = pageErrors(page);
   const author = await seedUser({ password: PASSWORD });
@@ -513,7 +510,7 @@ test("a teammate sees nothing of a draft's runs, and everything once it is publi
     await switchOrganizationThroughApi(other, group.organizationId);
     expect((await other.request.get(runsUrl(seeded))).status()).toBe(404);
     await open(other, versionPath(configuration.id, version!.id));
-    // The page has loaded, saying so (Ruling 47): the missing tab is no blank page's.
+    // The page has loaded, saying so: the missing tab is no blank page's.
     await expect(other.getByText("Configuration not found")).toBeVisible();
     await expect(testingTab(other)).toHaveCount(0);
 
@@ -554,8 +551,8 @@ test("with the tester down, the queue's refusal is shown with its words and noth
   const seeded = await openSeededTestingTab(page);
   await openRunDialog(page);
   await uploadAndSelect(page, logsFile());
-  // The API's answer while the tester is down (decision 12), from the route:
-  // the real down state is global (Preflight ruling 20).
+  // The API's answer while the tester is down, from the route: the real down
+  // state is global.
   await page.route(/\/test-runs$/, async (route) => {
     if (route.request().method() !== "POST") return route.fallback();
     return route.fulfill({
@@ -595,7 +592,7 @@ test("each slide of the run dialog moves the keyboard's focus into the slot slid
     await page.keyboard.press("Enter");
   };
 
-  /** Once the slide has settled, the track's box hasn't scrolled and the slot slid in shows whole (D14a Ruling 46). */
+  /** Once the slide has settled, the track's box hasn't scrolled and the slot slid in shows whole. */
   const expectSlidWhole = async () => {
     await expect.poll(() => runDialogTrack(page)).toEqual({ scrollLeft: 0, slotInView: true });
   };
@@ -640,8 +637,7 @@ test("each slide of the run dialog moves the keyboard's focus into the slot slid
 });
 
 // Selected again from My Files after a full reload: a file from an earlier
-// session, its head read from the API for the fixture-shape check (D14a
-// Ruling 43(1)).
+// session, its head read from the API for the fixture-shape check.
 test("a file uploaded in an earlier session is still in My Files and runs", async ({ page }) => {
   const seeded = await openSeededTestingTab(page);
   const file = logsFile();
@@ -659,18 +655,15 @@ test("a file uploaded in an earlier session is still in My Files and runs", asyn
   await expectStatus(page, "Success");
 });
 
-// After a full reload nothing of a file's head is in memory: the
-// fixture-shape check reads it from the API, through either head (D14a
-// Rulings 43(1), 46, 47): a file picked from My Files (GET
-// …/test-files/:fileId/head) and a re-run's input (GET
-// …/test-runs/:runId/files/input/head). A traces envelope on the logs
-// pipeline asks first through both.
+// After a full reload nothing of a file's head is in memory: the fixture-shape
+// check reads it from the API, through either head: a file picked from My
+// Files (GET …/test-files/:fileId/head) and a re-run's input (GET
+// …/test-runs/:runId/files/input/head). A traces envelope on the logs pipeline
+// asks first through both.
 test("after a reload, a file that doesn't suit the pipeline asks first through both heads: from My Files, and through ↺", async ({ page }) => {
-  // An upload, a run, a reload and two heads' questions: 12.9-18.4 s in D14b
-  // Task 9's full runs (five workers), 11.8-22.3 s in D14b's final fix
-  // wave's runs of the four files it touched, up to 74% of the 30 s
-  // per-test limit. Slow triples the limit, a hang guard; every wait inside
-  // keeps its own bound.
+  // An upload, a run, a reload and two heads' questions: 11.8-22.3 s in
+  // measured runs (five workers), up to 74% of the 30 s per-test limit. Slow
+  // triples the limit, a hang guard; every wait inside keeps its own bound.
   test.slow();
   const seeded = await openSeededTestingTab(page);
   const traces: PickedFile = {
@@ -716,15 +709,14 @@ test("after a reload, a file that doesn't suit the pipeline asks first through b
 
 // A modal dialog hides the rest of the page from assistive technology
 // (Radix's hideOthers), keeping only what carries aria-live. The shell's slot
-// for Monaco's live region carries aria-live="off" (D14a Ruling 52), so a
-// dialog whose editor is the page's first Monaco (the YAML tab never opened)
-// still announces: checked for the paste editor, a viewer and Compare, each
-// after a fresh load.
+// for Monaco's live region carries aria-live="off", so a dialog whose editor
+// is the page's first Monaco (the YAML tab never opened) still announces:
+// checked for the paste editor, a viewer and Compare, each after a fresh
+// load.
 test("Monaco's live region stays audible and replay-blocked under each dialog whose editor is the page's first", async ({ page }) => {
   // A run, then three fresh loads of the editor, each loading Monaco: 14.4-
-  // 24.2 s in D14b Task 9's full runs (five workers); 16.8-35.5 s in D14b's
-  // final fix wave's runs of the four files it touched, once past the 30 s
-  // per-test limit. Slow triples the limit, a hang guard; every wait inside
+  // 35.5 s in measured runs (five workers), once past the 30 s per-test
+  // limit. Slow triples the limit, a hang guard; every wait inside
   // keeps its own bound.
   test.slow();
   const errors = pageErrors(page);
@@ -779,7 +771,7 @@ test("Monaco's live region stays audible and replay-blocked under each dialog wh
   expect(errors).toEqual([]);
 });
 
-// ── Organization variables (D20 decision 13; Preflight rulings 28 and 29) ──
+// ── Organization variables ──
 
 /**
  * A run's text referencing the organization variable `name` (`${org:NAME}`),
@@ -880,8 +872,8 @@ test("a run's text is saved as written, ${org:NAME} and all, while the tester ge
     await expect(lines).not.toContainText(seeded.value);
     await expect(lines).not.toContainText(filled);
   });
-  // The Test YAML, what the fake tester answers from the text it received (Preflight ruling 29): the value filled in,
-  // its $ doubled so the collector reads it literally; no reference left.
+  // The Test YAML, what the fake tester answers from the text it received: the value filled in, its $ doubled so the
+  // collector reads it literally; no reference left.
   await view("Test YAML", "Test YAML (after sandbox mutations)", async (lines) => {
     await expect(lines).toContainText(`value: ${filled}`);
     await expect(lines).not.toContainText(reference);
@@ -891,12 +883,12 @@ test("a run's text is saved as written, ${org:NAME} and all, while the tester ge
 
 test("with the organization's variables unreadable, the queue's 503 is shown with its words, the run dialog kept open", async ({ page }) => {
   await openTestingTabWithVariable(page);
-  // The API's words for the queue's 503 (the variables routes' and Validate's, one family: Ruling 78).
+  // The API's words for the queue's 503 (the variables routes' and Validate's, one family).
   const message = VARIABLES_UNAVAILABLE_MESSAGE;
   await openRunDialog(page);
   await uploadAndSelect(page, logsFile());
-  // The API's answer when the opamp-server can't give the values (D20 Preflight ruling 28), from the route: the
-  // browser tests' opamp-server is shared, and can't be made unreachable for one test.
+  // The API's answer when the opamp-server can't give the values, from the route: the browser tests'
+  // opamp-server is shared, and can't be made unreachable for one test.
   await page.route(/\/test-runs$/, async (route) => {
     if (route.request().method() !== "POST") return route.fallback();
     return route.fulfill({
@@ -923,9 +915,9 @@ for (const [code, message] of [
 ] as const) {
   test(`a run that ended ${code} at its dispatch shows its words as the run's error`, async ({ page }) => {
     const seeded = await openTestingTabWithVariable(page);
-    // The dispatcher's endings (D20 Preflight ruling 28): the values unreadable, or too long once filled in, between
-    // the queue and the dispatch, which a browser test can't time. The run's reads are answered as the API answers
-    // such a run, from the route: the real reply with the ending's status, code and words.
+    // The dispatcher's endings: the values unreadable, or too long once filled in, between the queue and the
+    // dispatch, which a browser test can't time. The run's reads are answered as the API answers such a run, from
+    // the route: the real reply with the ending's status, code and words.
     await page.route(/\/test-runs(\/[^/]+)?$/, async (route) => {
       if (route.request().method() !== "GET") return route.fallback();
       const response = await route.fetch();

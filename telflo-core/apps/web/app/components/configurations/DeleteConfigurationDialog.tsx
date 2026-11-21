@@ -21,17 +21,16 @@ import {
 } from "~/lib/configurations.js";
 
 /*
- * Deleting a configuration (ADR 0018). It stays open until the API
- * answers, "Deleting..." meanwhile, and says nothing on success:
+ * Deleting a configuration. It stays open until the API answers,
+ * "Deleting..." meanwhile, and says nothing on success:
  * - Escape, an outside click and the close button do nothing while the
  *   delete is under way, so it really does stay open;
  * - a failure toasts the API's message for a refusal, else "An error has
- *   occurred. Please refresh the page.", never a server error's message (D7
- *   Preflight ruling 2). A published configuration's refusals (D16b Preflight
- *   ruling 6) are such: a fleet using it (409 `configuration_in_use`), the
- *   person's fleet limit (429 `rate_limited`), its fleet usage unreadable
- *   (503 `fleets_unavailable`, "nothing was deleted"); the dialog stays open
- *   for a retry;
+ *   occurred. Please refresh the page.", never a server error's message. A
+ *   published configuration's refusals are such: a fleet using it (409
+ *   `configuration_in_use`), the person's fleet limit (429 `rate_limited`),
+ *   its fleet usage unreadable (503 `fleets_unavailable`, "nothing was
+ *   deleted"); the dialog stays open for a retry;
  * - a 404 `configuration_not_found` (someone else deleted it) toasts its
  *   message, closes and reloads the list; a 404 `organization_not_found`
  *   closes and revalidates the layout, with no toast: the page moves to the

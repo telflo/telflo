@@ -5,10 +5,10 @@ import { FLEET_WRITE_TIMEOUT_MS } from "~/lib/fleets.js";
 import { runPacedWrites, type PacedProgress, type PacedResult, type PacedWrites } from "~/lib/paced-writes.js";
 
 /*
- * Bulk move's and bulk delete's run (D17b-1 decisions 12 and 27; Preflight
- * ruling 13): `runPacedWrites` over the selected collectors, one request at
- * a time under `FLEET_WRITE_TIMEOUT_MS`, its progress and its results, for
- * one opening of a dialog (the dialogs key each opening, `useOpeningKey`).
+ * Bulk move's and bulk delete's run: `runPacedWrites` over the selected
+ * collectors, one request at a time under `FLEET_WRITE_TIMEOUT_MS`, its
+ * progress and its results, for one opening of a dialog (the dialogs key each
+ * opening, `useOpeningKey`).
  *
  * - The run starts once per opening; a second start does nothing.
  * - The dialog closing (an organization switch closes it), unmounting, or
@@ -21,7 +21,7 @@ import { runPacedWrites, type PacedProgress, type PacedResult, type PacedWrites 
  * seconds: too many requests)", "Stop" / "Stopping…", "Moved {k}" /
  * "Deleted {k}", and per collector not counted "Already deleted", "May or
  * may not have moved" ("…been deleted"), "Not attempted", or the refusal's
- * message. Names are text only, in the masked shell (decision 32).
+ * message. Names are text only, in the masked shell.
  */
 
 export type BulkPhase = "confirm" | "running" | "done";

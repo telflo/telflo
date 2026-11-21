@@ -3,17 +3,16 @@ import { escapeHtml } from "../identity/emails.js";
 import { organizationInSentence } from "./organization-names.js";
 
 /**
- * An invitation to join an organization (D6 decision 12). One message
- * whether or not the address has an account, since the accept page decides
- * what to show. Plain like D1's and D3's emails, with no footer saying the
- * reader has a Telflo account, since an invitee may have none.
+ * An invitation to join an organization. One message whether or not the
+ * address has an account, since the accept page decides what to show. Plain
+ * like the verification and reset emails, with no footer saying the reader has
+ * a Telflo account, since an invitee may have none.
  *
  * A personal workspace named by its owner's email is "<email>'s
- * organization" in the subject and both bodies (D36-1 Q264); any other name
- * is itself. The organization's name is an admin's free text, so it is
- * escaped in the HTML part. The caller puts the token in
- * the link's fragment, `/accept-invitation#token=…`, so it never reaches a
- * server or its logs (decision 2).
+ * organization" in the subject and both bodies; any other name is itself.
+ * The organization's name is an admin's free text, so it is escaped in the
+ * HTML part. The caller puts the token in the link's fragment,
+ * `/accept-invitation#token=…`, so it never reaches a server or its logs.
  */
 export function buildInvitationEmail(input: {
   organizationName: string;

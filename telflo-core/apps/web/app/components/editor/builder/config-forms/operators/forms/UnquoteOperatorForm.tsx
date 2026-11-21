@@ -3,15 +3,15 @@ import { useOperatorId } from "../operator-ids.js";
 import { FieldSelector } from "../shared/FieldSelector.js";
 
 /*
- * The `unquote` operator's form (ADR 0018), over the card's scope (D9c
- * decisions 2 and 8). Ids are the card's (`op-<index>-unquote-…`). Field is
- * required (`docs/operators/unquote.md`), so it shows no default, and isn't
- * rootable (`transformer/unquote/config.go:35`).
+ * The `unquote` operator's form, over the card's scope. Ids are the card's
+ * (`op-<index>-unquote-…`). Field is required (`docs/operators/unquote.md`),
+ * so it shows no default, and isn't rootable
+ * (`transformer/unquote/config.go:35`).
  *
- * Fixed (decision 4): the quote styles no longer list "Single quotes:
- * 'value' → value". The collector unquotes with `strconv.Unquote`
- * (`unquote/transformer.go:39`), which takes single quotes around one
- * character only (`unquote.md`), so `'value'` is an error.
+ * The quote styles don't list single quotes (`'value'` → `value`). The
+ * collector unquotes with `strconv.Unquote` (`unquote/transformer.go:39`),
+ * which takes single quotes around one character only (`unquote.md`), so
+ * `'value'` is an error.
  */
 
 const CODE = "rounded-[4px] bg-muted px-1 py-0.5 font-mono text-xs";

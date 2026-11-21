@@ -1,58 +1,54 @@
 /**
- * Test runs and test files (D14a decisions 1, 3, 7 to 9, 11, 12, 20, 24 and
- * 27; Preflight rulings 7, 8, 9 and 13).
+ * Test runs and test files.
  *
  *   * test_input_files: a person's uploads and saved samples ("My Files") in
- *     one organization (decision 7). The bytes live in the FileStore at
- *     organizations/<org>/users/<owner>/test-inputs/<id> (decision 3); the
- *     row holds what the list shows. Row-level security admits the owner in
- *     the owner's organization only: select, insert and delete; no update
- *     (a file never changes). The owner's account going takes the rows
- *     (on delete cascade); their bytes stay on disk until a pruning job
- *     removes them (not built yet).
- *   * test_runs: the run queue and every run's record (decision 1). A run is
- *     a snapshot taken when it is queued and never changed (decision 20):
- *     the text, the pipeline and its signal, the duration, the collector
- *     pin and the input's name. Its status goes queued → running →
- *     succeeded or failed, or queued → failed; a running run whose tester
- *     refused it before starting goes back to queued (release). Nothing
- *     else.
+ *     one organization. The bytes live in the FileStore at
+ *     organizations/<org>/users/<owner>/test-inputs/<id>; the row holds what
+ *     the list shows. Row-level security admits the owner in the owner's
+ *     organization only: select, insert and delete; no update (a file never
+ *     changes). The owner's account going takes the rows (on delete cascade);
+ *     their bytes stay on disk until a pruning job removes them (not built
+ *     yet).
+ *   * test_runs: the run queue and every run's record. A run is a snapshot
+ *     taken when it is queued and never changed: the text, the pipeline and
+ *     its signal, the duration, the collector pin and the input's name. Its
+ *     status goes queued → running → succeeded or failed, or queued → failed;
+ *     a running run whose tester refused it before starting goes back to
+ *     queued (release). Nothing else.
  *       - Composite foreign keys tie it to its configuration and version in
- *         its own organization, as configuration_versions' do (spec §3.8),
- *         and to the configuration's distribution (ruling 13) and a version
- *         of the catalogue. queued_by_user_id becomes null when the account
- *         is hard-deleted.
- *       - Row-level security follows D11b's child-visible pattern (decision
- *         8): a run is visible to whoever can see its configuration, so a
- *         draft's runs are its author's and a published configuration's
- *         runs, past and future, every member's. A member inserts only a
- *         queued run, as themselves, at now() (ruling 9: no backdating), on
- *         a configuration they can see. The API's role updates and deletes
- *         nothing (using (false), as migration 022's delete policies): runs
- *         change only through the dispatcher's functions, and are never
- *         deleted (decision 9).
+ *         its own organization, as configuration_versions' do, and to the
+ *         configuration's distribution and a version of the catalog.
+ *         queued_by_user_id becomes null when the account is hard-deleted.
+ *       - Row-level security follows migration 021's child-visible pattern: a
+ *         run is visible to whoever can see its configuration, so a draft's
+ *         runs are its author's and a published configuration's runs, past and
+ *         future, every member's. A member inserts only a queued run, as
+ *         themselves, at now() (no backdating), on a configuration they can
+ *         see. The API's role updates and deletes nothing (using (false), as
+ *         migration 022's delete policies): runs change only through the
+ *         dispatcher's functions, and are never deleted.
  *       - A guard trigger, for every role, refuses a change to the snapshot
  *         (queued_by_user_id may only become null), any transition but the
  *         five above, and any change of a run that keeps its status.
  *       - Checks: the status, the signal, the duration (1 to 60), the text
  *         (262,144 characters), the sizes (10,485,760 bytes), the times and
  *         the lease tied to the status, and results only on a finished run.
- *   * otelcol_testing_state: one row, the tester's health as every API
- *     process sees it (decision 12, ruling 7). Global; the API's role reads
- *     it and writes it only through otelcol_testing_mark.
- *   * The dispatcher's functions (ruling 8): SECURITY DEFINER, EXECUTE for
- *     telflo_platform_runtime only, search_path fixed to pg_catalog, platform with
- *     every table named with its schema. Each refuses (42501) unless the
+ *   * otelcol_testing_state: one row, the tester's health as every API process
+ *     sees it. Global; the API's role reads it and writes it only through
+ *     otelcol_testing_mark.
+ *   * The dispatcher's functions: SECURITY DEFINER, EXECUTE for
+ *     telflo_platform_runtime only, search_path fixed to pg_catalog, platform
+ *     with every table named with its schema. Each refuses (42501) unless the
  *     database context is the dispatcher's: telflo.dispatcher = 'on', with
  *     telflo.user_id and telflo.organization_id empty, which only
  *     apps/api/src/database/context.ts's withDispatcherContext sets. A guard
- *     against bugs, as ADR 0022's: the same process holds the one login.
- *     Each takes its time once, from clock_timestamp() after its locks, and
- *     stamps every column with it (D14a Ruling 22): never now(), the
+ *     against bugs, as the other definer functions' are: the same process
+ *     holds the one login. Each takes its time once, from clock_timestamp()
+ *     after its locks, and stamps every column with it: never now(), the
  *     transaction's start, which can be older than a run queued or claimed
  *     while the function waited, and would order a run's times backwards.
- *       - test_runs_claim(slots, lease overhead): Q17's turns (decision
- *         11) under an advisory lock, so several API processes never run
+ *       - test_runs_claim(slots, lease overhead): each person's turn in
+ *         order, under an advisory lock, so several API processes never run
  *         more than slots at once; only under READ COMMITTED, since its cap
  *         relies on each statement's snapshot being taken after the lock. It
  *         first fails, rather than runs, a waiting run whose configuration
@@ -110,7 +106,7 @@ const resultColumns = [
   "error_message",
 ];
 
-/** The snapshot's columns (decision 20) and the run's identity: never changed. */
+/** The snapshot's columns and the run's identity: never changed. */
 const snapshotColumns = [
   "id",
   "organization_id",
@@ -129,7 +125,7 @@ const snapshotColumns = [
 ];
 
 /**
- * Q17's ranking of the waiting runs (decision 11), shared by the claim and
+ * The per-person ranking of the waiting runs, shared by the claim and
  * "n ahead". The runs whose person is null (a hard-deleted account's) share
  * one turn sequence, as one person's: the partition and the join both group
  * the nulls together.
@@ -185,11 +181,11 @@ export const up = (pgm) => {
     );
 
     comment on table test_input_files is
-      'a person''s test files in one organization, "My Files" (D14a decision
-       7): uploads and saved samples, listed only for their owner. The bytes
-       are in the FileStore under the owner''s folder (decision 3), reached
-       only through the API. A file never changes; deleting one removes the
-       row, then its bytes. Runs keep their own copies.';
+      'a person''s test files in one organization, "My Files": uploads and
+       saved samples, listed only for their owner. The bytes are in the
+       FileStore under the owner''s folder, reached only through the API. A
+       file never changes; deleting one removes the row, then its bytes. Runs
+       keep their own copies.';
     comment on column test_input_files.id is
       'the file''s id, which names its bytes in the FileStore.';
     comment on column test_input_files.organization_id is
@@ -201,8 +197,8 @@ export const up = (pgm) => {
        delete cascade: a hard-deleted account takes its rows, and its bytes
        stay on disk until they are pruned.';
     comment on column test_input_files.display_name is
-      'the name the list shows, trimmed, 1 to 200 characters. Private text
-       (ADR 0024): never in a log line, an attribute, an audit row or a URL.';
+      'the name the list shows, trimmed, 1 to 200 characters. Private text:
+       never in a log line, an attribute, an audit row or a URL.';
     comment on column test_input_files.file_name is
       'the uploaded file''s own name, or a pasted sample''s (name.json or
        name.log), 1 to 255 characters; a run''s input_name copies it.
@@ -211,10 +207,10 @@ export const up = (pgm) => {
       'at most 2,000 characters; the empty string when there is none.
        Private text.';
     comment on column test_input_files.content_type is
-      'from the name''s last extension (D14a Preflight ruling 10), never the
+      'from the name''s last extension, never the
        browser''s MIME type or a sniff.';
     comment on column test_input_files.size_bytes is
-      'the bytes'' size, at most 10,485,760 (decision 16).';
+      'the bytes'' size, at most 10,485,760.';
     comment on column test_input_files.sha256 is
       'the bytes'' SHA-256, 32 bytes, as the FileStore computed it while
        writing them.';
@@ -240,7 +236,7 @@ export const up = (pgm) => {
     comment on constraint ck_test_input_files_content_type_present on test_input_files is
       'a content type is named, at most 255 characters.';
     comment on constraint ck_test_input_files_size_bytes on test_input_files is
-      'an upload is at most 10 MiB (D14a decision 16), and a sample 1 MiB,
+      'an upload is at most 10 MiB, and a sample 1 MiB,
        which the API checks first.';
     comment on constraint ck_test_input_files_sha256_length on test_input_files is
       'a SHA-256 is 32 bytes.';
@@ -274,7 +270,7 @@ export const up = (pgm) => {
 
     comment on policy test_input_files_select on test_input_files is
       'the API''s role sees only the context''s user''s own files in the
-       context''s organization (D14a decision 7): nobody else''s, admins
+       context''s organization: nobody else''s, admins
        included.';
     comment on policy test_input_files_insert on test_input_files is
       'the API''s role adds a file only for the context''s user in the
@@ -369,38 +365,35 @@ export const up = (pgm) => {
     );
 
     comment on table test_runs is
-      'the test-run queue and every run''s record (D14a decisions 1 and 27).
-       A run is queued by a member, claimed and run by the API''s
-       dispatcher, and finished with the tester''s answer. Its snapshot never
-       changes (decision 20), its status changes only through the
-       dispatcher''s functions, and it is never deleted (decision 9). Its
-       files are in the FileStore at organizations/<org>/test-runs/<id>/
-       (decision 3). Visible to whoever can see its configuration (decision
-       8).';
+      'the test-run queue and every run''s record. A run is queued by a
+       member, claimed and run by the API''s dispatcher, and finished with the
+       tester''s answer. Its snapshot never changes, its status changes only
+       through the dispatcher''s functions, and it is never deleted. Its files
+       are in the FileStore at organizations/<org>/test-runs/<id>/. Visible to
+       whoever can see its configuration.';
     comment on column test_runs.id is
       'the run''s id, chosen by the API (uuidv7) before the insert, since the
-       input is copied into the run''s folder first (D14a Preflight ruling 11).';
+       input is copied into the run''s folder first.';
     comment on column test_runs.organization_id is
       'the configuration''s organization (fk_test_runs_configuration). A
        hard-deleted organization takes its runs.';
     comment on column test_runs.configuration_id is
-      'the configuration run. A run is visible to whoever can see it (D14a
-       decision 8), and hidden once it is deleted (decision 24): the
-       repository hides it, and the claim fails it if it was waiting.';
+      'the configuration run. A run is visible to whoever can see it, and
+       hidden once it is deleted: the repository hides it, and the claim
+       fails it if it was waiting.';
     comment on column test_runs.configuration_version_id is
       'the version whose run list shows the run (fk_test_runs_configuration_version).';
     comment on column test_runs.queued_by_user_id is
-      'the member who queued it: the person whose turn it takes (D14a
-       decision 11), and whose waiting runs are capped. Null once their
+      'the member who queued it: the person whose turn it takes, and whose
+       waiting runs are capped. Null once their
        account is hard-deleted; never changed otherwise.';
     comment on column test_runs.source_run_id is
       'for a re-run, the run whose input it copied; null otherwise. No
        foreign key: an id only, never followed by the database.';
     comment on column test_runs.yaml is
       'the text run, with organization-variable defaults substituted when it
-       was queued (D14a decision 20, Preflight ruling 12), at most 262,144
-       characters. Private (ADR 0024): never logged, audited or sent to
-       analytics.';
+       was queued, at most 262,144 characters. Private: never logged, audited
+       or sent to analytics.';
     comment on column test_runs.target_pipeline is
       'the pipeline the tester runs, as the text names it (logs, logs/app).';
     comment on column test_runs.signal is
@@ -409,8 +402,8 @@ export const up = (pgm) => {
       'how long the collector runs, 1 to 60 seconds. The lease adds it to
        its overhead.';
     comment on column test_runs.collector_distribution is
-      'the configuration''s distribution (fk_test_runs_configuration_distribution,
-       D14a Preflight ruling 13).';
+      'the configuration''s distribution
+       (fk_test_runs_configuration_distribution).';
     comment on column test_runs.collector_version is
       'the collector version run, the pin on screen when it was queued
        (fk_test_runs_collector_version).';
@@ -429,19 +422,18 @@ export const up = (pgm) => {
        admits only now(), so no run jumps the queue. A released run keeps it.';
     comment on column test_runs.started_at is
       'when the dispatcher claimed it, by the database''s clock after the
-       claim''s lock (D14a Ruling 22); null while queued, and on a run failed
+       claim''s lock; null while queued, and on a run failed
        while waiting.';
     comment on column test_runs.finished_at is
       'when it succeeded or failed, by the database''s clock after the
-       function''s locks (D14a Ruling 22); null until then.';
+       function''s locks; null until then.';
     comment on column test_runs.lease_id is
       'the dispatcher''s claim while it runs: finish and release act only
        with it. Null unless running.';
     comment on column test_runs.lease_expires_at is
       'when the reaper fails the running run, on the database''s clock: the
-       claim''s time (its clock after its lock, D14a Ruling 22) plus the
-       duration and the lease''s overhead (Preflight ruling 2). Null unless
-       running.';
+       claim''s time (its clock after its lock) plus the duration and the
+       lease''s overhead. Null unless running.';
     comment on column test_runs.strategy is
       'how the tester fed the input (OTLP replay, filelog or syslog), from its
        answer.';
@@ -485,24 +477,22 @@ export const up = (pgm) => {
       'the member who queued it (23503 otherwise); on delete set null, which
        the guard trigger allows.';
     comment on constraint fk_test_runs_configuration on test_runs is
-      'the composite foreign key (spec §3.8): a run names a configuration and
+      'the composite foreign key: a run names a configuration and
        that configuration''s own organization (23503 otherwise, even for the
        owner). No action: nothing deletes a run but its organization.';
     comment on constraint fk_test_runs_configuration_version on test_runs is
       'a run names a version of its own configuration in its own
        organization (23503 otherwise).';
     comment on constraint fk_test_runs_configuration_distribution on test_runs is
-      'a run is pinned to its configuration''s distribution (D14a Preflight
-       ruling 13).';
+      'a run is pinned to its configuration''s distribution.';
     comment on constraint fk_test_runs_collector_version on test_runs is
-      'a run names a version of the catalogue.';
+      'a run names a version of the catalog.';
     comment on constraint ck_test_runs_status on test_runs is
-      'queued, running, succeeded or failed (D14a decision 18). D15 adds its
-       own.';
+      'queued, running, succeeded or failed.';
     comment on constraint ck_test_runs_signal on test_runs is
       'traces, metrics or logs.';
     comment on constraint ck_test_runs_duration_seconds on test_runs is
-      'a run lasts 1 to 60 seconds (D14a decision 20).';
+      'a run lasts 1 to 60 seconds.';
     comment on constraint ck_test_runs_yaml_length on test_runs is
       'the text is at most 262,144 characters, as a version''s.';
     comment on constraint ck_test_runs_target_pipeline_length on test_runs is
@@ -510,7 +500,7 @@ export const up = (pgm) => {
     comment on constraint ck_test_runs_input_name_length on test_runs is
       'the input''s name is 1 to 255 characters, as a test file''s.';
     comment on constraint ck_test_runs_input_size_bytes on test_runs is
-      'an input is at most 10 MiB (D14a decision 16).';
+      'an input is at most 10 MiB.';
     comment on constraint ck_test_runs_output_size_bytes on test_runs is
       'a stored output is at most 10 MiB (R-006).';
     comment on constraint ck_test_runs_decoded_input_size_bytes on test_runs is
@@ -528,7 +518,7 @@ export const up = (pgm) => {
     comment on constraint ck_test_runs_results_only_when_finished on test_runs is
       'results (the tester''s answer, an error) only on a succeeded or failed
        run: a queued or running one has none, so a member''s insert carries
-       none (D14a Preflight ruling 9).';
+       none.';
     comment on constraint ck_test_runs_result_shapes on test_runs is
       'mutations and compatibility are JSON arrays, timings an object.';
     comment on constraint ck_test_runs_logs_length on test_runs is
@@ -552,8 +542,7 @@ export const up = (pgm) => {
       on test_runs (organization_id, configuration_id);
 
     comment on index idx_test_runs_queued is
-      'the waiting runs, oldest first: the claim''s and "n ahead"''s ranking
-       (D14a Preflight ruling 7).';
+      'the waiting runs, oldest first: the claim''s and "n ahead"''s ranking.';
     comment on index idx_test_runs_running is
       'the running runs: the claim''s count per person, and the reaper''s
        expired leases.';
@@ -587,20 +576,20 @@ export const up = (pgm) => {
 
     comment on policy test_runs_select on test_runs is
       'the API''s role sees the runs of the configurations the context''s
-       user can see (configurations_select applies inside the exists, D14a
-       decision 8): a draft''s runs are its author''s, a published
+       user can see (configurations_select applies inside the exists): a
+       draft''s runs are its author''s, a published
        configuration''s every member''s, past and future. A deleted
-       configuration''s included: the repository hides those (decision 24).';
+       configuration''s included: the repository hides those.';
     comment on policy test_runs_insert on test_runs is
       'the API''s role queues a run only on a configuration the context''s
-       user can see, as that user, queued, at now() (D14a Preflight ruling 9:
-       a backdated run can''t jump the queue); results are refused by
+       user can see, as that user, queued, at now() (a backdated run can''t
+       jump the queue); results are refused by
        ck_test_runs_results_only_when_finished. 42501 otherwise.';
     comment on policy test_runs_update on test_runs is
       'the API''s role updates no run: a run changes only through the
-       dispatcher''s functions (D14a Preflight ruling 8).';
+       dispatcher''s functions.';
     comment on policy test_runs_delete on test_runs is
-      'the API''s role deletes no run (D14a decision 9).';
+      'the API''s role deletes no run.';
 
     -- Not SECURITY DEFINER: it reads only the row it is given, as whatever
     -- role runs the update. P0001 (raise_exception), as migrations 020's
@@ -642,8 +631,8 @@ export const up = (pgm) => {
       for each row execute function refuse_test_run_change();
 
     comment on function refuse_test_run_change() is
-      'the run''s rules, kept by the database for every role (D14a
-       Preflight ruling 8): its snapshot and identity never change, and
+      'the run''s rules, kept by the database for every role: its snapshot
+       and identity never change, and
        queued_by_user_id only to null (the users foreign key''s on delete
        set null); its status goes only queued → running or failed, and
        running → succeeded, failed or queued (release); and a run that keeps
@@ -667,8 +656,8 @@ export const up = (pgm) => {
     revoke insert, update, delete on otelcol_testing_state from telflo_platform_runtime;
 
     comment on table otelcol_testing_state is
-      'the tester''s health as every API process sees it (D14a decision 12,
-       Preflight ruling 7): one row. Global (ADR 0008): the tester serves
+      'the tester''s health as every API process sees it: one row. Global:
+       the tester serves
        every organization. The API''s role reads it (queuing refuses while it
        is down) and changes it only through otelcol_testing_mark.';
     comment on column otelcol_testing_state.id is
@@ -681,9 +670,8 @@ export const up = (pgm) => {
     comment on constraint ck_otelcol_testing_state_singleton on otelcol_testing_state is
       'one row only: its key is true.';
 
-    -- The dispatcher's context (D14a Preflight ruling 8). Not granted to
-    -- anyone: only the definer functions below, running as the owner, call
-    -- it.
+    -- The dispatcher's context. Not granted to anyone: only the definer
+    -- functions below, running as the owner, call it.
     create function test_runs_require_dispatcher() returns void
     language plpgsql
     stable
@@ -748,13 +736,13 @@ export const up = (pgm) => {
       -- each statement below takes its snapshot after the lock is held, so
       -- it sees every earlier claim's running runs.
       perform pg_advisory_xact_lock(hashtext('telflo.test_runs_claim'));
-      -- The claim's one time (D14a Ruling 22), read once the lock is held:
+      -- The claim's one time, read once the lock is held:
       -- every run queued before it is older. A run queued later, which a
       -- statement below could still see, waits for the next claim, so no
       -- run starts or fails before it was queued.
       moment := clock_timestamp();
       -- A waiting run whose configuration or organization is deleted fails
-      -- here, rather than runs (D14a Preflight ruling 7). Its files stay.
+      -- here, rather than runs. Its files stay.
       update platform.test_runs t
          set status = 'failed',
              finished_at = moment,
@@ -796,18 +784,17 @@ export const up = (pgm) => {
     $$;
 
     comment on function test_runs_claim(integer, integer) is
-      'the dispatcher''s claim (D14a decisions 1 and 11, Preflight ruling 7):
-       under an advisory lock, fails each waiting run whose configuration or
-       organization is deleted (configuration_deleted), then marks running,
-       with a new lease expiring after the run''s duration plus
-       p_lease_overhead_seconds, as many waiting runs as p_slots leaves free
+      'the dispatcher''s claim: under an advisory lock, fails each waiting run
+       whose configuration or organization is deleted (configuration_deleted),
+       then marks running, with a new lease expiring after the run''s duration
+       plus p_lease_overhead_seconds, as many waiting runs as p_slots leaves free
        beside the runs already running, in every organization. Each slot goes
        to the oldest waiting run of the person with the fewest runs running,
        then the oldest: the order (turn, queued_at, id), where a run''s turn
        is its person''s running runs plus its place among their waiting ones.
        Runs with no person (their account hard-deleted) share one turn
        sequence, as one person''s. Its time is the clock once the lock is
-       held (D14a Ruling 22): a run queued after that waits for the next
+       held: a run queued after that waits for the next
        claim. Returns each claimed run''s snapshot, organization and lease.
        Only under READ COMMITTED (25000 otherwise): its cap needs each
        statement''s own snapshot. Commit at once: the lock is held until
@@ -834,7 +821,7 @@ export const up = (pgm) => {
         raise exception 'a finish''s results name only the result columns'
           using errcode = 'invalid_parameter_value';
       end if;
-      -- The run's row first, then the time (D14a Ruling 22): its claim has
+      -- The run's row first, then the time: its claim has
       -- committed, so the clock is past its start.
       perform 1
          from platform.test_runs t
@@ -873,8 +860,8 @@ export const up = (pgm) => {
     $$;
 
     comment on function test_runs_finish(uuid, uuid, boolean, jsonb) is
-      'finishes a running run whose lease is p_lease_id (D14a Preflight
-       ruling 7): succeeded or failed, with the results, a JSON object whose
+      'finishes a running run whose lease is p_lease_id: succeeded or failed,
+       with the results, a JSON object whose
        keys name result columns (22023 for any other). True when it did;
        false when the run is no longer the caller''s (reaped, or finished
        already), and then nothing changes. The dispatcher only (42501).';
@@ -905,7 +892,7 @@ export const up = (pgm) => {
 
     comment on function test_runs_release(uuid, uuid) is
       'puts a running run whose lease is p_lease_id back in the queue, with
-       its queued_at, so it keeps its place (D14a Preflight ruling 7). Only
+       its queued_at, so it keeps its place. Only
        for a tester that refused before starting (busy, starting, a refused
        connection): a run that may have started is never released, so none
        runs twice. True when it did. The dispatcher only (42501).';
@@ -924,7 +911,7 @@ export const up = (pgm) => {
       if p_message is null or btrim(p_message) = '' then
         raise exception 'the reaper takes a message' using errcode = 'invalid_parameter_value';
       end if;
-      -- The clock, not the transaction's start (D14a Ruling 22): a run
+      -- The clock, not the transaction's start: a run
       -- claimed after the transaction began is reaped once its lease is past.
       -- Its locks are the update's own: a run is reaped only when its lease
       -- expired before this time, so it started before it too.
@@ -944,10 +931,10 @@ export const up = (pgm) => {
     $$;
 
     comment on function test_runs_reap(text) is
-      'fails every running run past its lease, on the database''s clock when
-       it is called (D14a Ruling 22), with interrupted and p_message (D14a decision 18, Preflight ruling 7),
-       and returns their ids. A lost answer or a restart mid-run ends here;
-       the run is never started again. The dispatcher only (42501).';
+      'fails every running run past its lease, on the database''s clock when it
+       is called, with interrupted and p_message, and returns their ids. A lost
+       answer or a restart mid-run ends here; the run is never started again.
+       The dispatcher only (42501).';
 
     create function test_runs_fail_waiting(p_down_for interval, p_message text)
     returns setof uuid
@@ -964,7 +951,7 @@ export const up = (pgm) => {
         raise exception 'failing waiting runs takes a positive interval and a message'
           using errcode = 'invalid_parameter_value';
       end if;
-      -- The clock, not the transaction's start (D14a Ruling 22). Its locks
+      -- The clock, not the transaction's start. Its locks
       -- are the update's own: a run queued after this time, which the update
       -- could still see, waits for the next call, so none fails before it
       -- was queued.
@@ -986,11 +973,11 @@ export const up = (pgm) => {
     $$;
 
     comment on function test_runs_fail_waiting(interval, text) is
-      'once the tester has been down longer than p_down_for (D14a decision
-       12), a positive interval (22023 otherwise), fails every waiting run, in
+      'once the tester has been down longer than p_down_for, a positive
+       interval (22023 otherwise), fails every waiting run, in
        every organization, with testing_unavailable and p_message, and
        returns their ids; while it is up, or down for less, does nothing. Its
-       time is the clock when it is called (D14a Ruling 22): a run queued
+       time is the clock when it is called: a run queued
        after that waits for the next call. A run waiting behind a busy but
        working tester never fails here. The dispatcher only (42501).';
 
@@ -1009,7 +996,7 @@ export const up = (pgm) => {
       if p_up is null then
         raise exception 'the tester is marked up or down' using errcode = 'invalid_parameter_value';
       end if;
-      -- The row first, then the time (D14a Ruling 22).
+      -- The row first, then the time.
       perform 1 from platform.otelcol_testing_state s for update;
       moment := clock_timestamp();
       update platform.otelcol_testing_state s
@@ -1020,9 +1007,9 @@ export const up = (pgm) => {
     $$;
 
     comment on function otelcol_testing_mark(boolean) is
-      'a health monitor''s change (D14a decision 12, Preflight ruling 7): up
+      'a health monitor''s change: up
        clears down_since; down sets it to the clock, read after the row''s
-       lock (D14a Ruling 22), unless it is set already, so it keeps the first
+       lock, unless it is set already, so it keeps the first
        process''s time. Returns down_since as it is now. The dispatcher only
        (42501).';
 
@@ -1048,7 +1035,7 @@ export const up = (pgm) => {
     $$;
 
     comment on function test_runs_ahead(uuid[]) is
-      '"n ahead" (D14a decision 11, Preflight ruling 7): for each waiting run
+      '"n ahead": for each waiting run
        of p_run_ids in the context''s organization whose configuration the
        context''s user can see (the select policy''s rule), how many waiting
        runs, in every organization, the claim takes before it. Counts only:
@@ -1071,7 +1058,7 @@ export const up = (pgm) => {
 
     comment on function test_runs_waiting_for_context_user() is
       'how many runs the context''s user has waiting, in every organization
-       (D14a decision 19''s cap of 50). A count only; 0 without a user in the
+       (a cap of 50). A count only; 0 without a user in the
        context. SECURITY DEFINER, since their other organizations'' runs are
        invisible here.';
 

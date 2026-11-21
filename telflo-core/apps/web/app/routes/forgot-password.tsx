@@ -7,8 +7,8 @@ import type { ThemeHandle } from "~/lib/theme.js";
 
 /**
  * A signed-in visitor goes to `/app`. One whose access token has expired sees
- * the form, like a signed-out one (D2b decision 7). An unreachable API throws
- * rather than reading as signed out.
+ * the form, like a signed-out one. An unreachable API throws rather than
+ * reading as signed out.
  */
 export async function loader({ request }: Route.LoaderArgs) {
   const lookup = await fetchCurrentUser(request);
@@ -17,7 +17,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 // An auth screen: root's Layout renders the theme this browser was last
-// told, the remembered one or the `telflo_theme` cookie's (D21 decision 22).
+// told, the remembered one or the `telflo_theme` cookie's.
 export const handle = { theme: "remembered" } satisfies ThemeHandle;
 
 export function meta(_args: Route.MetaArgs) {

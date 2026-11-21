@@ -15,20 +15,17 @@ import { isAlreadyGone } from "~/lib/stores/test-suites-store.js";
 import { failureMessage } from "~/lib/test-runs/messages.js";
 
 /*
- * The Suites subtab's two delete confirmations (D14b decisions 2 and 8;
- * Preflight ruling 18): the suite confirmation, and one for a definition,
- * which is never deleted at once (decision 2's Parity Note).
+ * The Suites subtab's two delete confirmations: the suite confirmation, and
+ * one for a definition, which is never deleted at once.
  *
- * Differences (the Parity Notes): Delete keeps the dialog open, its words
- * "Deleting...", until the API answers, and a failure toasts the API's words
- * and keeps it open, not closed at the click; one already
- * gone ("not found": another tab deleted it) toasts the API's words and
- * closes, the item dropped (D14b Ruling 38); a session that ended toasts
- * nothing. The name is text in the description, under the app's `ph-mask`,
- * never an attribute (ADR 0024). Where the focus goes as it closes is the
- * caller's (`onCloseAutoFocus`): with no Radix trigger, Radix's own return
- * would leave it on the page's body, Cancel and Escape included (D14b
- * Ruling 51).
+ * Delete keeps the dialog open, its words "Deleting...", until
+ * the API answers, and a failure toasts the API's words and keeps it open;
+ * one already gone ("not found": another tab
+ * deleted it) toasts the API's words and closes, the item dropped; a session
+ * that ended toasts nothing. The name is text in the description, under the
+ * app's `ph-mask`, never an attribute. Where the focus goes as it closes is
+ * the caller's (`onCloseAutoFocus`): with no Radix trigger, Radix's own
+ * return would leave it on the page's body, Cancel and Escape included.
  */
 
 interface ConfirmDeleteProps {
@@ -123,7 +120,7 @@ export function DeleteSuiteDialog({
   );
 }
 
-/** "Delete test configuration?" (decision 2). */
+/** "Delete test configuration?". */
 export function DeleteDefinitionDialog({
   definition,
   onConfirm,

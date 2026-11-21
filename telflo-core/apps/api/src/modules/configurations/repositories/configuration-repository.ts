@@ -5,26 +5,24 @@ import type { AuthContext } from "../../../database/context.js";
 import { createOrganizationScope, type ScopedUpdateable } from "../../../tenancy/organization-scope.js";
 
 /*
- * The configurations of the context's organization (D7 decisions 4, 6 and
- * 8), through the organization scope. Row-level security on configurations
- * (migration 1700000000015) stands behind it: the transaction must carry a
- * database context naming the same organization, or the policies show and
- * admit nothing.
+ * The configurations of the context's organization, through the organization
+ * scope. Row-level security on configurations (migration 1700000000015)
+ * stands behind it: the transaction must carry a database context naming the
+ * same organization, or the policies show and admit nothing.
  *
- * Every method ignores a deleted configuration (decision 8): the policies
- * don't hide one, so the repository does.
+ * Every method ignores a deleted configuration: the policies don't hide one,
+ * so the repository does.
  *
- * Every method sees only what its viewer may (D11b decision 1): their own
- * drafts and every published configuration, by the rule the policies apply
- * (migration 1700000000021), so the list, `find` and every write agree
- * with row-level security. Another member's draft is as absent as a
- * configuration that doesn't exist. "Published" is the policies' own helper,
+ * Every method sees only what its viewer may: their own drafts and every
+ * published configuration, by the rule the policies apply (migration
+ * 1700000000021), so the list, `find` and every write agree with row-level
+ * security. Another member's draft is as absent as a configuration that
+ * doesn't exist. "Published" is the policies' own helper,
  * `configuration_is_published`, so the two can't drift apart.
  *
- * Every timestamp comes from the caller, as `at`, never from SQL `now()`
- * (decision 4): the API's clock holds whole milliseconds, so a timestamp
- * written here reads back equal to the JavaScript Date the list's cursor
- * carries.
+ * Every timestamp comes from the caller, as `at`, never from SQL `now()`:
+ * the API's clock holds whole milliseconds, so a timestamp written here
+ * reads back equal to the JavaScript Date the list's cursor carries.
  */
 
 /** Who created a configuration: their account's email, whether or not the account is soft-deleted. */
@@ -35,12 +33,11 @@ export interface ConfigurationCreator {
 
 /**
  * Whom a repository reads and writes for: the organization it is scoped to,
- * and the viewer whose drafts it shows (D11b Preflight ruling 6). An
- * `AuthContext` is one.
+ * and the viewer whose drafts it shows. An `AuthContext` is one.
  */
 export type ConfigurationViewerContext = Pick<AuthContext, "organizationId" | "userId">;
 
-/** A live configuration, as the list and the API's responses show it (decision 5's shape). */
+/** A live configuration, as the list and the API's responses show it. */
 export interface Configuration {
   id: string;
   name: string;
@@ -49,16 +46,16 @@ export interface Configuration {
   updatedAt: Date;
   /** Null once the creator's account is hard-deleted. */
   createdBy: ConfigurationCreator | null;
-  /** True when at least one of its versions is published (D11b decision 1); else it is a draft. */
+  /** True when at least one of its versions is published; else it is a draft. */
   published: boolean;
-  /** The catalogue distribution it is built for, chosen when it was created and never changed (D13a decision 5). */
+  /** The catalog distribution it is built for, chosen when it was created and never changed. */
   collectorDistribution: string;
 }
 
 /**
  * A live configuration as `lockForUpdate` returns it: its own columns only,
  * what a change's checks and diff need. No creator's email: that would need
- * the join a lock must not take (Preflight ruling 3).
+ * the join a lock must not take.
  */
 export interface LockedConfiguration {
   id: string;
@@ -68,7 +65,7 @@ export interface LockedConfiguration {
   createdByUserId: string | null;
   createdAt: Date;
   updatedAt: Date;
-  /** Its distribution (D13a decision 5): what a version's pin must be a version of. */
+  /** Its distribution: what a version's pin must be a version of. */
   collectorDistribution: string;
 }
 
@@ -79,16 +76,15 @@ export interface ConfigurationPagePosition {
 }
 
 export interface ListConfigurationsInput {
-  /** At most this many items. The caller bounds it (1 to 100, decision 6). */
+  /** At most this many items. The caller bounds it (1 to 100). */
   limit: number;
   /** The last item of the previous page; the page holds the rows strictly after it. */
   after?: ConfigurationPagePosition;
   /** Matched, ignoring case, as a substring of the name or the description. `%`, `_` and `\` match themselves. */
   search?: string;
   /**
-   * D11b decision 6: every configuration the viewer can see (`all`, the
-   * default), only the ones they created (`mine`), or only the published
-   * ones (`published`).
+   * Every configuration the viewer can see (`all`, the default), only the
+   * ones they created (`mine`), or only the published ones (`published`).
    */
   filter?: ConfigurationsListFilter;
 }
@@ -100,21 +96,20 @@ export interface ConfigurationPage {
 }
 
 export interface CreateConfigurationInput {
-  /** Trimmed and within decision 4's limits already: the contract does it, and the table refuses anything else. */
+  /** Trimmed and within its limits already: the contract does it, and the table refuses anything else. */
   name: string;
   description: string;
   createdByUserId: string;
   /**
-   * The distribution it is built for (D13a decision 5), a distribution of
-   * the catalogue (23503 otherwise): the catalogue's default, read in the
-   * same transaction. Never changed afterwards.
+   * The distribution it is built for, a distribution of the catalog
+   * (23503 otherwise): the catalog's default, read in the same
+   * transaction. Never changed afterwards.
    */
   collectorDistribution: string;
   /**
-   * The flow it was made from (D12 decision 12), its slug's format checked
-   * by the contract; no foreign key (a flow may be deleted). Left out, the
-   * insert names no such column and it stays null. Never read back
-   * (Preflight ruling 9).
+   * The flow it was made from, its slug's format checked by the contract;
+   * no foreign key (a flow may be deleted). Left out, the insert names no
+   * such column and it stays null. Never read back.
    */
   sourceFlowSlug?: string | undefined;
   /** The API's clock: both `created_at` and `updated_at`. */
@@ -129,8 +124,8 @@ export interface ConfigurationChanges {
 
 /*
  * "Undefined when there is none" below includes a configuration the viewer
- * can't see (another member's draft, D11b decision 1), and a write changes
- * none: to its viewer it doesn't exist.
+ * can't see (another member's draft), and a write changes none: to its
+ * viewer it doesn't exist.
  */
 export interface IConfigurationRepository {
   /**
@@ -154,13 +149,13 @@ export interface IConfigurationRepository {
    * Sets the given fields and `updated_at` to `at` on a live configuration,
    * and returns it as it now is; undefined when there is none or it is
    * deleted. It writes even when the values are the ones already there:
-   * whether anything changed is the caller's decision (decision 7).
+   * whether anything changed is the caller's decision.
    */
   update(id: string, changes: ConfigurationChanges, at: Date): Promise<Configuration | undefined>;
   /**
    * Sets only `updated_at` to `at` on a live configuration: a save of its
-   * YAML moves it to the top of the list (D8 decision 5). False when there
-   * is none or it is deleted.
+   * YAML moves it to the top of the list. False when there is none or it
+   * is deleted.
    */
   touch(id: string, at: Date): Promise<boolean>;
   /** Deletes a live configuration softly, `at`. False when there is none or it is already deleted. */
@@ -210,9 +205,9 @@ export function isPublished(table: "configurations" | "written"): RawBuilder<boo
 }
 
 /**
- * Whether the viewer can see `table`'s row (D11b decision 1): they created
- * it, or it is published. The select policy's rule, so a read here never
- * finds what row-level security would hide, nor misses what it would show.
+ * Whether the viewer can see `table`'s row: they created it, or it is
+ * published. The select policy's rule, so a read here never finds what
+ * row-level security would hide, nor misses what it would show.
  */
 export function visibleTo(userId: string, table: "configurations" | "written" = "configurations"): RawBuilder<boolean> {
   return sql<boolean>`(${sql.ref(`${table}.created_by_user_id`)} = ${userId} or ${isPublished(table)})`;
@@ -265,7 +260,7 @@ export function createConfigurationRepository(
    * and whether they are published. A left join: a hard-deleted creator
    * leaves `created_by_user_id` null, and a published row still lists.
    * `users.deleted_at` isn't filtered: a soft-deleted creator keeps their
-   * email here (decision 5).
+   * email here.
    */
   const live = () =>
     scope
@@ -288,8 +283,7 @@ export function createConfigurationRepository(
   /**
    * Sets `values` on the live configuration and returns it with its
    * creator's email, in one statement: the update is a common table
-   * expression, joined to `users` by a plain read that locks nothing there
-   * (Preflight ruling 3).
+   * expression, joined to `users` by a plain read that locks nothing there.
    */
   const updateLive = async (
     id: string,
@@ -350,10 +344,9 @@ export function createConfigurationRepository(
     // No join: `for update` over the list's left join to users is refused
     // ("FOR UPDATE cannot be applied to the nullable side of an outer
     // join"), and over an inner join it would lock the creator's account
-    // too, holding up their sign-in and adding a configuration -> user lock
-    // (Preflight ruling 3). Under row-level security a locking read applies
-    // the update policy, so the context must name this organization, as the
-    // scope's filter does.
+    // too, holding up their sign-in and adding a configuration -> user lock.
+    // Under row-level security a locking read applies the update policy, so
+    // the context must name this organization, as the scope's filter does.
     async lockForUpdate(id: string): Promise<LockedConfiguration | undefined> {
       const row = await scope
         .selectFrom("configurations")

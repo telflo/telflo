@@ -1,16 +1,15 @@
 /*
- * The `config` commands: `list`, `get`, `pull`, `create`, `publish`, `push`
- * (D27 decision 26), added to the
- * `config` command `program.ts` creates (Preflight ruling 22; `config
- * rules` is Task 4c's). They print D25's fields: `versionNumber`,
- * `publishedVersionNumber` (the highest published), the pin
- * (`distribution`, `collectorVersion`) and a version's `label`.
+ * The `config` commands: `list`, `get`, `pull`, `create`, `publish`, `push`,
+ * added to the `config` command `program.ts` creates (`config rules` is
+ * `config-rules.ts`'). They print the public API's fields: `versionNumber`,
+ * `publishedVersionNumber` (the highest published), the pin (`distribution`,
+ * `collectorVersion`) and a version's `label`.
  *
  * A configuration's YAML is printed only where it's asked for (`pull`, byte
  * for byte: data, not a message), and the collector's errors only as
  * `push`'s output: never in an error's message. Every other server string
- * in a human line goes through `terminalText` (Ruling 237; tables strip
- * their cells themselves).
+ * in a human line goes through `terminalText` (tables strip their cells
+ * themselves).
  */
 
 import { writeFileSync } from "node:fs";
@@ -140,9 +139,9 @@ export async function configPublish(id: string, options: { version: number }): P
 }
 
 /**
- * `--label`, or `--description` (its alias, the older CLI's name): both is a
- * usage error, and so is a label the API would refuse (trimmed, 1 to 80
- * characters: the contracts' `ConfigurationVersionLabelSchema`).
+ * `--label`, or `--description` (its alias): both is a usage error, and so
+ * is a label the API would refuse (trimmed, 1 to 80 characters: the
+ * contracts' `ConfigurationVersionLabelSchema`).
  */
 export function labelOf(options: { label?: string; description?: string }): string | undefined {
   if (options.label !== undefined && options.description !== undefined) throw new ExitError(LABEL_AND_DESCRIPTION_MESSAGE, EXIT.USAGE);
@@ -154,15 +153,15 @@ export function labelOf(options: { label?: string; description?: string }): stri
 }
 
 /**
- * `telflo config push <id> -f <file> [--publish] [--label <text>]`
- * (decision 26). Invalid YAML prints the collector's errors (stdout, or the
- * JSON) and exits 4; nothing is saved.
+ * `telflo config push <id> -f <file> [--publish] [--label <text>]`. Invalid
+ * YAML prints the collector's errors (stdout, or the JSON) and exits 4;
+ * nothing is saved.
  */
 export async function configPush(
   id: string,
   options: { file: string; publish?: boolean; label?: string; description?: string },
 ): Promise<void> {
-  // Every usage check before the login (Ruling 249): the label, the id, the file.
+  // Every usage check before the login: the label, the id, the file.
   const label = labelOf(options);
   const configurationId = requireId(id, "configuration");
   const yaml = await readInput(options.file);
@@ -225,7 +224,7 @@ export function registerConfigCommands(config: Command): void {
     .requiredOption("-f, --file <file>", "the YAML file, or - for stdin")
     .option("--publish", "publish the version pushed")
     .option("--label <text>", "the new version's label (when one is added)")
-    .option("--description <text>", "the same as --label (the older CLI's name)")
+    .option("--description <text>", "the same as --label")
     .action((id: string, options: { file: string; publish?: boolean; label?: string; description?: string }) =>
       configPush(id, options),
     );

@@ -1,5 +1,5 @@
 {
-  "description": "The seeded flows' slugs, pins and YAML, from migration 1700000000026's seededFlows (D12 decision 4, Preflight ruling 20). Generated: never edit by hand.",
+  "description": "The seeded flows' slugs, pins and YAML, from migration 1700000000026's seededFlows. Generated: never edit by hand.",
   "script": "npm run fixture:seeded-flows --workspace @telflo/db",
   "flows": [
     {

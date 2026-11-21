@@ -7,7 +7,7 @@ import {
   registrationNotOpen,
 } from "./registration.js";
 
-describe("the registration modes (D36-1 decision 35)", () => {
+describe("the registration modes", () => {
   it("lets an account be made: open by either way, invite-only from an invitation only, closed by neither", () => {
     expect({
       open: [allowsRegistration("open", "self"), allowsRegistration("open", "invitation")],

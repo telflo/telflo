@@ -23,12 +23,11 @@ describe("buildVerificationEmail", () => {
   });
 
   /**
-   * Finding 8 of the D1 final review: this used to assert the literal
-   * string "24 hours", which locked in a copy of the expiry that was
-   * hardcoded rather than read from TELFLO_VERIFICATION_TOKEN_TTL_HOURS —
-   * so the email would keep saying "24 hours" even if that setting were
-   * changed. Asserting against the same `ttlHours` value passed in is what
-   * actually pins the email to the setting.
+   * Asserting the literal string "24 hours" would lock in a copy of the expiry
+   * hardcoded rather than read from TELFLO_VERIFICATION_TOKEN_TTL_HOURS — so
+   * the email could keep saying "24 hours" even if that setting were changed.
+   * Asserting against the same `ttlHours` value passed in is what actually
+   * pins the email to the setting.
    */
   it("states the configured expiry, not a hardcoded one, so the recipient is not surprised by a dead link", () => {
     const email = buildVerificationEmail({ verificationUrl: url, ttlHours });
@@ -86,7 +85,7 @@ describe("buildDuplicateRegistrationEmail", () => {
   });
 });
 
-describe("buildDuplicateRegistrationEmail for an account with no password (D2c Ruling 19)", () => {
+describe("buildDuplicateRegistrationEmail for an account with no password", () => {
   const signInUrl = "https://app.telflo.local/login";
   const forgotPasswordUrl = "https://app.telflo.local/forgot-password";
   const email = buildDuplicateRegistrationEmail({ signInUrl, forgotPasswordUrl, hasPassword: false });
@@ -134,7 +133,7 @@ describe("buildDuplicateRegistrationEmail for an account with a password", () =>
 describe("buildPasswordResetEmail", () => {
   const resetUrl = "https://app.telflo.local/reset-password#token=abc123";
 
-  it("uses its fixed subject and wording (D3 decision 8)", () => {
+  it("uses its fixed subject and wording", () => {
     const email = buildPasswordResetEmail({ resetUrl });
     expect(email.subject).toBe("Reset your Telflo password");
     for (const body of [email.text, email.html]) {
@@ -168,10 +167,10 @@ describe("buildPasswordResetEmail", () => {
 });
 
 /*
- * The account's security emails (D21 decision 43): decision 43's words
- * exactly, and every interpolated value escaped in the HTML part.
+ * The account's security emails: their words exactly, and every
+ * interpolated value escaped in the HTML part.
  */
-describe("the account's security emails (D21 decision 43)", () => {
+describe("the account's security emails", () => {
   const forgotPasswordUrl = "https://app.telflo.local/forgot-password";
   const settingsUrl = "https://app.telflo.local/settings/account";
   const shared = [
@@ -191,7 +190,7 @@ describe("the account's security emails (D21 decision 43)", () => {
   }
 
   describe("buildPasswordChangedEmail", () => {
-    it("the subject and the text are decision 43's words", () => {
+    it("the subject and the text are the email's words", () => {
       const email = buildPasswordChangedEmail({ forgotPasswordUrl });
       expect(email.subject).toBe("Your Telflo password was changed");
       expect(email.text).toBe(
@@ -220,7 +219,7 @@ describe("the account's security emails (D21 decision 43)", () => {
   });
 
   describe("buildIdentityLinkedEmail", () => {
-    it("the subject and the text are decision 43's words, with Q127's ordered recovery as the only way back", () => {
+    it("the subject and the text are the email's words, with the ordered recovery as the only way back", () => {
       const email = buildIdentityLinkedEmail({ providerName: "Google", settingsUrl });
       expect(email.subject).toBe("Google sign-in was linked to your Telflo account");
       expect(email.text).toBe(
@@ -261,7 +260,7 @@ describe("the account's security emails (D21 decision 43)", () => {
   });
 
   describe("buildIdentityUnlinkedEmail", () => {
-    it("the subject and the text are decision 43's words, with what unlinking doesn't stop (Q126)", () => {
+    it("the subject and the text are the email's words, with what unlinking doesn't stop", () => {
       const email = buildIdentityUnlinkedEmail({ providerName: "Google", relinksByEmail: true, forgotPasswordUrl });
       expect(email.subject).toBe("Google sign-in was removed from your Telflo account");
       expect(email.text).toBe(
@@ -290,7 +289,7 @@ describe("the account's security emails (D21 decision 43)", () => {
       expect(email.text).not.toContain("Google");
     });
 
-    it("leaves the re-link sentence out when the provider doesn't re-link by email (Ruling 92)", () => {
+    it("leaves the re-link sentence out when the provider doesn't re-link by email", () => {
       const email = buildIdentityUnlinkedEmail({ providerName: "okta", relinksByEmail: false, forgotPasswordUrl });
       expect(email.subject).toBe("okta sign-in was removed from your Telflo account");
       expect(email.text).toBe(

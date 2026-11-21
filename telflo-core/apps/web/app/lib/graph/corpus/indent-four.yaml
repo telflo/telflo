@@ -1,4 +1,4 @@
-# Four-space indentation, sequences indented under their keys (Preflight ruling 1).
+# Four-space indentation, sequences indented under their keys.
 receivers:
     otlp:
         protocols:

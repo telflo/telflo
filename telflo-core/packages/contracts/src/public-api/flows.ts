@@ -3,9 +3,8 @@ import { FLOW_SIGNALS, FLOW_SOURCES } from "../flows.js";
 
 /*
  * The public surface's request and response shapes for flows (routes
- * 24–25) (D25 decisions 17, 18, 19 and 45): strict Zod schemas, camelCase,
- * from the platform's flow (flows.ts' FlowSchema) mapped to a summary and a
- * detail. Flows are global, not an
+ * 24–25): strict Zod schemas, camelCase, from the platform's flow (flows.ts'
+ * FlowSchema) mapped to a summary and a detail. Flows are global, not an
  * organization's; a token sees the published ones only.
  *
  * `updatedAt` is never null: the platform stamps every flow.
@@ -37,7 +36,7 @@ export const PublicFlowDetailSchema = PublicFlowSchema.extend({ description: z.s
 
 export type PublicFlowDetail = z.infer<typeof PublicFlowDetailSchema>;
 
-/** `GET /flows`: every published flow, in the gallery's order; not paginated (decision 19). */
+/** `GET /flows`: every published flow, in the gallery's order; not paginated. */
 export const PublicFlowsSchema = z.object({ items: z.array(PublicFlowSchema), nextCursor: z.null() }).strict();
 
 export type PublicFlows = z.infer<typeof PublicFlowsSchema>;

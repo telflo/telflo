@@ -5,30 +5,28 @@ import { InlineAlert } from "./InlineAlert.js";
 import { listLength } from "./shared/counts.js";
 
 /*
- * The log dedup processor's form (ADR 0018), over the form's fields
- * (D9d decision 2, D9b's contract). Collector claims are contrib
- * v0.162.0's `processor/logdedupprocessor`. The collector's own name,
- * `log_dedup`, opens this form (`RENAMED_TYPES`; `metadata.yaml:2-3`).
+ * The log dedup processor's form, over the form's fields. Collector claims
+ * are contrib v0.162.0's `processor/logdedupprocessor`. The collector's own
+ * name, `log_dedup`, opens this form (`RENAMED_TYPES`; `metadata.yaml:2-3`).
  *
- * - Fixed (decision 3): the lists' Add holds a row that isn't in the text
- *   (never `""`: a field whose first segment isn't `body` or
- *   `attributes` is refused, `config.go:107-172`; an empty condition doesn't
- *   parse, `factory.go:46-58`); the first typing appends it. Removing a
- *   list's last item removes its key.
- * - Changed (decision 7): the collector refuses Include and Exclude Fields
- *   together (`config.go:85-87`). A cascade would delete a typed list, so
- *   each list is locked (typing and Add disabled) while the other has items,
- *   with a hint; its items can still be removed. A text with both shows
- *   a fail alert, its section forced open.
- * - Changed (decision 4): Exclude Fields says excluded fields are removed
- *   from the emitted log (`README.md:35`).
- * - Fixed (D9b decision 4): Metadata Cardinality Limit is a number field:
- *   0, the collector's "no limit" (`config.go:51-53`), can be typed;
- *   cleared removes it.
- * - Strings are written as typed (decision 2): field paths keep `\.`, and
- *   conditions their quotes and escapes.
+ * - The lists' Add holds a row that isn't in the text (never `""`: a field
+ *   whose first segment isn't `body` or `attributes` is refused,
+ *   `config.go:107-172`; an empty condition doesn't parse,
+ *   `factory.go:46-58`); the first typing appends it. Removing a list's last
+ *   item removes its key.
+ * - The collector refuses Include and Exclude Fields together
+ *   (`config.go:85-87`). A cascade would delete a typed list, so each list
+ *   is locked (typing and Add disabled) while the other has items, with a
+ *   hint; its items can still be removed. A text with both shows a fail
+ *   alert, its section forced open.
+ * - Exclude Fields says excluded fields are removed from the emitted log
+ *   (`README.md:35`).
+ * - Metadata Cardinality Limit is a number field: 0, the collector's "no
+ *   limit" (`config.go:51-53`), can be typed; cleared removes it.
+ * - Strings are written as typed: field paths keep `\.`, and conditions their
+ *   quotes and escapes.
  *
- * Ids are fixed per field (decision 13).
+ * Ids are fixed per field.
  */
 
 export const EXCLUDE_FIELDS_DESCRIPTION =

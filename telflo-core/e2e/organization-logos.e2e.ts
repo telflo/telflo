@@ -6,12 +6,12 @@ import { addMember, seedUser } from "./support/database.js";
 import { E2E_WEB_URL } from "./support/environment.js";
 import { signInThroughApi, switchOrganizationThroughApi, waitForHydration } from "./support/session.js";
 
-// Organization logos (D23-2 decisions 2, 3, 8, 9, 51, 52 and 57), in the
-// browser: set in Create organization, shown in the sidebar's switcher and on
-// the Settings card, replaced and removed in Edit, seen by a contributor (no
-// Edit), and an SVG refused. The logos are REAL decodable PNGs, built below
-// (a file with the PNG signature alone passes the type check but fails to
-// decode, and the <img> would fall back to the initials: Preflight ruling 22).
+// Organization logos, in the browser: set in Create organization, shown in
+// the sidebar's switcher and on the Settings card, replaced and removed in
+// Edit, seen by a contributor (no Edit), and an SVG refused. The logos are
+// REAL decodable PNGs, built below (a file with the PNG signature alone
+// passes the type check but fails to decode, and the <img> would fall back to
+// the initials).
 
 const PASSWORD = "correct horse battery staple";
 
@@ -50,13 +50,13 @@ function pngChunk(type: string, data: Buffer): Buffer {
   return Buffer.concat([length, typeAndData, crc]);
 }
 
-/** A `size`×`size` PNG of one colour (8-bit RGB, no interlace): one any browser decodes. */
+/** A `size`×`size` PNG of one color (8-bit RGB, no interlace): one any browser decodes. */
 function solidPng(size: number, [red, green, blue]: [number, number, number]): Buffer {
   const header = Buffer.alloc(13);
   header.writeUInt32BE(size, 0);
   header.writeUInt32BE(size, 4);
   header[8] = 8; // bit depth
-  header[9] = 2; // colour type: RGB
+  header[9] = 2; // color type: RGB
   const row = Buffer.alloc(1 + size * 3); // filter byte 0, then the pixels
   for (let x = 0; x < size; x += 1) row.set([red, green, blue], 1 + x * 3);
   const pixels = Buffer.concat(Array.from({ length: size }, () => row));
@@ -109,13 +109,13 @@ interface InvariantDocument {
 
 /**
  * A logo's address appears ONLY as the src of an `<img>` inside
- * `ph-no-capture` (Rulings 137, 140 and 152), over the WHOLE document,
- * `<head>` and `<body>`: every attribute of every element (an href, a
- * `<link>` preload's imagesrcset, a data-* attribute, an inline style's
- * url(…), any other) and every text node (`<style>` and `<script>` text
- * included) is read, and `organization-logos`, in any case, may appear only
- * in the src or srcset of an `img.ph-no-capture`. Replay records any of the
- * others. Checked as booleans: a failure prints no address.
+ * `ph-no-capture`, over the WHOLE document, `<head>` and `<body>`: every
+ * attribute of every element (an href, a `<link>` preload's imagesrcset, a
+ * data-* attribute, an inline style's url(…), any other) and every text
+ * node (`<style>` and `<script>` text included) is read, and
+ * `organization-logos`, in any case, may appear only in the src or srcset
+ * of an `img.ph-no-capture`. Replay records any of the others. Checked as
+ * booleans: a failure prints no address.
  */
 async function expectLogoAddressOnlyInCapturedImages(page: Page): Promise<void> {
   const { everyAttributeIsACapturedImageSource, noTextNamesALogo } = await page.evaluate(() => {
@@ -144,7 +144,7 @@ async function expectLogoAddressOnlyInCapturedImages(page: Page): Promise<void> 
 }
 
 /**
- * A logo shown as decision 57 says (an `<img alt="">` blocked from replay, by
+ * A logo shown as it must be (an `<img alt="">` blocked from replay, by
  * ids) and decoded by the browser: `naturalWidth` is 0 for an image that
  * failed, so the boolean says the bytes really are an image.
  */

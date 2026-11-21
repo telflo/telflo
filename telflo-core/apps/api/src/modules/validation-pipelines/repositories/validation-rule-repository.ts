@@ -6,21 +6,19 @@ import { createOrganizationScope } from "../../../tenancy/organization-scope.js"
 import { visibleTo } from "../../configurations/repositories/configuration-repository.js";
 
 /*
- * A validation pipeline's rules (D15a decisions 12 and 13; Preflight rulings
- * 16 and 20), through the organization scope, as the context's user sees
- * them: a rule is visible exactly when its configuration is, by the
- * configurations' own rule (`visibleTo`), migration 030's select policy.
- * Row-level security stands behind it.
+ * A validation pipeline's rules, through the organization scope, as the
+ * context's user sees them: a rule is visible exactly when its configuration
+ * is, by the configurations' own rule (`visibleTo`), migration 030's select
+ * policy. Row-level security stands behind it.
  *
- * A rule's OTTL is stored as columns (Preflight ruling 16) and answered as
- * the contract's object. Every write here is made under the configuration's
- * lock (the service's lockAsMember, then lockedConfiguration), so the count
- * and the next position read under it hold until the transaction ends; the
- * unique (pipeline, position) key is the backstop. What is written is what
- * the contracts' schemas parsed (CreateValidationRuleRequestSchema,
+ * A rule's OTTL is stored as columns and answered as the contract's object.
+ * Every write here is made under the configuration's lock (the service's
+ * lockAsMember, then lockedConfiguration), so the count and the next
+ * position read under it hold until the transaction ends; the unique
+ * (pipeline, position) key is the backstop. What is written is what the
+ * contracts' schemas parsed (CreateValidationRuleRequestSchema,
  * UpdateValidationRuleRequestSchema): the table's blank check is ASCII
- * only, so the schemas' (Unicode's whitespace) are the gate (D15a Ruling
- * 36's watch item).
+ * only, so the schemas' (Unicode's whitespace) are the gate.
  */
 
 /** Whom the repository reads for. An `AuthContext` is one. */
@@ -36,7 +34,7 @@ export interface ValidationRuleContent {
   ottl: ValidationRuleOttl | null;
 }
 
-/** A rule. Its name, description, pattern and OTTL are configuration text (ADR 0024). */
+/** A rule. Its name, description, pattern and OTTL are configuration text. */
 export interface ValidationRule extends ValidationRuleContent {
   id: string;
   validationPipelineId: string;
@@ -44,7 +42,7 @@ export interface ValidationRule extends ValidationRuleContent {
   position: number;
   name: string;
   description: string;
-  /** Written by the public API's PUT (D25 decision 32), which the next PUT replaces; false for a person's. */
+  /** Written by the public API's PUT, which the next PUT replaces; false for a person's. */
   isApiOwned: boolean;
   /** Null once the creator's account is hard-deleted. */
   createdByUserId: string | null;
@@ -65,7 +63,7 @@ export interface CreateValidationRuleInput {
   createdByUserId: string;
   /** Created and updated at this time, from the API's clock. */
   at: Date;
-  /** The public API's PUT writes its rules as its own (D25 decision 32); every other create, false. */
+  /** The public API's PUT writes its rules as its own; every other create, false. */
   isApiOwned?: boolean;
 }
 
@@ -81,7 +79,7 @@ export interface IValidationRuleRepository {
   listForPipeline(validationPipelineId: string, limit: number): Promise<ValidationRule[]>;
   /**
    * Every rule the viewer can see of the version's pipelines, by pipeline
-   * then position: the public list's one read (D25 route 13). At most
+   * then position: the public list's one read. At most
    * VALIDATION_RULES_PER_PIPELINE_MAXIMUM per pipeline, which the API keeps.
    */
   listForVersion(configurationId: string, versionId: string): Promise<ValidationRule[]>;
@@ -90,9 +88,9 @@ export interface IValidationRuleRepository {
   /** A rule the viewer can see in that pipeline; undefined otherwise (another pipeline's included). */
   findInPipeline(validationPipelineId: string, id: string): Promise<ValidationRule | undefined>;
   /**
-   * How many rules the pipeline has: the cap's count (decision 13), read
-   * under the configuration's lock. With `isApiOwned`, only the public
-   * API's (true) or only the others (false).
+   * How many rules the pipeline has: the cap's count, read under the
+   * configuration's lock. With `isApiOwned`, only the public API's (true) or
+   * only the others (false).
    */
   countInPipeline(validationPipelineId: string, isApiOwned?: boolean): Promise<number>;
   /** A new rule at the pipeline's largest position plus one (1 for its first), in one statement. */
@@ -103,8 +101,8 @@ export interface IValidationRuleRepository {
   remove(id: string): Promise<boolean>;
   /**
    * Deletes the pipeline's visible rules the public API wrote
-   * (`is_api_owned`, D25 decision 32), a person's left alone; the deleted
-   * rules' ids, in position order. Run under the configuration's lock.
+   * (`is_api_owned`), a person's left alone; the deleted rules' ids, in
+   * position order. Run under the configuration's lock.
    */
   removeApiOwned(validationPipelineId: string): Promise<string[]>;
 }
@@ -239,8 +237,8 @@ export function createValidationRuleRepository(
     },
 
     async create(input) {
-      // The next position in the insert itself (Preflight ruling 16): under
-      // the configuration's lock, so no other insert reads the same largest.
+      // The next position in the insert itself: under the configuration's
+      // lock, so no other insert reads the same largest.
       const nextPosition = sql<number>`(
         select coalesce(max(existing.position), 0) + 1
           from validation_rules existing

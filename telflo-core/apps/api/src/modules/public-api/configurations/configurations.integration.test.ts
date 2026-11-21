@@ -38,10 +38,9 @@ import { hashPassword } from "../../identity/password.js";
 import { apiTokenHash } from "../../service-accounts/tokens.js";
 
 /*
- * The public surface's configurations, versions and publishing (D25
- * decision 17's routes 4–12; decisions 19, 20, 31 and 53; Preflight rulings
- * 6, 16 and 17), through the real server as the API's own role, with the
- * OpenAPI-checked fakes as the opamp-server and the collector validator.
+ * The public surface's configurations, versions and publishing, through
+ * the real server as the API's own role, with the OpenAPI-checked fakes as
+ * the opamp-server and the collector validator.
  * Each route: success through a real service account's token, a read token
  * on a write route 403, another organization's ids 404, another person's
  * draft invisible, and every reply checked against the OpenAPI document.
@@ -106,7 +105,7 @@ interface VersionBody {
 const INVALID_YAML = "receivers:\n  unknown_thing:\nexporters:\n  debug:\nservice:\n  pipelines:\n    traces:\n      receivers: [unknown_thing]\n      exporters: [debug]\n";
 const VALID_YAML = "receivers:\n  otlp:\nexporters:\n  debug:\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [debug]\n";
 
-describe("the public configurations routes (D25 routes 4-12)", () => {
+describe("the public configurations routes", () => {
   let settings: AppSettings;
   let db: Kysely<Database>;
   let ownerDb: Kysely<Database>;
@@ -280,7 +279,7 @@ describe("the public configurations routes (D25 routes 4-12)", () => {
     return configurationOf(organizationId, other.user.id);
   };
 
-  describe("GET /configurations (route 4)", () => {
+  describe("GET /configurations", () => {
     it("lists what the token's user sees, with each one's latest number, its pin and its highest published number; not another person's draft nor another organization's", async () => {
       const org = await organization();
       const other = await organization();
@@ -344,7 +343,7 @@ describe("the public configurations routes (D25 routes 4-12)", () => {
       const secondPage = second.json<{ items: ConfigurationBody[]; nextCursor: string | null }>();
       expect(secondPage.items.map((item) => item.id)).toEqual([made[0]]);
       expect(secondPage.nextCursor).toBeNull();
-      // A cursor that isn't one: the fleets lists' refusal, `{ path, message }` (Ruling 187); a schema's `{ path, code }`.
+      // A cursor that isn't one: the fleets lists' refusal, `{ path, message }`; a schema's `{ path, code }`.
       for (const cursor of ["nonsense", Buffer.from(JSON.stringify({ updatedAt: "2030-01-01", id: "x" })).toString("base64url")]) {
         const badCursor = await call("GET", ROUTE.list, org.read, { query: `?cursor=${cursor}` });
         expectRefusal(badCursor, 400, "invalid_request");
@@ -359,7 +358,7 @@ describe("the public configurations routes (D25 routes 4-12)", () => {
     });
   });
 
-  describe("POST /configurations (route 6)", () => {
+  describe("POST /configurations", () => {
     it("creates a draft and its version 1 holding the text as given, with an empty graph, at the default pin; a read token is 403 and makes nothing", async () => {
       const org = await organization();
       const marker = `marker-${randomUUID()}`;
@@ -387,7 +386,7 @@ describe("the public configurations routes (D25 routes 4-12)", () => {
       expect(row).toMatchObject({ yaml_content: yaml, nodes: [], edges: [], pipelines: [], created_by_user_id: org.accountUserId });
       const configuration = await ownerDb.selectFrom("configurations").selectAll().where("id", "=", created.id).executeTakeFirstOrThrow();
       expect(configuration.created_by_user_id).toBe(org.accountUserId);
-      // The text and the name are configuration text: in no log line (ADR 0024).
+      // The text and the name are configuration text: in no log line.
       expect(logLines.join("\n").includes(marker)).toBe(false);
     });
 
@@ -401,13 +400,13 @@ describe("the public configurations routes (D25 routes 4-12)", () => {
       expectRefusal(await call("POST", ROUTE.list, org.write, { payload: { name: "x", yaml: "a".repeat(2 * 1024 * 1024) } }), 413, "payload_too_large");
       expectRefusal(await call("POST", ROUTE.list, org.write, { payload: { name: "x", yaml: VALID_YAML, extra: true } }), 400, "invalid_request");
       expect(await countConfigurations(org.id)).toBe(0);
-      // 262,144 × U+0001: six bytes of JSON each, 1.5 MiB in all (D8 decision 7).
+      // 262,144 × U+0001: six bytes of JSON each, 1.5 MiB in all.
       const largest = await call("POST", ROUTE.list, org.write, { payload: { name: "x", yaml: "\u0001".repeat(262_144) } });
       expect(largest.statusCode).toBe(201);
     });
   });
 
-  describe("GET and PATCH /configurations/{configurationId} (routes 5 and 7)", () => {
+  describe("GET and PATCH /configurations/{configurationId}", () => {
     it("reads one with its latest version's text; another person's draft, another organization's and a malformed id are 404", async () => {
       const org = await organization();
       const other = await organization();
@@ -458,7 +457,7 @@ describe("the public configurations routes (D25 routes 4-12)", () => {
     });
   });
 
-  describe("GET and POST /configurations/{configurationId}/versions (routes 8 and 9)", () => {
+  describe("GET and POST /configurations/{configurationId}/versions", () => {
     it("lists every version, highest first, in one page; another's draft and another organization's are 404", async () => {
       const org = await organization();
       const other = await organization();
@@ -535,7 +534,7 @@ describe("the public configurations routes (D25 routes 4-12)", () => {
     });
   });
 
-  describe("GET /configurations/{configurationId}/versions/{versionNumber} (route 10)", () => {
+  describe("GET /configurations/{configurationId}/versions/{versionNumber}", () => {
     it("reads a version by its number; a number that isn't plain is 400; one it hasn't is 404 configuration_version_not_found", async () => {
       const org = await organization();
       const other = await organization();
@@ -565,7 +564,7 @@ describe("the public configurations routes (D25 routes 4-12)", () => {
     });
   });
 
-  describe("PATCH /configurations/{configurationId}/versions/{versionNumber} (route 11)", () => {
+  describe("PATCH /configurations/{configurationId}/versions/{versionNumber}", () => {
     it("merges the text and the pin over a draft, keeping the stored graph; neither changes nothing; a read token is 403", async () => {
       const org = await organization();
       const { configuration } = await configurationOf(org.id, org.accountUserId, [{ yaml: "stored: 1\n" }]);
@@ -673,7 +672,7 @@ describe("the public configurations routes (D25 routes 4-12)", () => {
       expectRefusal(await call("PATCH", ROUTE.version, org.write, { ...target, query: "?validate=yes", payload: {} }), 400, "invalid_request");
     });
 
-    it("with ?validate=true saves only the text it validated: a save landing in between is 409 configuration_version_changed, saving nothing (Ruling 165)", async () => {
+    it("with ?validate=true saves only the text it validated: a save landing in between is 409 configuration_version_changed, saving nothing", async () => {
       const org = await organization();
       const { configuration } = await configurationOf(org.id, org.accountUserId, [{ yaml: "stored: 1\n" }]);
       const target = { configurationId: configuration.id, versionNumber: 1 };
@@ -734,9 +733,9 @@ describe("the public configurations routes (D25 routes 4-12)", () => {
           is_default: false,
           deprecated: true,
           deprecated_note: "Retired fixture.",
-          // The test-only mark (Ruling 179): a killed run's row is removed before the next run's catalogue sync.
+          // The test-only mark: a killed run's row is removed before the next run's catalog sync.
           description: TEST_CATALOGUE_FIXTURE_NOTE,
-          // The JSON columns as text, as the catalogue's sync writes them.
+          // The JSON columns as text, as the catalog's sync writes them.
           supported_components: template.supported_components === null ? null : (JSON.stringify(template.supported_components) as never),
           otelcol_contrib: JSON.stringify(template.otelcol_contrib) as never,
           opamp_supervisor: JSON.stringify(template.opamp_supervisor) as never,
@@ -763,8 +762,8 @@ describe("the public configurations routes (D25 routes 4-12)", () => {
     });
   });
 
-  describe("POST /configurations/{configurationId}/versions/{versionNumber}/publish (route 12)", () => {
-    it("publishes through D11b's service to the opamp-server, and again answers 200 unchanged with no second publication; a read token is 403", async () => {
+  describe("POST /configurations/{configurationId}/versions/{versionNumber}/publish", () => {
+    it("publishes through the publishing service to the opamp-server, and again answers 200 unchanged with no second publication; a read token is 403", async () => {
       const org = await organization();
       const { configuration, versions } = await configurationOf(org.id, org.accountUserId, [{ published: false }, { yaml: "second: 2\n" }]);
       const target = { configurationId: configuration.id, versionNumber: 1 };
@@ -836,7 +835,7 @@ describe("the public configurations routes (D25 routes 4-12)", () => {
     });
   });
 
-  describe("body limits (Preflight ruling 17)", () => {
+  describe("body limits", () => {
     it("answers 413 payload_too_large past 2 MiB on the append and the version PATCH, past 1 MiB on the configuration PATCH and the publish, writing nothing", async () => {
       const org = await organization();
       const { configuration } = await configurationOf(org.id, org.accountUserId, [{ yaml: "stored: 1\n" }]);
@@ -860,7 +859,7 @@ describe("the public configurations routes (D25 routes 4-12)", () => {
     });
   });
 
-  describe("the OpenAPI document's requests are the contracts' (Ruling 165)", () => {
+  describe("the OpenAPI document's requests are the contracts'", () => {
     /** Each request schema of the document, compiled as the reply validator compiles a reply's. */
     const compiled = (name: string) => {
       const ajv = new Ajv2020({ strict: true, allErrors: true, allowUnionTypes: true });
@@ -914,7 +913,7 @@ describe("the public configurations routes (D25 routes 4-12)", () => {
     });
   });
 
-  describe("drafts stay private both ways (D11b decision 1; D22's hand-off)", () => {
+  describe("drafts stay private both ways", () => {
     /** The organization's admin, signed in to the browser and active in it. */
     const signedInAdmin = async (org: Organization) => {
       const signIn = await server.inject({
@@ -932,7 +931,7 @@ describe("the public configurations routes (D25 routes 4-12)", () => {
         payload: { organizationId: org.id },
       });
       expect(switched.statusCode).toBe(200);
-      // A no-op when the sign-in already landed there (D36-1 decision 56): no new cookie, the token sent stands.
+      // A no-op when the sign-in already landed there: no new cookie, the token sent stands.
       return switched.headers["set-cookie"] === undefined ? cookieValue(signIn, "telflo_access") : cookieValue(switched, "telflo_access");
     };
 

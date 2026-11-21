@@ -1,5 +1,4 @@
-# Test runs (D25 decision 17's routes 26-28; decisions 39-44; Q168).
-# Assembled by document.ts.
+# Test runs. Assembled by document.ts.
 # A run comes from a configuration's version or from a YAML with no
 # configuration; its sample is sent inline and stored as one of the token
 # user's test files; its rules are inline (used once, never saved), the

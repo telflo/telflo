@@ -2,8 +2,8 @@ import type { TestingErrorCode } from "@telflo/contracts";
 import { AppError } from "../../errors.js";
 
 /*
- * The test templates' own refusals (D14b detail 19). No message names a
- * template, its file or its content.
+ * The test templates' own refusals. No message names a template, its file
+ * or its content.
  */
 
 /**

@@ -3,7 +3,7 @@ import { decodeCursor, encodeCursor } from "./cursor.js";
 
 const ID = "0190a1b2-c3d4-7e5f-8a9b-0c1d2e3f4a70";
 
-describe("the product-admin lists' cursor (D29 decisions 9, 31 and 33)", () => {
+describe("the product-admin lists' cursor", () => {
   it("round-trips a position to the millisecond, the id lowercased", () => {
     const position = { createdAt: new Date("2026-10-26T10:00:00.123Z"), id: ID };
     expect(decodeCursor(encodeCursor(position))).toEqual(position);

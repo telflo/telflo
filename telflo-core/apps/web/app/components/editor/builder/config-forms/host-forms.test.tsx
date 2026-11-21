@@ -22,18 +22,16 @@ import { builderStore, componentNamed, openText } from "~/test/builder-store.js"
 import { formControls } from "~/test/form-controls.js";
 
 /*
- * The host forms (D9c Task 4): the hostmetrics and docker_stats forms
- * over the form contract. Each field is driven as a person would
- * (typing, clicking, picking) on the host corpus text (comments, an anchor
- * and merges, flow lists, a quoted API version, a bare scraper, `0750`), LF
- * and CRLF, and writes only its key: the text changes in that key's lines
- * only, as one undo entry, and parses to the value (D9c decision 2). The
- * fixes each have a test that fails if the bug returns:
- * `match_type` with a filter's first item and include and exclude kept
- * together (decisions 3 and 9; Preflight ruling 5), `api_version` written
- * as a string (decision 2), Root Path cleared removing its key (D9b's rule),
- * the label maps renamed in place with a clash refused (D9b decision 4)
- * and their nouns (decision 4). Five docker_stats cases close the file.
+ * The host forms: the hostmetrics and docker_stats forms over the form
+ * contract. Each field is driven as a person would (typing, clicking,
+ * picking) on the host corpus text (comments, an anchor and merges, flow
+ * lists, a quoted API version, a bare scraper, `0750`), LF and CRLF, and
+ * writes only its key: the text changes in that key's lines only, as one
+ * undo entry, and parses to the value. The fixes each have a test that
+ * fails if the bug returns: `match_type` with a filter's first item and
+ * include and exclude kept together, `api_version` written as a string,
+ * Root Path cleared removing its key, the label maps renamed in place with
+ * a clash refused and their nouns. Five docker_stats cases close the file.
  *
  * Collector claims cite contrib v0.162.0.
  */
@@ -614,7 +612,7 @@ const CASES: FieldCase[] = [
   },
 ];
 
-describe("every field of each form writes only its key (decision 2)", () => {
+describe("every field of each form writes only its key", () => {
   it.each(CASES.flatMap((c) => [[`${c.name}, LF`, c, false] as const, [`${c.name}, CRLF`, c, true] as const]))(
     "%s",
     async (_name, c, crlf) => {
@@ -640,7 +638,7 @@ describe("every field of each form writes only its key (decision 2)", () => {
   });
 });
 
-describe("merges, undo and opening (decision 2)", () => {
+describe("merges, undo and opening", () => {
   it("each edit is one undo entry named after the component", async () => {
     const user = renderForm(HOST);
     await retypeInto(user, byId("initial-delay"), "2s");
@@ -663,7 +661,7 @@ describe("merges, undo and opening (decision 2)", () => {
     "          names: [nginx]\n          match_type: strict\n        exclude:\n          names: [bash]\n          match_type: regexp\n",
   );
 
-  // One test per form and text, each with its own time limit (D9c Ruling 54): together they took 2-5 s.
+  // One test per form and text, each with its own time limit: together they took 2-5 s.
   const OPENING_TEXTS = [
     ["the corpus", CORPUS],
     ["the corpus in CRLF", CORPUS_CRLF],
@@ -680,7 +678,7 @@ describe("merges, undo and opening (decision 2)", () => {
     async (key, _name, base) => {
       const user = renderForm(key, base);
       for (const button of screen.queryAllByRole("button", { expanded: false })) await user.click(button);
-      // Opened, it shows the form's fields (D9c final review M6).
+      // Opened, it shows the form's fields.
       const { textboxes, all } = formControls();
       expect(screen.queryAllByRole("button", { expanded: false })).toHaveLength(0);
       expect(textboxes.length).toBeGreaterThanOrEqual(OPENED[key]!.textboxes);
@@ -698,9 +696,9 @@ describe("merges, undo and opening (decision 2)", () => {
   );
 });
 
-// ── The filters (decisions 3 and 9; Preflight ruling 5) ──
+// ── The filters ──
 
-describe("hostmetrics' filters: match_type, both sides, held rows (decisions 3 and 9)", () => {
+describe("hostmetrics' filters: match_type, both sides, held rows", () => {
   // internal/filter/filterset/config.go:37-48: an unset match_type is refused
   // ("unrecognized match_type"), and the scrapers build a filter set for any list with items
   // (diskscraper/disk_scraper_others.go:51-63).
@@ -744,7 +742,7 @@ describe("hostmetrics' filters: match_type, both sides, held rows (decisions 3 a
     expect((scraperOf(text(), "filesystem") as Value).exclude_fs_types).toEqual({ fs_types: ["tmpfs", "overlay"], match_type: "strict" });
   });
 
-  // Ruling 48 (a): a side with items and no match_type (or a null one) gets strict with the next item added.
+  // A side with items and no match_type (or a null one) gets strict with the next item added.
   it.each([
     ["no match_type", "          names: [nginx]\n"],
     ["a null match_type", "          names: [nginx]\n          match_type:\n"],
@@ -759,7 +757,7 @@ describe("hostmetrics' filters: match_type, both sides, held rows (decisions 3 a
     expect(entries()).toBe(1);
   });
 
-  // Ruling 48 (b): with both sides shown, the mode select reads the side last picked.
+  // With both sides shown, the mode select reads the side last picked.
   it("picking Exclude beside an include list reads Exclude, before and after its first item; Include Only reads Include Only", async () => {
     const user = renderForm(HOST);
     await openSection(user, "Disk Scraper");
@@ -819,7 +817,7 @@ describe("hostmetrics' filters: match_type, both sides, held rows (decisions 3 a
 
 // ── hostmetrics' scrapers ──
 
-describe("hostmetrics' scrapers (Parity: on by presence)", () => {
+describe("hostmetrics' scrapers (on by presence)", () => {
   it("a scraper is ticked while its key is under scrapers, a bare one included, and its section shows", async () => {
     renderForm(HOST, CORPUS.replace("      cpu: {}\n", "      cpu: {}\n      paging:\n").replace("      disk:\n        include:\n          devices: [sda, sdb] # the data disks\n          match_type: strict\n", "      disk: # bare\n"));
     for (const on of ["cpu", "memory", "paging", "load", "disk", "filesystem", "network", "process"]) {
@@ -831,7 +829,7 @@ describe("hostmetrics' scrapers (Parity: on by presence)", () => {
     expect(screen.queryByRole("button", { name: /^Processes Scraper/ })).toBeNull();
   });
 
-  it("the last scraper can be unticked; the collector's refusal is D13's to report (config.go:43-45)", async () => {
+  it("the last scraper can be unticked; the collector's refusal is the config validation's to report (config.go:43-45)", async () => {
     const one = "receivers:\n  hostmetrics:\n    scrapers:\n      cpu: {}\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    metrics:\n      receivers: [hostmetrics]\n      exporters: [debug]\n";
     const user = renderForm(HOST, one);
     await user.click(byId("scraper-cpu"));
@@ -855,7 +853,7 @@ describe("hostmetrics' scrapers (Parity: on by presence)", () => {
     expect(byId("scraper-disk")).toBeEnabled();
     expect(screen.getAllByText(UNSHOWABLE_VALUE_MESSAGE)).toHaveLength(1);
 
-    // Ruling 46: scrapers that isn't a mapping ticks none (none can be said to be on), disables all, one hint.
+    // A scrapers that isn't a mapping ticks none (none can be said to be on), disables all, one hint.
     for (const odd of ["receivers:\n  hostmetrics:\n    scrapers: [cpu]\n", "receivers:\n  hostmetrics:\n    scrapers: cpu\n"]) {
       rerenderForm(HOST, odd);
       const boxes = screen.getAllByRole("checkbox");
@@ -871,9 +869,9 @@ describe("hostmetrics' scrapers (Parity: on by presence)", () => {
   });
 });
 
-// ── What the forms show (decision 3) ──
+// ── What the forms show ──
 
-describe("what the forms show (decision 3)", () => {
+describe("what the forms show", () => {
   it("hostmetrics unset: the collector's defaults as placeholders and hints", async () => {
     // Core scraper/scraperhelper/internal/controller/generated_config.go:39-40 (1m, 1s); factory.go:39 (5m).
     const user = renderForm(HOST, "receivers:\n  hostmetrics:\n    scrapers:\n      process: {}\n      load: {}\n      filesystem: {}\n");
@@ -940,7 +938,7 @@ describe("what the forms show (decision 3)", () => {
 
 // ── docker_stats: api_version, the label maps, the copy ──
 
-describe("docker_stats' API version is a string (decision 2)", () => {
+describe("docker_stats' API version is a string", () => {
   // internal/docker/config.go:34 (`DockerAPIVersion string`), 47-61: a float there is refused, with a hint
   // to quote it; receiver/dockerstatsreceiver/config.go:41-47 checks it as a version string.
   it("the collector reads a string: 1.25 typed where none is set is written \"1.25\" and parses as a string", async () => {
@@ -957,8 +955,9 @@ describe("docker_stats' API version is a string (decision 2)", () => {
     expect(valueOf(text(), DOCKER).api_version).toBe("1.41");
   });
 
-  // Ruling 47 (decision 4): internal/docker/config.go:47-61 refuses a float there ("wrap the 'api_version' value in
-  // quotes"); a number in the text is said so, and typing quotes it, the same characters included.
+  // internal/docker/config.go:47-61 refuses a float there ("wrap the
+  // 'api_version' value in quotes"); a number in the text is said so, and
+  // typing quotes it, the same characters included.
   const NUMBER = CORPUS.replace('    api_version: "1.44" # a string to the collector\n', "    api_version: 1.40 # a float\n");
 
   it("a number in the text shows as written with the hint; focusing and leaving writes nothing", async () => {
@@ -1002,7 +1001,7 @@ describe("docker_stats' API version is a string (decision 2)", () => {
   });
 });
 
-describe("docker_stats' label maps (D9b decision 4; D9c decision 4)", () => {
+describe("docker_stats' label maps", () => {
   const TWO_LABELS = CORPUS.replace(
     "      com.example.team: team # who owns it\n",
     "      com.example.team: team # who owns it\n      com.example.tier: tier\n",
@@ -1035,7 +1034,7 @@ describe("docker_stats' label maps (D9b decision 4; D9c decision 4)", () => {
     expect(Object.keys(valueOf(text(), DOCKER).container_labels_to_metric_labels as Value)).toEqual(["com.example.owner", "com.example.tier"]);
   });
 
-  it("each map has its own nouns in D9b's staging markup: rows, the staging row, Press Enter to add.", async () => {
+  it("each map has its own nouns in the staging markup: rows, the staging row, Press Enter to add.", async () => {
     const user = renderForm(DOCKER);
     await openSection(user, "Container Labels to Metric Labels");
     await openSection(user, "Env Vars to Metric Labels");
@@ -1057,7 +1056,7 @@ describe("docker_stats' label maps (D9b decision 4; D9c decision 4)", () => {
   });
 });
 
-describe("the copy (Appearance)", () => {
+describe("the copy", () => {
   it("hostmetrics: the scrapers with their OS tags, and the per-scraper intervals alert", async () => {
     const user = renderForm(HOST);
     expect(hint("Select which metrics to collect.")).toBeInTheDocument();
@@ -1083,7 +1082,7 @@ describe("the copy (Appearance)", () => {
   });
 });
 
-describe("markup (Ruling 38)", () => {
+describe("markup", () => {
   it("hostmetrics' rows: scraper and described rows items-start space-x-3, error rows items-center", async () => {
     const user = renderForm(HOST);
     const cpuRow = byId("scraper-cpu").parentElement!;
@@ -1099,8 +1098,8 @@ describe("markup (Ruling 38)", () => {
     expect(byId("mute-all-errors").parentElement).toHaveClass("flex", "items-center", "space-x-3");
   });
 
-  // Ruling 85, measured in Chromium, WebKit and Firefox: these boxes sat 2 px above their label's line.
-  it("a scraper's box and a described box are moved down 2 px beside their label; an error box is left as it was (Ruling 85)", async () => {
+  // Measured in Chromium, WebKit and Firefox: these boxes sat 2 px above their label's line.
+  it("a scraper's box and a described box are moved down 2 px beside their label; an error box is left as it was", async () => {
     const user = renderForm(HOST);
     expect(byId("scraper-cpu")).toHaveClass("mt-0.5");
     await openSection(user, "Filesystem Scraper");
@@ -1110,10 +1109,10 @@ describe("markup (Ruling 38)", () => {
   });
 });
 
-// ── Privacy (decision 10) ──
+// ── Privacy ──
 
-describe("privacy (decision 10)", () => {
-  // Its own time limit (D9c Rulings 54 and 80).
+describe("privacy", () => {
+  // Its own time limit.
   it("puts no config value in any attribute: every section open, the menus open", async () => {
     const MARK = "zq-mark";
     const marked = [
@@ -1216,7 +1215,7 @@ describe("privacy (decision 10)", () => {
 
 // ── Dispatch ──
 
-describe("dispatch (decision 2)", () => {
+describe("dispatch", () => {
   it("the collector's host_metrics gets the Hostmetrics form (a deprecated_type at v0.162.0: metadata.yaml:2-3)", () => {
     expect(formFor("receiver", "host_metrics")).toBe(HostmetricsReceiverForm);
     expect(formFor("receiver", "docker_stats")).toBe(DockerStatsReceiverForm);

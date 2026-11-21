@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-# The archive smoke (D36-2 decision 98): the README's Quick start, run as
-# written on the release's Compose archive, then the install checked from
-# the outside.
+# The archive smoke: the README's Quick start, run as written on the
+# release's Compose archive, then the install checked from the outside.
 #
 #   scripts/smoke-compose-install.sh --archive <telflo-compose-<version>.tar.gz> --sums <SHA256SUMS>
 #       --work <dir> [--project <name>] [--http-port <p>] [--agent-port <p>] [--mailpit-port <p>]
@@ -38,8 +37,8 @@
 # from its link (POST /api/v1/invitation-registrations). Then its own
 # checks: every service healthy (one-shots exited 0, Mailpit running); only
 # the gateway's and the agent's ports published, on 127.0.0.1, and
-# Mailpit's on 127.0.0.1; .env 0600, secrets/ 0700 with its files 0644
-# (Preflight ruling 1); no development secret in .env or secrets/ (by sha256,
+# Mailpit's on 127.0.0.1; .env 0600, secrets/ 0700 with its files 0644; no
+# development secret in .env or secrets/ (by sha256,
 # deploy/compose/setup.sh's list, which check-compose-install.sh holds
 # complete); the open-source defaults in force (registration refused 403
 # registration_not_open, /playground 404); a configuration created,
@@ -59,13 +58,13 @@
 # shasum or sha256sum. Every image compose.yaml names (the five Telflo
 # images ghcr.io/telflo/telflo/<name>:<version>, Postgres, nginx, Mailpit
 # and the opamp-server at their pins) and the collector image
-# ghcr.io/telflo/telflo/collector:<the catalogue's default version> must
+# ghcr.io/telflo/telflo/collector:<the catalog's default version> must
 # already be in the local engine: it never pulls one, it refuses.
 #
 # The refusals (exit 2, before anything starts): usage; the project's name
 # (one that is never a throwaway, or one with containers, volumes or
-# networks already); the ports (the owner's stack's and dev servers', in
-# use, or the same twice); the work folder (relative, not empty, a path with
+# networks already); the ports (a developer's own stack's and dev servers',
+# in use, or the same twice); the work folder (relative, not empty, a path with
 # characters a URL or a group's mount can't hold, inside this tree); the
 # archive's name or version; README.md's Quick start (markers, a text to
 # replace not there exactly once, no bootstrap or `docker compose down`
@@ -136,17 +135,17 @@ HTTP_PORT=${HTTP_PORT:-58280}
 AGENT_PORT=${AGENT_PORT:-58281}
 MAILPIT_PORT=${MAILPIT_PORT:-58282}
 
-# The project: never the Compose install's, the development stack's or the owner's running stack.
+# The project: never the Compose install's, the development stack's or a developer's own running stack.
 case "$PROJECT" in
   telflo | telflo-dev | telflo-platform)
-    refuse "--project $PROJECT is never a throwaway project (the Compose install's, the development stack's or the owner's running stack)" ;;
+    refuse "--project $PROJECT is never a throwaway project (the Compose install's, the development stack's or a developer's own running stack)" ;;
 esac
 [[ "$PROJECT" =~ ^[a-z0-9][a-z0-9_-]{0,40}$ ]] || refuse "--project must be lower-case letters, digits, '_' and '-' (at most 41)"
 for port in "$HTTP_PORT" "$AGENT_PORT" "$MAILPIT_PORT"; do
   [[ "$port" =~ ^[1-9][0-9]{3,4}$ ]] && [ "$port" -le 65535 ] || refuse "a port must be a number from 1000 to 65535"
   case "$port" in
     8080 | 8025 | 51234 | 51235 | 50080 | 58025 | 51025 | 53000 | 55432)
-      refuse "port $port is a README default, or one the owner's stack or dev servers use: name another" ;;
+      refuse "port $port is a README default, or one a developer's own development stack or dev servers use: name another" ;;
   esac
 done
 [ "$HTTP_PORT" != "$AGENT_PORT" ] && [ "$HTTP_PORT" != "$MAILPIT_PORT" ] && [ "$AGENT_PORT" != "$MAILPIT_PORT" ] ||
@@ -893,7 +892,7 @@ while [ "$index" -le "$CMD_COUNT" ]; do
   index=$((index + 1))
 done
 
-step "nothing of the project left: no container, volume or network labelled $PROJECT, the README's folder gone"
+step "nothing of the project left: no container, volume or network labeled $PROJECT, the README's folder gone"
 cd "$WORK"
 left=$(project_leftovers)
 [ -z "$left" ] || fail "left of the project: $(printf '%s\n' "$left" | tr '\n' ';')"

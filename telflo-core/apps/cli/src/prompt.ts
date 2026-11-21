@@ -1,7 +1,6 @@
 /*
- * Reading from the person at the terminal (D27 decision 19): the hidden
- * prompt for a token, a visible line for a choice, and one line from a
- * stdin that isn't a terminal.
+ * Reading from the person at the terminal: the hidden prompt for a token, a
+ * visible line for a choice, and one line from a stdin that isn't a terminal.
  *
  * The hidden prompt puts the terminal in raw mode and echoes nothing (not
  * even a star). Enter ends it; Backspace removes a character; Ctrl-C and
@@ -32,12 +31,12 @@ export function stdinIsTerminal(): boolean {
 /**
  * A hidden answer at the terminal: `question` on stderr, nothing echoed.
  * Ctrl-C is exit 3 ("Cancelled."), Ctrl-D before anything is typed exit 2;
- * either way the terminal is restored. `signal` closes the prompt from
- * outside (the browser flow answered first: decision 19), the terminal
- * restored and the promise refused as a Ctrl-C would be. `ignoreEmpty`: an
- * Enter with nothing typed (or only spaces) is ignored and the prompt keeps
- * waiting (the browser flow's, where the browser may still answer: an
- * empty Enter must not end the login); Ctrl-D and a closed stdin still end it.
+ * either way the terminal is restored. `signal` closes the prompt from outside
+ * (the browser flow answered first), the terminal restored and the promise
+ * refused as a Ctrl-C would be. `ignoreEmpty`: an Enter with nothing typed (or
+ * only spaces) is ignored and the prompt keeps waiting (the browser flow's,
+ * where the browser may still answer: an empty Enter must not end the login);
+ * Ctrl-D and a closed stdin still end it.
  */
 export function readHidden(question: string, options: { signal?: AbortSignal; ignoreEmpty?: boolean } = {}): Promise<string> {
   const stdin = getIo().stdin;

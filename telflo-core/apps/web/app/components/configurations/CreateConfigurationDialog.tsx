@@ -42,66 +42,62 @@ import { useFlowsWhenOpen } from "~/lib/flows/use-flows.js";
 import { findDistribution, useCollectorDistributions } from "~/lib/stores/collector-catalogue-store.js";
 
 /*
- * Creating a configuration (ADR 0018): the start, browse and name steps
- * (D12 Preflight ruling 8). The start step offers a blank configuration or a
- * flow; the browse step is the flows picker; the name step names the copy.
- * Per the D7, D13a and D12 Parity Notes:
+ * Creating a configuration: the start, browse and name steps. The start step
+ * offers a blank configuration or a flow; the browse step is the flows
+ * picker; the name step names the copy:
  * - the flows are read each time the dialog opens, through the browser
- *   client, the published ones only, for a product admin too (Ruling 42);
- *   a read that fails leaves the list empty, so the browse step says "No
- *   flows are available right now.";
- * - the blank path's distribution is a dropdown (D13a decision 1: a real
- *   dropdown, built for several distributions, with one today): each option
- *   its mark, the catalogue's label and description, the default marked
- *   "Default", and the catalogue's default preselected (decision 5); under
- *   its label, a note that it is locked once the configuration is created.
- *   No collector version is sent: the server gives version 1 the
- *   distribution's default (decision 11). While the catalogue is unread
- *   nothing is offered, and a create then names no distribution, which is
- *   the catalogue's default on the server; a catalogue that couldn't be read
- *   says so, without naming its distribution (the page can't know it), and
- *   the create goes on. Reopening preselects the default again, so an
- *   abandoned pick never carries over;
+ *   client, the published ones only, for a product admin too; a read that
+ *   fails leaves the list empty, so the browse step says "No flows are
+ *   available right now.";
+ * - the blank path's distribution is a dropdown (a real dropdown, built for
+ *   several distributions, with one today): each option its mark, the
+ *   catalog's label and description, the default marked "Default", and the
+ *   catalog's default preselected; under its label, a note that it is
+ *   locked once the configuration is created. No collector version is sent:
+ *   the server gives version 1 the distribution's default. While the
+ *   catalog is unread nothing is offered, and a create then names no
+ *   distribution, which is the catalog's default on the server; a catalog
+ *   that couldn't be read says so, without naming its distribution (the
+ *   page can't know it), and the create goes on. Reopening preselects the
+ *   default again, so an abandoned pick never carries over;
  * - the flow path: the flow's name and summary prefilled, and in place of the
  *   dropdown the read-only `{mark} {short label} · collector v{version} — set
- *   by this flow`, with no lock note. A pin the catalogue no longer offers
+ *   by this flow`, with no lock note. A pin the catalog no longer offers
  *   moves the copy to the distribution's default version, which a sentence
- *   says (D12 decision 16); the copy is made by `createConfigurationFromFlow`
- *   (the flow's YAML, its graph, its pin and its slug);
+ *   says; the copy is made by `createConfigurationFromFlow` (the flow's YAML,
+ *   its graph, its pin and its slug);
  * - Create is enabled once the trimmed name isn't empty, checked after each
  *   keystroke lands, so the first character enables it and deleting the
  *   last one disables it;
- * - after a create the dialog closes and the editor opens at `/editor/{id}`
- *   (D8 decision 16; D7 reloaded the list instead);
+ * - after a create the dialog closes and the editor opens at `/editor/{id}`;
  * - a refusal says the API's message, anything else "Failed to create
- *   configuration" (D7 Preflight ruling 2); a flow D9a's parser can't read
- *   says "This flow could not be loaded: …". A 404 `organization_not_found`
- *   closes the dialog and revalidates the layout instead: the page moves to
- *   the session's organization. So does a 403 `terms_acceptance_required`,
- *   with no toast: the layout's terms dialog opens, and the list reloads
- *   after Accept;
+ *   configuration"; a flow whose YAML can't be read says "This flow could not
+ *   be loaded: …". A 404 `organization_not_found` closes the dialog and
+ *   revalidates the layout instead: the page moves to the session's
+ *   organization. So does a 403 `terms_acceptance_required`, with no toast:
+ *   the layout's terms dialog opens, and the list reloads after Accept;
  * - Back, Cancel, Escape, an outside click and the close button do nothing
  *   while the create is under way, as in the delete dialog, so a second
  *   create can't be started beside it;
  * - a create that answers after the dialog has unmounted, or after the
  *   organization changed, does nothing: it closes, navigates, toasts and
  *   captures nothing, so a fresh dialog open meanwhile keeps its text.
- * `config_created` is the PostHog event's name, kept for continuity (D7
- * Preflight ruling 13); it carries no properties, on either path: no flow's
- * name or text reaches an event (ADR 0024).
+ * `config_created` is the PostHog event's name, kept for continuity; it
+ * carries no properties, on either path: no flow's name or text reaches an
+ * event.
  */
 
 export const CREATE_FAILED_MESSAGE = "Failed to create configuration";
 
-/** Under the Distribution label: the permanence note (D13a decision 5). */
+/** Under the Distribution label: the permanence note. */
 export const DISTRIBUTION_LOCK_NOTE =
   "Which collector build this configuration is for. This is locked once the configuration is created.";
 
-/** When the catalogue couldn't be read: the create goes on, on the server's default. */
+/** When the catalog couldn't be read: the create goes on, on the server's default. */
 export const DISTRIBUTION_UNAVAILABLE_NOTE =
   "The distribution list couldn't be loaded, so this configuration will be created on the default distribution.";
 
-/** The catalogue's default distribution, else its first; undefined for an empty or unread one. */
+/** The catalog's default distribution, else its first; undefined for an empty or unread one. */
 function defaultDistribution(distributions: readonly CollectorDistribution[] | null): CollectorDistribution | undefined {
   return distributions?.find((distribution) => distribution.isDefault) ?? distributions?.[0];
 }
@@ -133,7 +129,7 @@ export function CreateConfigurationDialog({ open, onOpenChange, organizationId }
   // Read when the dialog opens, so the start step can count them and the
   // browse step rarely waits.
   const flows = useFlowsWhenOpen(open);
-  /** The distribution picked; null until the catalogue has been read (then its default), and on each opening. */
+  /** The distribution picked; null until the catalog has been read (then its default), and on each opening. */
   const [pickedDistribution, setPickedDistribution] = useState<string | null>(null);
   const shownDistribution =
     findDistribution(distributions, pickedDistribution) ?? defaultDistribution(distributions);
@@ -376,12 +372,12 @@ export function CreateConfigurationDialog({ open, onOpenChange, organizationId }
 }
 
 /**
- * The flow path's distribution (D12 Preflight ruling 8): no choice, the flow
- * was built for one, so a read-only line in place of the dropdown, `{mark}
- * {short label} · collector v{version} — set by this flow`, the mark and
- * label from the catalogue, else from the id. The version is the one the copy
- * gets: the flow's pin, or the distribution's default when the catalogue no
- * longer offers it, which the sentence under it says (D12 decision 16).
+ * The flow path's distribution: no choice, the flow was built for one, so a
+ * read-only line in place of the dropdown, `{mark} {short label} · collector
+ * v{version} — set by this flow`, the mark and label from the catalog, else
+ * from the id. The version is the one the copy gets: the flow's pin, or the
+ * distribution's default when the catalog no longer offers it, which the
+ * sentence under it says.
  */
 function FlowDistributionNote({
   flow,
@@ -436,11 +432,11 @@ function StartOption({
 }
 
 /**
- * The create's Distribution dropdown (D13a decisions 1 and 5): the trigger
- * shows the picked distribution's mark and compact name; each option its
- * mark, the catalogue's label and description, the default marked. Every
- * string is the catalogue's (ADR 0024 allows them anywhere); the options'
- * values are the distributions' ids.
+ * The create's Distribution dropdown: the trigger shows the picked
+ * distribution's mark and compact name; each option its mark, the catalog's
+ * label and description, the default marked. Every string is the catalog's
+ * (catalog data may go anywhere); the options' values are the distributions'
+ * ids.
  */
 function DistributionField({
   distributions,

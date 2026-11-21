@@ -1,18 +1,18 @@
 import { z } from "zod";
 
 /**
- * A person's preferences (D21 decisions 17 and 19): the one place for their
- * shape and their defaults. The API stores the theme in `user_settings.theme`
- * and only the editor and email keys ever saved in `user_settings.preferences`
- * (migration 034); it reads both through `readStoredPreferences`, which fills
- * in every default. The web never derives a default itself.
+ * A person's preferences: the one place for their shape and their defaults.
+ * The API stores the theme in `user_settings.theme` and only the editor and
+ * email keys ever saved in `user_settings.preferences` (migration 034); it
+ * reads both through `readStoredPreferences`, which fills in every default.
+ * The web never derives a default itself.
  */
 
 export const THEMES = ["light", "dark", "navy"] as const;
 export const ThemeSchema = z.enum(THEMES);
 export type Theme = z.infer<typeof ThemeSchema>;
 
-/** The editor's tab sizes (D21 decision 31). */
+/** The editor's tab sizes. */
 export const EDITOR_TAB_SIZES = [2, 4] as const;
 export type EditorTabSize = (typeof EDITOR_TAB_SIZES)[number];
 
@@ -39,7 +39,7 @@ export const EditorPreferencesSchema = z
 
 export type EditorPreferences = z.infer<typeof EditorPreferencesSchema>;
 
-/** The Notifications page's two switches (D21 decision 13, Q120). */
+/** The Notifications page's two switches. */
 export const EmailPreferencesSchema = z
   .object({
     productUpdates: z.boolean(),
@@ -68,7 +68,7 @@ export type DefaultUserPreferences = {
 };
 
 /**
- * The defaults (D8's `editor-store.ts:89-94` among them): Dark; a tab size
+ * The defaults (`editor-store.ts:89-94`'s among them): Dark; a tab size
  * of 2, a font size of 13, line numbers on, the minimap off; both emails on.
  */
 export const DEFAULT_USER_PREFERENCES: DefaultUserPreferences = Object.freeze({
@@ -117,12 +117,12 @@ function readKey<Value>(group: unknown, key: string, schema: z.ZodType<Value>, f
 }
 
 /**
- * A stored row read as `UserPreferences` (D21 decision 19): the `theme`
- * column and the `preferences` jsonb, or `undefined` and `undefined` when the
- * person has no row. Each of the seven keys is read on its own: a missing or
- * invalid key, a group that isn't an object, or a value that isn't one gets
- * that key's default, and unknown keys are ignored. It never throws for any
- * JSON value, so a stored value never makes a read fail.
+ * A stored row read as `UserPreferences`: the `theme` column and the
+ * `preferences` jsonb, or `undefined` and `undefined` when the person has no
+ * row. Each of the seven keys is read on its own: a missing or invalid key, a
+ * group that isn't an object, or a value that isn't one gets that key's
+ * default, and unknown keys are ignored. It never throws for any JSON value,
+ * so a stored value never makes a read fail.
  */
 export function readStoredPreferences(theme: unknown, stored: unknown): UserPreferences {
   const defaults = DEFAULT_USER_PREFERENCES;
@@ -148,7 +148,7 @@ export function readStoredPreferences(theme: unknown, stored: unknown): UserPref
 
 /**
  * The cookie that carries the theme to the seven auth screens before first
- * paint (D21 decision 23): HttpOnly, one word.
+ * paint: HttpOnly, one word.
  */
 export const THEME_COOKIE_NAME = "telflo_theme";
 

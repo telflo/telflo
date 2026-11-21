@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# release-notes.sh: the GitHub Release's notes (D36-2 decision 82), Markdown
-# on stdout, the same bytes for the same inputs.
+# release-notes.sh: the GitHub Release's notes, Markdown on stdout, the same
+# bytes for the same inputs.
 #
 #   scripts/release/release-notes.sh --oci <dir> --chart <tgz> --version <v>
 #
@@ -8,7 +8,7 @@
 # archives' digest files, <dir>/<name>.digest), the chart's reference, version
 # and package sha256 (the .tgz, whose own Chart.yaml must be the chart telflo
 # at <v>), the collector versions and the supervisor-collector chart version
-# the release was checked against (the catalogue's offered versions and the
+# the release was checked against (the catalog's offered versions and the
 # contracts' DEFAULT_HELM_CHART_VERSION), and links to the Quick start,
 # docs/kubernetes.md and docs/compose.md at the tag. No date, nothing read
 # from the network. Exit 0 written; 1 an input missing or wrong; 2 usage.

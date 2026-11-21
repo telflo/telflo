@@ -16,12 +16,12 @@ import { validatePublicReply } from "../../../testing/public-api-openapi.js";
 import { apiTokenHash } from "../../service-accounts/tokens.js";
 
 /*
- * The public surface's `/orgs` for a service account's token (D25 decision
- * 17's route 3; decisions 19, 30 and 53), through the real server as the
- * API's own role: its one organization, `{ id, name, type, role }`, never
- * another organization, and the reply checked against the OpenAPI
- * document. A read route: a read and a write token alike. People's `/orgs`
- * (every membership) is D25 Task 6's.
+ * The public surface's `/orgs` for a service account's token, through the
+ * real server as the API's own role: its one organization,
+ * `{ id, name, type, role }`, never another organization, and the reply
+ * checked against the OpenAPI document. A read route: a read and a write
+ * token alike. People's `/orgs` (every membership) is tested in
+ * personal-tokens.integration.test.ts.
  *
  * Tokens are built at run time by addApiToken and never printed: `call`
  * runs its canary (a boolean) on every reply before any comparison of it.
@@ -31,7 +31,7 @@ const opamp = useFakeOpampServer();
 
 const ROUTE = "/api/public/v1/orgs";
 
-describe("the public /orgs route for a service account (D25 route 3)", () => {
+describe("the public /orgs route for a service account", () => {
   let db: Kysely<Database>;
   let ownerDb: Kysely<Database>;
   let server: FastifyInstance;

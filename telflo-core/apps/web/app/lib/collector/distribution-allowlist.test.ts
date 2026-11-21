@@ -6,9 +6,8 @@ import { RENAMED_TYPES } from "./renamed-types.js";
 import { COMPONENT_TYPES, type ComponentType } from "~/lib/graph/types.js";
 
 /*
- * The allowlist's cases (D13a decision 6; Preflight ruling 18), their
- * `host_metrics` case D9c's deferred one, and a check that every renamed
- * type the parser knows matches its palette entry.
+ * The allowlist's cases, their `host_metrics` case among them, and a check
+ * that every renamed type the parser knows matches its palette entry.
  */
 
 /** A palette-shaped fixture: only `type` and `subType` drive the filter. */
@@ -56,7 +55,7 @@ describe("filterPaletteByAllowlist", () => {
 
   it("keeps a palette id that differs only by underscores from the canonical allowed name", () => {
     const result = filterPaletteByAllowlist(PALETTE, FIXTURE_ALLOWLIST);
-    // filelog -> file_log, hostmetrics -> host_metrics (D9c's deferred case)
+    // filelog -> file_log, hostmetrics -> host_metrics
     expect(result.some((c) => c.subType === "filelog")).toBe(true);
     expect(result.some((c) => c.subType === "hostmetrics")).toBe(true);
   });
@@ -108,7 +107,7 @@ describe("the collector's renamed types", () => {
     extension: "extensions",
   };
 
-  // Every rename is kind-specific (D13b Preflight ruling 15): the OTLP
+  // Every rename is kind-specific: the OTLP
   // receiver keeps `otlp`, only the exporter became `otlp_grpc`.
   it.each(COMPONENT_TYPES.flatMap((kind) => Object.entries(RENAMED_TYPES[kind]).map(([name, old]) => [kind, name, old] as const)))(
     "a distribution listing the %s `%s` keeps the palette's `%s`",

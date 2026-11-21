@@ -77,7 +77,7 @@ describe("InvitedMembersPage", () => {
     ]);
   });
 
-  // D36-1 decision 57 (Q268): a personal workspace invites only while registration is open.
+  // A personal workspace invites only while registration is open.
   const NO_PERSONAL_INVITATIONS = "Invitations can't be sent from a personal workspace on this site.";
 
   it("in a personal workspace on an invite-only site: no Invite Member and no Resend, the line in the button's place, Cancel kept", async () => {

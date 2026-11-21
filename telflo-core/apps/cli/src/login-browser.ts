@@ -1,10 +1,9 @@
 /*
- * `telflo login`'s browser flow (D27 decisions 19 and 20): the listener on
- * `127.0.0.1`, the browser opened on `<server>/cli-auth#state=…&port=…&host=…`
- * (the URL printed too), and the hidden prompt open beside them for a token
- * pasted from the page's fallback or the Account page. Whichever answers
- * first wins; the other is closed (the listener stopped, the prompt closed
- * with the terminal restored).
+ * `telflo login`'s browser flow: the listener on `127.0.0.1`, the browser
+ * opened on `<server>/cli-auth#state=…&port=…&host=…` (the URL printed too),
+ * and the hidden prompt open beside them for a token pasted from the page's
+ * fallback or the Account page. Whichever answers first wins; the other is
+ * closed (the listener stopped, the prompt closed with the terminal restored).
  *
  * The listener's endings are fixed words, exit 3: Cancel on the page, five
  * minutes without an answer, ten refused requests. The token itself is
@@ -29,9 +28,8 @@ export const TIMED_OUT_MESSAGE = "Timed out waiting for the browser: run telflo 
 export const TOO_MANY_REFUSALS_MESSAGE = "The login listener refused too many requests: run telflo login again.";
 
 /**
- * The machine's name as the page shows it and the token's name holds it
- * (decision 20): its `[A-Za-z0-9.-]` characters, cut to 32; `unknown-host`
- * when none is left.
+ * The machine's name as the page shows it and the token's name holds it: its
+ * `[A-Za-z0-9.-]` characters, cut to 32; `unknown-host` when none is left.
  */
 export function cliHost(name: string): string {
   const kept = name.replace(/[^A-Za-z0-9.-]/g, "").slice(0, HOST_MAXIMUM_LENGTH);
@@ -72,7 +70,7 @@ export async function browserLoginToken(server: string, parts: BrowserFlowParts 
     const url = cliAuthUrl(server, { state, port: listener.port, host });
     writeErr(BROWSER_WORDS(url));
     (parts.open ?? openBrowser)(url);
-    // An empty Enter is ignored: the browser may still answer (Ruling 249).
+    // An empty Enter is ignored: the browser may still answer.
     const pasted = readHidden(BROWSER_PASTE_PROMPT, { signal: prompt.signal, ignoreEmpty: true });
     // The loser's refusal (the prompt closed once the browser answered) is nobody's to handle.
     pasted.catch(() => undefined);

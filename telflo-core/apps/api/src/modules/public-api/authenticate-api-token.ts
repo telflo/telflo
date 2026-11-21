@@ -17,23 +17,21 @@ import { apiTokenHash } from "../service-accounts/tokens.js";
 import { invalidApiToken, organizationRequired } from "./errors.js";
 
 /*
- * The token check (D22 decisions 11 and 33 to 38; Preflight rulings 9 to
- * 12): the one entry of the public surface, `/api/public/v1/`. The only
- * caller of `findLiveApiTokenByHash` and of `createApiTokenContext`
+ * The token check: the one entry of the public surface, `/api/public/v1/`.
+ * The only caller of `findLiveApiTokenByHash` and of `createApiTokenContext`
  * (database/context-source.test.ts scans for others).
  *
- * A `tf_` token is a secret like a bearer (decision 48): it is read from the
- * header, hashed and dropped. Nothing here logs it, puts it in an error or
- * keeps it on the request; the request log carries no headers
- * (http/request-log.ts). Log lines hold the token's id only.
+ * A `tf_` token is a secret like a bearer: it is read from the header,
+ * hashed and dropped. Nothing here logs it, puts it in an error or keeps it
+ * on the request; the request log carries no headers (http/request-log.ts).
+ * Log lines hold the token's id only.
  *
- * No terms check (decision 35; D25 decision 10): a service account never
- * accepts the terms, and a terms bump locks none out; a person's token
- * neither. No CSRF header: the guard covers `/api/v1/` only (http/csrf.ts),
- * and a browser never attaches a bearer on its own.
+ * No terms check: a service account never accepts the terms, and a terms
+ * bump locks none out; a person's token neither. No CSRF header: the guard
+ * covers `/api/v1/` only (http/csrf.ts), and a browser never attaches a
+ * bearer on its own.
  *
- * Two steps (D25 decisions 21 to 24 and 26; Ruling 160), the plugin's
- * per-token count between them:
+ * Two steps, the plugin's per-token count between them:
  *   1. the token check (`createAuthenticateApiToken`): the lookup answers a
  *      service account's token with its organization and role, so its
  *      context is built at once; a person's own token is accepted with no
@@ -46,10 +44,9 @@ import { invalidApiToken, organizationRequired } from "./errors.js";
  */
 
 /**
- * Who the request acts as, once the token check accepted it (D22 decision
- * 37; D25 Preflight ruling 5): the token's context, its user's address (for
- * audit rows and the opamp-server's actor, D25 decision 12: personal data,
- * never logged), its kind and its id.
+ * Who the request acts as, once the token check accepted it: the token's
+ * context, its user's address (for audit rows and the opamp-server's actor:
+ * personal data, never logged), its kind and its id.
  */
 export interface RequestApiTokenAuthentication {
   context: ApiTokenContext;
@@ -59,12 +56,12 @@ export interface RequestApiTokenAuthentication {
 }
 
 /**
- * The token the check accepted (D25 decisions 21 and 24), before any
- * organization is known: whose it is, its id, its user and their address
- * (personal data, never logged), and its access. A service account's
- * request also has its `RequestApiTokenAuthentication` at once; a person's
- * gets one from the organization check, when X-Telflo-Org names an
- * organization they are a live member of.
+ * The token the check accepted, before any organization is known: whose it
+ * is, its id, its user and their address (personal data, never logged), and
+ * its access. A service account's request also has its
+ * `RequestApiTokenAuthentication` at once; a person's gets one from the
+ * organization check, when X-Telflo-Org names an organization they are a
+ * live member of.
  */
 export interface AcceptedApiToken {
   kind: ApiTokenKind;
@@ -74,11 +71,11 @@ export interface AcceptedApiToken {
   access: ApiTokenAccess;
 }
 
-/** The check itself: run by the public plugin's `onRequest` (D25 decision 13), or as a route's preHandler. */
+/** The check itself: run by the public plugin's `onRequest`, or as a route's preHandler. */
 export type ApiTokenCheck = (request: FastifyRequest) => Promise<void>;
 
 /**
- * Whether a route needs a personal token's organization (D25 decision 24):
+ * Whether a route needs a personal token's organization:
  * `required` everywhere but the routes declaring `organization: "optional"`
  * (`/whoami`, `/orgs`), where a header that is sent is still checked.
  */
@@ -107,9 +104,9 @@ export function decorateApiTokenAuthentication(server: FastifyInstance): void {
 }
 
 /**
- * The token whose "Last used" is written (decision 38): a service account's
- * context, or a person's token, which has no organization yet (D25 decision
- * 21: written in `{ userId, organizationId: null }`).
+ * The token whose "Last used" is written: a service account's context, or
+ * a person's token, which has no organization yet (written in
+ * `{ userId, organizationId: null }`).
  */
 export interface ApiTokenUse {
   kind: ApiTokenKind;
@@ -122,10 +119,10 @@ export interface ApiTokenUse {
 export interface ApiTokenStore {
   /** The definer lookup, by the token's hash at the API's clock: undefined for every refusal alike. */
   findLive(tokenHash: string, at: Date): Promise<LiveApiToken | undefined>;
-  /** "Last used" (decision 38): a service account's in its own context; a person's in theirs, with no organization. */
+  /** "Last used": a service account's in its own context; a person's in theirs, with no organization. */
   touchLastUsed(token: ApiTokenUse, at: Date): Promise<void>;
   /**
-   * A person's live role in a live organization (D25 decision 24), read in
+   * A person's live role in a live organization, read in
    * `{ userId, organizationId }` on every request: undefined for an
    * unknown or deleted organization and for one they aren't a live member
    * of, alike.
@@ -139,7 +136,7 @@ export function createApiTokenStore(db: Kysely<Database>): ApiTokenStore {
     findLive: (tokenHash, at) => findLiveApiTokenByHash(db, tokenHash, at),
     async touchLastUsed(token, at) {
       if (token.kind === "person") {
-        // Row-level security on personal_api_tokens reads the user alone (D25 decision 21).
+        // Row-level security on personal_api_tokens reads the user alone.
         await withDatabaseContext(db, { userId: token.userId, organizationId: null }, (transaction) =>
           createPersonalApiTokenRepository(transaction).touchLastUsed(token.userId, token.tokenId, at),
         );
@@ -182,9 +179,9 @@ function codeOf(error: unknown): string | undefined {
 }
 
 /**
- * The public routes' token check, decision 34's order exactly (run by the
- * public plugin's `onRequest` since D25, before any body is read), with
- * Preflight ruling 11's count (Ruling 100: in flight until settled):
+ * The public routes' token check, in this order exactly (run by the public
+ * plugin's `onRequest`, before any body is read), with the failure count (an
+ * attempt is in flight until settled):
  *   1. the client address's failure budget: blocked → 429 `rate_limited`
  *      with Retry-After (the window's remaining time; 1 second when only
  *      attempts in flight fill it), before the header is read;
@@ -198,7 +195,7 @@ function codeOf(error: unknown): string | undefined {
  *      fails and the 401;
  *   5. accepted: the request's own attempt is refunded (the window and the
  *      address's other failures stand), so whatever follows (a person's
- *      refused organization included, D25 decision 24) never counts;
+ *      refused organization included) never counts;
  *   6. the accepted token, and a service account's context (its
  *      organization and role from the lookup); a person's waits for the
  *      organization check;
@@ -206,7 +203,7 @@ function codeOf(error: unknown): string | undefined {
  *      the error's code only, and never refuses the request.
  * A lookup that throws (a server failure, not a failed token) refunds its
  * attempt too, and surfaces as the error handler's 500: a try/finally
- * refunds any attempt left unsettled, whatever throws (Ruling 105).
+ * refunds any attempt left unsettled, whatever throws.
  */
 export function createAuthenticateApiToken({ store, failures, now }: AuthenticateApiTokenDependencies): ApiTokenCheck {
   return async (request) => {
@@ -215,10 +212,10 @@ export function createAuthenticateApiToken({ store, failures, now }: Authenticat
     const header = request.headers.authorization;
     if (header === undefined) throw invalidApiToken();
     const attempt = failures.begin(ip);
-    // Settling is structural (Ruling 105): whatever leaves this block
-    // unsettled (the lookup throwing, or anything else that throws) is
-    // refunded on the way out; settling twice does nothing, so the refusals'
-    // fail() and the acceptance's refund() stand.
+    // Settling is structural: whatever leaves this block unsettled (the
+    // lookup throwing, or anything else that throws) is refunded on the way
+    // out; settling twice does nothing, so the refusals' fail() and the
+    // acceptance's refund() stand.
     try {
       const token = tokenOf(header);
       if (token === undefined) {
@@ -228,8 +225,8 @@ export function createAuthenticateApiToken({ store, failures, now }: Authenticat
       const at = now();
       const found: LiveApiToken | undefined = await store.findLive(apiTokenHash(token), at);
       // A service account's always names its organization and role, and a
-      // person's names neither (decision 21); a row otherwise is refused as
-      // an unknown one. The checks keep the types honest.
+      // person's names neither; a row otherwise is refused as an unknown
+      // one. The checks keep the types honest.
       const isServiceAccount =
         found?.kind === "service_account" && found.organizationId !== null && found.role !== null;
       const isPerson = found?.kind === "person" && found.organizationId === null && found.role === null;
@@ -274,14 +271,12 @@ export function createAuthenticateApiToken({ store, failures, now }: Authenticat
   };
 }
 
-/** The header naming a personal token's organization (D25 decision 24): an organization's id only. */
+/** The header naming a personal token's organization: an organization's id only. */
 const ORGANIZATION_HEADER = "x-telflo-org";
 
 /**
- * The organization check (D25 decision 24; Preflight ruling 14), after the
- * token check and the per-token count (Ruling 160):
- *   - a service account's token: nothing to do; it ignores X-Telflo-Org
- *     (decision 23);
+ * The organization check, after the token check and the per-token count:
+ *   - a service account's token: nothing to do; it ignores X-Telflo-Org;
  *   - a person's token, no header: `required` answers 400
  *     `organization_required`; `optional` leaves the organization unknown
  *     (`/whoami` answers null);
@@ -292,8 +287,8 @@ const ORGANIZATION_HEADER = "x-telflo-org";
  *     request): none (an unknown, a deleted, or another organization,
  *     alike) → 403 `organization_access_denied`; found → the context, with
  *     their live role.
- * Nothing here counts toward the token failure limit (decision 24): the
- * token was accepted, and its attempt already refunded.
+ * Nothing here counts toward the token failure limit: the token was
+ * accepted, and its attempt already refunded.
  */
 export function createApiTokenOrganizationCheck({ store }: { store: Pick<ApiTokenStore, "findRole"> }): ApiTokenOrganizationCheck {
   return async (request, requirement) => {

@@ -11,12 +11,11 @@ import {
   type PublicationRequest,
 } from "./client.js";
 
-// The platform's opamp-server client (D11a Tasks 7 and 10b), against the
-// fake, which validates every request and reply against
-// vendor/opamp-server/openapi.yaml. Every test ends with no unread
-// violation of the contract. Publications live under a registered
-// organization (decision 20): `registered`, shared, or `anOrganization()`
-// for a test that needs its own.
+// The platform's opamp-server client, against the fake, which validates
+// every request and reply against vendor/opamp-server/openapi.yaml. Every
+// test ends with no unread violation of the contract. Publications live
+// under a registered organization: `registered`, shared, or
+// `anOrganization()` for a test that needs its own.
 
 const RECEIVED_AT = "2026-10-03T14:05:00.000Z";
 
@@ -376,7 +375,7 @@ describe("postPublication", () => {
     });
   });
 
-  it("POSTs …/publications under the organization, with the caller's id in the body (0.2.4's postPublication, D36-1 decision 14)", async () => {
+  it("POSTs …/publications under the organization, with the caller's id in the body (0.2.4's postPublication)", async () => {
     const sent: { url: string; method: string | undefined; body: Record<string, unknown> }[] = [];
     const publication = aPublication();
     const id = randomUUID();
@@ -399,7 +398,7 @@ describe("postPublication", () => {
     expect(await recording.postPublication(registered, id, publication)).toMatchObject({ kind: "unchanged", publication: { id } });
   });
 
-  it("sends the collector as an object of exactly its two fields, and parses it from the reply (D13a decision 7)", async () => {
+  it("sends the collector as an object of exactly its two fields, and parses it from the reply", async () => {
     const sent: unknown[] = [];
     const publication = aPublication({ collector: { distribution: "otelcol-k8s", version: "0.155.0" } });
     const id = randomUUID();
@@ -433,7 +432,7 @@ describe("postPublication", () => {
     expect(result).toMatchObject({ kind: "unchanged", publication: { id, yaml: publication.yaml, receivedAt: RECEIVED_AT } });
   });
 
-  it("answers unchanged for a publishedAt that differs only below the millisecond (Ruling 27)", async () => {
+  it("answers unchanged for a publishedAt that differs only below the millisecond", async () => {
     const organizationId = await anOrganization();
     const publication = aPublication({ publishedAt: "2026-10-03T14:02:11.123Z" });
     const id = await put(organizationId, publication);
@@ -665,7 +664,7 @@ describe("deletePublication", () => {
     expect(await client.getPublication(owner, id)).toMatchObject({ kind: "found" });
   });
 
-  it("is in_use while a collector group or a collector uses it, and deletes nothing (D16a decision 31)", async () => {
+  it("is in_use while a collector group or a collector uses it, and deletes nothing", async () => {
     const organizationId = await anOrganization();
     const id = await put(organizationId, aPublication());
     fake.markPublicationInUse(organizationId, id);
@@ -714,7 +713,7 @@ describe("deleteConfigurationPublications", () => {
     expect(await client.deleteConfigurationPublications(registered, randomUUID())).toEqual({ kind: "deleted" });
   });
 
-  it("is in_use while one of them is used, and deletes none of them (D16a decision 31)", async () => {
+  it("is in_use while one of them is used, and deletes none of them", async () => {
     const organizationId = await anOrganization();
     const publication = aPublication();
     const used = await put(organizationId, publication);
@@ -792,7 +791,7 @@ describe("answers no caller can handle", () => {
     ["without its version", { distribution: "otelcol-contrib" }, "collector.version"],
     ["with a version that isn't major.minor.patch", { distribution: "otelcol-contrib", version: "0.162" }, "collector.version"],
     ["with a distribution in capitals", { distribution: "Otelcol-Contrib", version: "0.162.0" }, "collector.distribution"],
-  ])("throws for a reply whose collector is %s, naming the field only (D13a decision 7)", async (_label, collector, field) => {
+  ])("throws for a reply whose collector is %s, naming the field only", async (_label, collector, field) => {
     const organizationId = await anOrganization();
     const id = randomUUID();
     const publication = aPublication();
@@ -956,7 +955,7 @@ describe("unavailable", () => {
   });
 
   it("is unavailable for the opamp-server's 503 delete_in_progress on either long delete, as every 5xx", async () => {
-    // D16b Ruling 36: the server answers a delete it is already running at once.
+    // The server answers a delete it is already running at once.
     const running = clientAnswering(
       () =>
         new Response(

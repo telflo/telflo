@@ -131,14 +131,14 @@ describe("sessions repositories", () => {
       });
     });
 
-    it("reads the user's accepted terms version, null for a user who has accepted none (D7 decision 10)", async () => {
+    it("reads the user's accepted terms version, null for a user who has accepted none", async () => {
       const { session } = await signedInUser({
         user: { accepted_terms_version: null, terms_accepted_at: null },
       });
       expect((await findLive(session.id))?.user.acceptedTermsVersion).toBeNull();
     });
 
-    it("reads the user's product-admin flag from the row, each time, so the owner's change shows on the next read (D12 decision 3)", async () => {
+    it("reads the user's product-admin flag from the row, each time, so the operator's change shows on the next read", async () => {
       const { user, session } = await signedInUser({ user: { is_product_admin: true } });
       expect((await findLive(session.id))?.user.isProductAdmin).toBe(true);
 
@@ -165,7 +165,7 @@ describe("sessions repositories", () => {
       });
     });
 
-    it("reads the active organization's logo id (D23-2 decision 40)", async () => {
+    it("reads the active organization's logo id", async () => {
       const { user } = await createUserWithOrganization(ownerDb, { role: "admin" });
       const group = await addMembership(ownerDb, { userId: user.id, role: "contributor" });
       const logoId = "0199e000-0000-7000-8000-00000000a001";
@@ -377,7 +377,7 @@ describe("sessions repositories", () => {
       expect(rows.find((row) => row.id === other.id)?.active_organization_id).toBe(organization.id);
     });
 
-    it("finds the active organization of the user's most recently used session, revoked or not: refreshed last, then made last (D36-1 decision 56)", async () => {
+    it("finds the active organization of the user's most recently used session, revoked or not: refreshed last, then made last", async () => {
       const { user, organization, session } = await signedInUser();
       const group = await addMembership(ownerDb, { userId: user.id });
       const other = await signedInUser();
@@ -404,7 +404,7 @@ describe("sessions repositories", () => {
     });
   });
 
-  describe("the sessions list and signing out one session (D21 decision 40, Preflight rulings 13 and 14)", () => {
+  describe("the sessions list and signing out one session", () => {
     const DAY = 24 * 60 * 60 * 1000;
     const now = new Date("2030-06-01T12:00:00.000Z");
     /** Live means refreshed after this: now less a 30-day refresh lifetime. */
@@ -522,7 +522,7 @@ describe("sessions repositories", () => {
       expect(await sessionRow(account.session.id)).toEqual({ revoked_at: null, revoked_reason: null });
     });
 
-    it("revokeOwn never revokes the caller's current session, in any case (Ruling 85's defence in depth)", async () => {
+    it("revokeOwn never revokes the caller's current session, in any case (defense in depth)", async () => {
       const account = await signedInUser();
       const at = new Date("2030-06-01T12:34:56.000Z");
       // Live by the same clock, so only the current-session filter refuses it.

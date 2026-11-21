@@ -99,7 +99,7 @@ function edgeSignatures(graph: Graph): string[] {
   return graph.edges.map((e) => `${name(e.source)} > ${name(e.target)}`).sort();
 }
 
-/** The store's edges are the ones a fresh parse of its text draws (D9d Ruling 37). */
+/** The store's edges are the ones a fresh parse of its text draws. */
 function expectEdgesAsParsed(state: EditorState = store()) {
   const parsed = parse(state.text);
   if (!parsed.ok) throw new Error(parsed.reason);
@@ -117,7 +117,7 @@ function expectOneEntry(before: EditorState, description: string) {
 
 /**
  * The text the change must have written: `editText` from the text's
- * own model to the graph's (D9a decision 4; Preflight ruling 5).
+ * own model to the graph's.
  */
 function expectWrittenByEditText(before: EditorState, renames: { from: string; to: string }[] = []) {
   const parsed = parse(before.text);
@@ -163,7 +163,7 @@ describe("load", () => {
     }
   });
 
-  it("lays out a version D8 wrote ('[]' in the three columns) as the parser does", () => {
+  it("lays out a version with '[]' in the three columns as the parser does", () => {
     open(STARTER);
     const parsed = parse(STARTER);
     if (!parsed.ok) throw new Error(parsed.reason);
@@ -381,7 +381,7 @@ describe("every change writes the text through the text edits, and takes one ent
     expect(store().connect({ source: nodeOf("processors.batch", "traces").id, target: spanmetrics.id })).toEqual({ ok: true });
     // The group adopts the ungrouped end, a connector included. The
     // version is pinned to 0.162.0, which knows spanmetrics as span_metrics
-    // (since 0.151.0): the palette writes that (D13b decision 5).
+    // (since 0.151.0): the palette writes that.
     expectOneEntry(before, "Add Spanmetrics to traces");
     expect(store().text).toContain("exporters: [otlp, span_metrics]");
   });
@@ -643,7 +643,7 @@ describe("every change writes the text through the text edits, and takes one ent
     expect(nodeOf("processors.batch/2", "logs").data.sharedConfigId).toBe("processor-batch/2");
   });
 
-  it("adds a pipeline with the first unused colour, refuses a name in use, and is undoable", () => {
+  it("adds a pipeline with the first unused color, refuses a name in use, and is undoable", () => {
     open(STARTER);
     const before = store();
 
@@ -662,7 +662,7 @@ describe("every change writes the text through the text edits, and takes one ent
     expect(store().graph.pipelines).toHaveLength(3);
   });
 
-  it("recolours a pipeline: layout only, dirty, undoable", () => {
+  it("recolors a pipeline: layout only, dirty, undoable", () => {
     open(STARTER);
     const metrics = store().graph.pipelines.find((p) => p.name === "metrics")!;
     const before = store();
@@ -834,7 +834,7 @@ describe("every change writes the text through the text edits, and takes one ent
     expect(readTextModel(parsed.document).components.size).toBe(0);
   });
 
-  it("refuses a change the text edits can't write: graph and text as they were, no entry, and the spec's toast", () => {
+  it("refuses a change the text edits can't write: graph and text as they were, no entry, and the refusal toast", () => {
     const text =
       "receivers:\n  otlp: &block\n    protocols:\n      grpc: {}\nexporters:\n  debug:\n    samples: [*block]\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [debug]\n";
     open(text);
@@ -863,7 +863,7 @@ describe("every change writes the text through the text edits, and takes one ent
   });
 });
 
-describe("deleting a processor closes its pipeline's chain (D9d Ruling 36, the owner's)", () => {
+describe("deleting a processor closes its pipeline's chain", () => {
   const CHAINS = [
     "receivers:",
     "  otlp:",
@@ -1025,7 +1025,7 @@ describe("deleting a processor closes its pipeline's chain (D9d Ruling 36, the o
     }
   });
 
-  describe("a connector beside a plain receiver or exporter joins the group only as parse draws it (D9d Ruling 37)", () => {
+  describe("a connector beside a plain receiver or exporter joins the group only as parse draws it", () => {
     const MIXED = [
       "receivers:",
       "  otlp:",
@@ -1469,7 +1469,7 @@ describe("saving and discarding", () => {
     open(STARTER);
     const typed = STARTER.replace("    logs:\n", "    logs/typed:\n      receivers: [otlp]\n      exporters: [otlp]\n    logs:\n");
     store().setText(typed);
-    // The save sends the typed text with the graph from before the typing (decision 2).
+    // The save sends the typed text with the graph from before the typing.
     store().markSaved(typed, store().version!, store().graph);
 
     store().discardChanges();
@@ -1502,10 +1502,10 @@ describe("saving and discarding", () => {
 });
 
 /*
- * D9b Task 2: a form's changes and self-monitoring's, written by key path
- * through `writeValues` (D9b decisions 2 and 7; Preflight rulings 12, 18).
+ * A form's changes and self-monitoring's, written by key path through
+ * `writeValues`.
  */
-describe("a form's changes, written by key path (D9b decision 2)", () => {
+describe("a form's changes, written by key path", () => {
   it("writes only the changed lines, one entry per component within 800 ms (shared with the YAML box), and undo restores text and graph together", () => {
     open(STARTER);
     const batch = nodeOf("processors.batch", "traces");
@@ -1629,7 +1629,7 @@ describe("a form's changes, written by key path (D9b decision 2)", () => {
     expect(error).toHaveBeenCalledTimes(2);
   });
 
-  it("refuses a move that would change another value of the component, an alias re-bound (D9d Ruling 40): the toast; nothing changes", () => {
+  it("refuses a move that would change another value of the component, an alias re-bound: the toast; nothing changes", () => {
     const error = vi.spyOn(toast, "error");
     const text = [
       "receivers:",
@@ -1670,7 +1670,7 @@ describe("a form's changes, written by key path (D9b decision 2)", () => {
     expect(error).toHaveBeenCalledTimes(1);
   });
 
-  it("a write that changes nothing is unchanged: no entry, not dirty, the graph as it was (Preflight ruling 12)", () => {
+  it("a write that changes nothing is unchanged: no entry, not dirty, the graph as it was", () => {
     open(STARTER);
     const batch = nodeOf("processors.batch", "traces");
     const before = store();
@@ -1689,12 +1689,12 @@ describe("a form's changes, written by key path (D9b decision 2)", () => {
 });
 
 /*
- * D9d decision 8 (Task 3; Preflight rulings 1, 13, 31): a form's routing or
- * failover target choice writes the connector's entry and the pipeline's
- * receivers in one change, one undo entry, with a toast; an unrelated canvas
- * change leaves the receivers, and the processors, as the text has them.
+ * A form's routing or failover target choice writes the connector's entry and
+ * the pipeline's receivers in one change, one undo entry, with a toast; an
+ * unrelated canvas change leaves the receivers, and the processors, as the
+ * text has them.
  */
-describe("routing and failover targets wired into receivers (D9d decision 8)", () => {
+describe("routing and failover targets wired into receivers", () => {
   const head = (connector = "routing") =>
     [
       "receivers:",
@@ -1736,7 +1736,7 @@ describe("routing and failover targets wired into receivers (D9d decision 8)", (
     expectOneEntry(before, `Update ${nodeOf(key).data.label}`);
     expectTextDescribesGraph();
     expect(info).toHaveBeenCalledTimes(1);
-    // Inside ph-no-capture: it names pipelines (Ruling 301).
+    // Inside ph-no-capture: it names pipelines.
     expect(info).toHaveBeenCalledWith(toastText, { className: "ph-no-capture" });
     const written = store().text;
     store().undo();
@@ -1752,7 +1752,7 @@ describe("routing and failover targets wired into receivers (D9d decision 8)", (
       added: [DEFAULTS_AFTER, "      receivers: [otlp, routing] # r"],
     },
     {
-      // Ruling 34: its lines and comments kept, not joined onto one line.
+      // Its lines and comments kept, not joined onto one line.
       style: "a flow list spread over lines",
       audit: ["    traces/audit:", "      receivers: [ # open", "        # the edge", "        otlp # r", "      ]", "      exporters: [debug]", ""],
       removed: [DEFAULTS_BEFORE, "        otlp # r"],
@@ -1796,7 +1796,7 @@ describe("routing and failover targets wired into receivers (D9d decision 8)", (
     expect(written).toContain("        - otlp\r\n        - routing\r\n");
   });
 
-  it("gives another pipeline sharing the list by an alias its own copy (Preflight ruling 31)", () => {
+  it("gives another pipeline sharing the list by an alias its own copy", () => {
     const text =
       head() +
       ["    traces/audit:", "      receivers: &rs [otlp]", "      exporters: [debug]", "    traces/z:", "      receivers: *rs", "      exporters: [debug]", ""].join(
@@ -2031,7 +2031,7 @@ describe("routing and failover targets wired into receivers (D9d decision 8)", (
     expect(store().text).toBe(text);
   });
 
-  it("duplicating a connector, and adding a pipeline the config names, don't wire (Preflight ruling 13)", () => {
+  it("duplicating a connector, and adding a pipeline the config names, don't wire", () => {
     const text = corpusText("routing-connector.yaml").replace("      - 'traces/out'\n    table", "      - 'traces/out'\n      - traces/audit\n    table");
     open(text);
     const copy = store().duplicateNode(nodeOf("connectors.routing").id)!;
@@ -2092,7 +2092,7 @@ describe("routing and failover targets wired into receivers (D9d decision 8)", (
  * `service.telemetry` by key path (never replacing the whole section), and
  * Remove Section removes its lines.
  */
-describe("self-monitoring's telemetry (D9b decision 7)", () => {
+describe("self-monitoring's telemetry", () => {
   const BASE = `receivers:
   otlp:
     protocols:

@@ -4,12 +4,11 @@ import { Input } from "~/components/ui/input.js";
 import { cn } from "~/lib/utils.js";
 
 /*
- * A duration field (ADR 0018). Its error shows only for what the
- * collector refuses (D9b decision 4): what Go's `time.ParseDuration`
- * refuses, when the value holds no `${…}` reference (the collector expands
- * those first), so `1m30s`, `0`, `-5s` and `${env:TIMEOUT}` pass. A value
- * is still passed on when invalid, and validity follows the value shown,
- * not only the last keystroke.
+ * A duration field. Its error shows only for what the collector refuses:
+ * what Go's `time.ParseDuration` refuses, when the value holds no `${…}`
+ * reference (the collector expands those first), so `1m30s`, `0`, `-5s`
+ * and `${env:TIMEOUT}` pass. A value is still passed on when invalid, and
+ * validity follows the value shown, not only the last keystroke.
  */
 
 /** Go's `time.ParseDuration`: `0`, or signed number-and-unit runs (`1h30m`, `1.5h`, `.5s`, `300ms`). */
@@ -29,7 +28,7 @@ export interface DurationInputProps extends Omit<React.InputHTMLAttributes<HTMLI
    * Omitted, the characters decide.
    */
   invalid?: boolean | undefined;
-  /** The error shown for an invalid value, where the grammar isn't Go's (D9d: Prometheus' durations). */
+  /** The error shown for an invalid value, where the grammar isn't Go's (Prometheus' durations, say). */
   message?: string | undefined;
 }
 

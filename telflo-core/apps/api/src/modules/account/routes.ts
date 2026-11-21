@@ -38,7 +38,7 @@ import { auditUserAgent } from "../../http/audit-user-agent.js";
 
 export interface AccountRoutesDependencies extends ServerDependencies {
   now: () => Date;
-  /** Required, as the password-reset routes' (Preflight ruling 18): the security emails go after the response. */
+  /** Required, as the password-reset routes': the security emails go after the response. */
   runAfterResponse: RunAfterResponse;
 }
 
@@ -62,7 +62,7 @@ const errorResponses = {
  */
 const PersonalApiTokenParamsSchema = z.object({ tokenId: z.string() });
 
-/** The create's reply carries the token (D25 decision 28): no cache, the browser's or a proxy's, may keep it. */
+/** The create's reply carries the token: no cache, the browser's or a proxy's, may keep it. */
 const NO_STORE = "no-store";
 
 /** A token as listed: its prefix, never the token or its hash; the person stays in the API. */
@@ -80,10 +80,10 @@ function toApiTokenResponseBody(token: ListedPersonalApiToken): ApiTokenResponse
 }
 
 /**
- * A person's own tokens' service over the API's database (D25 decision
- * 28): each unit of work one transaction in the session's context (the
- * person and their active organization), which personal_api_tokens'
- * row-level security reads by the person only.
+ * A person's own tokens' service over the API's database: each unit of
+ * work one transaction in the session's context (the person and their
+ * active organization), which personal_api_tokens' row-level security reads
+ * by the person only.
  */
 export function createDatabasePersonalApiTokenService(db: Kysely<Database>, now: () => Date): IPersonalApiTokenService {
   const withTransaction: WithPersonalApiTokenTransaction = (context, work) =>
@@ -99,10 +99,9 @@ export function createDatabasePersonalApiTokenService(db: Kysely<Database>, now:
 
 /**
  * The account's own routes, under `/api/v1/auth/me` beside the terms
- * acceptance (D21 decision 20). They run `authenticate` only, never
- * `requireCurrentTerms`: they are the person's own, like `/me`, and the terms
- * dialog blocks the shell anyway. The person is always the session's user:
- * no route takes a user id.
+ * acceptance. They run `authenticate` only, never `requireCurrentTerms`: they
+ * are the person's own, like `/me`, and the terms dialog blocks the shell
+ * anyway. The person is always the session's user: no route takes a user id.
  *
  * Preferences aren't security events: no audit row, and no rate limit (a
  * session is needed).
@@ -149,7 +148,7 @@ export function registerAccountRoutes(
   /**
    * Merges the change onto the stored preferences and answers the whole
    * preferences after it. A change carrying `theme` also sets `telflo_theme`
-   * to the stored theme (D21 decision 23).
+   * to the stored theme.
    */
   typed.patch(
     "/api/v1/auth/me/preferences",
@@ -169,12 +168,11 @@ export function registerAccountRoutes(
   );
 
   /**
-   * Changes the password with the current one (D21 decision 35), answering
-   * 204. The shared per-IP bucket first (`identityPerIp`), then, once the
-   * session is known, sign-in's per-email failure budget keyed by the
-   * session's address (Preflight ruling 9). Every session is kept and no
-   * cookie is set or cleared. The request log carries no body, so neither
-   * password.
+   * Changes the password with the current one, answering 204. The shared per-IP
+   * bucket first (`identityPerIp`), then, once the session is known, sign-in's
+   * per-email failure budget keyed by the session's address. Every session is
+   * kept and no cookie is set or cleared. The request log carries no body, so
+   * neither password.
    */
   typed.put(
     "/api/v1/auth/me/password",
@@ -193,9 +191,9 @@ export function registerAccountRoutes(
     },
     async (request, reply) => {
       const authentication = requireAuthentication(request);
-      // Settled exactly once, whatever happens (Preflight ruling 9): a
-      // success clears the address; anything else keeps the count only for
-      // a wrong current password.
+      // Settled exactly once, whatever happens: a success clears the
+      // address; anything else keeps the count only for a wrong current
+      // password.
       let isReauthenticated = false;
       let failure: unknown;
       try {
@@ -217,11 +215,10 @@ export function registerAccountRoutes(
     },
   );
 
-  // A person's own API tokens (D25 decision 28; Preflight ruling 14): the
-  // person's only, never an organization's, so no admin check and no
-  // organization in the path; `authenticate` only (no terms), the CSRF guard
-  // on the writes. Not rate limited: the cap of 20 under the user's lock
-  // bounds a create, as D22's.
+  // A person's own API tokens: the person's only, never an organization's,
+  // so no admin check and no organization in the path; `authenticate` only
+  // (no terms), the CSRF guard on the writes. Not rate limited: the cap of 20
+  // under the user's lock bounds a create.
   typed.get(
     "/api/v1/auth/me/api-tokens",
     { preHandler: authenticate, schema: { response: { 200: ApiTokensResponseSchema, ...errorResponses } } },
@@ -252,7 +249,7 @@ export function registerAccountRoutes(
   );
 
   // A revoke: the row stays, revoked, and its name is free. An already
-  // revoked token, or another person's, is the one 404 (Preflight ruling 14).
+  // revoked token, or another person's, is the one 404.
   typed.delete(
     "/api/v1/auth/me/api-tokens/:tokenId",
     {

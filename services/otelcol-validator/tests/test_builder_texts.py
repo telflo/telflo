@@ -1,6 +1,6 @@
-"""`builder_texts.py`'s texts are still the web corpus's files (D13b ruling
-68). Run from the repository; the image carries only this service, so there
-the check is skipped (the binary tests use the copies)."""
+"""`builder_texts.py`'s texts are still the web corpus's files. Run from
+the repository; the image carries only this service, so there the check is
+skipped (the binary tests use the copies)."""
 
 from __future__ import annotations
 

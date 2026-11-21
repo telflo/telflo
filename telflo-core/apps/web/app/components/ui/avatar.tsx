@@ -2,12 +2,11 @@ import * as React from "react"
 import { cn } from "~/lib/utils.js"
 
 /*
- * The shadcn Avatar (ADR 0018; AvatarImage adds `ph-no-capture`), without
+ * The shadcn Avatar (AvatarImage adds `ph-no-capture`), without
  * @radix-ui/react-avatar: the same spans Radix renders, with no new
- * dependency. AvatarImage is a plain `<img alt="">` (D23-2 decisions 51 and
- * 57); it never decides on its own whether to show: the caller
- * (OrganizationLogo) renders EITHER the image OR the fallback, and swaps to
- * the fallback from `onError`.
+ * dependency. AvatarImage is a plain `<img alt="">`; it never decides on its
+ * own whether to show: the caller (OrganizationLogo) renders EITHER the image
+ * OR the fallback, and swaps to the fallback from `onError`.
  */
 
 const Avatar = React.forwardRef<HTMLSpanElement, React.HTMLAttributes<HTMLSpanElement>>(
@@ -40,14 +39,13 @@ AvatarFallback.displayName = "AvatarFallback"
 
 /**
  * The image: `alt=""` always (a logo is organization content, never named in
- * an attribute; D23-2 decision 57), so it is presentational. `ph-no-capture`
- * always, in its own classes, so replay records nothing of it whoever renders
- * it. And `fetchPriority="low"` always: React's server rendering otherwise
- * puts a `<link rel="preload" as="image" href="…">` for a server-rendered
- * `<img>` in the `<head>`, outside `ph-no-capture`, and replay records it
- * (Ruling 137). `alt` and `fetchPriority` come after the spread, so no caller
- * can drop either (Ruling 140). A logo's address appears ONLY as the src of
- * this `<img>`.
+ * an attribute), so it is presentational. `ph-no-capture` always, in its own
+ * classes, so replay records nothing of it whoever renders it. And
+ * `fetchPriority="low"` always: React's server rendering otherwise puts a
+ * `<link rel="preload" as="image" href="…">` for a server-rendered `<img>` in
+ * the `<head>`, outside `ph-no-capture`, and replay records it. `alt` and
+ * `fetchPriority` come after the spread, so no caller can drop either. A
+ * logo's address appears ONLY as the src of this `<img>`.
  */
 const AvatarImage = React.forwardRef<
   HTMLImageElement,

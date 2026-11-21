@@ -1,4 +1,4 @@
-"""The collector's readiness (D14a Task 4).
+"""The collector's readiness.
 
 When ``_wait_for_ready`` gives up — the collector still running but not
 listening, or the collector gone — the run fails with fixed words, and the

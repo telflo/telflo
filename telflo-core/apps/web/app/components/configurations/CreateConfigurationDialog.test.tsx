@@ -74,7 +74,7 @@ async function renderDialog({ atStart = false } = {}) {
 
 type User = ReturnType<typeof userEvent.setup>;
 
-/** From the start step, the blank path's name step (D12 Preflight ruling 8). */
+/** From the start step, the blank path's name step. */
 async function chooseBlank(user: User) {
   await user.click(await screen.findByRole("button", { name: /Blank configuration/ }));
   await screen.findByLabelText("Configuration Name");
@@ -110,7 +110,7 @@ function pendingCreate() {
   return { createConfiguration, finish: () => finish() };
 }
 
-/** The Distribution dropdown, once the catalogue has been read. */
+/** The Distribution dropdown, once the catalog has been read. */
 function distributionField() {
   return screen.findByRole("combobox", { name: "Distribution" });
 }
@@ -172,12 +172,12 @@ describe("CreateConfigurationDialog", () => {
     expect(description).toHaveAttribute("maxlength", "500");
     expect(screen.getByRole("button", { name: "Create" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Cancel" })).toBeNull();
-    // D13a decision 5: the distribution is picked here, the catalogue's default preselected.
+    // The distribution is picked here, the catalog's default preselected.
     expect(await distributionField()).toHaveTextContent(/^Otel Contrib$/);
     expect(screen.getByText(DISTRIBUTION_LOCK_NOTE)).toBeInTheDocument();
     expect(screen.queryByText(/set by this flow/)).toBeNull();
 
-    // Back, to the start step (D7 had Cancel: there was no step to go back to).
+    // Back, to the start step.
     await user.click(screen.getByRole("button", { name: "Back" }));
     expect(await screen.findByRole("dialog", { name: "New configuration" })).toBeInTheDocument();
   });
@@ -197,7 +197,7 @@ describe("CreateConfigurationDialog", () => {
     expect(create).toBeDisabled();
   });
 
-  it("creates with the trimmed name and description, captures config_created with no properties, closes and opens the editor (D8 decision 16)", async () => {
+  it("creates with the trimmed name and description, captures config_created with no properties, closes and opens the editor", async () => {
     const createConfiguration = vi.spyOn(apiClient, "createConfiguration").mockResolvedValue({ configuration: MINE });
     const captureEvent = vi.spyOn(analytics, "captureEvent");
     const success = vi.spyOn(toast, "success");
@@ -322,7 +322,7 @@ describe("CreateConfigurationDialog", () => {
     ["a server error", new ApiError("internal_error", "Something went wrong. Please try again.")],
     ["an invalid request", new ApiError("invalid_request", "The request was not valid.")],
     ["no connection", new ApiError("network_error", "Could not reach the server. Check your connection.")],
-  ])("toasts \"Failed to create configuration\" for %s (D7 Preflight ruling 2)", async (_why, failure) => {
+  ])("toasts \"Failed to create configuration\" for %s", async (_why, failure) => {
     vi.spyOn(apiClient, "createConfiguration").mockRejectedValue(failure);
     const error = vi.spyOn(toast, "error");
     const { user, onOpenChange } = await renderDialog();
@@ -441,11 +441,10 @@ describe("CreateConfigurationDialog", () => {
   });
 
   /*
-   * The distribution dropdown (D13a decision 1), with a fixture second
-   * distribution. There is no version lookup: the server gives version 1
-   * the distribution's default.
+   * The distribution dropdown, with a fixture second distribution. There is
+   * no version lookup: the server gives version 1 the distribution's default.
    */
-  describe("the distribution (D13a decisions 1 and 5)", () => {
+  describe("the distribution", () => {
     beforeEach(() => {
       vi.spyOn(apiClient, "getCollectorDistributions").mockResolvedValue({ distributions: [CONTRIB, ACME] });
     });
@@ -536,7 +535,7 @@ describe("CreateConfigurationDialog", () => {
       expect(await distributionField()).toHaveTextContent(/^Otel Contrib$/);
     });
 
-    it("reads the catalogue once for the page, and again on reopening after a failure", async () => {
+    it("reads the catalog once for the page, and again on reopening after a failure", async () => {
       const read = vi
         .spyOn(apiClient, "getCollectorDistributions")
         .mockRejectedValueOnce(new ApiError("network_error", "Could not reach the server. Check your connection."))
@@ -557,11 +556,11 @@ describe("CreateConfigurationDialog", () => {
   });
 
   /*
-   * "Start from a flow" (D12 Preflight ruling 8): the browse step, and the
-   * name step for a flow (its pinned distribution a locked fact instead of
-   * the picker), on Contrib 0.162.0.
+   * "Start from a flow": the browse step, and the name step for a flow
+   * (its pinned distribution a locked fact instead of the picker), on
+   * Contrib 0.162.0.
    */
-  describe("starting from a flow (D12)", () => {
+  describe("starting from a flow", () => {
     /** From the start step to the browse step, its flows listed. */
     async function browse(user: User) {
       await user.click(await screen.findByRole("button", { name: /Start from a flow/ }));
@@ -626,7 +625,7 @@ describe("CreateConfigurationDialog", () => {
       expect(read).toHaveBeenCalledTimes(2);
     });
 
-    it("never offers or counts a hidden flow, though the API lists it to a product admin (Ruling 42)", async () => {
+    it("never offers or counts a hidden flow, though the API lists it to a product admin", async () => {
       // A product admin's read: the API lists the hidden flow too, `published: false`.
       useUserStore.getState().setCurrent({ ...signedInMember(), isProductAdmin: true });
       vi.spyOn(apiClient, "getFlows").mockResolvedValue({ flows: [TAIL_SAMPLING, HIDDEN, PII_REDACTION] });
@@ -646,7 +645,7 @@ describe("CreateConfigurationDialog", () => {
       expect(within(dialog).getByText("No flows match your search or filter.")).toBeInTheDocument();
     });
 
-    it("says no flows are available, uncounted, when every flow the API lists is hidden (Ruling 42)", async () => {
+    it("says no flows are available, uncounted, when every flow the API lists is hidden", async () => {
       useUserStore.getState().setCurrent({ ...signedInMember(), isProductAdmin: true });
       vi.spyOn(apiClient, "getFlows").mockResolvedValue({ flows: [HIDDEN] });
       const { user } = await renderDialog({ atStart: true });
@@ -693,7 +692,7 @@ describe("CreateConfigurationDialog", () => {
         sourceFlowSlug: TAIL_SAMPLING.slug,
       });
       expect(request.nodes!.length).toBeGreaterThan(0);
-      // config_created as on the blank path: no properties, so no flow's name or text (ADR 0024).
+      // config_created as on the blank path: no properties, so no flow's name or text.
       expect(captureEvent.mock.calls).toEqual([["config_created"]]);
       expect(onOpenChange).toHaveBeenCalledWith(false);
     });
@@ -730,7 +729,7 @@ describe("CreateConfigurationDialog", () => {
       expect(screen.getByLabelText("Description")).toHaveValue("");
     });
 
-    it("moves a copy of a flow on a pin the catalogue no longer offers to the default, and says so (D12 decision 16)", async () => {
+    it("moves a copy of a flow on a pin the catalog no longer offers to the default, and says so", async () => {
       vi.spyOn(apiClient, "getFlows").mockResolvedValue({
         flows: [makeFlow({ collectorVersion: RETIRED_VERSION })],
       });
@@ -749,7 +748,7 @@ describe("CreateConfigurationDialog", () => {
       expect(createConfiguration.mock.calls[0]![1]).toMatchObject({ collectorVersion: "0.162.0" });
     });
 
-    it("sends the flow's pin with the catalogue unread, and toasts the API's refusal of it", async () => {
+    it("sends the flow's pin with the catalog unread, and toasts the API's refusal of it", async () => {
       vi.spyOn(apiClient, "getCollectorDistributions").mockRejectedValue(
         new ApiError("network_error", "Could not reach the server. Check your connection."),
       );
@@ -764,7 +763,7 @@ describe("CreateConfigurationDialog", () => {
       await browse(user);
       await user.click(await screen.findByRole("heading", { level: 3, name: TAIL_SAMPLING.name }));
 
-      // The mark and label from the id, with the catalogue unread.
+      // The mark and label from the id, with the catalog unread.
       expect(await screen.findByText(/set by this flow/)).toHaveTextContent(
         "Otel Contrib · collector v0.155.0 — set by this flow",
       );
@@ -777,7 +776,7 @@ describe("CreateConfigurationDialog", () => {
       expect(screen.getByRole("button", { name: "Create" })).toBeEnabled();
     });
 
-    it("refuses a flow D9a's parser can't read, saying it could not be loaded, and creates nothing", async () => {
+    it("refuses a flow whose YAML can't be read, saying it could not be loaded, and creates nothing", async () => {
       vi.spyOn(apiClient, "getFlows").mockResolvedValue({ flows: [makeFlow({ yaml: "receivers:\n  - [unclosed" })] });
       const createConfiguration = vi.spyOn(apiClient, "createConfiguration");
       const captureEvent = vi.spyOn(analytics, "captureEvent");

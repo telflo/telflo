@@ -14,15 +14,15 @@ import {
 import type { TestDatabases } from "./testing.js";
 
 /**
- * configurations (D7 decisions 4, 6 and 8, migration 1700000000015): its
- * constraints, as the owner; its row-level security, as the API's role
- * (`db`), which the policies constrain.
+ * configurations (migration 1700000000015): its constraints, as the owner;
+ * its row-level security, as the API's role (`db`), which the policies
+ * constrain.
  */
 describe("configurations", () => {
   let databases: TestDatabases;
   let db: Kysely<Database>;
   let ownerDb: Kysely<Database>;
-  /** The catalogue's default distribution and version (D13a), which a row written by hand names. */
+  /** The catalog's default distribution and version, which a row written by hand names. */
   let pin: { distribution: string; version: string };
 
   beforeAll(async () => {
@@ -76,9 +76,9 @@ describe("configurations", () => {
         created_at: at,
         updated_at: at,
         deleted_at: null,
-        // The fixture's: the catalogue's default distribution (D13a).
+        // The fixture's: the catalog's default distribution.
         collector_distribution: pin.distribution,
-        // Created blank, from no flow (D12 decision 9).
+        // Created blank, from no flow.
         source_flow_slug: null,
       });
     });
@@ -187,7 +187,7 @@ describe("configurations", () => {
 
     it("keeps the configuration, with no creator, when the creator's account is hard-deleted", async () => {
       // In a group organization: a personal one cascades with its owner and
-      // would take the configuration with it (Preflight ruling 6).
+      // would take the configuration with it.
       const { organization } = await createOrganization();
       const creator = await createUserWithOrganization(ownerDb);
       await addMembership(ownerDb, { userId: creator.user.id, organizationId: organization.id, role: "contributor" });
@@ -315,7 +315,7 @@ describe("configurations", () => {
       });
     });
 
-    it("refuses an insert created by anyone but the context's user, or by no one, with 42501 (D11b: a new configuration is its creator's draft)", async () => {
+    it("refuses an insert created by anyone but the context's user, or by no one, with 42501 (a new configuration is its creator's draft)", async () => {
       const { a, aAdmin } = await twoOrganizations();
       const teammateId = await addMember(a, "contributor");
       for (const creator of [teammateId, null]) {
@@ -328,7 +328,7 @@ describe("configurations", () => {
           ),
         ).rejects.toMatchObject({ code: "42501" });
       }
-      // With only the organization in the context, as sign-up had it before D11b, none passes.
+      // With only the organization in the context, none passes.
       await expect(
         inContext(a, null, (transaction) =>
           transaction
@@ -374,7 +374,7 @@ describe("configurations", () => {
       expect(await configurationRow(inB.id)).toEqual(inB);
     });
 
-    describe("drafts are private (D11b decision 1, migration 1700000000021)", () => {
+    describe("drafts are private (migration 1700000000021)", () => {
       /**
        * One organization: an author's draft, the author's published
        * configuration (v1 published, v2 a draft), and a never-published one
@@ -537,7 +537,7 @@ describe("configurations", () => {
         expect(await configurationRow(draft.id)).toEqual(draft);
       });
 
-      describe("never hard-deleted, and keeping its author (D11b Ruling 29, migration 1700000000022)", () => {
+      describe("never hard-deleted, and keeping its author (migration 1700000000022)", () => {
         const versionIds = (configurationId: string) =>
           ownerDb
             .selectFrom("configuration_versions")
@@ -625,13 +625,13 @@ describe("configurations", () => {
         });
       });
 
-      describe("keeping its collector distribution (D13a decision 5, migration 1700000000023)", () => {
+      describe("keeping its collector distribution (migration 1700000000023)", () => {
         const refusal = (id: string) => ({ code: "P0001", message: `configuration ${id} keeps its collector distribution` });
 
         /**
          * Runs `work` as the owner in a transaction that adds a second
-         * distribution to the catalogue, `fixture-distribution` with one
-         * version, and is always rolled back, so telflo_platform_test's catalogue
+         * distribution to the catalog, `fixture-distribution` with one
+         * version, and is always rolled back, so telflo_platform_test's catalog
          * stays the committed one.
          */
         const withFixtureDistribution = async (work: (transaction: Kysely<Database>) => Promise<void>) => {
@@ -674,7 +674,7 @@ describe("configurations", () => {
             [authorId, draft],
             [teammateId, published],
           ] as const) {
-            // A distribution the catalogue doesn't have: only the trigger, a
+            // A distribution the catalog doesn't have: only the trigger, a
             // before trigger, can answer P0001; the foreign keys would say 23503.
             await expect(
               inContext(organizationId, viewer, (transaction) =>
@@ -687,7 +687,7 @@ describe("configurations", () => {
           }
         });
 
-        it("refuses the tables' owner too, to a distribution the catalogue has, a configuration with no version included", async () => {
+        it("refuses the tables' owner too, to a distribution the catalog has, a configuration with no version included", async () => {
           const { organizationId, published } = await oneOrganization();
           await withFixtureDistribution(async (transaction) => {
             const versionless = await addConfiguration(transaction, { organizationId });

@@ -39,9 +39,9 @@ const RUN_ID = "0190a1b2-c3d4-7e5f-8a9b-0c1d2e3f4a5b";
 const FILE_ID = "0190a1b2-c3d4-7e5f-8a9b-0c1d2e3f4a5c";
 
 describe("the limits", () => {
-  it("are decisions 16 and 19's, Preflight ruling 15's and the tester's contract's", () => {
+  it("are the uploads', the queue's, the list's and the tester's contract's", () => {
     expect(TEST_FILE_MAXIMUM_BYTES).toBe(10_485_760);
-    // Ruling 43's head of a test file, and Ruling 46's of a run's input.
+    // The head of a test file, and of a run's input.
     expect(TEST_FILE_HEAD_MAXIMUM_BYTES).toBe(65_536);
     expect(TEST_SAMPLE_MAXIMUM_BYTES).toBe(1_048_576);
     expect(TEST_RUNS_LIST_MAXIMUM).toBe(100);
@@ -55,7 +55,7 @@ describe("the limits", () => {
     expect(TEST_RUN_ERROR_MESSAGE_MAXIMUM_LENGTH).toBe(2_000);
   });
 
-  it("have decision 28's codes, D14b's (detail 19, Preflight ruling 23), and decisions 12, 14 and 19's words", () => {
+  it("have the testing endpoints' codes and their words", () => {
     expect(TESTING_ERROR_CODES).toEqual([
       "test_file_not_found",
       "test_file_too_large",
@@ -73,22 +73,22 @@ describe("the limits", () => {
       "filled_in_too_long",
       "test_run_output_not_found",
     ]);
-    // D20 Ruling 78: the opamp-server's and the validator's sentence, with a run's own limit.
+    // The opamp-server's and the validator's sentence, with a run's own limit.
     expect(TEST_RUN_FILLED_IN_TOO_LONG_MESSAGE).toBe(
       "The configuration with its organization variables filled in is over 262,144 characters.",
     );
     expect(TEST_RUN_FILLED_IN_TOO_LONG_MESSAGE).toContain(TEST_RUN_YAML_MAXIMUM_LENGTH.toLocaleString("en-US"));
     expect(TESTING_UNAVAILABLE_MESSAGE).toBe("Testing is unavailable right now. Try again later.");
     expect(COLLECTOR_VERSION_RETIRED_MESSAGE).toBe("No longer offered. Pick a newer collector version.");
-    // D14b Preflight ruling 15: a Play all's toast quotes it.
+    // A Play all's toast quotes it.
     expect(TEST_RUN_QUEUE_FULL_MESSAGE).toBe("You have 50 test runs waiting already. Wait for some to finish.");
-    // D14b Ruling 37: too many waiting for a copy place, not the per-minute words.
+    // Too many waiting for a copy place, not the per-minute words.
     expect(TEST_RUN_QUEUING_BUSY_MESSAGE).toBe("Too many test runs being queued at once. Try again shortly.");
   });
 });
 
-describe("a test file's type (Preflight ruling 10)", () => {
-  it("allows decision 16's six extensions, with their upload types", () => {
+describe("a test file's type", () => {
+  it("allows six extensions, with their upload types", () => {
     expect(TEST_FILE_EXTENSIONS).toEqual(["json", "ndjson", "yaml", "yml", "txt", "log"]);
     expect(TEST_FILE_CONTENT_TYPES).toEqual({
       json: "application/json",
@@ -151,7 +151,7 @@ describe("the upload's fields", () => {
   });
 });
 
-describe("QueueTestRunRequestSchema (D14a decision 28; D14b Preflight ruling 9)", () => {
+describe("QueueTestRunRequestSchema", () => {
   const TEMPLATE_ID = "0190a1b2-c3d4-7e5f-8a9b-0c1d2e3f4a5d";
   const DEFINITION_ID = "0190a1b2-c3d4-7e5f-8a9b-0c1d2e3f4a5e";
   const valid = {
@@ -202,7 +202,7 @@ describe("QueueTestRunRequestSchema (D14a decision 28; D14b Preflight ruling 9)"
     ["an unknown field", { distribution: "otelcol-contrib" }],
     ["a definition mixed into a file's run", { definitionId: DEFINITION_ID }],
     ["a definition in place of the file, with the one-off fields", { inputFileId: undefined, definitionId: DEFINITION_ID }],
-    // A run's rules are the database's snapshot, never a client's (D15a Preflight ruling 21).
+    // A run's rules are the database's snapshot, never a client's.
     ["its own rules", { validationRules: [] }],
     ["its own validation pipeline", { validationPipelineId: RUN_ID }],
   ])("refuses a one-off run with %s", (_label, overrides) => {
@@ -285,14 +285,14 @@ describe("the responses", () => {
     validationResults: null,
   };
 
-  it("carry Preflight ruling 15's list row, and the run in full", () => {
+  it("carry the list's row, and the run in full", () => {
     expect(TestRunSummarySchema.parse(summary)).toEqual(summary);
     expect(TestRunDetailSchema.parse(detail)).toEqual(detail);
     // The list row carries no text: the detail's fields are refused there.
     expect(TestRunSummarySchema.safeParse({ ...summary, yaml: "x" }).success).toBe(false);
   });
 
-  it("carry a definition's run's breadcrumb (D14b Preflight ruling 20): the suite's and the definition's ids and names", () => {
+  it("carry a definition's run's breadcrumb: the suite's and the definition's ids and names", () => {
     const breadcrumb = { suiteId: FILE_ID, suiteName: "Smoke tests", definitionId: RUN_ID, definitionName: "Logs only" };
     expect(TestRunSummarySchema.parse({ ...summary, ...breadcrumb })).toEqual({ ...summary, ...breadcrumb });
     expect(TestRunDetailSchema.parse({ ...detail, ...breadcrumb })).toEqual({ ...detail, ...breadcrumb });
@@ -304,7 +304,7 @@ describe("the responses", () => {
     expect(TestRunSummarySchema.safeParse({ ...summary, suiteId: "not-a-uuid" }).success).toBe(false);
   });
 
-  describe("carry the run's rules and their results (D15a Preflight ruling 25)", () => {
+  describe("carry the run's rules and their results", () => {
     const RULE_ONE = "0199e000-0000-7000-8000-0000000000a1";
     const RULE_TWO = "0199e000-0000-7000-8000-0000000000a2";
     const rules = [
@@ -370,7 +370,7 @@ describe("the responses", () => {
     expect(TestRunDetailSchema.safeParse({ ...detail, ...overrides }).success).toBe(false);
   });
 
-  describe("count code points, as the tester and the table do, never UTF-16 units (D14a Ruling 39)", () => {
+  describe("count code points, as the tester and the table do, never UTF-16 units", () => {
     it("codePointLength counts a pair once and a lone surrogate once", () => {
       expect(codePointLength("")).toBe(0);
       expect(codePointLength("abc")).toBe(3);

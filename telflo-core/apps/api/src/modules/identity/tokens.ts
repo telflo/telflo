@@ -16,7 +16,7 @@ export function hashToken(token: string): string {
 /**
  * A random opaque token (32 bytes, base64url) and the hash to store. The
  * plaintext is never persisted. Email verification and session refresh
- * tokens (D2a) both use it.
+ * tokens both use it.
  */
 export function generateToken(): { token: string; tokenHash: string } {
   const token = randomBytes(TOKEN_BYTES).toString("base64url");

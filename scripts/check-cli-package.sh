@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# The CLI's package check (D27 decision 13, Preflight ruling 20): the
-# `npm pack` tarball of telflo-core/apps/cli installs and runs ALONE, with
-# no workspace beside it, and ships only what it should.
+# The CLI's package check: the `npm pack` tarball of telflo-core/apps/cli
+# installs and runs ALONE, with no workspace beside it, and ships only
+# what it should.
 #
 #   bash scripts/check-cli-package.sh [--keep <dir>] [--cache <dir>]
 #
@@ -9,9 +9,9 @@
 #    folder, with a temporary HOME, npm config and TELFLO_CLI_CONFIG_DIR:
 #    nothing reads or writes the user's own.
 # 2. The tarball holds only package.json, README.md, LICENSE, dist/** and
-#    skills/**; its manifest keeps "private": true and "Apache-2.0"; no dist/**/*.js
-#    imports anything from `@telflo/` (a workspace package isn't installed
-#    beside a tarball; Preflight ruling 3).
+#    skills/**; its manifest keeps "private": true and "Apache-2.0"; no
+#    dist/**/*.js imports anything from `@telflo/` (a workspace package isn't
+#    installed beside a tarball).
 # 3. The CLI's two runtime dependencies are put in the temporary npm cache
 #    (`npm cache add`, at the versions its package.json pins: a read of the
 #    public registry, unless --cache names a cache that already holds them),
@@ -25,7 +25,7 @@
 #   stack smoke's TELFLO_SMOKE_CLI is then <dir>/lib/node_modules/@telflo/cli/dist/index.js.
 # --cache <dir>: the npm cache to use and keep (default: a temporary one).
 #
-# Nothing is published (Q188): this script never runs npm publish, login or
+# Nothing is published: this script never runs npm publish, login or
 # any registry write.
 set -euo pipefail
 

@@ -4,8 +4,8 @@ import { OtelIcon } from "./OtelIcon.js";
 import { fullLabelFor, iconFor, iconForDistribution, shortLabelFor } from "./distribution-icons.js";
 
 /*
- * The distribution icons and labels, Contrib only (no ClickStack; D13a
- * decision 1), and the mark's own (Preflight ruling 19).
+ * The distribution icons and labels, Contrib only (no ClickStack), and the
+ * mark's own.
  */
 
 describe("iconFor", () => {
@@ -87,7 +87,7 @@ describe("iconForDistribution", () => {
   });
 });
 
-describe("OtelIcon (Preflight ruling 19)", () => {
+describe("OtelIcon", () => {
   it("is the two-tone cncf/artwork mark: its viewBox, two paths, orange then blue, and its name", () => {
     const { container } = render(<OtelIcon />);
     const svg = container.querySelector("svg")!;
@@ -105,12 +105,12 @@ describe("OtelIcon (Preflight ruling 19)", () => {
   });
 });
 
-describe("fullLabelFor (D12 Preflight ruling 18)", () => {
-  it("prefers the catalogue's label", () => {
+describe("fullLabelFor", () => {
+  it("prefers the catalog's label", () => {
     expect(fullLabelFor("otelcol-contrib", "Contrib, as the catalogue says")).toBe("Contrib, as the catalogue says");
   });
 
-  it("names Contrib in full without the catalogue", () => {
+  it("names Contrib in full without the catalog", () => {
     expect(fullLabelFor("otelcol-contrib")).toBe("OpenTelemetry Collector Contrib");
   });
 

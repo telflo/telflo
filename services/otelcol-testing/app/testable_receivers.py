@@ -5,12 +5,12 @@ chain we test instead of stripping.
 `has_container_operator` skip a pipeline, a receivers list or a receiver
 configuration that isn't of its expected shape (a mapping or a list)
 instead of raising, so a malformed text is refused or left to the
-collector rather than failing the run's child (D14a Task 4; the run checks
+collector rather than failing the run's child (the run checks
 the configuration's shape first, `app/compatibility.py`'s
 `configuration_shape_problem`).
 
-`filelog` (`file_log` from collector 0.149.0, either spelling; D14a Ruling
-49) and `syslog` both embed an operator chain. The sandbox keeps the
+`filelog` (`file_log` from collector 0.149.0, either spelling) and
+`syslog` both embed an operator chain. The sandbox keeps the
 chain but **synthesizes a fresh receiver shell from scratch** — no user
 transport/source value (`include`, `storage`, `listen_address`, `tls`, …)
 ever reaches the executed config. That makes arbitrary file read and
@@ -28,11 +28,11 @@ from enum import Enum
 from typing import Any
 
 # The receiver types the tester feeds through their own operator chain, by
-# every name they go by, each to its strategy's kind. The catalogue renamed
+# every name they go by, each to its strategy's kind. The catalog renamed
 # `filelog` to `file_log` from collector 0.149.0
 # (catalog/distributions/otelcol-contrib.json's `renamedTypes`; the old name
 # still works, deprecated), so a text may spell it either way and both take
-# the same pull strategy, synthesis and checks (D14a Ruling 49). `syslog` has
+# the same pull strategy, synthesis and checks. `syslog` has
 # no rename.
 _KIND_BY_TYPE = {
     "filelog": "filelog",

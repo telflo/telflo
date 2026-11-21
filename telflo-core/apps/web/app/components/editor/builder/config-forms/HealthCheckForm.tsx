@@ -4,11 +4,10 @@ import { InlineAlert } from "./InlineAlert.js";
 import { TLSConfigSection } from "./shared/TLSConfigSection.js";
 
 /*
- * The health check extension's form (ADR 0018), over the form's fields
- * (D9b decisions 2 and 3): each field writes its own key; the TLS section
- * is the server section (Preflight ruling 4). The collector's defaults
- * (health_check `createDefaultConfig`, contrib v0.162.0: `localhost:13133`,
- * path `/`) show while a key is unset.
+ * The health check extension's form, over the form's fields: each field
+ * writes its own key; the TLS section is the server section. The
+ * collector's defaults (health_check `createDefaultConfig`, contrib
+ * v0.162.0: `localhost:13133`, path `/`) show while a key is unset.
  *
  * The sections' counts read the text: the response bodies set, and the
  * `tls` block's keys.

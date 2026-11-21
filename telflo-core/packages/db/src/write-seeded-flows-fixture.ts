@@ -6,7 +6,7 @@ import { SEEDED_FLOWS_FIXTURE_PATH, writeSeededFlowsFixture, type FixtureSourceF
 // is reached as @telflo/db/testing's loadFlowsMigration reaches it, by a
 // dynamic import of a computed URL (a static one would bring an untyped file
 // outside `src` into the typecheck); that loader is test support, which a
-// file that isn't a test may not import (eslint.config.js, D2c Ruling 5).
+// file that isn't a test may not import (eslint.config.js).
 const url = new URL("../migrations/1700000000026_flows.js", import.meta.url).href;
 const { seededFlows } = (await import(url)) as { seededFlows: readonly FixtureSourceFlow[] };
 const text = writeSeededFlowsFixture(seededFlows);

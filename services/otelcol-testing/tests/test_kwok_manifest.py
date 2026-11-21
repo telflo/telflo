@@ -1,11 +1,10 @@
 """kwok's manifest (`kwok/binaries.json`) and its downloader
-(`scripts/download-kwok.py`), which the image's download stage runs (D14a
-spec decision 6, Preflight ruling 19): the manifest, kwokctl's
-configuration and the service agree on the version and the layout; the
-downloader takes only upstream URLs and 64-hex sha256s for amd64 and arm64,
-and copies out of etcd's archive only the one file's bytes. Unmarked: no
-network, no binary (the downloader's fetch is a fake here; the image's build
-is where the real one runs)."""
+(`scripts/download-kwok.py`), which the image's download stage runs: the
+manifest, kwokctl's configuration and the service agree on the version and
+the layout; the downloader takes only upstream URLs and 64-hex sha256s for
+amd64 and arm64, and copies out of etcd's archive only the one file's bytes.
+Unmarked: no network, no binary (the downloader's fetch is a fake here; the
+image's build is where the real one runs)."""
 
 from __future__ import annotations
 

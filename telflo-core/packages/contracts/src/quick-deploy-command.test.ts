@@ -14,7 +14,7 @@ import {
   type QuickDeployCommandParts,
 } from "./quick-deploy-command.js";
 
-// The Quick Deploy command (D17c-2 decisions 8 and 29; Preflight ruling 14).
+// The Quick Deploy command.
 //
 // `run` runs a command in a REAL shell (bash, sh, dash and zsh, those
 // present) whose PATH is a directory of fakes alone: `sudo`, `curl`,
@@ -154,7 +154,7 @@ const UNIT = (root: string, name: string) =>
     "WantedBy=multi-user.target",
   ].join("\n");
 
-/** Preflight ruling 14's lines (Rulings 32 and 33's changes in), written out for every combination; the goldens below are literal. */
+/** The command's lines, written out for every combination; the goldens below are literal. */
 function expectedLines(url: string, root: string, name: string, systemd: boolean, bearer = BEARER): string {
   const proto = url.startsWith("https://") ? " --proto '=https'" : "";
   const head = [
@@ -217,7 +217,7 @@ const COMBINATIONS = [false, true].flatMap((systemd) =>
   ["", "edge one.2_b-c"].flatMap((name) => [HTTPS_URL, HTTP_URL].map((url) => ({ systemd, name, url }))),
 );
 
-describe("quickDeployCommands: the lines (Preflight ruling 14)", () => {
+describe("quickDeployCommands: the lines", () => {
   it("finds bash and sh to run them in", () => {
     expect(SHELLS.some((shell) => shell.endsWith("/bash"))).toBe(true);
     expect(SHELLS.some((shell) => shell.endsWith("/sh"))).toBe(true);
@@ -246,7 +246,7 @@ describe("quickDeployCommands: the lines (Preflight ruling 14)", () => {
     expect(command.match(/\)/g)).toHaveLength(1);
     // csh and tcsh read a paste line by line and run each line that parses: no line of the command may. Every
     // line, the unit's text (the heredoc's body and `UNIT`) aside, is the `(`, ends in a dangling ` &&`, or is
-    // the last, its ` )` unbalanced there; so none is a command csh runs (Ruling 51).
+    // the last, its ` )` unbalanced there; so none is a command csh runs.
     const body = systemd ? [lines.indexOf(`sudo install -m 644 /dev/stdin ${QUICK_DEPLOY_UNIT_PATH} <<'UNIT' &&`) + 1, lines.indexOf("UNIT")] : [0, -1];
     expect(systemd ? body[0]! > 0 && body[1]! > body[0]! : true).toBe(true);
     lines.forEach((line, index) => {
@@ -255,7 +255,7 @@ describe("quickDeployCommands: the lines (Preflight ruling 14)", () => {
       const closes = index === lines.length - 1 && line.endsWith(" )");
       expect(opens || closes || line.endsWith(" &&"), `line ${index}`).toBe(true);
     });
-    // curl's -q is honoured only as its first argument; --retry 3 retries only transient failures (never a 410 or 404).
+    // curl's -q is honored only as its first argument; --retry 3 retries only transient failures (never a 410 or 404).
     expect(command).toContain("| curl -q -g -fsS --retry 3");
   });
 
@@ -415,7 +415,7 @@ describe("quickDeployCommands' backstops (throw: a broken contract, never writte
   });
 });
 
-describe("quickDeployPreview: neither the bearer nor the link's secret (decision 29)", () => {
+describe("quickDeployPreview: neither the bearer nor the link's secret", () => {
   it.each(COMBINATIONS)("is the command with both masked (systemd $systemd, name $name, $url)", ({ systemd, name, url }) => {
     const preview = quickDeployPreview({ url, rootPath: "/etc/otelcol", displayName: name, systemd });
     const maskedUrl = `${url.slice(0, url.length - SECRET.length)}${QUICK_DEPLOY_MASKED_SECRET}`;

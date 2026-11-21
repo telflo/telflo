@@ -26,7 +26,7 @@ import { TESTING_ERROR_CODES } from "./test-runs.js";
 import { VALIDATION_RULES_ERROR_CODES } from "./validation-rules.js";
 import { VARIABLE_ERROR_CODES } from "./variables.js";
 
-// The account's security routes (D21 decisions 21 and 35-40).
+// The account's security routes.
 
 const session = {
   id: "0192f1a8-7a3c-7c51-9b7e-2f4d6c8e0a12",
@@ -122,7 +122,7 @@ describe("SignInMethodsResponseSchema", () => {
       providers: [{ id: "google", name: "Google" }],
     };
     expect(SignInMethodsResponseSchema.safeParse(reply).success).toBe(true);
-    // Whether the provider re-links by email (Ruling 92): required, a boolean.
+    // Whether the provider re-links by email: required, a boolean.
     const { relinksByEmail: _omitted, ...withoutRelinks } = reply.identities[0]!;
     expect(SignInMethodsResponseSchema.safeParse({ ...reply, identities: [withoutRelinks] }).success).toBe(false);
     expect(
@@ -180,7 +180,7 @@ describe("UnlinkIdentityRequestSchema", () => {
 });
 
 describe("ACCOUNT_ERROR_CODES", () => {
-  it("ACCOUNT_ERROR_CODES is decision 21's eight codes", () => {
+  it("ACCOUNT_ERROR_CODES is the account routes' eight codes", () => {
     expect(ACCOUNT_ERROR_CODES).toEqual([
       "current_password_incorrect",
       "password_not_set",

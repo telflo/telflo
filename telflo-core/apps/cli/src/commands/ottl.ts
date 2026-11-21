@@ -1,9 +1,10 @@
 /*
- * `telflo ottl lint [file|-]` (D27 decision 26): OTTL parse-checked with the real grammar (route 16), a
- * collector configuration's every expression, or raw expressions with
- * `--context`. Exit 0 when everything parses, 4 when something doesn't (or
- * the YAML itself doesn't parse: its errors are the output), 2 for a usage
- * error (the API's 400 `invalid_request` too), 1 when the evaluator couldn't lint (503: nothing checked).
+ * `telflo ottl lint [file|-]`: OTTL parse-checked with the real grammar (route
+ * 16), a collector configuration's every expression, or raw expressions with
+ * `--context`. Exit 0 when everything parses, 4 when something doesn't (or the
+ * YAML itself doesn't parse: its errors are the output), 2 for a usage error
+ * (the API's 400 `invalid_request` too), 1 when the evaluator couldn't lint
+ * (503: nothing checked).
  */
 
 import { Option, type Command } from "commander";
@@ -36,7 +37,7 @@ export async function ottlLint(file: string | undefined, options: OttlLintOption
     if (error instanceof ApiError && error.status === 503) {
       throw rewordedError(error, LINT_UNAVAILABLE_MESSAGE);
     }
-    // A request the API refused as such (more than 200 expressions in a YAML, say): a usage error, as validate's (Ruling 239).
+    // A request the API refused as such (more than 200 expressions in a YAML, say): a usage error, as validate's.
     if (error instanceof ApiError && error.status === 400 && error.code === "invalid_request") {
       throw new ExitError(error.message, EXIT.USAGE, error.code, error.status);
     }

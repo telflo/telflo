@@ -6,19 +6,18 @@ import { claimPublicSurface, methodsOf } from "./route-guard.js";
 import { registerAnonymousValidateRoute, type AnonymousValidateDependencies } from "./validate/anonymous.js";
 
 /*
- * The public surface's open routes (D25 decisions 16 and 49; Preflight
- * ruling 3): a sibling plugin with the `/api/public/v1` prefix and none of
- * the public plugin's hooks, so no token, no organization and no per-token
- * count. GET /health, GET /openapi.json, the document, and
- * the reference page (decision 49: GET /docs, its 301, and GET /docs/*,
- * the page and its assets; docs/reference-page.ts), and D27's POST
- * /validate/anonymous (decision 23; validate/anonymous.ts), whose
- * dependencies the plugin is given. Only the routes on the
- * root guard's allowlist (route-guard.ts' OPEN_PUBLIC_ROUTES) may be
- * registered here: anything else refuses the server's start.
+ * The public surface's open routes: a sibling plugin with the
+ * `/api/public/v1` prefix and none of the public plugin's hooks, so no
+ * token, no organization and no per-token count. GET /health, GET
+ * /openapi.json, the document, and the reference page (GET /docs, its 301,
+ * and GET /docs/*, the page and its assets; docs/reference-page.ts), and
+ * POST /validate/anonymous (validate/anonymous.ts), whose dependencies the
+ * plugin is given. Only the routes on the root guard's allowlist
+ * (route-guard.ts' OPEN_PUBLIC_ROUTES) may be registered here: anything
+ * else refuses the server's start.
  */
 
-/** The document changes only with a deploy: caches may keep it five minutes (decision 49). */
+/** The document changes only with a deploy: caches may keep it five minutes. */
 const DOCUMENT_CACHE_CONTROL = "public, max-age=300";
 
 export function createOpenRoutesPlugin(
@@ -26,7 +25,7 @@ export function createOpenRoutesPlugin(
   deps: AnonymousValidateDependencies,
 ): FastifyPluginAsync {
   return async (open) => {
-    // First: only OPEN_PUBLIC_ROUTES may be registered here, and only they are verified (route-guard.ts, Rulings 163 and 164).
+    // First: only OPEN_PUBLIC_ROUTES may be registered here, and only they are verified (route-guard.ts).
     claimPublicSurface(open, "open");
     open.addHook("onRoute", (route) => {
       for (const method of methodsOf(route)) record({ method, url: route.url, access: "none" });
@@ -46,7 +45,7 @@ export function createOpenRoutesPlugin(
     open.get("/docs", redirectToReferencePage);
     open.get("/docs/*", serveReferencePageFile(pageFiles));
 
-    // D27 decision 23: a text checked for no one, under its own limits (validate/anonymous.ts).
+    // POST /validate/anonymous: a text checked for no one, under its own limits (validate/anonymous.ts).
     registerAnonymousValidateRoute(open, deps);
   };
 }

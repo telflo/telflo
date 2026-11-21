@@ -19,34 +19,32 @@ import {
 } from "../database/context.js";
 
 /*
- * The product-admin functions of migrations 1700000000041, 042 (the
- * delete) and 044 (the organization-creation switch, D36-1 decision 51)
- * from the API's real database contexts (D29 decisions 18, 21 and 44;
- * Preflight rulings 1 and 3; Rulings 257, 258 and 260). Each is
- * SECURITY DEFINER and reaches every organization's people and the
- * feedback, so each refuses with the gate's 42501 (its dedicated hint,
- * which the SystemRepository alone answers 403), and changes nothing, in
- * any context but withProductAdminContext's for a live human product
- * admin. One test per condition (Ruling 260), every function under it: no
+ * The product-admin functions of migrations 1700000000041, 042 (the delete)
+ * and 044 (the organization-creation switch) from the API's real database
+ * contexts. Each is SECURITY DEFINER and reaches every organization's
+ * people and the feedback, so each refuses with the gate's 42501 (its
+ * dedicated hint, which the SystemRepository alone answers 403), and
+ * changes nothing, in any context but withProductAdminContext's for a live
+ * human product admin. One test per condition, every function under it: no
  * context, a member's (a product admin's own), a user's, the dispatcher's,
  * an organization or the dispatcher's setting beside the product-admin
  * setting, that setting other than on, and a product-admin context whose
  * user isn't one (the flag false, a deleted admin, a service account
  * holding the flag, an unknown, empty, malformed or upper-case id). A flag
- * cleared mid-session refuses the next call. The
- * API's role holds no SELECT on either table (INSERT only on user_feedback,
- * nothing on user_deletion_records).
+ * cleared mid-session refuses the next call. The API's role holds no SELECT
+ * on either table (INSERT only on user_feedback, nothing on
+ * user_deletion_records).
  *
- * Every function that writes re-reads the caller under a row lock after
- * its other locks (Rulings 257 and 258): a removal of the caller committed
- * while the write waited wins, and the write answers `forbidden` and
- * changes nothing. Each is shown with two connections: the removal holds
- * its locks, the write is seen waiting on a lock, then the removal commits.
+ * Every function that writes re-reads the caller under a row lock after its
+ * other locks: a removal of the caller committed while the write waited
+ * wins, and the write answers `forbidden` and changes nothing. Each is
+ * shown with two connections: the removal holds its locks, the write is
+ * seen waiting on a lock, then the removal commits.
  *
  * The functions' own answers (the list's search and blocks, grant and
- * revoke's outcomes, feedback's) are the tasks' integration suites'; the
- * delete's own answers are below (Task 2's). Seeded
- * addresses are @example.com fixtures; nothing here prints one.
+ * revoke's outcomes, feedback's) are tested in their own integration suites;
+ * the delete's own answers are below. Seeded addresses are @example.com
+ * fixtures; nothing here prints one.
  */
 
 describe("the product-admin functions from the API's database contexts", () => {
@@ -105,7 +103,7 @@ describe("the product-admin functions from the API's database contexts", () => {
     ["product_admin_count_pending_feedback", sql`select product_admin_count_pending_feedback()`],
     ["product_admin_handle_feedback", sql`select * from product_admin_handle_feedback(${seeded.feedback.id}::uuid, 'dismissed', now())`],
     ["product_admin_delete_account", sql`select * from product_admin_delete_account(${seeded.cara.userId}::uuid, now())`],
-    // Migration 044's (D36-1 decision 51): the switch turned on.
+    // Migration 044's: the switch turned on.
     ["product_admin_set_organization_creation", sql`select * from product_admin_set_organization_creation('product_admins')`],
   ];
 
@@ -120,7 +118,7 @@ describe("the product-admin functions from the API's database contexts", () => {
     siteSettings: await ownerDb.selectFrom("site_settings").selectAll().execute(),
   });
 
-  /** The gate's own refusal: 42501 with its dedicated hint (Ruling 260), which the SystemRepository alone answers 403. */
+  /** The gate's own refusal: 42501 with its dedicated hint, which the SystemRepository alone answers 403. */
   const GATE_REFUSAL = "42501 telflo_product_admin_gate";
 
   /**
@@ -169,7 +167,7 @@ describe("the product-admin functions from the API's database contexts", () => {
         return work(transaction);
       });
 
-  /** Each condition the gate refuses (decision 44's first bullet): one test each, every function under it. */
+  /** Each condition the gate refuses: one test each, every function under it. */
   const refusedConditions: Array<[string, (seeded: Seeded) => Opener]> = [
     ["no context", () => (work) => db.transaction().execute(work)],
     ["a member's context: a product admin acting in their group", (seeded) => (work) => withDatabaseContext(db, { userId: seeded.ana.userId, organizationId: seeded.group }, work)],
@@ -229,7 +227,7 @@ describe("the product-admin functions from the API's database contexts", () => {
     expect(await everything()).toEqual(before);
   });
 
-  it("refuses the API's role a select of either table, any change of user_feedback but an insert without RETURNING, and any write of user_deletion_records (decision 21, Preflight rulings 3 and 8)", async () => {
+  it("refuses the API's role a select of either table, any change of user_feedback but an insert without RETURNING, and any write of user_deletion_records", async () => {
     const seeded = await seed();
     await ownerDb
       .insertInto("user_deletion_records")
@@ -254,7 +252,7 @@ describe("the product-admin functions from the API's database contexts", () => {
       ["update user_deletion_records", sql`update user_deletion_records set deleted_at = now()`],
       ["delete user_deletion_records", sql`delete from user_deletion_records`],
       ["the gate itself", sql`select assert_product_admin()`],
-      // Migration 044's one row (D36-1 decision 51): read, never written, but through the function.
+      // Migration 044's one row: read, never written, but through the function.
       ["update site_settings", sql`update site_settings set organization_creation = 'product_admins'`],
       ["insert site_settings", sql`insert into site_settings (id, organization_creation) values (true, 'product_admins')`],
       ["delete site_settings", sql`delete from site_settings`],
@@ -277,7 +275,7 @@ describe("the product-admin functions from the API's database contexts", () => {
     expect((await ownerDb.selectFrom("user_deletion_records").select("user_id").execute()).length).toBe(1);
   });
 
-  describe("the writes' caller re-check under a row lock (Rulings 257 and 258)", () => {
+  describe("the writes' caller re-check under a row lock", () => {
     /** Resolves once some connection of the API's role waits on a lock: the second connection is queued behind the first. */
     const waitingOnALock = async () => {
       for (let attempt = 0; attempt < 500; attempt += 1) {
@@ -350,7 +348,7 @@ describe("the product-admin functions from the API's database contexts", () => {
       expect(cara.is_product_admin).toBe(false);
     });
 
-    it("product_admin_set_organization_creation: a change by an admin removed while it waited on the caller's lock answers forbidden and changes nothing (D36-1 decision 51)", async () => {
+    it("product_admin_set_organization_creation: a change by an admin removed while it waited on the caller's lock answers forbidden and changes nothing", async () => {
       const seeded = await seed();
       const answer = await againstAnaRemoved(seeded, async (transaction) => {
         const { rows } = await sql<{ outcome: string; previous: string | null }>`
@@ -397,7 +395,7 @@ describe("the product-admin functions from the API's database contexts", () => {
       });
     });
 
-    it("product_admin_handle_feedback: an acknowledge racing the sender's delete waits on the sender's lock, then answers author_deleted and leaves the item pending (Ruling 271)", async () => {
+    it("product_admin_handle_feedback: an acknowledge racing the sender's delete waits on the sender's lock, then answers author_deleted and leaves the item pending", async () => {
       const seeded = await seed();
       let commit!: () => void;
       const held = new Promise<void>((resolve) => {
@@ -433,9 +431,9 @@ describe("the product-admin functions from the API's database contexts", () => {
       expect({ handledAt: item.handled_at, outcome: item.outcome }).toEqual({ handledAt: null, outcome: null });
     });
   });
-  // Migration 1700000000042's delete (D29 Task 2, decisions 18, 21 and 29; Ruling 257): refused, and
-  // changing nothing, wherever the other functions are refused. Kept apart from `calls`, which the first
-  // test runs to the end in a product admin's context: a delete there would change the people the others read.
+  // Migration 1700000000042's delete: refused, and changing nothing, wherever the other functions are
+  // refused. Kept apart from `calls`, which the first test runs to the end in a product admin's context:
+  // a delete there would change the people the others read.
   describe("product_admin_delete_account (migration 1700000000042)", () => {
     const deleteCara = (seeded: Seeded) => sql`select * from product_admin_delete_account(${seeded.cara.userId}::uuid, now())`;
     /** Everything the delete would change, as the owner reads it. */

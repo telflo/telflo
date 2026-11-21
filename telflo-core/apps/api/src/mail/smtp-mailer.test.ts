@@ -50,14 +50,14 @@ describe("createSmtpMailer", () => {
       }
     });
 
-    it("doesn't apply to starttls or implicit: TLS is the protection (D36-1 decision 38)", () => {
+    it("doesn't apply to starttls or implicit: TLS is the protection", () => {
       for (const tls of ["starttls", "implicit"] as const) {
         expect(() => createSmtpMailer({ ...base, host: "smtp.example.com", port: 587, tls })).not.toThrow();
       }
     });
   });
 
-  describe("a login with tls: none (D36 Ruling 346)", () => {
+  describe("a login with tls: none", () => {
     const login = { username: `cnry-user-${randomUUID()}`, password: `cnry-password-${randomUUID()}` };
 
     it("is refused to a host other than loopback, even with allowInsecureTransport, naming neither value", () => {
@@ -82,7 +82,7 @@ describe("createSmtpMailer", () => {
     });
   });
 
-  describe("the transport (D36-1 decision 38)", () => {
+  describe("the transport", () => {
     it("maps each TLS mode to nodemailer's options", () => {
       const expected = {
         starttls: { secure: false, requireTLS: true },

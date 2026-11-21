@@ -55,9 +55,7 @@ import type { TestRunQueueSignal } from "./test-runs-dependencies.js";
 import type { TestRunsTransaction, WithTestRunsTransaction } from "./transaction.js";
 
 /*
- * The runs API (D14a decisions 1, 8, 11, 12, 14, 18 to 20, 23, 24 and 28;
- * Preflight rulings 7, 11 to 13 and 15; Ruling 24; D14b decisions 6, 7 and
- * 11, Preflight rulings 10, 21 and 22).
+ * The runs API.
  *
  * Queuing a run, in this order:
  *   1. the session, the terms (the routes' preHandlers), the active
@@ -66,48 +64,43 @@ import type { TestRunsTransaction, WithTestRunsTransaction } from "./transaction
  *      (another member's draft and a deleted configuration are 404);
  *   2. the pin, with the configuration's distribution (findVersionState):
  *      unknown is 400 `collector_version_unknown`, deprecated 400
- *      `collector_version_retired`, before any limit (Preflight ruling 13);
+ *      `collector_version_retired`, before any limit;
  *   3. the source, read as the caller: their own file in this organization
- *      (`test_file_not_found` otherwise, admins included); a run they can
- *      see, re-read through row-level security (Ruling 24), whose input is
- *      still on disk (`test_run_not_found` otherwise), its breadcrumb
- *      copied when it is a run of the path's configuration and version (D14b
- *      Ruling 34); a live template (`test_template_not_found` otherwise); or a
- *      definition of the path's version they can see, read through
- *      row-level security with its suite's name (`test_definition_not_found`
- *      otherwise), which gives the run its input, pipeline, signal,
- *      duration and breadcrumb (D14b Preflight ruling 10); and whether the
+ *      (`test_file_not_found` otherwise, admins included); a run they can see,
+ *      re-read through row-level security, whose input is still on disk
+ *      (`test_run_not_found` otherwise), its breadcrumb copied when it is a
+ *      run of the path's configuration and version; a live template
+ *      (`test_template_not_found` otherwise); or a definition of the path's
+ *      version they can see, read through row-level security with its suite's
+ *      name (`test_definition_not_found` otherwise), which gives the run its
+ *      input, pipeline, signal, duration and breadcrumb; and whether the
  *      version's validation pipeline for that pipeline and signal has rules
- *      the caller can see (D15a Preflight ruling 21);
+ *      the caller can see;
  *   4. the tester's down state, from the row every API process shares
  *      (readOtelcolTestingDownSince): 503 `testing_unavailable` at once,
- *      nothing queued (decision 12); then, for a run that would carry
- *      rules, the OTTL evaluator's (isOttlEvaluatorKnownDown): 503
- *      `rules_unavailable` (D15a decision 15). A run without rules queues
- *      as before;
- *   5. 20 runs a minute per person, per organization (D14b Preflight
- *      ruling 22): 429 `test_run_rate_limited`. A run from a definition
- *      isn't counted (D14b decision 7): the source's kind decides it, as
- *      step 3's read set it, never a field of the request. An admission
- *      refused before the input is copied (a full queue, a text too long,
- *      an input that isn't there) is refunded; one whose copy began is
- *      spent, whatever follows (Rulings 39 and 42);
- *   6. a place among the person's TEST_RUN_COPIES_IN_FLIGHT_PER_USER
- *      requests in flight in this organization, waiting for one first come
- *      first served (D14b Ruling 33, copy-places.ts): beyond
- *      TEST_RUN_COPIES_WAITING_PER_USER waiting, 429 `test_run_rate_limited`
- *      with its own words (D14b Ruling 37).
- *      Held until the request ends, whatever it ends in; then at most 50
- *      waiting for the person, in this organization, counted once the place
- *      is held (test_runs_waiting_for_context_user, D14b Preflight ruling
- *      21): 429 `test_run_queue_full`, a definition's run included;
- *   7. the organization's variables (D20 decision 13; Preflight ruling 28):
- *      for a text with a live `${org:NAME}` only, its values read from the
- *      opamp-server to refuse early, unreadable 503
- *      `variables_unavailable`, too long once filled in (counted, never
- *      built) 400 `filled_in_too_long`. The text is stored as written:
- *      the dispatcher fills the values in again, as they are then, on the
- *      way to the tester (organization-variables.ts);
+ *      nothing queued; then, for a run that would carry rules, the OTTL
+ *      evaluator's (isOttlEvaluatorKnownDown): 503 `rules_unavailable`. A run
+ *      without rules queues as before;
+ *   5. 20 runs a minute per person, per organization: 429
+ *      `test_run_rate_limited`. A run from a definition isn't counted: the
+ *      source's kind decides it, as step 3's read set it, never a field of the
+ *      request. An admission refused before the input is copied (a full queue,
+ *      a text too long, an input that isn't there) is refunded; one whose copy
+ *      began is spent, whatever follows;
+ *   6. a place among the person's TEST_RUN_COPIES_IN_FLIGHT_PER_USER requests
+ *      in flight in this organization, waiting for one first come first served
+ *      (copy-places.ts): beyond TEST_RUN_COPIES_WAITING_PER_USER waiting, 429
+ *      `test_run_rate_limited` with its own words. Held until the request
+ *      ends, whatever it ends in; then at most 50 waiting for the person, in
+ *      this organization, counted once the place is held
+ *      (test_runs_waiting_for_context_user): 429 `test_run_queue_full`, a
+ *      definition's run included;
+ *   7. the organization's variables: for a text with a live `${org:NAME}`
+ *      only, its values read from the opamp-server to refuse early,
+ *      unreadable 503 `variables_unavailable`, too long once filled in
+ *      (counted, never built) 400 `filled_in_too_long`. The text is stored
+ *      as written: the dispatcher fills the values in again, as they are
+ *      then, on the way to the tester (organization-variables.ts);
  *   8. the run's id (uuidv7), and the input copied into
  *      organizations/<org>/test-runs/<run>/input; a source whose bytes are
  *      gone is its own 404;
@@ -117,51 +110,48 @@ import type { TestRunsTransaction, WithTestRunsTransaction } from "./transaction
  *      breadcrumb, and the audit row `test_run.queued`, which names ids
  *      only. The definition or template isn't re-read: the copy is made,
  *      and the snapshot outlives them. The row's insert takes the rules'
- *      snapshot itself (the run repository's create, D15a decision 14):
- *      the rules as they are then, through row-level security, never from
- *      the request (its schemas are strict). A re-run takes the current
- *      rules, as it takes the current text;
+ *      snapshot itself (the run repository's create): the rules as they are
+ *      then, through row-level security, never from the request (its
+ *      schemas are strict). A re-run takes the current rules, as it takes
+ *      the current text;
  *  10. on any failure after the copy began, the run's files are removed
  *      (each of its three, as the FileStore removes by key);
  *  11. the dispatcher woken.
  *
  * A run's text, its input's name, a suite's and a definition's names and
- * the bytes reach no log line and no audit row (decision 23, ADR 0024).
+ * the bytes reach no log line and no audit row.
  *
- * D25's public API (decisions 39 to 44; Preflight ruling 12) shares steps 4
- * to 11 (`queuePrepared`):
- *   * a version's run through `queue` with `inlineRules` (decision 42): the
- *     request's rules, checked by the public route as Save checks one and
- *     given fresh ids, are the run's snapshot instead of the database's,
- *     and decide whether it carries rules; `[]` is a run with none. Only
- *     the public route passes it; every other run keeps the database's
- *     snapshot (D15a decision 14);
- *   * a YAML run through `queueFromYaml` (decision 39): no configuration,
- *     so steps 1 and 2 are the membership and the pin (the distribution
- *     and version named, else the catalogue's defaults: 400
- *     `collector_distribution_unknown`, `collector_version_unknown`,
- *     `collector_version_retired`), step 3 the caller's own file (the
- *     sample the public route stored), and its rules always inline. Its
- *     audit row's metadata is `{ source: "yaml", inputFileId }`. It is its
- *     creator's alone (migration 1700000000040's policies), and no run
- *     list shows it;
+ * The public API shares steps 4 to 11 (`queuePrepared`):
+ *   * a version's run through `queue` with `inlineRules`: the request's
+ *     rules, checked by the public route as Save checks one and given fresh
+ *     ids, are the run's snapshot instead of the database's, and decide
+ *     whether it carries rules; `[]` is a run with none. Only the public
+ *     route passes it; every other run keeps the database's snapshot;
+ *   * a YAML run through `queueFromYaml`: no configuration, so steps 1 and 2
+ *     are the membership and the pin (the distribution and version named,
+ *     else the catalog's defaults: 400 `collector_distribution_unknown`,
+ *     `collector_version_unknown`, `collector_version_retired`), step 3 the
+ *     caller's own file (the sample the public route stored), and its rules
+ *     always inline. Its audit row's metadata is
+ *     `{ source: "yaml", inputFileId }`. It is its creator's alone (migration
+ *     1700000000040's policies), and no run list shows it;
  *   * `find` and `openOutput` read a run by its id alone: a version's run
  *     the caller can see, or their own YAML run (404 `test_run_not_found`
  *     otherwise), and its output (404 `test_run_output_not_found` before
  *     there is one).
  *
- * The public route takes step 5's minute itself (D25 Ruling 187), after
- * `precheckQueue` and before it spends a rule check or an upload, and hands
- * the admission to `queue` (`options.admission`) or `queueFromYaml`, which
- * don't admit again. From then on the service owns it: any refusal before
- * the copy begins (steps 1 to 4 included) gives it back, as step 5's own
- * admission is.
+ * The public route takes step 5's minute itself, after `precheckQueue` and
+ * before it spends a rule check or an upload, and hands the admission to
+ * `queue` (`options.admission`) or `queueFromYaml`, which don't admit
+ * again. From then on the service owns it: any refusal before the copy
+ * begins (steps 1 to 4 included) gives it back, as step 5's own admission
+ * is.
  */
 
-/** An admission that counts nothing: a definition's run's (D14b decision 7). Its refund is a no-op. */
+/** An admission that counts nothing: a definition's run's. Its refund is a no-op. */
 const NOT_COUNTED = { isAdmitted: true, refund: () => undefined } as const;
 
-/** Step 5's minute, admitted by the public route before it spent anything (D25 Ruling 187). Refunding twice gives back one. */
+/** Step 5's minute, admitted by the public route before it spent anything. Refunding twice gives back one. */
 export interface RunAdmission {
   isAdmitted: true;
   refund: () => void;
@@ -214,26 +204,25 @@ interface PreparedRun {
   /** Both null for a YAML run. */
   configurationId: string | null;
   versionId: string | null;
-  /** The public route's rules (D25 decision 42); undefined for the database's snapshot. */
+  /** The public route's rules; undefined for the database's snapshot. */
   inlineRules: readonly ValidationRuleSnapshot[] | undefined;
   /** The database's snapshot must hold a rule (QueueTestRunOptions.requireSavedRules). */
   requireSavedRules: boolean;
-  /** The public route's minute (Ruling 187): step 5 takes it instead of admitting one. Undefined: step 5 admits. */
+  /** The public route's minute: step 5 takes it instead of admitting one. Undefined: step 5 admits. */
   admission: RunAdmission | undefined;
   /** Step 9's re-check, first in its transaction: the membership under the organization's lock, and what step 1 and 2 read. */
   recheck: (transaction: TestRunsTransaction) => Promise<void>;
-  /** The audit row's metadata: ids only (decision 23). */
+  /** The audit row's metadata: ids only. */
   auditMetadata: Record<string, string>;
 }
 
 /**
- * A YAML run's pin (D25 decisions 39 and 40), as `validateText` reads one
- * (Ruling 168): a named distribution must be the catalogue's (400
- * `collector_distribution_unknown`), whatever its versions offer; the
- * version named is taken as it is, and a default is needed only when it is
- * left out (the catalogue's default distribution's, or the named one's: 400
- * `collector_distribution_unknown` when it has none). Whether the version
- * is offered is assertPinOffered's.
+ * A YAML run's pin, as `validateText` reads one: a named distribution must be
+ * the catalog's (400 `collector_distribution_unknown`), whatever its
+ * versions offer; the version named is taken as it is, and a default is needed
+ * only when it is left out (the catalog's default distribution's, or the
+ * named one's: 400 `collector_distribution_unknown` when it has none). Whether
+ * the version is offered is assertPinOffered's.
  */
 async function yamlRunPin(
   transaction: TestRunsTransaction,
@@ -277,11 +266,11 @@ export interface TestRunServiceDependencies {
   fileStore: IFileStore;
   /** The person's 20 a minute in an organization (RateLimiters' testRunsPerUser). */
   limiter: PerUserLimiter;
-  /** The person's queue requests in flight in an organization (D14b Ruling 33). */
+  /** The person's queue requests in flight in an organization. */
   copyPlaces: CopyPlaces;
   /** When the tester went down, as the shared row has it; null while it is up (readOtelcolTestingDownSince). */
   readDownSince: () => Promise<Date | null>;
-  /** Whether the OTTL evaluator is known down, as the shared row has it (isOttlEvaluatorKnownDown, D15a decision 15). */
+  /** Whether the OTTL evaluator is known down, as the shared row has it (isOttlEvaluatorKnownDown). */
   isRulesEvaluatorDown: () => Promise<boolean>;
   organizationVariables: IOrganizationVariables;
   queued: TestRunQueueSignal;
@@ -300,35 +289,35 @@ export interface OpenedTestRunFile {
   stream: Readable;
 }
 
-/** A version's run's options: only the public route passes any (D25 decision 42). */
+/** A version's run's options: only the public route passes any. */
 export interface QueueTestRunOptions {
   /**
    * The run's rules, checked as Save checks one and given fresh ids, in
    * their order: its snapshot instead of the database's, `[]` for a run
-   * with none. Left out, the database's (D15a decision 14).
+   * with none. Left out, the database's.
    */
   inlineRules?: readonly ValidationRuleSnapshot[];
   /**
-   * The public route's `useSavedRules` (D25 Ruling 182): the run must carry
-   * the database's rules. None at step 3 is 422 `configuration_invalid`
-   * (noSavedRules) before anything is copied; a snapshot found empty by
-   * step 9's insert (the rules deleted since) is the same refusal, the
-   * transaction rolled back, so no run is stored that checks nothing.
+   * The public route's `useSavedRules`: the run must carry the database's
+   * rules. None at step 3 is 422 `configuration_invalid` (noSavedRules)
+   * before anything is copied; a snapshot found empty by step 9's insert (the
+   * rules deleted since) is the same refusal, the transaction rolled back, so
+   * no run is stored that checks nothing.
    */
   requireSavedRules?: true;
   /**
-   * The public route's minute (D25 Ruling 187), admitted before it spent a
-   * rule check or an upload: step 5 takes it and admits nothing more, and
-   * any refusal before the copy gives it back.
+   * The public route's minute, admitted before it spent a rule check or
+   * an upload: step 5 takes it and admits nothing more, and any refusal
+   * before the copy gives it back.
    */
   admission?: RunAdmission;
 }
 
-/** The public API's YAML run (D25 decisions 39 and 40), as its route has checked it. */
+/** The public API's YAML run, as its route has checked it. */
 export interface QueueYamlTestRunRequest {
   /** The text, as written (a run's text's limits). Never logged. */
   yaml: string;
-  /** Left out, the catalogue's default distribution. */
+  /** Left out, the catalog's default distribution. */
   distribution?: string | undefined;
   /** Left out, the distribution's default version. */
   collectorVersion?: string | undefined;
@@ -339,7 +328,7 @@ export interface QueueYamlTestRunRequest {
   durationSeconds: number;
   /** The rules, checked, with fresh ids, in their order; `[]` for none. */
   inlineRules: readonly ValidationRuleSnapshot[];
-  /** The route's minute (Ruling 187), as `QueueTestRunOptions.admission`: never admitted again. */
+  /** The route's minute, as `QueueTestRunOptions.admission`: never admitted again. */
   admission: RunAdmission;
 }
 
@@ -364,25 +353,24 @@ export interface ITestRunService {
     options?: QueueTestRunOptions,
   ): Promise<TestRunWithPlace>;
   /**
-   * The public route's cheap refusals (D25 Ruling 178), before it stores a
-   * sample or spends a rule check, all re-checked when the run is queued:
-   * the membership; for `savedRulesOf`, the version as the caller sees it
-   * and its saved rules for that pipeline and signal (422
-   * `configuration_invalid` in fixed words when it has none); the pin as
-   * a YAML run reads one (`yamlRunPin`, then unknown 400
-   * `collector_version_unknown`, retired 400 `collector_version_retired`);
-   * the person's waiting runs in this organization (429
-   * `test_run_queue_full` at TEST_RUNS_WAITING_MAXIMUM_PER_USER, Ruling
-   * 187); the tester's shared down state (503 `testing_unavailable`); and,
-   * for a run with rules, the evaluator's (503 `rules_unavailable`).
+   * The public route's cheap refusals, before it stores a sample or spends a
+   * rule check, all re-checked when the run is queued: the membership; for
+   * `savedRulesOf`, the version as the caller sees it and its saved rules for
+   * that pipeline and signal (422 `configuration_invalid` in fixed words when
+   * it has none); the pin as a YAML run reads one (`yamlRunPin`, then unknown
+   * 400 `collector_version_unknown`, retired 400 `collector_version_retired`);
+   * the person's waiting runs in this organization (429 `test_run_queue_full`
+   * at TEST_RUNS_WAITING_MAXIMUM_PER_USER); the tester's shared down state
+   * (503 `testing_unavailable`); and, for a run with rules, the evaluator's
+   * (503 `rules_unavailable`).
    */
   precheckQueue(actor: Actor, organizationId: string, check: QueuePrecheck): Promise<void>;
-  /** Queues a YAML run (D25 decision 39): steps 1 to 3 its own, then the queue's 4 to 11. */
+  /** Queues a YAML run: steps 1 to 3 its own, then the queue's 4 to 11. */
   queueFromYaml(actor: Actor, organizationId: string, request: QueueYamlTestRunRequest): Promise<YamlTestRun>;
   /**
-   * A run by its id alone (D25 decision 43): a version's run the caller can
-   * see (their own draft's, or a published configuration's), or their own
-   * YAML run; 404 `test_run_not_found` otherwise.
+   * A run by its id alone: a version's run the caller can see (their own
+   * draft's, or a published configuration's), or their own YAML run; 404
+   * `test_run_not_found` otherwise.
    */
   find(actor: Actor, organizationId: string, runId: string): Promise<AnyTestRun>;
   /**
@@ -416,9 +404,9 @@ export interface ITestRunService {
     file: TestRunFile,
   ): Promise<OpenedTestRunFile>;
   /**
-   * The first TEST_FILE_HEAD_MAXIMUM_BYTES of a visible run's input (D14a
-   * Ruling 46), for the fixture-shape check before a re-run: the same 404s
-   * as openFile's. The caller must consume or destroy the stream.
+   * The first TEST_FILE_HEAD_MAXIMUM_BYTES of a visible run's input, for the
+   * fixture-shape check before a re-run: the same 404s as openFile's. The
+   * caller must consume or destroy the stream.
    */
   openInputHead(
     actor: Actor,
@@ -464,7 +452,7 @@ async function visibleVersion(
   return { configuration, version };
 }
 
-/** The pin's refusals (Preflight ruling 13): the distribution is always the configuration's. */
+/** The pin's refusals: the distribution is always the configuration's. */
 async function assertPinOffered(
   transaction: TestRunsTransaction,
   distribution: string,
@@ -504,48 +492,45 @@ export function createTestRunService(deps: TestRunServiceDependencies): ITestRun
   }
 
   /**
-   * Steps 4 to 11, shared by a version's run and a YAML run (D25 Preflight
-   * ruling 12), once steps 1 to 3 have read `prepared`.
+   * Steps 4 to 11, shared by a version's run and a YAML run, once steps 1 to
+   * 3 have read `prepared`.
    */
   async function queuePrepared(actor: Actor, organizationId: string, prepared: PreparedRun): Promise<PlacedRun> {
     const { runId, source, hasRules } = prepared;
 
-    // 4. The shared row, not only this process's view (Ruling 24).
+    // 4. The shared row, not only this process's view.
     await refundingOnRefusal(prepared.admission, async () => {
       if ((await readDownSince()) !== null) throw testingUnavailable();
-      // A run with rules can't be checked while the evaluator is known down
-      // (D15a decision 15); one without rules queues as before.
+      // A run with rules can't be checked while the evaluator is known down;
+      // one without rules queues as before.
       if (hasRules && (await isRulesEvaluatorDown())) throw rulesUnavailableAtQueue();
     });
 
-    // 5. The person's minute in this organization (D14b Preflight ruling
-    // 22). A run from a definition isn't counted (D14b decision 7): the
-    // kind comes from step 3's server-side read, never from the request.
-    // The public route's was admitted before it spent anything (Ruling 187).
+    // 5. The person's minute in this organization. A run from a definition
+    // isn't counted: the kind comes from step 3's server-side read, never
+    // from the request. The public route's was admitted before it spent
+    // anything.
     const admission =
       prepared.admission ?? (source.kind === "definition" ? NOT_COUNTED : limiter.admit(actor.context.userId, organizationId));
     if (!admission.isAdmitted) throw testRunRateLimited(admission.retryAfterSeconds);
 
-    // A refusal before any byte is copied gives the minute back (Rulings
-    // 39 and 42): too many waiting for a place, a full queue at step 6,
-    // the variables unreadable or the text too long once they are filled
-    // in, an input that isn't there to copy.
-    // Once a copy has begun the admission is spent, whatever follows: a
-    // failed copy, the re-check's full queue. A burst of counted runs
-    // can't then copy more than 20 inputs a minute. A definition's
-    // admission counted nothing to give back; its burst is bounded by the
-    // places instead (D14b Ruling 33): at most
-    // TEST_RUN_COPIES_IN_FLIGHT_PER_USER requests hold one at once, and
-    // each counts the waiting runs only once it holds it, so at a nearly
-    // full queue at most that many copy before the one that fills it
-    // commits, and every later one counts a full queue and copies
-    // nothing.
+    // A refusal before any byte is copied gives the minute back: too many
+    // waiting for a place, a full queue at step 6, the variables unreadable or
+    // the text too long once they are filled in, an input that isn't there to
+    // copy. Once a copy has begun the admission is spent, whatever follows: a
+    // failed copy, the re-check's full queue. A burst of counted runs can't
+    // then copy more than 20 inputs a minute. A definition's admission counted
+    // nothing to give back; its burst is bounded by the places instead: at
+    // most TEST_RUN_COPIES_IN_FLIGHT_PER_USER requests hold one at once, and
+    // each counts the waiting runs only once it holds it, so at a nearly full
+    // queue at most that many copy before the one that fills it commits, and
+    // every later one counts a full queue and copies nothing.
     let isCopying = false;
     let queuedRun: PlacedRun;
     try {
-      // 6. A place (no transaction is open while it waits), then the
-      // person's waiting runs in this organization (D14b Preflight ruling
-      // 21): refused before 10 MiB is copied for nothing.
+      // 6. A place (no transaction is open while it waits), then the person's
+      // waiting runs in this organization: refused before 10 MiB is copied
+      // for nothing.
       const place = await copyPlaces.take(actor.context.userId, organizationId);
       if (!place.isTaken) throw testRunQueuingBusy(place.retryAfterSeconds);
       try {
@@ -586,7 +571,7 @@ export function createTestRunService(deps: TestRunServiceDependencies): ITestRun
               configurationId: prepared.configurationId,
               versionId: prepared.versionId,
               sourceRunId: source.kind === "rerun" ? source.sourceRunId : null,
-              // As written (decision 13): never a filled-in copy.
+              // As written: never a filled-in copy.
               yaml: prepared.yaml,
               pipeline: source.pipeline,
               signal: source.signal,
@@ -596,10 +581,10 @@ export function createTestRunService(deps: TestRunServiceDependencies): ITestRun
               inputName: source.name,
               inputSizeBytes: copied.sizeBytes,
               breadcrumb: source.breadcrumb,
-              // Only the public route's runs (D25 decision 42); left out, the database's snapshot.
+              // Only the public route's runs; left out, the database's snapshot.
               ...(prepared.inlineRules === undefined ? {} : { inlineRules: prepared.inlineRules }),
             });
-            // The saved rules deleted since step 3 (Ruling 182): no run that checks nothing; the transaction rolls back.
+            // The saved rules deleted since step 3: no run that checks nothing; the transaction rolls back.
             if (prepared.requireSavedRules && run.validationRules.length === 0) throw noSavedRules();
             await transaction.audit.record({
               action: "test_run.queued",
@@ -608,9 +593,9 @@ export function createTestRunService(deps: TestRunServiceDependencies): ITestRun
               organizationId,
               subjectType: "test_run",
               subjectId: runId,
-              // Ids only (decision 23): never the text, the input's name, the
+              // Ids only: never the text, the input's name, the
               // pipeline's, or a suite's or a definition's. Exactly one
-              // source (D14b Preflight ruling 10).
+              // source.
               metadata: prepared.auditMetadata,
               ipAddress: actor.ipAddress,
               userAgent: actor.userAgent,
@@ -638,13 +623,13 @@ export function createTestRunService(deps: TestRunServiceDependencies): ITestRun
 
   const service: ITestRunService = {
     async queue(actor, organizationId, configurationId, versionId, request, options = {}) {
-      // Every id the request names, canonical (D14b Ruling 30): a malformed
-      // one is its source's 404, as an unknown one is.
+      // Every id the request names, canonical: a malformed one is its
+      // source's 404, as an unknown one is.
       const canonical = (id: string | undefined) => (id === undefined ? undefined : canonicalIdOf(id));
       const { inlineRules } = options;
 
       // 1–3, read in one transaction, committed before anything else; a
-      // refusal gives the route's minute back (Ruling 187).
+      // refusal gives the route's minute back.
       const { path, prepared } = await refundingOnRefusal(options.admission, async () => {
         assertActiveOrganization(actor, organizationId);
         const path = canonicalVersionPath(configurationId, versionId);
@@ -655,7 +640,7 @@ export function createTestRunService(deps: TestRunServiceDependencies): ITestRun
           let source: RunSource;
           if ("definitionId" in request) {
             // A definition of the path's version, read as the caller through
-            // row-level security (D14b Preflight ruling 10).
+            // row-level security.
             const id = canonical(request.definitionId);
             const definition =
               id === undefined ? undefined : await transaction.definitions.findForRun(path.configurationId, path.versionId, id);
@@ -688,8 +673,8 @@ export function createTestRunService(deps: TestRunServiceDependencies): ITestRun
               audit: { inputFileId: file.id },
             };
           } else if (request.templateId !== undefined) {
-            // A live template (D14b decision 13): its bytes are copied into the
-            // run's folder, so deleting it later breaks nothing.
+            // A live template: its bytes are copied into the run's folder, so
+            // deleting it later breaks nothing.
             const id = canonical(request.templateId);
             const template = id === undefined ? undefined : await transaction.templates.findLive(id);
             if (!template) throw testTemplateNotFound();
@@ -702,13 +687,12 @@ export function createTestRunService(deps: TestRunServiceDependencies): ITestRun
               audit: { templateId: template.id },
             };
           } else {
-            // A re-run (Ruling 24): the source is re-read here, as the
-            // caller, so row-level security and the repository's own rule
-            // both decide whether they may see it. Its breadcrumb travels with
-            // it (D14b Preflight ruling 10),
-            // but only from a run of the path's own configuration and version
-            // (D14b Ruling 34): a draft's suite and definition names never
-            // reach another configuration's or version's runs.
+            // A re-run: the source is re-read here, as the caller, so
+            // row-level security and the repository's own rule both decide
+            // whether they may see it. Its breadcrumb travels with it, but
+            // only from a run of the path's own configuration and version: a
+            // draft's suite and definition names never reach another
+            // configuration's or version's runs.
             const id = canonical(request.sourceRunId);
             const sourceRun = id === undefined ? undefined : await transaction.runs.find(id);
             if (!sourceRun) throw testRunNotFound();
@@ -735,15 +719,14 @@ export function createTestRunService(deps: TestRunServiceDependencies): ITestRun
               audit: { sourceRunId: sourceRun.id },
             };
           }
-          // Whether the run would carry rules (D15a Preflight ruling 21), as
-          // the caller sees them: the insert at step 9 takes the snapshot. The
-          // public route's run carries the rules it passes, and only those (D25
-          // decision 42).
+          // Whether the run would carry rules, as the caller sees them: the
+          // insert at step 9 takes the snapshot. The public route's run
+          // carries the rules it passes, and only those.
           const hasRules =
             inlineRules === undefined
               ? await transaction.runs.hasValidationRules(path.versionId, source.pipeline, source.signal)
               : inlineRules.length > 0;
-          // useSavedRules with none (Ruling 182): refused before anything is copied or counted.
+          // useSavedRules with none: refused before anything is copied or counted.
           if (options.requireSavedRules === true && inlineRules === undefined && !hasRules) throw noSavedRules();
           return { distribution, source, hasRules, runId: await transaction.runs.nextId() };
         });
@@ -784,7 +767,7 @@ export function createTestRunService(deps: TestRunServiceDependencies): ITestRun
         }
         const pin = await yamlRunPin(transaction, check.pin);
         await assertPinOffered(transaction, pin.distribution, pin.collectorVersion);
-        // A full queue before the route spends its minute, a rule check or an upload (Ruling 187); step 9 counts it again.
+        // A full queue before the route spends its minute, a rule check or an upload; step 9 counts it again.
         if ((await transaction.runs.waitingForCurrentUser()) >= TEST_RUNS_WAITING_MAXIMUM_PER_USER) throw testRunQueueFull();
       });
       if ((await readDownSince()) !== null) throw testingUnavailable();
@@ -795,9 +778,8 @@ export function createTestRunService(deps: TestRunServiceDependencies): ITestRun
       const fileId = canonicalIdOf(request.inputFileId);
 
       // 1–3, read in one transaction, committed before anything else: the
-      // membership, the pin (the catalogue's defaults for what isn't named),
-      // and the caller's own file. A refusal gives the route's minute back
-      // (Ruling 187).
+      // membership, the pin (the catalog's defaults for what isn't named),
+      // and the caller's own file. A refusal gives the route's minute back.
       const prepared = await refundingOnRefusal(request.admission, () => {
         assertActiveOrganization(actor, organizationId);
         return withTransaction(actor.context, async (transaction) => {
@@ -832,7 +814,7 @@ export function createTestRunService(deps: TestRunServiceDependencies): ITestRun
           await lockAsMember(transaction, actor);
           await assertPinOffered(transaction, prepared.distribution, prepared.collectorVersion);
         },
-        // Ids only (decision 23), and where it came from: never the text or the sample.
+        // Ids only, and where it came from: never the text or the sample.
         auditMetadata: { source: "yaml", inputFileId: prepared.source.audit.inputFileId },
       });
       const { run } = placed;

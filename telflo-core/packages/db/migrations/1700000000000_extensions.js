@@ -1,9 +1,9 @@
 /**
- * Extensions. Deliberately short: no pg_cron, pg_net or vault (spec §3.3).
+ * Extensions. Deliberately short: no pg_cron, pg_net or vault.
  * Everything here is core contrib.
  *
  * uuidv7() needs no extension on Postgres 18 — it is built in, which is the
- * reason the spec requires 18.
+ * reason the schema requires 18.
  */
 export const up = (pgm) => {
   pgm.createExtension("pgcrypto", { ifNotExists: true });

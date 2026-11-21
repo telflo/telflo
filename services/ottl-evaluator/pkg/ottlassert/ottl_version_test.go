@@ -1,7 +1,6 @@
-// New in D15a Task 1 (spec decision 9; plan Preflight ruling 4): the
-// evaluator is built on the OTTL of the catalogue's default collector
+// The evaluator is built on the OTTL of the catalog's default collector
 // version, so this test fails when go.mod's pkg/ottl version and the
-// catalogue's default differ. Change both together (catalog/README.md,
+// catalog's default differ. Change both together (catalog/README.md,
 // "Adding a collector version").
 //
 // It reads go.mod's text: debug.ReadBuildInfo lists no dependencies in a

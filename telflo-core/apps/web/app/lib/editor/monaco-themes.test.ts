@@ -9,10 +9,10 @@ function definedThemes(): Record<string, unknown> {
   return defined;
 }
 
-describe("Monaco's themes (D21 decisions 2 and 27, Q128)", () => {
+describe("Monaco's themes", () => {
   it("defines telflo-dark and telflo-navy with their pinned values, and nothing for Light", () => {
     // Pinned value for value.
-    // Light uses Monaco's built-in `vs` (Q128): no telflo-light is defined.
+    // Light uses Monaco's built-in `vs`: no telflo-light is defined.
     expect(definedThemes()).toMatchInlineSnapshot(`
       {
         "telflo-dark": {
@@ -103,7 +103,7 @@ describe("Monaco's themes (D21 decisions 2 and 27, Q128)", () => {
     `);
   });
 
-  it("maps each app theme to its Monaco theme, Light to Monaco's own vs (Q128)", () => {
+  it("maps each app theme to its Monaco theme, Light to Monaco's own vs", () => {
     expect(monacoThemeFor("dark")).toBe("telflo-dark");
     expect(monacoThemeFor("navy")).toBe("telflo-navy");
     expect(monacoThemeFor("light")).toBe("vs");

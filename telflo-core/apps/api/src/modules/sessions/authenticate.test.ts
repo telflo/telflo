@@ -65,8 +65,8 @@ describe("authenticate", () => {
 });
 
 // Whether the Terms are satisfied is the session service's answer, from the
-// site's Terms version (D36-1 Preflight ruling 1; service.test.ts covers the
-// comparison): authenticate only carries it onto the request.
+// site's Terms version (service.test.ts covers the comparison): authenticate
+// only carries it onto the request.
 describe("hasAcceptedCurrentTerms", () => {
   it("is the session service's answer, carried as it is", async () => {
     expect((await run({ ...authenticated, hasAcceptedCurrentTerms: false })).authentication?.hasAcceptedCurrentTerms).toBe(false);

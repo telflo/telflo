@@ -53,7 +53,7 @@ describe("organizations repositories", () => {
 
   /**
    * Fails with 55P03 while another transaction holds a conflicting lock on
-   * the row: the deterministic way to see a lock held (D2a Ruling 6).
+   * the row: the deterministic way to see a lock held.
    */
   const probeLock = (
     table: "organizations" | "organization_members" | "users",
@@ -131,7 +131,7 @@ describe("organizations repositories", () => {
       expect(await findPersonal(user.id)).toBeUndefined();
     });
 
-    it("finds the live organization the user joined most recently, in their context only (D36-1 decision 56)", async () => {
+    it("finds the live organization the user joined most recently, in their context only", async () => {
       const newest = (userId: string) =>
         withUserContext(db, userId, (transaction) => createOrganizationRepository(transaction).findNewestJoinedForUser(userId));
       const { user, organization: personal } = await createUserWithOrganization(ownerDb);
@@ -238,7 +238,7 @@ describe("organizations repositories", () => {
       expect((await organizationRow(organization.id)).owner_user_id).toBeNull();
     });
 
-    it("takes the id and the logo it is given (D23-2 decision 35)", async () => {
+    it("takes the id and the logo it is given", async () => {
       const repository = createOrganizationRepository(db);
       const id = await repository.nextId();
       const logoId = await repository.nextId();
@@ -247,7 +247,7 @@ describe("organizations repositories", () => {
       expect(await organizationRow(id)).toMatchObject({ logo_id: logoId, logo_content_type: "image/jpeg" });
     });
 
-    it("picks a new uuidv7 id each time, as the table's default (Preflight ruling 4)", async () => {
+    it("picks a new uuidv7 id each time, as the table's default", async () => {
       const repository = createOrganizationRepository(db);
       const [first, second] = [await repository.nextId(), await repository.nextId()];
       expect(first).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
@@ -335,7 +335,7 @@ describe("organizations repositories", () => {
       expect((await organizationRow(group.id)).name).toBe(group.name);
     });
 
-    it("sets and clears the context's organization's logo, both columns together, and nobody else's (D23-2 decision 36)", async () => {
+    it("sets and clears the context's organization's logo, both columns together, and nobody else's", async () => {
       const { userId, personal, group } = await personWithGroup();
       const logoId = "0199e000-0000-7000-8000-00000000a002";
       const set = await inOrganization(userId, group.id, (organizations) =>
@@ -366,7 +366,7 @@ describe("organizations repositories", () => {
       expect((await organizationRow(group.id)).logo_id).toBe(logoId);
     });
 
-    it("lists each organization's logo id for its member (D23-2 decision 40)", async () => {
+    it("lists each organization's logo id for its member", async () => {
       const { userId, group } = await personWithGroup();
       const logoId = "0199e000-0000-7000-8000-00000000a004";
       await inOrganization(userId, group.id, (organizations) => organizations.setLogo({ logoId, contentType: "image/webp" }));
@@ -437,7 +437,7 @@ describe("organizations repositories", () => {
       const admin = await personWithGroup();
       // A person whose only membership is in the group, a shape the owner
       // writes and no API path creates; a service account's deletion with
-      // its organization is the routes' test (D22 Preflight ruling 8).
+      // its organization is the routes' test.
       const onlyHere = await createUserWithOrganization(ownerDb, { organization: { type: "group", name: "Solo" } });
       await addMembership(ownerDb, { userId: admin.userId, organizationId: onlyHere.organization.id });
 
@@ -583,7 +583,7 @@ describe("organizations repositories", () => {
       expect(await inOrganization(admin, organizationId, (members) => members.find(colleague))).toBeUndefined();
     });
 
-    it("leaves service accounts out of the list, and finds one, active or removed, marked as one (D22 decision 30)", async () => {
+    it("leaves service accounts out of the list, and finds one, active or removed, marked as one", async () => {
       const { organizationId, admin } = await organizationWithMembers();
       const { user: serviceAccount } = await addServiceAccount(ownerDb, { organizationId });
       const { user: removed } = await addServiceAccount(ownerDb, { organizationId });
@@ -613,7 +613,7 @@ describe("organizations repositories", () => {
       expect(await inOrganization(admin, organizationId, (members) => members.find(admin))).toMatchObject({
         isServiceAccount: false,
       });
-      // findByEmail keeps every kind (decision 12): the invite's member check.
+      // findByEmail keeps every kind: the invite's member check.
       expect(
         await inOrganization(admin, organizationId, (members) => members.findByEmail(serviceAccount.email)),
       ).toMatchObject({ userId: serviceAccount.id, isServiceAccount: true });

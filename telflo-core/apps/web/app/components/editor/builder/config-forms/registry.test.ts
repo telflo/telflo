@@ -63,9 +63,8 @@ import { paletteSubType } from "~/lib/graph/parse.js";
 import { COMPONENT_TYPES, type ComponentType } from "~/lib/graph/types.js";
 
 /*
- * The form dispatch (D9b decision 6): by the component's type and its
- * palette sub-type. D9b's Tasks 6 to 8 and D9c's Tasks 2 to 8 added their rows to `FORMS`. `otlp` is both
- * a receiver's and an exporter's, each with its own form.
+ * The form dispatch: by the component's type and its palette sub-type.
+ * `otlp` is both a receiver's and an exporter's, each with its own form.
  */
 
 const FORMS: readonly (readonly [ComponentType, string, ConfigForm])[] = [
@@ -153,7 +152,7 @@ describe("formFor", () => {
     expect(formFor("receiver", "otlphttp")).toBeUndefined();
   });
 
-  it("gives the prometheus receiver and exporter each its own form, and prometheus_remote_write the remote write form (D9d Task 5)", () => {
+  it("gives the prometheus receiver and exporter each its own form, and prometheus_remote_write the remote write form", () => {
     expect(formFor("receiver", "prometheus")).toBe(PrometheusReceiverForm);
     expect(formFor("exporter", "prometheus")).toBe(PrometheusExporterForm);
     // exporter/prometheusremotewriteexporter/metadata.yaml:2-3 (v0.162.0): `prometheus_remote_write` is the current type.
@@ -163,7 +162,7 @@ describe("formFor", () => {
     expect(formFor("receiver", "prometheusremotewrite")).toBeUndefined();
   });
 
-  it("gives statsd, cumulativetodelta, metricstransform and groupbyattrs their forms, and the collector's cumulative_to_delta and metrics_transform the palette's (D9d Task 6)", () => {
+  it("gives statsd, cumulativetodelta, metricstransform and groupbyattrs their forms, and the collector's cumulative_to_delta and metrics_transform the palette's", () => {
     expect(formFor("receiver", "statsd")).toBe(StatsdReceiverForm);
     expect(formFor("processor", "statsd")).toBeUndefined();
     // processor/cumulativetodeltaprocessor/metadata.yaml:2-3 and processor/metricstransformprocessor/metadata.yaml:2-3 (v0.162.0): the current types.
@@ -178,7 +177,7 @@ describe("formFor", () => {
     expect(findPaletteEntry("processor", paletteSubType("metrics_transform", "processor"))?.subType).toBe("metricstransform");
   });
 
-  it("gives jaeger, zipkin, probabilistic_sampler, span and spanmetrics their forms, the zipkin receiver and exporter each its own, and the collector's span_metrics the palette's (D9d Task 7)", () => {
+  it("gives jaeger, zipkin, probabilistic_sampler, span and spanmetrics their forms, the zipkin receiver and exporter each its own, and the collector's span_metrics the palette's", () => {
     expect(formFor("receiver", "jaeger")).toBe(JaegerReceiverForm);
     expect(formFor("receiver", "zipkin")).toBe(ZipkinReceiverForm);
     expect(formFor("exporter", "zipkin")).toBe(ZipkinExporterForm);
@@ -193,7 +192,7 @@ describe("formFor", () => {
     expect(formFor("connector", "span")).toBeUndefined();
   });
 
-  it("gives transform and logdedup their forms, and the collector's log_dedup the palette's (D9d Task 9)", () => {
+  it("gives transform and logdedup their forms, and the collector's log_dedup the palette's", () => {
     expect(formFor("processor", "transform")).toBe(TransformProcessorForm);
     expect(formFor("processor", "logdedup")).toBe(LogDedupProcessorForm);
     // processor/logdedupprocessor/metadata.yaml:2-3 (v0.162.0): `type: log_dedup`, `deprecated_type: logdedup`.
@@ -204,13 +203,13 @@ describe("formFor", () => {
     expect(formFor("exporter", "log_dedup")).toBeUndefined();
   });
 
-  it("gives redaction its form (D9d Task 10); the collector's type is redaction, not renamed (metadata.yaml:2)", () => {
+  it("gives redaction its form; the collector's type is redaction, not renamed (metadata.yaml:2)", () => {
     expect(formFor("processor", "redaction")).toBe(RedactionProcessorForm);
     expect(paletteSubType("redaction", "processor")).toBe("redaction");
     expect(formFor("exporter", "redaction")).toBeUndefined();
   });
 
-  it("gives the datadog receiver and exporter each its own form (D9d Task 11); neither is renamed (the exporter's metadata.yaml:1, the receiver's :2)", () => {
+  it("gives the datadog receiver and exporter each its own form; neither is renamed (the exporter's metadata.yaml:1, the receiver's :2)", () => {
     expect(formFor("receiver", "datadog")).toBe(DatadogReceiverForm);
     expect(formFor("exporter", "datadog")).toBe(DatadogExporterForm);
     expect(DatadogReceiverForm).not.toBe(DatadogExporterForm);
@@ -220,18 +219,18 @@ describe("formFor", () => {
     expect(formFor("connector", "datadog")).toBeUndefined();
   });
 
-  it("gives the S3 receiver and exporter each its own form, and the receiver's aws_s3 spelling the receiver's (D9d Task 12; receiver/awss3receiver/metadata.yaml:2-3, exporter/awss3exporter/metadata.yaml:1)", () => {
+  it("gives the S3 receiver and exporter each its own form, and the receiver's aws_s3 spelling the receiver's (receiver/awss3receiver/metadata.yaml:2-3, exporter/awss3exporter/metadata.yaml:1)", () => {
     expect(formFor("receiver", "awss3")).toBe(AWSS3ReceiverForm);
     expect(formFor("exporter", "awss3")).toBe(AWSS3ExporterForm);
     expect(formFor("receiver", "awss3")).not.toBe(formFor("exporter", "awss3"));
     expect(formFor("receiver", "aws_s3")).toBe(AWSS3ReceiverForm);
-    // The rename is the receiver's only (final ruling F8): an exporter spelled aws_s3, which the collector refuses, has no form.
+    // The rename is the receiver's only: an exporter spelled aws_s3, which the collector refuses, has no form.
     expect(paletteSubType("aws_s3", "receiver")).toBe("awss3");
     expect(paletteSubType("aws_s3", "exporter")).toBe("aws_s3");
     expect(formFor("exporter", "aws_s3")).toBeUndefined();
   });
 
-  it("gives clickhouse and file their exporter forms (D9d Task 12); neither is renamed (metadata.yaml:1 each)", () => {
+  it("gives clickhouse and file their exporter forms; neither is renamed (metadata.yaml:1 each)", () => {
     expect(formFor("exporter", "clickhouse")).toBe(ClickhouseExporterForm);
     expect(formFor("exporter", "file")).toBe(FileExporterForm);
     expect(paletteSubType("clickhouse", "exporter")).toBe("clickhouse");
@@ -252,7 +251,7 @@ describe("formFor", () => {
       for (const [spelled, palette] of Object.entries(RENAMED_TYPES[kind])) {
         renames += 1;
         expect(formFor(kind, spelled)).toBe(formFor(kind, palette));
-        // Every rename is kind-specific (D13b Preflight ruling 15, final ruling F8 generalised): an
+        // Every rename is kind-specific: an
         // `otlp_grpc` receiver or an `aws_s3` exporter is a type the collector doesn't have, so no form.
         for (const other of COMPONENT_TYPES.filter((type) => type !== kind)) {
           if (!Object.hasOwn(RENAMED_TYPES[other], spelled)) expect(formFor(other, spelled)).toBeUndefined();
@@ -265,7 +264,7 @@ describe("formFor", () => {
   });
 
   it("gives a component without a form, or an unknown one, none", () => {
-    // `count`, outside the palette, keeps the fallback past D9d (D9c Preflight ruling 3; filelog has a form since D9c Task 8).
+    // `count`, outside the palette, keeps the fallback.
     expect(formFor("processor", "count")).toBeUndefined();
     expect(formFor("receiver", "count")).toBeUndefined();
     expect(formFor("exporter", "no_such_exporter")).toBeUndefined();
@@ -276,10 +275,10 @@ describe("formFor", () => {
 });
 
 /*
- * D9c's dispatch (its decision 2; plan Task 1): its 13 forms are in `FORMS`
- * above, under their palette types (Tasks 2 to 8 landed them). The collector's
- * current names of three of them (each a `deprecated_type` at v0.162.0)
- * resolve to the palette's, and so to its form (Preflight ruling 28).
+ * The Kubernetes, host and logs components' 13 forms are in `FORMS` above,
+ * under their palette types. The collector's current names of three of them
+ * (each a `deprecated_type` at v0.162.0) resolve to the palette's, and so to
+ * its form.
  */
 const D9C_TYPES: readonly (readonly [ComponentType, string])[] = [
   ["receiver", "k8s_cluster"],
@@ -297,7 +296,7 @@ const D9C_TYPES: readonly (readonly [ComponentType, string])[] = [
   ["receiver", "netflow"],
 ];
 
-describe("D9c's forms", () => {
+describe("the Kubernetes, host and logs components' forms", () => {
   it.each(D9C_TYPES)("a %s %s is a palette entry, and its form is the one FORMS names", (type, subType) => {
     expect(findPaletteEntry(type, subType)).toBeDefined();
     const form = FORMS.find(([t, s]) => t === type && s === subType)?.[2];
@@ -315,14 +314,14 @@ describe("D9c's forms", () => {
     expect(formFor("receiver", spelled)).toBe(formFor("receiver", palette));
   });
 
-  it("gives the collector's k8s_objects and kubelet_stats the Kubernetes forms (Task 2)", () => {
+  it("gives the collector's k8s_objects and kubelet_stats the Kubernetes forms", () => {
     expect(formFor("receiver", "k8s_objects")).toBe(K8sObjectsReceiverForm);
     expect(formFor("receiver", "kubelet_stats")).toBe(KubeletStatsReceiverForm);
     expect(formFor("receiver", "k8sobjects")).toBe(K8sObjectsReceiverForm);
     expect(formFor("receiver", "kubeletstats")).toBe(KubeletStatsReceiverForm);
   });
 
-  it("gives the collector's host_metrics the Hostmetrics form, and docker_stats its form (Task 4)", () => {
+  it("gives the collector's host_metrics the Hostmetrics form, and docker_stats its form", () => {
     expect(formFor("receiver", "host_metrics")).toBe(HostmetricsReceiverForm);
     expect(formFor("receiver", "hostmetrics")).toBe(HostmetricsReceiverForm);
     expect(formFor("receiver", "docker_stats")).toBe(DockerStatsReceiverForm);
@@ -330,7 +329,7 @@ describe("D9c's forms", () => {
 
   // receiver/filelogreceiver/metadata.yaml:2-3 and fluentforwardreceiver/metadata.yaml:2-3 (v0.162.0):
   // `file_log` and `fluent_forward` are the current types, the palette's their deprecated aliases.
-  it("gives the collector's file_log and fluent_forward the logs receivers' forms (Task 8)", () => {
+  it("gives the collector's file_log and fluent_forward the logs receivers' forms", () => {
     expect(formFor("receiver", "file_log")).toBe(FilelogReceiverForm);
     expect(formFor("receiver", "fluent_forward")).toBe(FluentForwardReceiverForm);
     expect(formFor("receiver", "filelog")).toBe(FilelogReceiverForm);
@@ -340,7 +339,7 @@ describe("D9c's forms", () => {
     expect(formFor("receiver", "netflow")).toBe(NetflowReceiverForm);
   });
 
-  it("gives the collector's k8s_attributes and resource_detection the processors' forms (Task 3)", () => {
+  it("gives the collector's k8s_attributes and resource_detection the processors' forms", () => {
     expect(formFor("processor", "k8s_attributes")).toBe(K8sAttributesProcessorForm);
     expect(formFor("processor", "resource_detection")).toBe(ResourceDetectionProcessorForm);
     expect(formFor("processor", "k8sattributes")).toBe(K8sAttributesProcessorForm);

@@ -6,10 +6,10 @@ import { fileURLToPath } from "node:url";
 import Ajv2020, { type ErrorObject, type ValidateFunction } from "ajv/dist/2020.js";
 import { parse as parseYaml, parseDocument } from "yaml";
 
-// The collector validator in memory, for tests only (D13b Preflight ruling
-// 20). Built on node:http, as the fake opamp-server is. It never ships:
-// .dockerignore leaves apps/api/src/testing out of the images, and a lint
-// rule keeps production code from importing it.
+// The collector validator in memory, for tests only. Built on node:http, as
+// the fake opamp-server is. It never ships: .dockerignore leaves
+// apps/api/src/testing out of the images, and a lint rule keeps production
+// code from importing it.
 //
 // It checks the contract both ways: every request it receives and every
 // reply it sends is validated against services/otelcol-validator/openapi.yaml,
@@ -29,20 +29,20 @@ import { parse as parseYaml, parseDocument } from "yaml";
 // - one `env_var` requirement per `${env:NAME}`, valid or not;
 // - one "Organization variables filled in" requirement naming the
 //   `organizationVariables` the request sent, as the real validator names
-//   those it filled in (D20 decision 27). That row only: it fills nothing
-//   in itself, so it never answers the real one's "Unresolved organization
-//   variable", over-128-characters or legacy rows, nor its 1 MiB
-//   `filled_in_too_long` refusal;
+//   those it filled in. That row only: it fills nothing in itself, so it
+//   never answers the real one's "Unresolved organization variable",
+//   over-128-characters or legacy rows, nor its 1 MiB `filled_in_too_long`
+//   refusal;
 // - 503 `validator_busy` when the text holds `# fake-otelcol-validator: unavailable`.
 //
-// It knows no catalogue: any distribution and version in the path's format
-// is checked. The API's tests push the catalogue's answers (404, 409, 503)
+// It knows no catalog: any distribution and version in the path's format
+// is checked. The API's tests push the catalog's answers (404, 409, 503)
 // with nextFault.
 
 /** A fixed, public test credential: 32 bytes and more. */
 export const FAKE_OTELCOL_VALIDATOR_SECRET = "telflo-fake-otelcol-validator-secret-0123456789";
 
-/** A line a text holds to be answered 503 `validator_busy` (Preflight ruling 20). */
+/** A line a text holds to be answered 503 `validator_busy`. */
 export const FAKE_OTELCOL_VALIDATOR_UNAVAILABLE_MARKER = "# fake-otelcol-validator: unavailable";
 
 /** A component type the fake refuses as unknown starts with this. */
@@ -54,8 +54,8 @@ export const FAKE_OTELCOL_VALIDATOR_UNKNOWN_TYPE_PREFIX = "unknown_";
  * - `hang`: never answered (until close());
  * - `reset`: the connection is reset before anything is read;
  * - `error_500`: 500 `internal_error`;
- * - `not_found`: 404, as for a distribution or version its catalogue doesn't list;
- * - `version_retired`: 409, as for a version its catalogue deprecated;
+ * - `not_found`: 404, as for a distribution or version its catalog doesn't list;
+ * - `version_retired`: 409, as for a version its catalog deprecated;
  * - `version_unavailable`: 503, as for an offered version it doesn't hold;
  * - `validator_busy`: 503, as when no slot freed up;
  * - `invalid_request`: 400;
@@ -81,7 +81,7 @@ export interface FakeOtelcolValidatorRequest {
   version: string;
   /** The body's `yaml`, or undefined when the body had none. */
   yaml: string | undefined;
-  /** The body's `organizationVariables`, or undefined when it sent none (D20). */
+  /** The body's `organizationVariables`, or undefined when it sent none. */
   organizationVariables?: Record<string, string> | undefined;
 }
 
@@ -291,11 +291,11 @@ function singleHeader(headers: IncomingHttpHeaders, name: string): string | unde
 // ---------------------------------------------------------------------------
 // The answers.
 
-/** The real validator's body cap (D20 Preflight ruling 30, re-derived on Q104): 2 MiB. */
+/** The real validator's body cap: 2 MiB. */
 const MAX_BODY_BYTES = 2 * 1024 * 1024;
 /** Bodies past this aren't read at all: the fake drops the connection. */
 const MAX_READ_BYTES = 16 * 1024 * 1024;
-/** The real validator's limit on `yaml` (Ruling 27): the platform's. */
+/** The real validator's limit on `yaml`: the platform's. */
 const MAX_YAML_CHARACTERS = 262_144;
 /** How many requests takeRequests() keeps, so a browser run's fake doesn't grow without bound. */
 const MAX_KEPT_REQUESTS = 1_000;

@@ -16,14 +16,13 @@ import { SAMPLE_CONFIGURATION_IDS, sampleConfigurations, type SampleConfiguratio
 import { clockAt, DAY, HOUR, MINUTE, SAMPLE_SRE, SAMPLE_VISITOR, sampleNotFound, type SampleClock } from "./types.js";
 
 /*
- * The sample's fleet management (D31-1 decisions 10 and 35): 3 server
- * fleets and 1 Kubernetes fleet, their 14 and 6 collectors, in the
- * platform's shapes, WITH collector groups of both kinds, tokens and their
- * history, install links, and the error history
- * a collector's details read. Every object parses with its contracts
- * schema (fleets.test.ts) and nothing is shaped like a secret (Preflight
- * ruling 6): the platform's token and link shapes have no bearer, prefix or
- * secret field, and no link carries a `…?token=`.
+ * The sample's fleet management: 3 server fleets and 1 Kubernetes fleet,
+ * their 14 and 6 collectors, in the platform's shapes, WITH collector
+ * groups of both kinds, tokens and their history, install links, and the
+ * error history a collector's details read. Every object parses with its
+ * contracts schema (fleets.test.ts) and nothing is shaped like a secret:
+ * the platform's token and link shapes have no bearer, prefix or secret
+ * field, and no link carries a `…?token=`.
  *
  * - Ids are fixed, lowercase, v4-shaped literals, so a link survives the
  *   rebuild; times are relative to now (`toISOString`), and every read

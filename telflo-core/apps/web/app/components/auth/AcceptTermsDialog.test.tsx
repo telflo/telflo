@@ -9,9 +9,9 @@ import * as apiClient from "~/lib/api-client.js";
 import { ApiError } from "~/lib/api-client.js";
 import { useUserStore } from "~/lib/stores/user-store.js";
 
-/** The site's Terms version the layout passes in (D36-1 decision 29): the SaaS's. */
+/** The site's Terms version the layout passes in: the SaaS's. */
 const TERMS_VERSION = "2026-01-01";
-/** The site's Terms (D36-1 decision 32): its version and the two documents' URLs. */
+/** The site's Terms: its version and the two documents' URLs. */
 const TERMS = { version: TERMS_VERSION, termsUrl: "/home/terms-of-service", privacyUrl: "https://legal.example.com/privacy" };
 
 const CURRENT_USER: CurrentUserResponse = {
@@ -76,7 +76,7 @@ describe("AcceptTermsDialog", () => {
     expect(within(shown).getAllByRole("button").map((button) => button.textContent)).toEqual(["Cancel", "Accept"]);
   });
 
-  it("links the site's Terms of Service and Privacy Policy, each in a new tab (Ruling 20; D36-1 decision 32)", async () => {
+  it("links the site's Terms of Service and Privacy Policy, each in a new tab", async () => {
     renderDialog();
     const shown = await dialog();
 
@@ -114,7 +114,7 @@ describe("AcceptTermsDialog", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
-  it("never opens on a site that asks for no Terms, whatever open says (D36-1 decision 32)", async () => {
+  it("never opens on a site that asks for no Terms, whatever open says", async () => {
     renderDialog(() => ({ required: true }), null);
 
     expect(await screen.findByText("the page")).toBeInTheDocument();

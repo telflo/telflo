@@ -1,14 +1,12 @@
 """What a run's strategy works with, and what it reports.
 
-D14a Task 4:
-
 - A strategy never spawns or stops the collector, or reads its output:
   `app/run.py` does those for every strategy (the pipes drained as the
   collector runs, the collector stopped in a ``finally``, the output read in
   the answer's form). A strategy is the per-kind part: it stages the input
   and mutates the text (``prepare``), says when the collector is ready
   (``wait_ready``), waits for a Kubernetes processor's informer
-  (``wait_for_cluster``, Ruling 30) and feeds it (``feed``).
+  (``wait_for_cluster``) and feeds it (``feed``).
 - ``cached_fixture`` is the input exactly as the service staged it (its
   bytes, never decoded first), and ``kwok_cluster`` is the cluster's
   endpoint as the service passes it to the run's child (``KwokEndpoint``):
@@ -102,7 +100,7 @@ class TestStrategy(Protocol):
 
     async def wait_for_cluster(self, ctx: ExecutorContext) -> None:
         """The kwok informer wait, between ready and feed, for a pipeline
-        with a Kubernetes processor (every strategy's, Ruling 30)."""
+        with a Kubernetes processor (every strategy's)."""
         ...
 
     async def feed(self, ctx: ExecutorContext, collector: Collector) -> object | None: ...
@@ -117,8 +115,8 @@ class RunOutcome:
     # Did the collector itself start, run, and shut down cleanly? This is
     # distinct from "produced output" — a pipeline whose `filter` processor
     # legitimately drops every record runs cleanly but emits nothing. The
-    # run's answer is `succeeded` when it did (D14a decision 4: a run ends
-    # Success or Error; rules are D15's).
+    # run's answer is `succeeded` when it did (a run ends Success or Error;
+    # its rules are checked apart, by the OTTL evaluator).
     collector_ok: bool
     output: dict = field(default_factory=dict)
     stderr: str = ""

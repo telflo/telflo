@@ -10,10 +10,9 @@ import { attributesHolding } from "~/test/fleets.js";
 import { holdsText, quietQueries, waitUntilGone } from "~/test/service-accounts.js";
 
 /*
- * "Contact us"'s dialog (D29 decisions 32, 40 and 41; Preflight rulings 16
- * and 21): its texts; Send disabled while blank; "Sending..."; the
- * fixed toasts; an uncontrolled textarea inside `ph-no-capture` holding the
- * person's words in no attribute, React prop or toast; a fresh box each
+ * "Contact us"'s dialog: its texts; Send disabled while blank; "Sending...";
+ * the fixed toasts; an uncontrolled textarea inside `ph-no-capture` holding
+ * the person's words in no attribute, React prop or toast; a fresh box each
  * opening; a failure keeps the dialog and the text. The message is the
  * person's own words: checked as booleans with fixed labels only.
  */
@@ -111,7 +110,7 @@ describe("ContactUsDialog", () => {
     finish({ id: "00000000-0000-4000-8000-0000000000f1" });
     await waitUntilGone(() => screen.queryByRole("dialog", { name: "Contact Us" }), "the dialog closed");
     expect(storageHolds(MESSAGE), "browser storage holding the words").toBe(false);
-    // The focus back on the button that opened it (Ruling 271).
+    // The focus back on the button that opened it.
     expect(document.activeElement === screen.getByRole("button", { name: "open contact us" })).toBe(true);
     expect({
       toasts: success.mock.calls.length,

@@ -22,7 +22,7 @@ import {
 } from "./test-runs.js";
 
 /*
- * Test runs' data operations (D27 decision 27): the body, the target and its pin, the poll with
+ * Test runs' data operations: the body, the target and its pin, the poll with
  * its backoff on a fake clock, a 429's Retry-After while polling, and the
  * create's and output's long timeout.
  */
@@ -99,7 +99,7 @@ describe("the statuses (drift)", () => {
 });
 
 describe("buildTestRunBody", () => {
-  it("a text's run with inline rules, in D25's field names", () => {
+  it("a text's run with inline rules, in the public API's field names", () => {
     expect(buildTestRunBody(SPEC, { yaml: "receivers: {}\n" })).toEqual({
       sample: SPEC.sample,
       signal: "logs",

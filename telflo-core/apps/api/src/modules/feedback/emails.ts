@@ -1,12 +1,12 @@
 import { escapeHtml } from "../identity/emails.js";
 
 /*
- * User Feedback's two emails (D29 decision 35), plain text and HTML, every
- * inserted value escaped in the HTML part.
+ * User Feedback's two emails, plain text and HTML, every inserted value
+ * escaped in the HTML part.
  *
  * - To each product admin, separately, about a new item: the sender's email
- *   and a link to the page. NEVER the feedback's text (decision 6): the
- *   builder isn't given it.
+ *   and a link to the page. NEVER the feedback's text: the builder isn't
+ *   given it.
  * - To the sender, when a product admin acknowledges their item: the
  *   admin's reply, its line breaks kept. The reply is never stored and goes
  *   to this one recipient only.
@@ -18,7 +18,7 @@ export interface FeedbackEmail {
   html: string;
 }
 
-/** The subjects (decision 35). */
+/** The subjects. */
 export const FEEDBACK_ADMIN_EMAIL_SUBJECT = "Telflo - New User Feedback Request";
 export const FEEDBACK_REPLY_EMAIL_SUBJECT = "Telflo - Thank You for Your Feedback";
 

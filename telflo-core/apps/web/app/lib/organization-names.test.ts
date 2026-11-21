@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { isEmailAddress, isNamedByEmail, organizationInSentence, organizationLabel } from "./organization-names.js";
 
 // The one rule the invite dialog, the invitation page, the welcome callout
-// and the delete dialog share (D36-1 Q262, Q264).
+// and the delete dialog share.
 
 describe("isEmailAddress", () => {
   it("takes an address pattern: something, @, something, a dot, something, no spaces", () => {
@@ -26,7 +26,7 @@ describe("isNamedByEmail", () => {
   });
 });
 
-describe("organizationLabel (the invite dialog's \"the … organization\", Q262)", () => {
+describe("organizationLabel (the invite dialog's \"the … organization\")", () => {
   it("adds 's to a personal workspace named by its email, and leaves any other name as it is", () => {
     expect(organizationLabel("someone@example.com", "personal")).toBe("someone@example.com's");
     expect(organizationLabel("ops@example.com", "group")).toBe("ops@example.com");
@@ -34,7 +34,7 @@ describe("organizationLabel (the invite dialog's \"the … organization\", Q262)
   });
 });
 
-describe("organizationInSentence (Q264)", () => {
+describe("organizationInSentence", () => {
   it("says <email>'s organization for a personal workspace named by its email, and the name for any other", () => {
     expect(organizationInSentence("someone@example.com", "personal")).toBe("someone@example.com's organization");
     expect(organizationInSentence("ops@example.com", "group")).toBe("ops@example.com");

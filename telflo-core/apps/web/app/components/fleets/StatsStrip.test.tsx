@@ -7,8 +7,8 @@ import { EMPTY_SUMMARY, FLEET_ID, fleetDetail, populatedSummary } from "~/test/f
 import { onlineEmphasis, StatsStrip, versionDriftCount, versionDriftHint } from "./StatsStrip.js";
 import { ARCHIVED_TOOLTIP, SUSPENDED_TOOLTIP } from "./TokenCell.js";
 
-// A server fleet's stats strip (D17b-1 decision 20, Preflight ruling 8):
-// the server tiles, from the fleet's summary.
+// A server fleet's stats strip: the server tiles, from the fleet's
+// summary.
 
 const NOW = Date.parse("2026-10-14T12:00:00.000Z");
 const DAY = 24 * 60 * 60 * 1000;
@@ -53,7 +53,7 @@ describe("StatsStrip", () => {
     expect(within(tile("Token expires")).getByText("Never")).toBeInTheDocument();
   });
 
-  it("shows a mixed fleet's: the counts, some offline in the warning colour, pending, failed and drifted as lagging", () => {
+  it("shows a mixed fleet's: the counts, some offline in the warning color, pending, failed and drifted as lagging", () => {
     renderStrip(fleetDetail({ summary: populatedSummary(NOW) }));
     expect(valueOf("Collectors")).toHaveTextContent(/^10$/);
     expect(valueOf("Online")).toHaveTextContent(/^4$/);
@@ -66,7 +66,7 @@ describe("StatsStrip", () => {
     expect(within(tile("Token expires")).getByText("Rotating →")).toBeInTheDocument();
   });
 
-  it("colours Online danger with collectors and none online", () => {
+  it("colors Online danger with collectors and none online", () => {
     renderStrip(fleetDetail({ summary: summary({ collectors: 3, offline: 3 }) }));
     expect(valueOf("Online")).toHaveClass("text-fail");
   });
@@ -90,7 +90,7 @@ describe("StatsStrip", () => {
     expect(within(tile("Version drift")).getByText("All up to date")).toBeInTheDocument();
   });
 
-  it("says how many have nothing assigned when none lags, in place of up to date (D16c Ruling 18)", () => {
+  it("says how many have nothing assigned when none lags, in place of up to date", () => {
     renderStrip(fleetDetail({ summary: summary({ collectors: 3, online: 3, unassigned: 3 }) }));
     expect(valueOf("Version drift")).toHaveTextContent(/^0$/);
     expect(valueOf("Version drift")).toHaveClass("text-foreground");
@@ -109,7 +109,7 @@ describe("StatsStrip", () => {
     expect(versionDriftHint(counts)).toBe(hint);
   });
 
-  describe("Token expires: D17a's badge and tooltip, a link to the fleet's Tokens tab (D17b-2 decision 22)", () => {
+  describe("Token expires: the Token badge and tooltip, a link to the fleet's Tokens tab", () => {
     /** The tile's trigger: the link to the Tokens tab, its tooltip opened by focusing it. */
     function trigger(): HTMLElement {
       return within(tile("Token expires")).getByRole("link");
@@ -133,7 +133,7 @@ describe("StatsStrip", () => {
       ["45d", rotate({ expiresAt: new Date(NOW + 45 * DAY).toISOString() }), "text-ok"],
       ["6mo", rotate({ expiresAt: new Date(NOW + 180 * DAY).toISOString() }), "text-ok"],
       ["1y", rotate({ expiresAt: new Date(NOW + 400 * DAY).toISOString() }), "text-ok"],
-    ] as const)("shows %s in its colour, linking to the fleet's Tokens tab", (label, counts, colour) => {
+    ] as const)("shows %s in its color, linking to the fleet's Tokens tab", (label, counts, colour) => {
       renderStrip(fleetDetail({ summary: counts }));
       expect(within(tile("Token expires")).getByText(label)).toHaveClass(colour);
       expect(screen.getAllByRole("link")).toEqual([trigger()]);

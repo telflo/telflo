@@ -36,7 +36,7 @@ import { UNCALLED_TESTING } from "../../testing/otelcol-testing.js";
 import { UNCALLED_OTELCOL_VALIDATOR } from "../../testing/otelcol-validator.js";
 import { hashPassword } from "../identity/password.js";
 
-// The opamp-server every server needs (D11b decision 8): this file's own fake.
+// The opamp-server every server needs: this file's own fake.
 const opamp = useFakeOpampServer();
 
 const csrfHeaders = { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE };
@@ -133,11 +133,10 @@ async function filesUnder(root: string): Promise<string[]> {
 const sha256Of = (data: Buffer) => createHash("sha256").update(data).digest("hex");
 
 /*
- * D14b Task 5: the test templates API (decisions 3, 13 and 14; details 19
- * to 21; Preflight rulings 11, 22 and 24), against Postgres as the API's
- * own role, with a real FileStore on a temporary directory. Product admins
- * write; members read the live templates and their bytes; a deleted
- * template's definitions keep their own copies (Task 4's queue path).
+ * The test templates API, against Postgres as the API's own role, with a
+ * real FileStore on a temporary directory. Product admins write; members
+ * read the live templates and their bytes; a deleted template's definitions
+ * keep their own copies (the queue's path).
  */
 describe("the test templates API", () => {
   let databases: TestDatabases;
@@ -281,7 +280,7 @@ describe("the test templates API", () => {
       userId: account.user.id,
       email: account.user.email,
       organizationId: organization.id,
-      // A no-op when the sign-in already landed there (D36-1 decision 56): no new cookie, the token sent stands.
+      // A no-op when the sign-in already landed there: no new cookie, the token sent stands.
       access: (switched.headers["set-cookie"] === undefined ? cookieValue(signedIn, "telflo_access") : cookieValue(switched, "telflo_access")),
     };
   };
@@ -474,7 +473,7 @@ describe("the test templates API", () => {
       ["a second file", [...fields(), file, { ...file, filename: "more.json" }]],
       ["a misnamed file part", [...fields(), { ...file, name: "upload" }]],
       ["the name as a file", [{ name: "name", filename: "a.json", data }, ...fields().slice(1), file]],
-      ["a D14a upload's parts", [{ name: "displayName", value: "a" }, { name: "description", value: "" }, file]],
+      ["a test file upload's parts", [{ name: "displayName", value: "a" }, { name: "description", value: "" }, file]],
       ["an empty name", templateParts(data, { name: "   " })],
       ["a 201-character name", templateParts(data, { name: "a".repeat(201) })],
       ["a 2,001-character description", templateParts(data, { description: "d".repeat(2_001) })],
@@ -531,7 +530,7 @@ describe("the test templates API", () => {
       expect(await auditRows()).toEqual([]);
     });
 
-    it("needs no current terms of a product admin, as flows' writes (D12)", async () => {
+    it("needs no current terms of a product admin, as flows' writes", async () => {
       const admin = await productAdmin({ hasAcceptedTerms: false });
       expect((await upload(admin, templateParts(Buffer.from("x")))).statusCode).toBe(201);
     });
@@ -606,7 +605,7 @@ describe("the test templates API", () => {
       expect(await auditRows()).toEqual([]);
     });
 
-    it("isn't rate limited (ruling 24): a product admin's 31 uploads in a minute all save (RATE_LIMITS)", async () => {
+    it("isn't rate limited: a product admin's 31 uploads in a minute all save (RATE_LIMITS)", async () => {
       const limited = await serverWith({ rateLimits: RATE_LIMITS });
       const admin = await productAdmin();
       for (let n = 0; n < 31; n += 1) {
@@ -681,7 +680,7 @@ describe("the test templates API", () => {
       const live = await created(admin);
       const renamed = await call(admin, "PATCH", templatePathOf(live.id.toUpperCase()), { name: "Upper" });
       expect(renamed.json<{ template: TemplateBody }>().template).toMatchObject({ id: live.id, name: "Upper" });
-      // A deleted template's metadata stays as it was (Ruling 29's n3: the API changes live ones only).
+      // A deleted template's metadata stays as it was (the API changes live ones only).
       expect((await templateRows()).find((row) => row.id === deleted.id)!.name).toBe(deleted.name);
     });
   });
@@ -731,7 +730,7 @@ describe("the test templates API", () => {
       expect(JSON.stringify(warnings)).not.toContain(template.id);
     });
 
-    it("answers 404 on both file reads of a template deleted while its bytes couldn't be removed: the live row decides, not the bytes left behind (Ruling 36)", async () => {
+    it("answers 404 on both file reads of a template deleted while its bytes couldn't be removed: the live row decides, not the bytes left behind", async () => {
       const admin = await productAdmin();
       const member = await person();
       const template = await created(admin);
@@ -747,7 +746,7 @@ describe("the test templates API", () => {
       }
     });
 
-    it("commits the row before the bytes go: a delete whose transaction fails leaves the template live with its bytes; one that commits removes them only after (Ruling 36)", async () => {
+    it("commits the row before the bytes go: a delete whose transaction fails leaves the template live with its bytes; one that commits removes them only after", async () => {
       const admin = await productAdmin();
       const member = await person();
       const bytes = Buffer.from('{"resourceLogs":["kept"]}\n');
@@ -887,7 +886,7 @@ describe("the test templates API", () => {
       }
     });
 
-    it("lists the templates to a product admin without the current terms, as D12's flows admin list reads (the admin page's list); the file reads still need them", async () => {
+    it("lists the templates to a product admin without the current terms, as the flows admin list reads (the admin page's list); the file reads still need them", async () => {
       const admin = await productAdmin({ hasAcceptedTerms: false });
       const template = await created(admin);
       const listed = await call(admin, "GET", TEMPLATES);
@@ -954,7 +953,7 @@ describe("the test templates API", () => {
       }
     });
 
-    it("counts the head and the whole file together in a per-person budget of their own (user:<id>: this global route has no organization; RATE_LIMITS: 30 a minute; ruling 22, Rulings 36 and 41); the list isn't counted", async () => {
+    it("counts the head and the whole file together in a per-person budget of their own (user:<id>: this global route has no organization; RATE_LIMITS: 30 a minute); the list isn't counted", async () => {
       const limited = await serverWith({ rateLimits: RATE_LIMITS });
       const admin = await productAdmin();
       const template = await created(admin);
@@ -976,7 +975,7 @@ describe("the test templates API", () => {
       expect(await anaReads(TEMPLATES)).toBe(200);
     });
 
-    it("counts a whole-file read on its own: 30 in a minute, then 429 (Ruling 36)", async () => {
+    it("counts a whole-file read on its own: 30 in a minute, then 429", async () => {
       const limited = await serverWith({ rateLimits: RATE_LIMITS });
       const admin = await productAdmin();
       const template = await created(admin);
@@ -987,7 +986,7 @@ describe("the test templates API", () => {
       expectRefusal(await call(ana, "GET", filePathOf(template.id), undefined, { on: limited }), 429, "rate_limited", MESSAGES.uploadsLimited);
     });
 
-    it("counts a read answered 404 before the template is looked up: 30 refused reads spend the minute (Ruling 41)", async () => {
+    it("counts a read answered 404 before the template is looked up: 30 refused reads spend the minute", async () => {
       const limited = await serverWith({ rateLimits: RATE_LIMITS });
       const admin = await productAdmin();
       const template = await created(admin);
@@ -1006,7 +1005,7 @@ describe("the test templates API", () => {
     });
   });
 
-  describe("a deleted template's definitions (decision 13)", () => {
+  describe("a deleted template's definitions", () => {
     it("a definition made from a template before its delete still runs, from its own copy: the template leaves the list and its file reads 404", async () => {
       const admin = await productAdmin();
       const ana = await person({ role: "admin" });
@@ -1075,7 +1074,7 @@ describe("the test templates API", () => {
     });
   });
 
-  describe("privacy (ADR 0024)", () => {
+  describe("privacy", () => {
     it("puts no template's name, description or file name in any audit row or log line", async () => {
       const admin = await productAdmin();
       const member = await person();

@@ -27,7 +27,7 @@ import { DEFAULT_TOKEN_ID, FLEET_ID, ROTATE_TOKEN_ID, fleet, fleetCreated, liste
 
 /*
  * The server fleet's create dialog, and through it the create every dialog
- * shares (`NewFleetDialog`: D17a decision 24, Preflight ruling 13).
+ * shares (`NewFleetDialog`).
  */
 
 const DEFAULT_BEARER = fleetCreated().tokens.default.bearer;
@@ -49,7 +49,7 @@ const TERMS = () => refusal("terms_acceptance_required", "Accept the current Ter
 const ORGANIZATION_GONE = () => refusal("organization_not_found", "Organization not found", 404);
 const SESSION_ENDED = () => refusal("unauthenticated", "You need to sign in.", 401);
 
-/** Each way a create can end with its outcome unknown (Preflight ruling 13), but the 30 s abort (its own test). */
+/** Each way a create can end with its outcome unknown, but the 30 s abort (its own test). */
 const UNKNOWN_OUTCOMES: Array<[string, () => ApiError]> = [
   ["a 503", UNAVAILABLE],
   ["a 500", () => refusal("internal_error", "Something went wrong.", 500)],
@@ -238,7 +238,7 @@ function serveReveals(answer: (tokenId: string, signal: AbortSignal | undefined)
   );
 }
 
-describe("NewServerFleetDialog (D17a decision 24, Preflight ruling 13)", () => {
+describe("NewServerFleetDialog", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     vi.spyOn(toast, "success");

@@ -31,7 +31,7 @@ describe("AvatarImage", () => {
     expect(failed).toBe(1);
   });
 
-  it("owns ph-no-capture, alt \"\" and fetchpriority low, whatever a caller passes (Ruling 140)", () => {
+  it("owns ph-no-capture, alt \"\" and fetchpriority low, whatever a caller passes", () => {
     // A caller that slips past the props' type (a cast, a spread object) still cannot drop them.
     const sneaky = { alt: "Acme", fetchPriority: "high" } as unknown as Record<string, never>;
     render(<AvatarImage src="/x.png" className="extra" {...sneaky} />);
@@ -43,7 +43,7 @@ describe("AvatarImage", () => {
   });
 });
 
-describe("OrganizationLogo (D23-2 decision 51)", () => {
+describe("OrganizationLogo", () => {
   it("shows the initials alone when there is no logo", () => {
     const { container } = renderLogo(null);
 

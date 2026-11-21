@@ -1,15 +1,15 @@
-"""Health and kwok's start (D14a Preflight ruling 5, Ruling 26): the service
-listens first and starts kwok in the background. Meanwhile health answers
-503 `starting` and a run 503 `tester_starting`, before its body is read;
-once kwok is up, 200 `ok`/`ready`. A failed start is retried, three
-attempts in all with a backoff before each retry; after the last, health
-answers 503 `unavailable`/`failed`, a run 503 `tester_unavailable` (never
-served without kwok), and the service exits with a non-zero status. The
-cluster is stopped at shutdown, its endpoint reaches the run's child, and
-its kubeconfig is scrubbed from answers. Once up, the cluster's liveness is
-re-checked on health and before each run (Ruling 29): a cluster that stopped
-answering is `failed`, with the same consequences. (The service's app passes
-kwok's real starter, `app/kwok_cluster.py`; here the starters are fakes.)"""
+"""Health and kwok's start: the service listens first and starts kwok in the
+background. Meanwhile health answers 503 `starting` and a run 503
+`tester_starting`, before its body is read; once kwok is up, 200
+`ok`/`ready`. A failed start is retried, three attempts in all with a backoff
+before each retry; after the last, health answers 503 `unavailable`/`failed`,
+a run 503 `tester_unavailable` (never served without kwok), and the service
+exits with a non-zero status. The cluster is stopped at shutdown, its
+endpoint reaches the run's child, and its kubeconfig is scrubbed from
+answers. Once up, the cluster's liveness is re-checked on health and before
+each run: a cluster that stopped answering is `failed`, with the same
+consequences. (The service's app passes kwok's real starter,
+`app/kwok_cluster.py`; here the starters are fakes.)"""
 
 from __future__ import annotations
 
@@ -115,8 +115,8 @@ async def call_asgi_without_lifespan(app, body: bytes) -> tuple[int, object]:  #
 
 async def test_a_start_that_fails_every_attempt_refuses_runs_and_reports_unavailable(binary_dir: Path) -> None:
     """Three attempts, all failing: health says `unavailable`/`failed`, and a
-    run is refused before its body is read (Ruling 26: never served without
-    kwok, even one that needs no cluster)."""
+    run is refused before its body is read (never served without kwok, even
+    one that needs no cluster)."""
     write_collector(binary_dir, VERSION, "exec sleep 600\n")
     attempts = []
 
@@ -150,8 +150,8 @@ async def test_a_start_that_fails_every_attempt_refuses_runs_and_reports_unavail
 
 async def test_a_failed_start_is_retried_after_its_backoff_and_can_still_come_up() -> None:
     """Two failures, then a cluster: still `starting` between attempts, the
-    backoffs are the ruling's (2 s, then 4 s; the sleep is recorded, not
-    waited), and the third attempt makes it ready."""
+    backoffs are 2 s, then 4 s (the sleep is recorded, not waited), and the
+    third attempt makes it ready."""
     cluster = FakeCluster(Path("/nowhere/kubeconfig.yaml"))
     outcomes = [RuntimeError("first"), RuntimeError("second"), cluster]
     states: list[KwokState] = []
@@ -315,7 +315,7 @@ async def test_the_kubeconfig_is_scrubbed_from_answers(binary_dir: Path, tmp_pat
 
 
 # ---------------------------------------------------------------------------
-# Ruling 29: a ready cluster's liveness, re-checked on health and before each
+# A ready cluster's liveness, re-checked on health and before each
 # run
 # ---------------------------------------------------------------------------
 
@@ -362,7 +362,7 @@ async def test_a_cluster_that_stops_answering_refuses_runs_and_fails_health(bina
             assert cluster.probes == 1
 
             cluster.alive = False
-            # One stall isn't a dead cluster (Ruling 33): still ready.
+            # One stall isn't a dead cluster: still ready.
             stalled = await http.get(HEALTH_URL)
             assert (stalled.status_code, stalled.json()) == (200, {"status": "ok", "kwok": "ready"})
             assert (cluster.probes, app.state.kwok.liveness_failures) == (2, 1)
@@ -428,7 +428,7 @@ async def test_overlapping_checks_share_one_probe_and_give_up_once() -> None:
     cluster.gate.set()
     states = await asyncio.gather(*checks)
 
-    # One probe for the three, one failure: still ready (Ruling 33).
+    # One probe for the three, one failure: still ready.
     assert states == [KwokState.READY] * 3
     assert (cluster.probes, supervisor.liveness_failures, gave_up) == (1, 1, [])
     states = await asyncio.gather(*[supervisor.check_alive() for _ in range(3)])
@@ -491,7 +491,7 @@ async def test_a_cancelled_check_leaves_its_probe_to_finish() -> None:
 
 
 async def test_one_stall_is_tolerated_and_two_failures_in_a_row_fail_kwok() -> None:
-    """Ruling 33 (a single ~3 s stall restarted the tester): a probe that
+    """A single ~3 s stall mustn't restart the tester: a probe that
     fails once, between answers, leaves kwok ready and the count is reset by
     the next answer; only two failures in a row fail it, and give up once."""
     answers = [False, True, False, True, True, False, False]
@@ -545,9 +545,9 @@ print("uvicorn returned", flush=True)
 
 def test_the_service_exits_with_a_non_zero_status_once_its_cluster_stops_answering(binary_dir: Path) -> None:
     """The real path, in a real server: kwok came up, then its cluster stopped
-    answering; the second health request in a row that finds it (Ruling 33)
+    answering; the second health request in a row that finds it
     fails kwok, and the process ends with status 1 after uvicorn's graceful
-    shutdown (Ruling 26's exit)."""
+    shutdown."""
     import socket
     import time
 

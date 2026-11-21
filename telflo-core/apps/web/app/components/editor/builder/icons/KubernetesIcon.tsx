@@ -1,6 +1,6 @@
 /*
  * The Kubernetes mark, for the Kubernetes receivers and the k8sattributes
- * processor (D9a decision 10).
+ * processor.
  *
  * Source: devicon, `icons/kubernetes/kubernetes-plain.svg` at commit
  * d98a72cb9a6d8e543ddbddc32bac231572349e96 (2021-05-15),
@@ -11,7 +11,7 @@
  * mark names the system the component talks to. Listed in
  * docs/third-party-assets.md.
  *
- * A monochrome silhouette in the component type's colour; decorative, so
+ * A monochrome silhouette in the component type's color; decorative, so
  * hidden from assistive technology (the card's title names the component).
  */
 export function KubernetesIcon({ className }: { className?: string; strokeWidth?: number }) {

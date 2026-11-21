@@ -5,11 +5,11 @@ import { E2E_WEB_URL } from "./support/environment.js";
 import { memberRow } from "./support/permissions.js";
 import { signInThroughApi, switchOrganizationThroughApi, waitForHydration } from "./support/session.js";
 
-// Organizations, membership and switching (D5 decisions 9-11), in the
-// browser. These tests add a second member by SQL (support/database.ts's
-// addMember), since joining is not what they test; invitations.e2e.ts joins
-// through D6's invitations. A second person is a second browser context: their
-// own cookie jar, signed in on their own.
+// Organizations, membership and switching, in the browser. These tests add a
+// second member by SQL (support/database.ts's addMember), since joining is
+// not what they test; invitations.e2e.ts joins through the invitations. A
+// second person is a second browser context: their own cookie jar, signed in
+// on their own.
 
 const PASSWORD = "correct horse battery staple";
 
@@ -44,8 +44,8 @@ async function open(page: Page, path: string): Promise<void> {
 
 /**
  * The page's next client-side navigation: the sidebar's Configurations link,
- * to /app. The signed-in layout's loader runs on every navigation (D2b
- * Ruling 10), so it asks the API again.
+ * to /app. The signed-in layout's loader runs on every navigation, so it
+ * asks the API again.
  */
 async function navigate(page: Page): Promise<void> {
   await page.getByRole("link", { name: "Configurations" }).click();
@@ -115,7 +115,7 @@ test("after a switch in one tab, the other tab's next navigation shows the new o
   context,
 }) => {
   const user = await seedUser({ password: PASSWORD });
-  // Signed in before joining the group: the session starts in the personal organization (Q265).
+  // Signed in before joining the group: the session starts in the personal organization.
   await signInThroughApi(page, user);
   const group = await addMember({ userId: user.userId });
   const otherTab = await context.newPage();

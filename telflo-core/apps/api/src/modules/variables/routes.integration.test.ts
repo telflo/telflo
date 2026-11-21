@@ -26,7 +26,7 @@ import { UNCALLED_TESTING } from "../../testing/otelcol-testing.js";
 import { hashPassword } from "../identity/password.js";
 import { VARIABLES_UNAVAILABLE_MESSAGE } from "./errors.js";
 
-// The opamp-server every server needs (D11b decision 8): this file's own fake.
+// The opamp-server every server needs: this file's own fake.
 const opamp = useFakeOpampServer();
 
 const csrfHeaders = { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE };
@@ -85,12 +85,10 @@ interface Call {
 }
 
 /**
- * D20 decisions 1, 6, 14, 15, 18, 21 and 37 and Preflight rulings 25 to 27,
- * 39, 44 and 46, for the variables and variable groups routes (Task 10),
- * against Postgres through the API as its own role, with the
- * OpenAPI-checked fake as the opamp-server. The server's client is the
- * fake's, wrapped: every call is recorded, and a test can put a hook in
- * front of any method.
+ * The variables and variable groups routes, against Postgres through the
+ * API as its own role, with the OpenAPI-checked fake as the opamp-server.
+ * The server's client is the fake's, wrapped: every call is recorded, and a
+ * test can put a hook in front of any method.
  */
 describe("the variables and variable groups routes", () => {
   let settings: AppSettings;
@@ -219,7 +217,7 @@ describe("the variables and variable groups routes", () => {
       payload: { organizationId },
     });
     expect(response.statusCode).toBe(200);
-    // A no-op when the sign-in already landed there (D36-1 decision 56): no new cookie, the token sent stands.
+    // A no-op when the sign-in already landed there: no new cookie, the token sent stands.
     return response.headers["set-cookie"] === undefined ? access : cookieValue(response, "telflo_access");
   };
 
@@ -317,9 +315,9 @@ describe("the variables and variable groups routes", () => {
   };
 
   /**
-   * A version 1 of a configuration `creatorUserId` made, published as D11b
-   * leaves one with `yaml`: the platform's rows (as the owner) and the
-   * opamp-server's published copy, its names read from the text.
+   * A version 1 of a configuration `creatorUserId` made, published as
+   * publishing leaves one, with `yaml`: the platform's rows (as the owner)
+   * and the opamp-server's published copy, its names read from the text.
    */
   const publishedWith = async (organizationId: string, creatorUserId: string, yaml: string) => {
     const configuration = await addConfiguration(ownerDb, {
@@ -385,7 +383,7 @@ describe("the variables and variable groups routes", () => {
 
   // -------------------------------------------------------------------------
 
-  describe("every member reads and writes every route (Preflight rulings 25 and 46: no viewer role)", () => {
+  describe("every member reads and writes every route (no viewer role)", () => {
     it.each(["admin", "contributor"] as const)("a variable's life, for the %s: create, a retry, list, rename, revalue, describe, delete", async (role) => {
       const world = await team();
       const person = world[role];
@@ -471,7 +469,7 @@ describe("the variables and variable groups routes", () => {
       const reset = await send(person, "DELETE", overridePath(world.organizationId, id, variable.id));
       expect(reset.statusCode).toBe(204);
       expect((await send(person, "GET", groupPath(world.organizationId, id))).json()).toMatchObject({ variableGroup: { overrideCount: 0 }, overrides: [] });
-      // The Reset records its actor (Ruling 62).
+      // The Reset records its actor.
       expect(calls.filter((call) => call.operation === "resetVariableGroupOverride").map((call) => call.args[3])).toEqual([
         { id: person.userId, email: person.email },
       ]);
@@ -540,11 +538,11 @@ describe("the variables and variable groups routes", () => {
         expectRefusal(await send(world.admin, "POST", variablesPath(world.organizationId), body), 400, "invalid_request");
       }
       expect(operations()).toEqual([]);
-      // Q104's longest value is taken, four-byte characters counted once each.
+      // The longest value is taken, four-byte characters counted once each.
       expect((await aVariable(world.admin, world.organizationId, { value: "\u{1F680}".repeat(1024) })).value).toBe("\u{1F680}".repeat(1024));
     });
 
-    it("refuses a 151st variable (Q104) and a 101st variable group (409)", async () => {
+    it("refuses a 151st variable and a 101st variable group (409)", async () => {
       const world = await team();
       await registered(world.organizationId);
       for (let index = 0; index < 150; index += 1) {
@@ -701,7 +699,7 @@ describe("the variables and variable groups routes", () => {
 
   // -------------------------------------------------------------------------
 
-  describe("the audit rows (decision 37; Q94)", () => {
+  describe("the audit rows", () => {
     it("records each write after its success, ids and field names only, and none for a create's retry or a refusal", async () => {
       const world = await team();
       const canary = `CANARY_${randomUUID().replaceAll("-", "").toUpperCase()}`;
@@ -758,7 +756,7 @@ describe("the variables and variable groups routes", () => {
       expectNotLogged(canary, value, description, groupName);
     });
 
-    it("writes one override_set row for every PUT, a new override, a replace and the same value alike; one override_reset for every Reset, of a live override, of none and of a reset row alike (Preflight ruling 44)", async () => {
+    it("writes one override_set row for every PUT, a new override, a replace and the same value alike; one override_reset for every Reset, of a live override, of none and of a reset row alike", async () => {
       const world = await team();
       const variable = await aVariable(world.admin, world.organizationId);
       const group = await aVariableGroup(world.admin, world.organizationId);
@@ -783,7 +781,7 @@ describe("the variables and variable groups routes", () => {
 
   // -------------------------------------------------------------------------
 
-  describe("the in-use refusals' details (decision 6; Preflight ruling 26; Q102)", () => {
+  describe("the in-use refusals' details", () => {
     /**
      * A variable a published version references, assigned to a collector
      * group in each of two fleets and pinned on one collector; a variable
@@ -843,7 +841,7 @@ describe("the variables and variable groups routes", () => {
         expect(detailsOf(renamed)).toEqual(expected);
       }
       expect(opamp.fake.snapshotOf(world.organizationId)).toEqual(before);
-      // A value change is never refused (decision 6).
+      // A value change is never refused.
       expect((await send(world.admin, "PATCH", variablePath(world.organizationId, world.variable.id), { value: "changed" })).statusCode).toBe(200);
       expect((await variableAudits(world.organizationId)).map((row) => row.action).filter((action) => action !== "organization_variable.created" && action !== "variable_group.created")).toEqual([
         "organization_variable.updated",
@@ -920,7 +918,7 @@ describe("the variables and variable groups routes", () => {
       });
     });
 
-    it("passes the opamp-server's totals through beside at most 100 listed entries (Q102)", async () => {
+    it("passes the opamp-server's totals through beside at most 100 listed entries", async () => {
       const world = await team();
       const variable = await aVariable(world.admin, world.organizationId);
       calls = [];
@@ -950,7 +948,7 @@ describe("the variables and variable groups routes", () => {
 
   // -------------------------------------------------------------------------
 
-  describe("the drafts warning (default 21; Preflight ruling 27)", () => {
+  describe("the drafts warning", () => {
     const draftsOf = async (person: Person, organizationId: string, variableId: string) => {
       const response = await send(person, "GET", `${variablePath(organizationId, variableId)}/drafts`);
       expect(response.statusCode).toBe(200);
@@ -1013,7 +1011,7 @@ describe("the variables and variable groups routes", () => {
       expect(await draftsOf(world.admin, world.organizationId, variable.id)).toEqual([publishedThenDraft, mine, escapedAndLive]);
       // A published configuration's draft every member sees; another's draft configuration only its author.
       expect(await draftsOf(world.contributor, world.organizationId, variable.id)).toEqual([publishedThenDraft, theirs]);
-      // Only the variable's id travelled: the name was read from the opamp-server.
+      // Only the variable's id traveled: the name was read from the opamp-server.
       expect(operations().filter((operation) => operation === "listVariables")).toHaveLength(2);
       expectNotLogged(variable.name, "b-mine-draft", "endpoint");
     });
@@ -1028,7 +1026,7 @@ describe("the variables and variable groups routes", () => {
 
   // -------------------------------------------------------------------------
 
-  describe("the one 503 (decision 1): variables_unavailable, nothing changed", () => {
+  describe("the one 503: variables_unavailable, nothing changed", () => {
     const FAULTS = ["error_500", "reset", "malformed_reply"] as const;
 
     // A malformed reply comes after the opamp-server's change: a write's 503 can follow a change it made (its message says so).
@@ -1072,7 +1070,7 @@ describe("the variables and variable groups routes", () => {
 
   // -------------------------------------------------------------------------
 
-  describe("an error's own words never reach a log or a reply (Ruling 71)", () => {
+  describe("an error's own words never reach a log or a reply", () => {
     it("logs no message a throw carries, on every route's call and a create's registration and in a 409's lookups; the 503 body holds none either", async () => {
       const world = await team();
       const variable = await aVariable(world.admin, world.organizationId);
@@ -1113,7 +1111,7 @@ describe("the variables and variable groups routes", () => {
     });
   });
 
-  describe("the person's opamp-server budget, shared with the fleet routes (D16b Preflight ruling 12)", () => {
+  describe("the person's opamp-server budget, shared with the fleet routes", () => {
     let limited: FastifyInstance;
 
     beforeAll(async () => {
@@ -1168,7 +1166,7 @@ describe("the variables and variable groups routes", () => {
     });
   });
 
-  describe("a 409's name lookups, bounded (Ruling 71)", () => {
+  describe("a 409's name lookups, bounded", () => {
     /** A `variable_in_use` naming one group in each of `fleets` fleets, none of them the organization's. */
     const inUseAcross = (fleets: number) => ({
       kind: "variable_in_use",
@@ -1236,7 +1234,7 @@ describe("the variables and variable groups routes", () => {
     });
   });
 
-  describe("a create racing its organization's delete (D16b Preflight ruling 13)", () => {
+  describe("a create racing its organization's delete", () => {
     it("deletes the organization in the opamp-server again and answers 404 when it was deleted while the create ran", async () => {
       const world = await team();
       hooks.createVariable = async (...args: unknown[]) => {

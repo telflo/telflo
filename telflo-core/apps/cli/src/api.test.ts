@@ -30,8 +30,8 @@ import { ExitError, setIo, setJsonMode } from "./output.js";
 import { VERSION } from "./version.js";
 
 /*
- * The client (D27 decisions 16-18), against a stand-in fetch. The token is
- * made at run time and checked with boolean canaries only.
+ * The client, against a stand-in fetch. The token is made at run time and
+ * checked with boolean canaries only.
  */
 
 const SERVER = "https://telflo.example";
@@ -59,7 +59,7 @@ async function refusal(promise: Promise<unknown>): Promise<unknown> {
   throw new Error("the request didn't fail");
 }
 
-describe("the client's requests (decision 16)", () => {
+describe("the client's requests", () => {
   it("calls the public prefix with the token, Accept, User-Agent and no redirect followed", async () => {
     const fake = fakeFetch(() => ({ json: { ok: true } }));
     const client = new ApiClient({ server: SERVER, token: TOKEN, fetch: fake.fetch });
@@ -125,7 +125,7 @@ describe("the client's requests (decision 16)", () => {
     expect((error as ApiError).message).toBe(UNEXPECTED_REPLY_MESSAGE(200));
   });
 
-  it("parses a JSON reply that starts with a BOM, dropping one (Ruling 242)", async () => {
+  it("parses a JSON reply that starts with a BOM, dropping one", async () => {
     const fake = fakeFetch((_call, index) =>
       new Response(index === 0 ? '\uFEFF{"ok":true}' : '\uFEFF\uFEFF{"ok":true}', { headers: { "content-type": "application/json" } }),
     );
@@ -146,7 +146,7 @@ describe("the client's requests (decision 16)", () => {
     expect(((await refusal(client.request("GET", "/fleets"))) as ApiError).message).toBe(UNEXPECTED_REPLY_MESSAGE(200));
   });
 
-  it("is made only for an origin the HTTPS rule accepts (decision 12)", () => {
+  it("is made only for an origin the HTTPS rule accepts", () => {
     for (const server of ["http://telflo.example", "https://telflo.example/api", "https://telflo.example/", "telflo.example"]) {
       expect(() => new ApiClient({ server, token: TOKEN })).toThrow(ExitError);
     }
@@ -164,7 +164,7 @@ describe("the client's requests (decision 16)", () => {
   });
 });
 
-describe("path segments (decision 16)", () => {
+describe("path segments", () => {
   it("percent-encodes a segment and refuses . and ..", () => {
     expect(segment("a b/c?d#e")).toBe("a%20b%2Fc%3Fd%23e");
     expect(() => segment(".")).toThrow(ExitError);
@@ -180,7 +180,7 @@ describe("path segments (decision 16)", () => {
   });
 });
 
-describe("errors in fixed words (decision 18)", () => {
+describe("errors in fixed words", () => {
   it("shows the envelope's message and keeps its code and details", async () => {
     const details = { errors: [{ message: "m" }] };
     const fake = fakeFetch(() => ({ status: 422, json: envelope("configuration_invalid", "The YAML isn't valid.", details) }));
@@ -216,7 +216,7 @@ describe("errors in fixed words (decision 18)", () => {
     expect(error.message.includes("nginx")).toBe(false);
   });
 
-  it("redacts a token an envelope's message quotes (Ruling 237)", async () => {
+  it("redacts a token an envelope's message quotes", async () => {
     const fake = fakeFetch(() => ({ status: 400, json: envelope("bad", `Refused: Bearer ${TOKEN}`) }));
     const error = (await refusal(new ApiClient({ server: SERVER, token: TOKEN, fetch: fake.fetch }).request("GET", "/a"))) as ApiError;
     expect(error.message.includes(TOKEN)).toBe(false);
@@ -273,7 +273,7 @@ describe("errors in fixed words (decision 18)", () => {
   });
 });
 
-describe("429 and Retry-After (decision 17, Preflight ruling 10)", () => {
+describe("429 and Retry-After", () => {
   function limited(retryAfter: string | undefined) {
     return {
       status: 429,
@@ -293,7 +293,7 @@ describe("429 and Retry-After (decision 17, Preflight ruling 10)", () => {
     expect(stderr).toEqual([`${RATE_LIMIT_WAIT_LINE(7)}\n`, `${RATE_LIMIT_WAIT_LINE(2)}\n`]);
   });
 
-  it("with --json, each wait is one JSON note on stderr (Ruling 249)", async () => {
+  it("with --json, each wait is one JSON note on stderr", async () => {
     setJsonMode(true);
     try {
       const fake = fakeFetch((_call, index) => (index < 1 ? limited("4") : { json: { ok: true } }));
@@ -356,7 +356,7 @@ describe("429 and Retry-After (decision 17, Preflight ruling 10)", () => {
   });
 });
 
-describe("paged lists (decision 16)", () => {
+describe("paged lists", () => {
   it("follows nextCursor with limit=100", async () => {
     const fake = routedFetch({
       "GET /fleets": (call) => {
@@ -398,7 +398,7 @@ describe("paged lists (decision 16)", () => {
   });
 });
 
-describe("the reply's size (Ruling 237)", () => {
+describe("the reply's size", () => {
   it("refuses a JSON reply over 16 MiB, streamed or declared (exit 1)", async () => {
     const big = `"${"a".repeat(MAXIMUM_REPLY_BYTES)}"`;
     const streamed = fakeFetch(() => new Response(big, { headers: { "content-type": "application/json" } }));
@@ -423,7 +423,7 @@ describe("the reply's size (Ruling 237)", () => {
     expect(((await refusal(client.request("GET", "/test-runs/r/output", { text: true }))) as ExitError).message).toBe(REPLY_TOO_LARGE_MESSAGE);
   });
 
-  it("answers the reply's bytes exactly with bytes: true, a BOM and an invalid byte kept (Ruling 238)", async () => {
+  it("answers the reply's bytes exactly with bytes: true, a BOM and an invalid byte kept", async () => {
     const sent = Buffer.from([0xef, 0xbb, 0xbf, 0x61, 0xff, 0x62, 0x0a]);
     const fake = fakeFetch(() => new Response(sent, { headers: { "content-type": "text/plain; charset=utf-8" } }));
     const client = new ApiClient({ server: SERVER, token: TOKEN, fetch: fake.fetch });

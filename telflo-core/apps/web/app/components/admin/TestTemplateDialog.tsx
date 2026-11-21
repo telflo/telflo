@@ -25,14 +25,13 @@ import { receiverTypeLabel, signalLabel, TEMPLATE_SIGNALS_IN_ORDER } from "~/lib
  * A test template's dialog: a template's name, receiver type, signal type,
  * description and (when new) file; its placeholders, limits, messages (each
  * shown on Create or Save, all at once) and buttons; not closable while it
- * saves. Per the D14b Parity Notes:
- * - the receiver types are the API's list (TEST_TEMPLATE_RECEIVER_TYPES,
- *   the palette's 18 receivers) by their palette labels (Preflight ruling
- *   12); a template whose stored type the list lacks keeps it, shown as it
- *   is;
+ * saves:
+ * - the receiver types are the API's list (TEST_TEMPLATE_RECEIVER_TYPES, the
+ *   palette's 18 receivers) by their palette labels; a template whose stored
+ *   type the list lacks keeps it, shown as it is;
  * - the file is checked as it is picked: one of the six extensions, up to
- *   10 MiB, in the API's 415 and 413 words (`uploadRefusal`, as D14a's
- *   UploadPanel), and Create holds while it is refused;
+ *   10 MiB, in the API's 415 and 413 words (`uploadRefusal`, as
+ *   UploadPanel's), and Create holds while it is refused;
  * - a refusal shows the API's words (a 413 or 415 included), else
  *   "Failed to create template" / "Failed to update template"
  *   (`failureMessage`), so the 10 MB refusal is never hidden;
@@ -42,11 +41,10 @@ import { receiverTypeLabel, signalLabel, TEMPLATE_SIGNALS_IN_ORDER } from "~/lib
  *   receiver type the list lacks isn't sent back for the API to refuse; a
  *   description left empty is `''`, not null;
  * - the chosen file's name shows as text, not as a read-only input's value
- *   (an attribute; ADR 0024), and with the hidden file input it is blocked
- *   from replay (`ph-no-capture`): replay records a file input's value,
- *   "C:\fakepath\<the file's name>", whatever maskAllInputs says (D14a's
- *   finding; D14b Preflight ruling 19). The Name and Description values
- *   sit under maskAllInputs.
+ *   (an attribute), and with the hidden file input it is blocked from
+ *   replay (`ph-no-capture`): replay records a file input's value,
+ *   "C:\fakepath\<the file's name>", whatever maskAllInputs says. The Name
+ *   and Description values sit under maskAllInputs.
  */
 
 interface TestTemplateDialogProps {
@@ -286,7 +284,7 @@ export function TestTemplateDialog({
             <div className="space-y-2">
               <span className="mb-2 block text-sm font-medium leading-none">File</span>
               <div className="flex gap-2">
-                {/* The name as text, never an input's value, and blocked from replay (Preflight ruling 19). */}
+                {/* The name as text, never an input's value, and blocked from replay. */}
                 <div className="ph-no-capture flex h-8 flex-1 min-w-0 items-center truncate rounded-md border border-input bg-muted px-3 text-[13px] text-muted-foreground cursor-default">
                   {file?.name ?? "No file selected"}
                 </div>
@@ -303,7 +301,7 @@ export function TestTemplateDialog({
               </div>
               {/* Blocked from replay (`ph-no-capture`): rrweb records a file
                   input's value, "C:\fakepath\<the file's name>", as it
-                  changes, whatever maskAllInputs says (D14a's finding). */}
+                  changes, whatever maskAllInputs says. */}
               <input
                 ref={fileInputRef}
                 type="file"

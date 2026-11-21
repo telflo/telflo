@@ -1,4 +1,4 @@
-# Lists of mappings and scalars that forms edit by item (D9b decision 2).
+# Lists of mappings and scalars that forms edit by item.
 receivers:
   otlp:
     protocols:

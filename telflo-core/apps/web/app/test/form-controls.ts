@@ -1,12 +1,11 @@
 import { screen } from "@testing-library/react";
 
 /*
- * The controls a rendered form shows, for the "opening writes nothing"
- * tests (D9c final review M6): they focus every text field, so each checks
- * that it found the form's fields and that opening its sections showed
- * them, against a minimum per form. A broken selector, a section that no
- * longer opens or a form that renders nothing then fails the test rather
- * than passing over no fields.
+ * The controls a rendered form shows, for the "opening writes nothing" tests:
+ * they focus every text field, so each checks that it found the form's fields
+ * and that opening its sections showed them, against a minimum per form. A
+ * broken selector, a section that no longer opens or a form that renders
+ * nothing then fails the test rather than passing over no fields.
  */
 
 const OTHER_ROLES = ["checkbox", "combobox", "radio", "spinbutton"] as const;

@@ -2,8 +2,7 @@
 # Fails if any Python package the validator ships carries a license that does
 # not allow redistribution. telflo ships the validator's image too, so its
 # Python dependencies follow the same rule as the npm and Go ones.
-# Only licenses on the policy's allowed list pass (ADR 0019; D13b Preflight
-# ruling 12).
+# Only licenses on the policy's allowed list pass.
 #
 # Usage: scripts/check-licenses.sh [license-policy.json] [lock]
 #
@@ -28,8 +27,8 @@
 # name npm packages and are not read here.
 #
 # The image's base (python:3.12-slim) and the collectors it bakes are not
-# Python packages and aren't scanned here: ADR 0019 lists them as reviewed
-# components, pinned by digest and sha256.
+# Python packages and aren't scanned here: they are reviewed components,
+# pinned by digest and sha256.
 #
 # Exits 0 when every license is allowed, 1 when one isn't, 2 when the check
 # itself can't run.

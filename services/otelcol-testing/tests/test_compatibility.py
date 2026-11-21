@@ -1,6 +1,5 @@
-"""The compatibility checks; D14a Task 4's rules (C-002 with a non-mapping
-processor, C-000 never quoting the text, the configuration's shape) are
-tested at the end."""
+"""The compatibility checks; C-002 with a non-mapping processor, C-000 never
+quoting the text, and the configuration's shape are tested at the end."""
 
 from __future__ import annotations
 
@@ -613,7 +612,7 @@ service:
 
 
 # ---------------------------------------------------------------------------
-# D14a Task 4's fixes
+# C-002 with a non-mapping processor, C-000, the configuration's shape
 # ---------------------------------------------------------------------------
 
 import pytest  # noqa: E402

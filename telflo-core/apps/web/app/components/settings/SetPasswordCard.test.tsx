@@ -9,7 +9,7 @@ import { SET_PASSWORD_FAILED_MESSAGE } from "~/lib/account.js";
 import { ACCOUNT_EMAIL, held } from "~/test/account.js";
 import { expectNoAttributeHolds } from "~/test/fleets.js";
 
-/* Set a Password (D21 decisions 36 and 45): D3's reset link for the account's own email. */
+/* Set a Password: the password reset link for the account's own email. */
 
 function Card() {
   return <SetPasswordCard email={ACCOUNT_EMAIL} setPassword={useSetPassword(ACCOUNT_EMAIL)} />;

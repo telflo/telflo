@@ -16,16 +16,15 @@ import { hashPassword } from "../identity/password.js";
 import { apiTokenHash } from "../service-accounts/tokens.js";
 
 /*
- * A person's own API tokens on their Account page (D25 decisions 27 to 29;
- * Preflight ruling 14): GET, POST and DELETE /api/v1/auth/me/api-tokens,
- * through the real server as the API's own role. The list (the person's
- * own, by prefix), the create (201 once with the token, no-store; the
- * stored hash; the expiry), the name's uniqueness, the cap of 20 live,
- * the revoke (204; again, another person's, an unknown or a malformed id:
- * the one 404), the audit rows (ids and fixed values only, under the
- * session's active organization), a session and the CSRF header needed,
- * the current terms not, and the token working on the public surface until
- * it is revoked.
+ * A person's own API tokens on their Account page: GET, POST and DELETE
+ * /api/v1/auth/me/api-tokens, through the real server as the API's own role.
+ * The list (the person's own, by prefix), the create (201 once with the token,
+ * no-store; the stored hash; the expiry), the name's uniqueness, the cap of 20
+ * live, the revoke (204; again, another person's, an unknown or a malformed
+ * id: the one 404), the audit rows (ids and fixed values only, under the
+ * session's active organization), a session and the CSRF header needed, the
+ * current terms not, and the token working on the public surface until it is
+ * revoked.
  *
  * Tokens are built by the API at run time and never printed: every reply
  * that could hold one is checked with booleans first.
@@ -57,7 +56,7 @@ interface ListedToken {
   isExpired: boolean;
 }
 
-describe("a person's own API tokens (D25 decision 28)", () => {
+describe("a person's own API tokens", () => {
   let settings: AppSettings;
   let db: Kysely<Database>;
   let ownerDb: Kysely<Database>;
@@ -197,7 +196,7 @@ describe("a person's own API tokens (D25 decision 28)", () => {
       payload: { organizationId: team.id },
     });
     expect(switched.statusCode).toBe(200);
-    // A no-op when the sign-in already landed there (D36-1 decision 56): no new cookie, the token sent stands.
+    // A no-op when the sign-in already landed there: no new cookie, the token sent stands.
     const inTeam = { access: (switched.headers["set-cookie"] === undefined ? ana.access : cookieValue(switched, "telflo_access")) };
 
     const { token, apiToken } = await create(inTeam, { name: "Audited name", access: "read", expiresInDays: null });
@@ -247,7 +246,7 @@ describe("a person's own API tokens (D25 decision 28)", () => {
     expect((await create(ana, { name: "deploy", access: "read", expiresInDays: null })).response.statusCode).toBe(201);
   });
 
-  it("holds at most 20 live tokens, as D22 (Q137; Ruling 180): an expired one doesn't count; the 21st live is 409 api_token_limit_reached; a revoke frees a place", async () => {
+  it("holds at most 20 live tokens, as a service account does: an expired one doesn't count; the 21st live is 409 api_token_limit_reached; a revoke frees a place", async () => {
     const ana = await signedIn();
     const live = [];
     for (let index = 0; index < 19; index += 1) {
@@ -331,7 +330,7 @@ describe("a person's own API tokens (D25 decision 28)", () => {
     expect((await ownerDb.selectFrom("personal_api_tokens").select("id").execute()).length).toBe(1);
   });
 
-  it("refuses a request outside D22's rules (400): a name too long, an expiry out of range, an unknown field", async () => {
+  it("refuses a malformed request (400): a name too long, an expiry out of range, an unknown field", async () => {
     const ana = await signedIn();
     for (const payload of [
       { name: "x".repeat(65), access: "read", expiresInDays: null },

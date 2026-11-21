@@ -13,8 +13,8 @@ import {
 } from "./bootstrap.js";
 
 /*
- * `telflo-admin bootstrap`'s usage (D36-1 decision 37): exit 2 with fixed
- * lines, before anything is opened. Its paths against the database and
+ * `telflo-admin bootstrap`'s usage: exit 2 with fixed lines, before
+ * anything is opened. Its paths against the database and
  * Mailpit are bootstrap.integration.test.ts's.
  */
 
@@ -41,7 +41,7 @@ describe("parseBootstrapArguments", () => {
     ["--email twice", ["--email", EMAIL, "--email", "other@example.com", "--organization", "Acme"]],
     ["--organization twice", ["--email", EMAIL, "--organization", "Acme", "--organization=Beta"]],
     ["--email without a value", ["--organization", "Acme", "--email"]],
-    // Q266: the link is always printed; the flag that asked for it is gone, refused as any unknown option.
+    // The link is always printed, so there is no --print-link: it is refused as any unknown option.
     ["--print-link", ["--email", EMAIL, "--organization", "Acme", "--print-link"]],
     ["--print-link first", ["--print-link", "--email", EMAIL, "--organization", "Acme"]],
     ["--print-link with a value", ["--email", EMAIL, "--organization", "Acme", "--print-link=yes"]],
@@ -75,7 +75,7 @@ describe("parseBootstrapArguments", () => {
   });
 });
 
-describe("parseResetLinkArguments (Q258)", () => {
+describe("parseResetLinkArguments", () => {
   it("reads --email, trimmed and lowercased, in either spelling", () => {
     for (const args of [["--email", " First-Admin@Example.com "], [`--email=${EMAIL}`]]) {
       expect(parseResetLinkArguments(args)).toEqual({ kind: "reset-link", input: { email: EMAIL } });
@@ -111,7 +111,7 @@ describe("runAdminCommand", () => {
     return { code, out, err, opened: open.mock.calls.length > 0 };
   };
 
-  it("names --email and --organization, and no other option, in the usage line (Q266)", () => {
+  it("names --email and --organization, and no other option, in the usage line", () => {
     expect(BOOTSTRAP_USAGE).toBe("Usage: telflo-admin bootstrap --email <email> --organization <name>");
     expect(BOOTSTRAP_USAGE_PROBLEMS.arguments).toBe("telflo-admin bootstrap takes --email and --organization, each once, and nothing else.");
   });
@@ -135,7 +135,7 @@ describe("runAdminCommand", () => {
     }
   });
 
-  it("answers 2 for --print-link, gone with Q266, and for any other unknown flag, opening nothing", async () => {
+  it("answers 2 for --print-link, which isn't an option, and for any other unknown flag, opening nothing", async () => {
     for (const flag of ["--print-link", "--verbose"]) {
       expect(await run(["bootstrap", "--email", EMAIL, "--organization", "Acme", flag])).toEqual({
         code: 2,
@@ -180,7 +180,7 @@ describe("runAdminCommand", () => {
   });
 });
 
-describe("REFUSING_MAILER (decision 54, Q266)", () => {
+describe("REFUSING_MAILER", () => {
   it("sends nothing: every send is refused", async () => {
     await expect(REFUSING_MAILER.send({ to: EMAIL, subject: "s", text: "t", html: "h" })).rejects.toThrow();
   });

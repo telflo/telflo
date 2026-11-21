@@ -1,11 +1,10 @@
 /**
- * The run dialog's Templates step (D14b decision 13; Preflight rulings 12, 17
- * and 19): the live templates read afresh each time the step shows, the
- * filters by receiver type (palette labels) and signal, the details, the
- * viewer, the download (bytes, the original file name, a detached anchor),
- * the pick for a one-off run (its head from `…/file/head`), a template
- * deleted after it was picked, a failed read, and replay's rule (no name in
- * an attribute or a URL).
+ * The run dialog's Templates step: the live templates read afresh each time
+ * the step shows, the filters by receiver type (palette labels) and signal,
+ * the details, the viewer, the download (bytes, the original file name, a
+ * detached anchor), the pick for a one-off run (its head from
+ * `…/file/head`), a template deleted after it was picked, a failed read,
+ * and replay's rule (no name in an attribute or a URL).
  *
  * Rendered in the whole tab, as TestingTab.test.tsx does: Monaco is stubbed;
  * the API is its client's functions, spied on; toasts are spied on.
@@ -154,7 +153,7 @@ async function choose(user: ReturnType<typeof userEvent.setup>, filter: "Receive
   await user.click(await screen.findByRole("option", { name: option }));
 }
 
-describe("the Templates step (Preflight ruling 17)", () => {
+describe("the Templates step", () => {
   it("lists the live templates, read afresh each time the step shows", async () => {
     const { user, dialog } = await openTemplates();
     expect(names()).toEqual(["zq-otlp-logs", "zq-app-lines", "zq-host-metrics"]);
@@ -168,12 +167,12 @@ describe("the Templates step (Preflight ruling 17)", () => {
     expect(listTemplates).toHaveBeenCalledTimes(2);
   });
 
-  it("filters by 'Receiver Type' and 'Signal Type': 'Any' at first, the values present sorted by their labels (the palette's; 'Logs', 'Metrics': Ruling 40), each filter labelled", async () => {
+  it("filters by 'Receiver Type' and 'Signal Type': 'Any' at first, the values present sorted by their labels (the palette's; 'Logs', 'Metrics'), each filter labeled", async () => {
     const { user } = await openTemplates();
 
     expect(screen.getByRole("combobox", { name: "Receiver Type" })).toHaveTextContent("Any");
     expect(screen.getByRole("combobox", { name: "Signal Type" })).toHaveTextContent("Any");
-    // Labelled from the palette (the next test shows the order is the labels').
+    // Labeled from the palette (the next test shows the order is the labels').
     expect(await optionsOf(user, "Receiver Type")).toEqual(["Any", "File Log", "Host Metrics", "OTLP"]);
     expect(await optionsOf(user, "Signal Type")).toEqual(["Any", "Logs", "Metrics"]);
 
@@ -186,7 +185,7 @@ describe("the Templates step (Preflight ruling 17)", () => {
     expect(names()).toEqual(["zq-host-metrics"]);
   });
 
-  it("forgets the highlight of a template a filter hides: it doesn't come back highlighted when the filter widens, and OK holds (D14b Ruling 42)", async () => {
+  it("forgets the highlight of a template a filter hides: it doesn't come back highlighted when the filter widens, and OK holds", async () => {
     const { user, dialog } = await openTemplates();
     await user.click(screen.getByRole("button", { name: "zq-otlp-logs", pressed: false }));
     expect(screen.getByRole("button", { name: "zq-otlp-logs", pressed: true })).toBeInTheDocument();
@@ -202,7 +201,7 @@ describe("the Templates step (Preflight ruling 17)", () => {
     expect(within(dialog).getByRole("button", { name: "OK" })).toBeDisabled();
   });
 
-  it("sorts the receiver types by label, the raw value as a fallback (ruling 12): by value they would sort the other way", async () => {
+  it("sorts the receiver types by label, the raw value as a fallback: by value they would sort the other way", async () => {
     listTemplates.mockResolvedValue({
       templates: [
         templateFixture({ id: "0199f200-0000-7000-8000-000000000011", receiverType: "kubelet_zz", name: "zq-a" }),
@@ -372,7 +371,7 @@ describe("the Templates step (Preflight ruling 17)", () => {
   });
 });
 
-describe("a template deleted after it was picked, the list's read failing (D14b Ruling 42)", () => {
+describe("a template deleted after it was picked, the list's read failing", () => {
   it("clears the selection all the same: the dialog's and the remembered one (Run remembers it before it queues)", async () => {
     const { user, dialog } = await openTemplates();
     await user.click(screen.getByRole("button", { name: "zq-otlp-logs", pressed: false }));
@@ -391,7 +390,7 @@ describe("a template deleted after it was picked, the list's read failing (D14b 
   });
 });
 
-describe("replay (Preflight ruling 19; ADR 0024)", () => {
+describe("replay", () => {
   it("puts no template name, description or file name in any attribute, with the list, the details and the viewer shown", async () => {
     const { user } = await openTemplates();
     await user.click(screen.getByRole("button", { name: "Show details for zq-otlp-logs" }));

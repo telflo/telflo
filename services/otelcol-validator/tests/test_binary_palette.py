@@ -1,15 +1,15 @@
-"""The palette's defaults against every offered collector (D13b decision 9,
-Preflight rulings 3 and 22; marked `binary`, run inside the image with
-`pytest -m binary`).
+"""The palette's defaults against every offered collector (marked `binary`,
+run inside the image with `pytest -m binary`).
 
 `fixtures/palette-defaults.json` holds what a drop of each palette entry
 writes, spelled as each offered version's pin knows it, in the smallest
-configuration around it. The web writes it (`npm run fixture:palette-defaults
---workspace @telflo/web`, telflo-core/apps/web/scripts/palette-defaults.ts)
-and its suite fails when it is stale. Each text must pass the service's check
-on every version it is for (requirements allowed), but for the refusals the
-owner accepted (Preflight ruling 3: the palette is left as it is), each
-asserted with the collector's answer, so an upstream change is noticed.
+configuration around it. The web writes it
+(`npm run fixture:palette-defaults --workspace @telflo/web`,
+telflo-core/apps/web/scripts/palette-defaults.ts) and its suite fails when it
+is stale. Each text must pass the service's check on every version it is for
+(requirements allowed), but for the refusals accepted as they are (the
+palette is left as it is), each asserted with the collector's answer, so an
+upstream change is noticed.
 """
 
 from __future__ import annotations
@@ -26,8 +26,8 @@ pytestmark = pytest.mark.binary
 FIXTURE = json.loads((Path(__file__).parent / "fixtures" / "palette-defaults.json").read_text())
 CASES = FIXTURE["cases"]
 
-# The owner's accepted refusals (Preflight ruling 3): palette id -> (why, the
-# collector's answer on every offered version).
+# The accepted refusals: palette id -> (why, the collector's answer on every
+# offered version).
 EXPECTED_REFUSALS: dict[str, tuple[str, list[dict]]] = {
     "memory-limiter-extension": (
         "Contrib has no memory_limiter extension (the processor is the component); the entry's help says so.",
@@ -50,8 +50,8 @@ EXPECTED_REFUSALS: dict[str, tuple[str, list[dict]]] = {
 
 
 def test_the_fixture_is_for_the_offered_versions() -> None:
-    """The fixture's versions are the catalogue's offered ones (the web's
-    test checks it against the catalogue too: a stale fixture is refreshed
+    """The fixture's versions are the catalog's offered ones (the web's
+    test checks it against the catalog too: a stale fixture is refreshed
     there)."""
     for case in CASES:
         assert case["distribution"] == DISTRIBUTION

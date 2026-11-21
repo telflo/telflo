@@ -7,7 +7,7 @@ import { initMonaco } from "~/lib/editor/monaco-setup.js";
  * as the YAML tab and SampleEditor do: a mount before `loader.config`
  * fetches Monaco from a CDN. "Loading editor…" until then; "The editor
  * couldn't load." with "Try again" when it fails (SampleEditor's words).
- * The viewers and Compare share it (D14a Preflight ruling 14).
+ * The viewers and Compare share it.
  */
 export function MonacoGate({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<"loading" | "ready" | "failed">("loading");

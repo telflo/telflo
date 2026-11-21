@@ -15,7 +15,7 @@ import {
 const TEMPLATE_ID = "0190a1b2-c3d4-7e5f-8a9b-0c1d2e3f4a70";
 
 describe("the limits and lists", () => {
-  it("are migration 029's bounds, the list's 1,000 and Preflight ruling 11's parts, in order", () => {
+  it("are migration 029's bounds, the list's 1,000 and the upload's parts, in order", () => {
     expect(TEST_TEMPLATE_NAME_MAXIMUM_LENGTH).toBe(200);
     expect(TEST_TEMPLATE_DESCRIPTION_MAXIMUM_LENGTH).toBe(2_000);
     expect(TEST_TEMPLATES_LIST_MAXIMUM).toBe(1_000);
@@ -98,7 +98,7 @@ describe("the responses", () => {
   it("carry a template, alone and in a list", () => {
     expect(TestTemplateResponseSchema.parse({ template })).toEqual({ template });
     expect(TestTemplatesResponseSchema.parse({ templates: [template] })).toEqual({ templates: [template] });
-    // A stored receiver type the list no longer offers still serialises.
+    // A stored receiver type the list no longer offers still serializes.
     expect(TestTemplateSchema.safeParse({ ...template, receiverType: "kafka" }).success).toBe(true);
   });
 

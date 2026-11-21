@@ -1,15 +1,14 @@
 /*
- * `telflo deploy` (D27 decision 28; Preflight ruling 22) on the platform's
- * collector groups (D25 routes 20, 21 and 23): the configuration's version
- * (the given one, else its highest published) goes to the one group of the
- * fleet serving the configuration (updated), or to a new group (`--name`).
- * A new fleet's first deploy (Ruling 248): no group serves it, no `--group`
- * or `--name`, and the fleet's Default group serves nothing, so the version
- * goes to the Default group (an update), which `fleet install` then joins.
- * Several groups serving it is exit 2 listing their ids: a group's name is
- * configuration text, never in an error. Every id goes through
- * `canonicalIdOf` before it's compared or sent. Data only: the command
- * prints.
+ * `telflo deploy` on the platform's collector groups (routes 20, 21 and
+ * 23): the configuration's version (the given one, else its highest
+ * published) goes to the one group of the fleet serving the configuration
+ * (updated), or to a new group (`--name`). A new fleet's first deploy: no
+ * group serves it, no `--group` or `--name`, and the fleet's Default group
+ * serves nothing, so the version goes to the Default group (an update),
+ * which `fleet install` then joins. Several groups serving it is exit 2
+ * listing their ids: a group's name is configuration text, never in an
+ * error. Every id goes through `canonicalIdOf` before it's compared or
+ * sent. Data only: the command prints.
  */
 
 import type {
@@ -64,7 +63,7 @@ function servesNothingAsDefault(group: GroupRef): boolean {
 
 export type DeployTarget = { kind: "update"; id: string } | { kind: "create" } | { kind: "ambiguous"; candidates: string[] };
 
-/** What a deploy asks for a new group: `--name`, and `--role` (a role but `node` means a new group: Ruling 254). */
+/** What a deploy asks for a new group: `--name`, and `--role` (a role but `node` means a new group). */
 export interface NewGroupIntent {
   name?: string | undefined;
   role?: KubernetesRole | undefined;
@@ -75,8 +74,8 @@ export interface NewGroupIntent {
  * configuration is this one (ids compared canonically); several are
  * ambiguous. When none serves it: a create when the deploy asks for a new
  * group (`--name`, or a `--role` but `node`); otherwise the fleet's
- * Default group when it serves no version (a new fleet's first deploy,
- * Ruling 248), else a create (which asks for `--name`).
+ * Default group when it serves no version (a new fleet's first deploy),
+ * else a create (which asks for `--name`).
  */
 export function resolveDeployTarget(
   groups: readonly GroupRef[],

@@ -13,24 +13,23 @@ import {
 } from "./repositories/personal-api-token-repository.js";
 
 /*
- * A person's own API tokens (D25 decisions 3 and 27 to 29; Preflight ruling
- * 14), on their Account page: listed, created once (the token crosses the
- * API only in the create's reply) and revoked, never deleted. Only the
- * person sees or revokes them: organization admins can't. A personal token
- * acts as its person in any organization they belong to, named per request
- * by X-Telflo-Org (the public surface's token check).
+ * A person's own API tokens, on their Account page: listed, created once (the
+ * token crosses the API only in the create's reply) and revoked, never
+ * deleted. Only the person sees or revokes them: organization admins can't. A
+ * personal token acts as its person in any organization they belong to, named
+ * per request by X-Telflo-Org (the public surface's token check).
  *
- * - **The limit:** 20 live tokens, neither revoked nor expired, as D22's
- *   (the owner's Q137; Ruling 180), counted under a lock on the user's
- *   row, so two creates can't both pass the count. No create limiter:
- *   D22's routes have none, and the cap bounds it.
+ * - **The limit:** 20 live tokens, neither revoked nor expired, as a
+ *   service account's, counted under a lock on the user's row, so two
+ *   creates can't both pass the count. No create limiter: the cap bounds
+ *   it.
  * - **The name** is unique, case aside, among the person's tokens not yet
  *   revoked (expired ones included), under the same lock, the index behind
  *   it.
  * - **Audit rows** (`personal_api_token.created`, `.revoked`) hold ids and
  *   fixed values only (the access, the expiry), never the token, its prefix
- *   or its name, under the session's active organization as D21's account
- *   audits are. No emails.
+ *   or its name, under the session's active organization as the account's
+ *   other audits are. No emails.
  *
  * A token is a secret like a bearer and its name is the person's content:
  * nothing here logs either, and the errors are fixed words.
@@ -136,11 +135,12 @@ export function createPersonalApiTokenService(deps: PersonalApiTokenServiceDepen
     },
 
     /**
-     * Under the lock on the user's row (every D21 transaction locks the user
-     * first): 20 live tokens already (neither revoked nor expired), the 409; a name taken by a token not
-     * yet revoked, expired included, the 409 (its unique index behind it);
-     * then the mint, the row and the audit row (the access and the expiry
-     * only). `expiresAt` is the creation plus that many days of 24 hours.
+     * Under the lock on the user's row (every account transaction locks the
+     * user first): 20 live tokens already (neither revoked nor expired), the
+     * 409; a name taken by a token not yet revoked, expired included, the 409
+     * (its unique index behind it); then the mint, the row and the audit row
+     * (the access and the expiry only). `expiresAt` is the creation plus that
+     * many days of 24 hours.
      */
     async create(actor, request) {
       const { userId } = actor.context;
@@ -181,7 +181,7 @@ export function createPersonalApiTokenService(deps: PersonalApiTokenServiceDepen
      * Under the lock on the user's row: one update of the person's token not
      * yet revoked (an expired one too). Nothing updated (unknown, another
      * person's, already revoked), or an id that isn't a canonical uuid, is
-     * the one 404 (D22's answer; Preflight ruling 14).
+     * the one 404.
      */
     async revoke(actor, tokenId) {
       const { userId } = actor.context;

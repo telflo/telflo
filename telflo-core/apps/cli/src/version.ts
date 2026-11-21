@@ -3,7 +3,7 @@
  * source of truth: what `npm pack` ships). From `dist/version.js` and from
  * `src/version.ts` alike, the manifest is one folder up. It imports only
  * node's built-ins: the browser tests import the listener, which imports
- * this (D27 decision 20, Preflight ruling 17).
+ * this.
  */
 
 import { readFileSync } from "node:fs";

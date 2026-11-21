@@ -1,5 +1,5 @@
 """A run's workspace. One that already exists is refused, never removed, so
-a run sent twice can't delete the live run's workspace (D14a Task 4). The
+a run sent twice can't delete the live run's workspace. The
 service's
 own workspaces (mkdtemp, made and removed by `app/runner.py`) are wrapped
 with ``RunWorkspace.existing``, tested at the end.

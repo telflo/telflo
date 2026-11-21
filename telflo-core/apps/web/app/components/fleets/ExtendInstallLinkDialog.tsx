@@ -19,11 +19,10 @@ import { useOpeningKey } from "~/lib/hooks/use-opening-key.js";
 import { DialogErrorAlert } from "./DialogErrorAlert.js";
 
 /*
- * Extend (D17c-2 decisions 5 and 31; Preflight rulings 24 and 25): a
- * Dialog "Extend install link" with six presets as native radios (no radio
- * group in `components/ui`, no new dependency), "Cancel" / "Extend"
- * ("Extending…") and the toast "Install link extended". In the D17c-2
- * Parity Notes:
+ * Extend: a dialog "Extend install link" with six presets as native radios
+ * (no radio group in `components/ui`, no new dependency), "Cancel" /
+ * "Extend" ("Extending…") and the toast "Install link extended". Its
+ * rules:
  *
  * - The new expiry is counted from now (the API's clock, not the old
  *   expiry, so an expired link never stays expired), and the words say so:

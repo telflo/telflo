@@ -18,10 +18,10 @@ import { CANCELLED_MESSAGE } from "./prompt.js";
 import { EXIT, ExitError, setIo } from "./output.js";
 
 /*
- * `telflo login`'s browser flow (D27 decisions 19 and 20): the listener, the
- * page's address printed and handed to the opener (a stand-in: no browser
- * starts), and the hidden prompt racing them through a pty-less stream.
- * Tokens are made at run time and checked with boolean canaries only.
+ * `telflo login`'s browser flow: the listener, the page's address printed
+ * and handed to the opener (a stand-in: no browser starts), and the
+ * hidden prompt racing them through a pty-less stream. Tokens are made at
+ * run time and checked with boolean canaries only.
  */
 
 const SERVER = "https://telflo.example";
@@ -73,7 +73,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe("cliHost (decision 20)", () => {
+describe("cliHost", () => {
   it.each([
     ["ada-laptop.local", "ada-laptop.local"],
     ["Ada's MacBook Pro", "AdasMacBookPro"],

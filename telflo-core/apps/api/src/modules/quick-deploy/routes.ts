@@ -40,38 +40,34 @@ import { openValues, SealedValuesError } from "./sealed-values.js";
 import { quickDeploySecretHash } from "./secret.js";
 
 /*
- * The public download (D17c-2 decisions 6, 7, 9 and 26; Preflight rulings
- * 4, 9, 10 and 13): GET /api/v1/quick-deploy/{secret}, for whoever holds a
+ * The public download: GET /api/v1/quick-deploy/{secret}, for whoever holds a
  * link, with no session, no cookie read and no CSRF header (a GET). Its
  * machinery is http/public-download.ts'. Registered after the fleet routes
  * (server.ts), outside their hooks: no `authenticate`.
  *
- * The order, exactly (ruling 10): the per-IP limit (the `onRequest` hook,
- * every request counted, an unknown or malformed secret's included); the
- * secret's shape (404); its sha-256 and the definer's lookup (404); the
- * per-link limit (every attempt on a found link, by its id, 429); the row,
- * in the link's organization's context with no person; revoked (410);
- * expired (410); the organization not live (410); the organization's
- * "Public install links" switch off (D17d-2 decision 20, Preflight ruling
- * 10: 403 plain text, read with the link; counted by the limits above,
- * never by the download count, audited nowhere); a render slot (8 per
- * process, 503 with Retry-After: 1); the render, by the link's kind: a
- * Linux link's (the fleets service's `quickDeployBundle`: the fleet, the
- * group, its current version, the variables, the default token, the values
- * opened into the start script, the templates) or a Helm values link's
- * (`quickDeployHelmValues`: the group's current Helm facts, the values, a
- * bearer of the link's default token revealed last with no actor); then,
- * in ONE transaction after the build, the switch read again `for share`
- * (off: 403, nothing counted), the counter (the link still active, else
- * 410) and the `quick_deploy_link.downloaded` audit row with the
- * requester's address and user agent; 200, the download's headers,
- * `telflo-collector-{method}-{arch}.tar.gz`, or a Helm link's
+ * The order, exactly: the per-IP limit (the `onRequest` hook, every request
+ * counted, an unknown or malformed secret's included); the secret's shape
+ * (404); its sha-256 and the definer's lookup (404); the per-link limit (every
+ * attempt on a found link, by its id, 429); the row, in the link's
+ * organization's context with no person; revoked (410); expired (410); the
+ * organization not live (410); the organization's "Public install links"
+ * switch off (403 plain text, read with the link; counted by the limits above,
+ * never by the download count, audited nowhere); a render slot (8 per process,
+ * 503 with Retry-After: 1); the render, by the link's kind: a Linux link's
+ * (the fleets service's `quickDeployBundle`: the fleet, the group, its current
+ * version, the variables, the default token, the values opened into the start
+ * script, the templates) or a Helm values link's (`quickDeployHelmValues`: the
+ * group's current Helm facts, the values, a bearer of the link's default token
+ * revealed last with no actor); then, in ONE transaction after the build, the
+ * switch read again `for share` (off: 403, nothing counted), the counter (the
+ * link still active, else 410) and the `quick_deploy_link.downloaded` audit
+ * row with the requester's address and user agent; 200, the download's
+ * headers, `telflo-collector-{method}-{arch}.tar.gz`, or a Helm link's
  * `values.yaml` (`text/yaml; charset=utf-8`).
  *
- * A Helm link's reply holds the fleet's default token's bearer (D17d-2
- * decision 1, the one public download that does): `no-store`, and never
- * logged (the request log keeps no reply body; a render's refusal logs ids
- * and a field only).
+ * A Helm link's reply holds the fleet's default token's bearer (the one
+ * public download that does): `no-store`, and never logged (the request
+ * log keeps no reply body; a render's refusal logs ids and a field only).
  *
  * The handler hashes the secret at once: only the hash and ids go further.
  * Nothing logs the secret: the request log cuts it from every line
@@ -126,14 +122,14 @@ export function registerQuickDeployRoutes(
     quickDeploy: settings.quickDeploy,
   });
   const renders = createInFlightCap(PUBLIC_DOWNLOAD_RENDERS_IN_FLIGHT);
-  /** The ids of the link a request found, for its refusal's log line (Ruling 36): ids only, never the secret or its hash. */
+  /** The ids of the link a request found, for its refusal's log line: ids only, never the secret or its hash. */
   const linkIds = new WeakMap<FastifyRequest, PublicDownloadLogFields>();
 
   /**
    * The link's values, sealed for it, opened into the bundle's
-   * COLLECTOR_ENV_EXPORTS (decision 7); none typed, none. A link that names
-   * variables but holds no sealed values is malformed (Ruling 36): the
-   * route's logged 503, never a bundle without them.
+   * COLLECTOR_ENV_EXPORTS; none typed, none. A link that names variables but
+   * holds no sealed values is malformed: the route's logged 503, never a
+   * bundle without them.
    */
   const valuesOf = (link: QuickDeployLink) => {
     if (link.sealed === null) {
@@ -144,12 +140,11 @@ export function registerQuickDeployRoutes(
   };
 
   /**
-   * The counter and the audit row, in one transaction after the build
-   * (Preflight rulings 4 and 13). The organization's switch read again,
-   * locked `for share` (D17d-2 Preflight ruling 10: an admin's change waits,
-   * or this waits on it): off, 403; the organization gone meanwhile, 410.
-   * The link no longer active (revoked or expired meanwhile): 410. Nothing
-   * counted or audited on any of them.
+   * The counter and the audit row, in one transaction after the build. The
+   * organization's switch read again, locked `for share` (an admin's
+   * change waits, or this waits on it): off, 403; the organization gone
+   * meanwhile, 410. The link no longer active (revoked or expired
+   * meanwhile): 410. Nothing counted or audited on any of them.
    */
   async function recordDownload(link: QuickDeployLink, requester: Requester, at: Date): Promise<void> {
     let counted: QuickDeployLink | "links_disabled" | "organization_gone" | undefined;
@@ -180,12 +175,10 @@ export function registerQuickDeployRoutes(
         return recorded;
       });
     } catch (error) {
-      // FAIL CLOSED, the controller's provisional choice (Preflight ruling
-      // 13; an open question for the owner, who may reverse it): a count or
-      // `downloaded` row that can't be written rolls back both, and the
-      // download is refused, 503: nothing served, nothing counted. (D17c-1's
-      // signed-in bundle serves instead, logging the failed row.) Ids, the
-      // error's name and its code (Postgres's SQLSTATE) only.
+      // FAIL CLOSED: a count or `downloaded` row that can't be written rolls
+      // back both, and the download is refused, 503: nothing served, nothing
+      // counted. (The signed-in bundle serves instead, logging the failed
+      // row.) Ids, the error's name and its code (Postgres's SQLSTATE) only.
       server.log.error(
         {
           operation: "quickDeployDownload",
@@ -222,7 +215,7 @@ export function registerQuickDeployRoutes(
       linkIds.set(request, { organizationId: found.organizationId, linkId: found.id });
       // Every attempt on a found link counts, whatever refuses it next.
       rateLimiters.quickDeployPerLink.count(found.id);
-      // The link and its organization's switch, in one transaction (D17d-2 Preflight ruling 10).
+      // The link and its organization's switch, in one transaction.
       const { link, organization } = await withOrganizationTransaction(found.organizationId, async (transaction) => ({
         link: await transaction.quickDeployLinks.findForDownload(found.id),
         organization: await transaction.organization.findSettings(),
@@ -243,7 +236,7 @@ export function registerQuickDeployRoutes(
           return built;
         });
         return sendDownload(reply, {
-          // values.yaml (D17d-2 Ruling 36): what a browser opening the link saves; the Quick Deploy command's curl names its own file.
+          // values.yaml: what a browser opening the link saves; the Quick Deploy command's curl names its own file.
           fileName: HELM_VALUES_DOWNLOAD_NAME,
           contentType: "text/yaml; charset=utf-8",
           body: Buffer.from(values, "utf8"),

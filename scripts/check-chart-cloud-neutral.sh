@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
-# The charts are cloud-neutral (D33-1 decisions 9 and 32): nothing in a
-# chart, or rendered from it, names a cloud provider's annotations, identity
-# bindings, API groups, hostnames or storage classes. Cloud details belong in
-# an operator's own values files, passed through the charts' annotation
-# maps, never in a chart.
+# The charts are cloud-neutral: nothing in a chart, or rendered from it,
+# names a cloud provider's annotations, identity bindings, API groups,
+# hostnames or storage classes. Cloud details belong in an operator's own
+# values files, passed through the charts' annotation maps, never in a chart.
 #
-# Adapted from the opamp-server repository's scripts/check-chart-cloud-neutral.sh
-# at v0.1.0 (f0601e7dc3094c14e7241b40048455098e9c61e8; D26 decision 32),
-# Copyright the Telflo authors, licensed under the Apache License, Version
-# 2.0 (http://www.apache.org/licenses/LICENSE-2.0). The changes: each chart's
-# annotation-value paths (and the checksum keys a template may write) come
-# from a list per chart (chart_settings below) instead of one hard-coded
-# list; with no argument it checks both of the platform's charts, each with
-# every one of its profiles; a vendored dependency's templates are checked
-# too; and every line names its chart.
+# Adapted from the opamp-server repository's
+# scripts/check-chart-cloud-neutral.sh at v0.1.0
+# (f0601e7dc3094c14e7241b40048455098e9c61e8), Copyright the Telflo authors,
+# licensed under the Apache License, Version 2.0
+# (http://www.apache.org/licenses/LICENSE-2.0). The changes: each chart's
+# annotation-value paths (and the checksum keys a template may write) come from
+# a list per chart (chart_settings below) instead of one hard-coded list; with
+# no argument it checks both of the platform's charts, each with every one of
+# its profiles; a vendored dependency's templates are checked too; and every
+# line names its chart.
 #
 # Usage: scripts/check-chart-cloud-neutral.sh [CHART_DIR [PROFILES_DIR]]
 #   no argument   charts/telflo (the vendored opamp-server chart
@@ -34,9 +34,9 @@
 #     the values maps (chart_settings), except a pod template's checksum of
 #     something the chart renders (checksum/<name>: a hash, never a cloud's
 #     key) and Helm's own helm.sh/resource-policy: keep (that key with that
-#     value only: a volume `helm uninstall` leaves; Ruling 331). Checked
-#     twice: in the templates' text, and by rendering every profile with
-#     those maps emptied, when no other annotation may be left.
+#     value only: a volume `helm uninstall` leaves). Checked twice: in the
+#     templates' text, and by rendering every profile with those maps
+#     emptied, when no other annotation may be left.
 #
 # Offline: only `helm package` and `helm template`, with every HELM_* variable
 # unset and Helm's homes in a temporary directory. Prints PASS/FAIL lines
@@ -64,7 +64,7 @@ managed-csi"
 # The only annotation keys a template may write itself: a pod template's
 # checksum of an object the chart renders, so a change rolls the pods; and
 # Helm's own resource policy, with the value keep alone (an object
-# `helm uninstall` leaves, such as a volume of data; Ruling 331), written
+# `helm uninstall` leaves, such as a volume of data), written
 # exactly so: KEEP_KEY, KEEP_VALUE.
 ALLOWED_KEY='checksum/[a-z0-9][a-z0-9.-]*'
 KEEP_KEY='helm.sh/resource-policy'
@@ -122,7 +122,7 @@ export HELM_CACHE_HOME="$tmp/helm/cache" HELM_CONFIG_HOME="$tmp/helm/config" HEL
 
 # A throwaway chart that lists every annotation key a rendered manifest
 # stream holds: "# A <Kind>/<name><path>.annotations <key> <JSON value>"
-# (D26's walk, one line a key).
+# (one line a key).
 mkdir -p "$tmp/annotations/templates" || exit 2
 printf 'apiVersion: v2\nname: annotations\nversion: 0.0.0\n' >"$tmp/annotations/Chart.yaml"
 cat >"$tmp/annotations/templates/list.yaml" <<'TEMPLATE'

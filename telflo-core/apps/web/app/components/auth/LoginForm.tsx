@@ -38,11 +38,10 @@ const SESSION_NOT_KEPT_MESSAGE =
   "You're signed in, but your browser didn't keep the session. Check that cookies are allowed for this site, then try again.";
 
 /**
- * What `/login?error=…` says after a federated sign-in fails (D2c decision
- * 4). `oauth_failed` has its fixed text; `oauth_email_reserved` says
- * the API's words for the service accounts' domain (D22 decision 24);
- * `registration_not_open` says a site that isn't open needs an invitation
- * (D36-1 Preflight ruling 5); any value not listed here shows nothing.
+ * What `/login?error=…` says after a federated sign-in fails. `oauth_failed`
+ * has its fixed text; `oauth_email_reserved` says the API's words for the
+ * service accounts' domain; `registration_not_open` says a site that isn't
+ * open needs an invitation; any value not listed here shows nothing.
  */
 const OIDC_QUERY_ERROR_MESSAGES: Record<OidcQueryErrorCode, string> = {
   oauth_failed: "Social login failed. Please try again or use email/password.",
@@ -64,8 +63,8 @@ function describeQueryError(value: string | null): string | null {
  * What the alert says for a failed sign-in. The server's own text is shown
  * where it is a known one ("Invalid login credentials") or carries the
  * retry wait; an unverified email reads "Email not confirmed". Anything
- * else, an unreachable server included, gets the catch-all.
- * The accept page's sign-in form says the same (D6 decision 13).
+ * else, an unreachable server included, gets the catch-all. The accept
+ * page's sign-in form says the same.
  */
 function isSessionErrorCode(code: string): code is SessionErrorCode {
   return (SESSION_ERROR_CODES as readonly string[]).includes(code);
@@ -87,9 +86,9 @@ export function describeSignInError(caught: unknown): string {
 
 /**
  * The destination, with this page's fragment carried when it is the CLI's
- * sign-in page (D27 Preflight ruling 13): `/cli-auth`'s parameters travel in
- * the fragment, which the signed-in layout's redirect kept on
- * `/login?redirectTo=%2Fcli-auth`. Nowhere else: no other page reads one.
+ * sign-in page: `/cli-auth`'s parameters travel in the fragment, which the
+ * signed-in layout's redirect kept on `/login?redirectTo=%2Fcli-auth`.
+ * Nowhere else: no other page reads one.
  */
 function withCliAuthFragment(destination: string): string {
   const path = destination.split(/[?#]/, 1)[0] ?? "";
@@ -98,22 +97,21 @@ function withCliAuthFragment(destination: string): string {
 }
 
 /*
- * The sign-in form (ADR 0018). Success goes to the `redirectTo` query
- * parameter, cleaned by safeRedirectPath, with no toast. The client
- * navigation re-runs the destination's loader, which then sees the new
- * session cookie. For the CLI's sign-in page, `/cli-auth`, this page's
- * fragment goes with it (withCliAuthFragment).
+ * The sign-in form. Success goes to the `redirectTo` query parameter, cleaned
+ * by safeRedirectPath, with no toast. The client navigation re-runs the
+ * destination's loader, which then sees the new session cookie. For the CLI's
+ * sign-in page, `/cli-auth`, this page's fragment goes with it
+ * (withCliAuthFragment).
  *
- * A button per configured provider with an icon (D2c: Google), then the
+ * A button per configured provider with an icon (Google), then the
  * "or continue with email" divider; with none, neither renders. The button
  * carries the cleaned `redirectTo` to the API's start endpoint, and only
  * when the page has one that survives safeRedirectPath. A failed federated
  * sign-in comes back as `?error=…`, shown in the same alert.
- * GitHub's button is gone for good (D2c Parity Notes).
  *
  * After "Email not confirmed", a resend prompt offers another
  * confirmation email for whatever the Email field holds when Resend is
- * clicked (D3). The API answers the same for any address, so the success
+ * clicked. The API answers the same for any address, so the success
  * text is shown for any address. A new sign-in attempt clears the prompt.
  *
  * After a successful sign-in the form stays disabled until navigation
@@ -138,7 +136,7 @@ export function LoginForm({ providers }: LoginFormProps) {
   const [isEmailNotConfirmed, setIsEmailNotConfirmed] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [isResendSent, setIsResendSent] = useState(false);
-  // "Sign up" only where anyone may (D36-1 decision 23, Preflight ruling 6): an invitation-only or closed site has no sign-up page to offer.
+  // "Sign up" only where anyone may: an invitation-only or closed site has no sign-up page to offer.
   const canSignUp = useSite().registration === "open";
   const location = useLocation();
   // The location key at the moment a sign-in succeeded; null otherwise.

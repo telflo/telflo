@@ -17,12 +17,11 @@ import {
 } from "~/lib/variables.js";
 
 /*
- * `/variables`, the left nav's "Variables" (D20 defaults 20 and 21;
- * decision 39; ADR 0018), with D20's columns and dialogs
+ * `/variables`, the left nav's "Variables", with its columns and dialogs
  * (`components/variables/`):
- * - the warning under the header (Q106, Ruling 80): not for secrets, which
- *   stay in `${env:NAME}`, since a test run fills these values in and keeps
- *   its Test YAML and the collector's logs with its results;
+ * - the warning under the header: not for secrets, which stay in
+ *   `${env:NAME}`, since a test run fills these values in and keeps its
+ *   Test YAML and the collector's logs with its results;
  * - "Add variable" in the header and in the empty state, "No organization
  *   variables yet"; "No variables match your search" when the search
  *   matches none; "Loading variables…" while the list is read, and a failed
@@ -32,7 +31,7 @@ import {
  *   `?q=`) or browser storage, and its input sits inside `ph-no-capture`
  *   (what is typed is configuration text); its placeholder and name are
  *   fixed words;
- * - the help card says `$` opens the picker (a Parity Note);
+ * - the help card says `$` opens the picker;
  * - the title is fixed ("Variables - Telflo"), never a name.
  * An organization switch drops the search and closes the dialogs.
  */

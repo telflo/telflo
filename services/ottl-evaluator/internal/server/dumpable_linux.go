@@ -1,5 +1,4 @@
-// New in D15a Task 2 (plan Preflight ruling 12), after the collector
-// tester's app/hardening.py (ADR 0028).
+// After the collector tester's app/hardening.py.
 
 //go:build linux
 

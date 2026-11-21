@@ -1,15 +1,14 @@
 /*
  * The Grafana mark, for the OTLP/HTTP exporter's "Grafana Cloud" quick
- * setup (D9b decision 8).
+ * setup.
  *
  * Source: Simple Icons release 16.33.0 (tag `16.33.0`, commit
  * e01988cc57a3aca39621023f9881e9b733ebcd77), `icons/grafana.svg`,
  * https://github.com/simple-icons/simple-icons/blob/16.33.0/icons/grafana.svg
- * (Simple Icons cites https://grafana.com; its brand colour is #F46800).
- * The path data is Simple Icons' exactly.
- * License: CC0-1.0 (Simple Icons). Grafana is a trademark of Grafana Labs;
- * the mark names the backend the quick setup pre-fills. Listed in
- * docs/third-party-assets.md.
+ * (Simple Icons cites https://grafana.com; its brand color is #F46800). The
+ * path data is Simple Icons' exactly. License: CC0-1.0 (Simple Icons).
+ * Grafana is a trademark of Grafana Labs; the mark names the backend the
+ * quick setup pre-fills. Listed in docs/third-party-assets.md.
  *
  * Drawn in Grafana's orange; decorative, so hidden
  * from assistive technology (the option's text names the backend).

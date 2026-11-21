@@ -1,9 +1,9 @@
 import { useEffect } from "react";
 
 /*
- * The editor's two guards for work not yet saved (D8 decision 5 and 15;
- * D9a fix wave): Cmd/Ctrl+S, which the page answers by saving, and the
- * browser's `beforeunload` question when the tab closes or reloads.
+ * The editor's two guards for work not yet saved: Cmd/Ctrl+S, which the page
+ * answers by saving, and the browser's `beforeunload` question when the tab
+ * closes or reloads.
  */
 
 /** Cmd/Ctrl+S: the page's save (the page listens on `window`; YamlEditor's Monaco has its own command). */

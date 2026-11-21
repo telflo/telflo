@@ -128,14 +128,14 @@ describe("CurrentUserResponseSchema", () => {
     expect(CurrentUserResponseSchema.safeParse({ ...valid, isProductAdmin: true }).success).toBe(true);
   });
 
-  it("requires mayCreateOrganizations, as a boolean (D36-1 decision 51)", () => {
+  it("requires mayCreateOrganizations, as a boolean", () => {
     const { mayCreateOrganizations: _omitted, ...withoutFlag } = valid;
     expect(CurrentUserResponseSchema.safeParse(withoutFlag).success).toBe(false);
     expect(CurrentUserResponseSchema.safeParse({ ...valid, mayCreateOrganizations: "true" }).success).toBe(false);
     expect(CurrentUserResponseSchema.safeParse({ ...valid, mayCreateOrganizations: false }).success).toBe(true);
   });
 
-  it("requires the preferences, every key, with no unknown one (D21 decision 20)", () => {
+  it("requires the preferences, every key, with no unknown one", () => {
     const { preferences: _omitted, ...withoutPreferences } = valid;
     expect(CurrentUserResponseSchema.safeParse(withoutPreferences).success).toBe(false);
     expect(CurrentUserResponseSchema.safeParse({ ...valid, preferences: null }).success).toBe(false);
@@ -237,7 +237,7 @@ describe("SwitchOrganizationResponseSchema", () => {
   });
 });
 
-describe("ActiveOrganizationSchema's logoId (D23-2 decisions 13 and 40)", () => {
+describe("ActiveOrganizationSchema's logoId", () => {
   it("is required: a logo's id or null", () => {
     const { logoId: _omitted, ...withoutLogo } = organization;
     expect(SwitchOrganizationResponseSchema.safeParse({ organization: withoutLogo }).success).toBe(false);
@@ -315,7 +315,7 @@ describe("OidcProvidersResponseSchema", () => {
 });
 
 describe("OIDC_QUERY_ERROR_CODES", () => {
-  it("lists the four codes a federated sign-in reports in the login URL (registration_not_open: D36-1 decision 35)", () => {
+  it("lists the four codes a federated sign-in reports in the login URL, registration_not_open among them", () => {
     expect(OIDC_QUERY_ERROR_CODES).toEqual([
       "oauth_failed",
       "oauth_email_unverified",
@@ -331,7 +331,7 @@ describe("OIDC_QUERY_ERROR_CODES", () => {
 });
 
 describe("OIDC_LINK_RESULT_CODES", () => {
-  it("lists the five codes a link from Settings reports in the account page's URL (D21 decision 38)", () => {
+  it("lists the five codes a link from Settings reports in the account page's URL", () => {
     expect(OIDC_LINK_RESULT_CODES).toEqual([
       "linked",
       "identity_in_use",

@@ -29,7 +29,7 @@ import {
   writeOut,
 } from "./output.js";
 
-/* Exit codes, --json, fixed words (D27 decision 18). */
+/* Exit codes, --json, fixed words. */
 
 let out: string;
 let err: string;
@@ -46,7 +46,7 @@ afterEach(() => {
 });
 
 describe("exit codes", () => {
-  it("are 0 to 4, as the older CLI's", () => {
+  it("are 0 to 4", () => {
     expect(EXIT).toEqual({ OK: 0, API: 1, USAGE: 2, AUTH: 3, FAILED: 4 });
   });
 });
@@ -61,7 +61,7 @@ describe("emit, writeOut and writeErr", () => {
     expect(out).toBe(`human\n${JSON.stringify({ a: 1 }, null, 2)}\n`);
   });
 
-  it("writes a note as its line, or with --json one JSON object a line, a token in it redacted (Ruling 249)", () => {
+  it("writes a note as its line, or with --json one JSON object a line, a token in it redacted", () => {
     writeNote("Rate limited: retrying in 2 s.");
     expect(err).toBe("Rate limited: retrying in 2 s.\n");
     err = "";
@@ -112,7 +112,7 @@ describe("printTable", () => {
     expect(table).toBe(["id   name   n", "---  -----  -", "a    first  1", "bbb"].join("\n"));
   });
 
-  it("strips control characters from every cell (Ruling 237)", () => {
+  it("strips control characters from every cell", () => {
     const table = printTable([{ name: "evil\u001b]0;title\u0007\u001b[31mred\u009b2J" }], ["name"]);
     expect(table).toBe(["name", "---------------------", "evil]0;title[31mred2J"].join("\n"));
     // eslint-disable-next-line no-control-regex
@@ -124,20 +124,20 @@ describe("printTable", () => {
   });
 });
 
-describe("terminalText (Ruling 237)", () => {
+describe("terminalText", () => {
   it("removes C0, DEL and C1 controls: ESC, BEL, an OSC, CSI", () => {
     expect(terminalText("a\u001b]8;;https://x\u0007link\u001b]8;;\u0007\u007f\u0085\u009bz\n\tb")).toBe("a]8;;https://xlink]8;;zb");
     expect(terminalText("Ada's workspace")).toBe("Ada's workspace");
   });
 });
 
-describe("endingOf (decision 18)", () => {
+describe("endingOf", () => {
   it("keeps an ExitError's words and code", () => {
     expect(endingOf(new ExitError("usage words", EXIT.USAGE))).toEqual({ message: "usage words", exitCode: 2, code: "usage_error", status: null });
     expect(endingOf(new ExitError("x", EXIT.FAILED, "invalid"))).toMatchObject({ exitCode: 4, code: "invalid" });
   });
 
-  it("keeps the HTTP status of a refusal an ExitError rewords, for --json (Ruling 239)", () => {
+  it("keeps the HTTP status of a refusal an ExitError rewords, for --json", () => {
     expect(endingOf(new ExitError("reworded", EXIT.USAGE, "collector_version_unknown", 400))).toEqual({
       message: "reworded",
       exitCode: 2,
@@ -201,7 +201,7 @@ describe("reportError", () => {
   });
 });
 
-describe("reportError's redaction (Ruling 237)", () => {
+describe("reportError's redaction", () => {
   const token = `tf_${randomBytes(32).toString("base64url")}`;
 
   it("redacts a token an envelope quotes, and an origin typed from one, in plain output", () => {
@@ -233,7 +233,7 @@ describe("withoutTokens", () => {
   });
 });
 
-describe("guardOutputStreams (Ruling 247)", () => {
+describe("guardOutputStreams", () => {
   class FakeStream extends EventEmitter {
     written: string[] = [];
     writable = true;

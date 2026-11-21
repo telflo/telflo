@@ -7,10 +7,10 @@ import { NO_GROUP_MESSAGE } from "../ops/fleets.js";
 import { NO_FLEETS_MESSAGE, NO_GROUPS_MESSAGE } from "./fleet.js";
 
 /*
- * telflo fleet list|create|groups|install (D27 decisions 11 and 28): each
- * command's request and output, against a stub fetch. Install's command
- * is a SECRET: it is made at run time and checked with boolean canaries
- * only (on stdout exactly once, never on stderr, never in an error).
+ * telflo fleet list|create|groups|install: each command's request and output,
+ * against a stub fetch. Install's command is a SECRET: it is made at run time
+ * and checked with boolean canaries only (on stdout exactly once, never on
+ * stderr, never in an error).
  */
 
 const SERVER = "https://telflo.example";
@@ -104,7 +104,7 @@ describe("telflo fleet list", () => {
 });
 
 describe("telflo fleet create", () => {
-  it("creates the fleet and prints its id and token id, then the next steps: deploy, then install for its type (Ruling 248)", async () => {
+  it("creates the fleet and prints its id and token id, then the next steps: deploy, then install for its type", async () => {
     const result = await runCli(["fleet", "create", "--label", "edge", "--type", "kubernetes-supervisor", "--expires-in", "1y"]);
     expect(result.code).toBe(0);
     expect(bodies()).toEqual([{ label: "edge", type: "kubernetes-supervisor", expiresIn: "1y" }]);
@@ -123,13 +123,13 @@ describe("telflo fleet create", () => {
     expect(bodies()[2]).toEqual({ label: "edge", type: "server" });
   });
 
-  it("strips control characters from the fleet's label (Ruling 237)", async () => {
+  it("strips control characters from the fleet's label", async () => {
     const result = await runCli(["fleet", "create", "--label", "\u001b]0;edge\u0007", "--type", "server"]);
     expect(result.code).toBe(0);
     expect(result.stdout.startsWith('Created fleet "]0;edge" (')).toBe(true);
   });
 
-  it("refuses the older CLI's server-supervisor, an unknown expiry and a missing type before any request (exit 2)", async () => {
+  it("refuses an unknown type (server-supervisor), an unknown expiry and a missing type before any request (exit 2)", async () => {
     for (const args of [
       ["--label", "edge", "--type", "server-supervisor"],
       ["--label", "edge", "--type", "server", "--expires-in", "3y"],
@@ -225,7 +225,7 @@ describe("telflo fleet install (the command is a secret)", () => {
     expect(countOf(result.stdout, command) === 1).toBe(true);
   });
 
-  it("strips control characters from the reply's words on stderr (Ruling 237), the command left byte-exact", async () => {
+  it("strips control characters from the reply's words on stderr, the command left byte-exact", async () => {
     fake = routedFetch({
       [`POST /fleets/${FLEET}/install`]: { json: { ...installReply("docker"), groupName: "\u001b[2JDefault", notes: ["\u009b31mSet it\u0007"] } },
     });
@@ -280,7 +280,7 @@ describe("telflo fleet install (the command is a secret)", () => {
     expect(fake.calls).toHaveLength(0);
   });
 
-  it("a group-less Kubernetes fleet says to run telflo deploy (Preflight ruling 8); a read token is exit 3; neither prints a command", async () => {
+  it("a group-less Kubernetes fleet says to run telflo deploy; a read token is exit 3; neither prints a command", async () => {
     fake = routedFetch({
       [`POST /fleets/${FLEET}/install`]: {
         status: 422,

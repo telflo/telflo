@@ -1,8 +1,7 @@
-"""The validate route and the catalogue (D13b spec decision 10): a
-distribution or version the catalogue doesn't list is 404, a deprecated
-version 409 `version_retired`, an offered version the validator doesn't
-hold 503, each before the body is read. There is no contrib-only route, no
-`/versions` and no `/distributions`.
+"""The validate route and the catalog: a distribution or version the
+catalog doesn't list is 404, a deprecated version 409 `version_retired`, an
+offered version the validator doesn't hold 503, each before the body is read.
+There is no contrib-only route, no `/versions` and no `/distributions`.
 """
 
 from __future__ import annotations
@@ -29,12 +28,12 @@ BODY = {"yaml": "receivers:\n  otlp:\n"}
 
 
 # ---------------------------------------------------------------------------
-# The catalogue (was: the manifests' loading)
+# The catalog (was: the manifests' loading)
 # ---------------------------------------------------------------------------
 
 
 def test_catalog_load_refuses_a_missing_directory(tmp_path: Path) -> None:
-    """The catalogue is required: the service refuses to start without it,
+    """The catalog is required: the service refuses to start without it,
     never starting knowing no version."""
     with pytest.raises(CatalogError):
         Catalog.load(tmp_path / "does-not-exist")
@@ -43,7 +42,7 @@ def test_catalog_load_refuses_a_missing_directory(tmp_path: Path) -> None:
 def test_catalog_loads_the_repository_catalogue() -> None:
     """Run from the checkout, the default directory is the repository's
     `catalog/distributions`: its offered versions are offered and a version
-    it retired (D13b ruling 48) is retired."""
+    it retired is retired."""
     catalog = Catalog.load(DEFAULT_CATALOG_DIR)
 
     assert catalog.state("otelcol-contrib", "0.162.0") is VersionState.OFFERED
@@ -53,7 +52,7 @@ def test_catalog_loads_the_repository_catalogue() -> None:
 
 
 def test_catalog_ignores_fields_it_does_not_use() -> None:
-    """The test catalogue carries `renamedTypes` and a made-up field; the
+    """The test catalog carries `renamedTypes` and a made-up field; the
     reader takes only distribution, version and deprecated."""
     catalog = Catalog.load(CATALOG_DIR)
 
@@ -99,7 +98,7 @@ def test_validate_contrib_raises_404_for_unknown_version(client: TestClient) -> 
 
 
 def test_validate_contrib_raises_503_when_binary_missing(client: TestClient) -> None:
-    """0.161.0 is offered by the test catalogue but not held."""
+    """0.161.0 is offered by the test catalog but not held."""
     resp = client.post("/validator/v1/validate/otelcol-contrib/0.161.0", json=BODY, headers=auth_headers())
 
     assert resp.status_code == 503
@@ -108,7 +107,7 @@ def test_validate_contrib_raises_503_when_binary_missing(client: TestClient) -> 
 
 def test_retired_version_answers_409_version_retired(client: TestClient) -> None:
     """A version pinned to a deprecated one is never checked against another
-    version (spec decision 4)."""
+    version."""
     resp = client.post("/validator/v1/validate/otelcol-contrib/0.155.0", json=BODY, headers=auth_headers())
 
     assert resp.status_code == 409
@@ -124,7 +123,7 @@ def test_retired_version_is_409_even_when_its_binary_is_present(binary_dir: Path
 
 
 def test_a_second_catalogue_distribution_is_reached_through_the_same_route(binary_dir: Path) -> None:
-    """Any distribution the catalogue lists is routed; the binary layout is
+    """Any distribution the catalog lists is routed; the binary layout is
     `v<version>/otelcol-contrib`."""
     write_collector(binary_dir, "1.2.3", PASSING_COLLECTOR)
     with TestClient(create_app(make_settings(binary_dir))) as client:
@@ -135,7 +134,7 @@ def test_a_second_catalogue_distribution_is_reached_through_the_same_route(binar
 
 
 # ---------------------------------------------------------------------------
-# Check order: the path and the catalogue before the body
+# Check order: the path and the catalog before the body
 # ---------------------------------------------------------------------------
 
 
@@ -275,8 +274,8 @@ def test_new_route_requires_the_secret(client: TestClient) -> None:
 
 
 def test_distributions_and_versions_routes_are_not_ported(client: TestClient) -> None:
-    """Rewritten: `/versions` and `/distributions` (which listed checksums
-    and availability) are not ported; the platform reads the catalogue."""
+    """No `/distributions`, `/versions` or `/health` under `/validator/v1`:
+    each is 404; the platform reads the catalog itself."""
     for path in ("/validator/v1/distributions", "/validator/v1/versions", "/validator/v1/health"):
         resp = client.get(path, headers=auth_headers())
         assert resp.status_code == 404, path

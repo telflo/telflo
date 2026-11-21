@@ -4,8 +4,7 @@ info:
   title: otelcol-testing API
   version: 1.0.0
   description: |
-    The collector tester (D14a spec decisions 1, 5 and 13; Preflight rulings
-    1, 2, 4 and 5): runs one test of an OpenTelemetry Collector
+    The collector tester: runs one test of an OpenTelemetry Collector
     configuration, starting the pinned `otelcol-contrib` in a sandbox,
     feeding it the input and returning what came out. It holds no database
     or storage credentials: the request carries the text, the settings and

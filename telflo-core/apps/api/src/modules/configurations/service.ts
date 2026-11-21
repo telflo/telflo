@@ -48,12 +48,11 @@ import type { IConfigurationVersionSelectionRepository } from "./repositories/co
  * The repositories a unit of work uses, bound to one transaction that
  * carries the request's database context: the active organization, its
  * members, its configurations, their versions, each person's selected
- * version (D10 decision 3), the collector catalogue (global, D13a), the
- * test suites (a new version's copy of its source's, D14b Preflight ruling
- * 8), the validation pipelines (likewise, D15a Preflight ruling 24), and
+ * version, the collector catalog (global), the test suites (a new
+ * version's copy of its source's), the validation pipelines (likewise), and
  * the audit trail. The configurations, versions, suites and validation
- * pipelines are the caller's view of them (D11b decision 1): their own
- * drafts and every published configuration.
+ * pipelines are the caller's view of them: their own drafts and every
+ * published configuration.
  */
 export interface ConfigurationTransaction {
   organization: Pick<IActiveOrganizationRepository, "findActiveForShare">;
@@ -82,29 +81,28 @@ export type WithConfigurationTransaction = <Result>(
 
 export interface ConfigurationServiceDependencies {
   withTransaction: WithConfigurationTransaction;
-  /** Every configuration timestamp comes from here, never SQL `now()` (decision 4). */
+  /** Every configuration timestamp comes from here, never SQL `now()`. */
   now: () => Date;
   /**
    * Called once a configuration's soft delete has committed, never when it
    * is refused: schedules the removal of its snapshots from the
-   * opamp-server after the response (D11b decision 12,
-   * `createPublicationsCleanup` in publishing.ts). It must not throw or
-   * wait: the delete's answer never depends on it.
+   * opamp-server after the response (`createPublicationsCleanup` in
+   * publishing.ts). It must not throw or wait: the delete's answer never
+   * depends on it.
    */
   afterDelete: (organizationId: string, configurationId: string) => void;
   /**
-   * D16b decision 19, Preflight rulings 6 and 12: asks the opamp-server
-   * whether a collector group or a collector uses one of the
-   * configuration's published versions, for a delete. It spends one read
-   * and an in-flight slot of the person's fleet limits in the context's
-   * organization (given back before it resolves), or answers
-   * `rate_limited` having asked nothing. The service calls it outside any
-   * transaction, and only for a published configuration. A
+   * Asks the opamp-server whether a collector group or a collector uses
+   * one of the configuration's published versions, for a delete. It
+   * spends one read and an in-flight slot of the person's fleet limits in
+   * the context's organization (given back before it resolves), or
+   * answers `rate_limited` having asked nothing. The service calls it
+   * outside any transaction, and only for a published configuration. A
    * misconfiguration (OpampServerMisconfigurationError) rejects, as any
    * other failure of the call does: the service answers each the one 503.
    */
   fleetUsage: (context: ActorContext, configurationId: string) => Promise<FleetUsageAnswer>;
-  /** A delete's usage check that failed: ids and the result's kind only (ADR 0024). */
+  /** A delete's usage check that failed: ids and the result's kind only. */
   log: Pick<FastifyBaseLogger, "warn" | "error">;
 }
 
@@ -122,7 +120,7 @@ export interface ListConfigurationsOptions {
   cursor?: string | undefined;
   /** Trimmed already; empty means no search. */
   search?: string | undefined;
-  /** D11b decision 6: everything the caller can see, only their own, or only the published. */
+  /** Everything the caller can see, only their own, or only the published. */
   filter: ConfigurationsListFilter;
 }
 
@@ -136,38 +134,36 @@ export interface CreateConfigurationInput {
   name: string;
   description: string;
   /**
-   * The distribution it is built for (D13a decision 5); left out, the
-   * catalogue's default (Preflight ruling 14).
+   * The distribution it is built for; left out, the catalog's default.
    */
   collectorDistribution?: string | undefined;
   /**
-   * Version 1's content, exactly as the browser built it from a flow (D12
-   * decision 5, Preflight ruling 7): the text and the graph together. Left
-   * out, version 1 holds `''` and the table's empty graph.
+   * Version 1's content, exactly as the browser built it from a flow: the
+   * text and the graph together. Left out, version 1 holds `''` and the
+   * table's empty graph.
    */
   content?: SaveConfigurationVersionInput | undefined;
   /**
-   * Version 1's collector version (D12 decision 12): one the distribution
-   * offers and hasn't deprecated, else 400 `collector_version_unknown`; left
-   * out, the distribution's default.
+   * Version 1's collector version: one the distribution offers and hasn't
+   * deprecated, else 400 `collector_version_unknown`; left out, the
+   * distribution's default.
    */
   collectorVersion?: string | undefined;
-  /** The flow it was made from (D12 Preflight ruling 9): stored, never answered. */
+  /** The flow it was made from: stored, never answered. */
   sourceFlowSlug?: string | undefined;
 }
 
 /**
  * What a save asks for, as the contract parses it: the content, and the
- * collector version, left out to keep the one stored (D13a Preflight ruling
- * 13).
+ * collector version, left out to keep the one stored.
  */
 export interface SaveVersionInput extends SaveConfigurationVersionInput {
   collectorVersion?: string | undefined;
 }
 
 /**
- * A configuration, the version the editor opens (D8 decision 4), and every
- * version's summary, highest number first (D10 decision 4).
+ * A configuration, the version the editor opens, and every version's
+ * summary, highest number first.
  */
 export interface ConfigurationWithVersion {
   configuration: Configuration;
@@ -176,18 +172,17 @@ export interface ConfigurationWithVersion {
 }
 
 /**
- * What a create asks for (D10 decision 5), as the contract parses it: the
- * content the editor holds, the version it was made from, and a label,
- * trimmed already, or none.
+ * What a create asks for, as the contract parses it: the content the editor
+ * holds, the version it was made from, and a label, trimmed already, or none.
  */
 export interface NewConfigurationVersionInput extends SaveConfigurationVersionInput {
-  /** Any string: one that isn't a canonical UUID is 404 configuration_version_not_found (D10 Preflight ruling 6). */
+  /** Any string: one that isn't a canonical UUID is 404 configuration_version_not_found. */
   sourceVersionId: string;
   /** Trimmed, 1 to 80 characters; undefined for none. */
   label?: string | undefined;
   /**
-   * The new version's collector version (D13a Preflight ruling 16): left
-   * out, the source's saved one; else the save's rule against the source's.
+   * The new version's collector version: left out, the source's saved one;
+   * else the save's rule against the source's.
    */
   collectorVersion?: string | undefined;
 }
@@ -199,9 +194,8 @@ export interface ConfigurationUpdate {
 }
 
 /**
- * A configuration with what the public API answers of its versions (D25
- * decision 31, Preflight ruling 6): its latest version's number and pin,
- * and its highest published number.
+ * A configuration with what the public API answers of its versions: its latest
+ * version's number and pin, and its highest published number.
  */
 export interface ConfigurationWithFacts {
   configuration: Configuration;
@@ -221,7 +215,7 @@ export interface ConfigurationDetail extends ConfigurationWithFacts {
   yamlContent: string;
 }
 
-/** What the public API's version append asks for (D25 decision 31): the text, and a label or none. */
+/** What the public API's version append asks for: the text, and a label or none. */
 export interface AppendConfigurationVersionInput {
   yamlContent: string;
   /** Trimmed, 1 to 80 characters; undefined for none. */
@@ -229,16 +223,15 @@ export interface AppendConfigurationVersionInput {
 }
 
 /**
- * What the public API's version PATCH merges over a draft (D25 decision
- * 31): a field left out keeps the one stored; the graph is always the
- * stored one.
+ * What the public API's version PATCH merges over a draft: a field left out
+ * keeps the one stored; the graph is always the stored one.
  */
 export interface PatchConfigurationVersionInput {
   yamlContent?: string | undefined;
   collectorVersion?: string | undefined;
   /**
-   * The version's `updatedAt` as the caller read it for its validation
-   * (Ruling 165): a save since is 409 `configuration_version_changed`, and
+   * The version's `updatedAt` as the caller read it for its validation:
+   * a save since is 409 `configuration_version_changed`, and
    * nothing is written, so the text validated is the text saved. Left out,
    * the merge writes over whatever is saved.
    */
@@ -247,28 +240,27 @@ export interface PatchConfigurationVersionInput {
 
 /**
  * A configuration with its facts, whether it is published read from the
- * facts (Ruling 165): the list's row and the facts are two statements, so
- * the facts' highest published number is the one answer for both fields.
+ * facts: the list's row and the facts are two statements, so the facts'
+ * highest published number is the one answer for both fields.
  */
 function withFacts(configuration: Configuration, facts: ConfigurationVersionFacts): ConfigurationWithFacts {
   return { configuration: { ...configuration, published: facts.publishedVersionNumber !== null }, facts };
 }
 
 export interface IConfigurationService {
-  /** A page of the active organization's live configurations (decision 6). No lock. */
+  /** A page of the active organization's live configurations. No lock. */
   list(actor: Actor, organizationId: string, options: ListConfigurationsOptions): Promise<ConfigurationsPage>;
   /**
    * The live configuration, the version the editor opens, and every
-   * version's summary (D10 decision 4). The version is the caller's
-   * selection when it names a version of this live configuration, else the
-   * highest `version_number` (D8 decision 4). Another person's selection
-   * never counts. No lock.
+   * version's summary. The version is the caller's selection when it names
+   * a version of this live configuration, else the highest
+   * `version_number`. Another person's selection never counts. No lock.
    */
   get(actor: Actor, organizationId: string, configurationId: string): Promise<ConfigurationWithVersion>;
   /**
-   * The live configuration, that version of it, and every version's summary
-   * (D10 decision 4). No lock. 404 `configuration_version_not_found` for a
-   * version that isn't this live configuration's, malformed ids included.
+   * The live configuration, that version of it, and every version's summary.
+   * No lock. 404 `configuration_version_not_found` for a version that isn't
+   * this live configuration's, malformed ids included.
    */
   getVersion(
     actor: Actor,
@@ -278,13 +270,12 @@ export interface IConfigurationService {
   ): Promise<ConfigurationWithVersion>;
   /**
    * The live configuration's versions' summaries, highest number first,
-   * without content or layout (D17b-1 decisions 7 and 31; the route answers
-   * only their ids, numbers, labels and published dates): every one the
-   * caller can see, or only the published ones (`published`, possibly
-   * none). The configuration's read's visibility and refusals: 404
-   * `configuration_not_found` for one the caller can't see (another
-   * organization's, another member's draft-only one, a deleted, unknown or
-   * malformed one). No lock.
+   * without content or layout (the route answers only their ids, numbers,
+   * labels and published dates): every one the caller can see, or only the
+   * published ones (`published`, possibly none). The configuration's read's
+   * visibility and refusals: 404 `configuration_not_found` for one the caller
+   * can't see (another organization's, another member's draft-only one, a
+   * deleted, unknown or malformed one). No lock.
    */
   listVersions(
     actor: Actor,
@@ -294,23 +285,22 @@ export interface IConfigurationService {
   ): Promise<ConfigurationVersionSummary[]>;
   /**
    * A new configuration, created by the caller, with its version 1 holding
-   * empty YAML (D8 decision 4), or the content given, exactly as given (D12
-   * Preflight ruling 7), built for the distribution named or the
-   * catalogue's default, its version 1 at that distribution's default
-   * version (D13a decision 9) or the collector version given. A
-   * distribution the catalogue doesn't offer is 400
-   * `collector_distribution_unknown` (Preflight ruling 14); then a
-   * collector version it doesn't offer, or has deprecated, is 400
-   * `collector_version_unknown` (D12 decision 12). Either refusal writes
-   * nothing. A graph the table's checks refuse rejects with the database's
-   * 23514, and nothing is written. The flow's slug, when given, is stored
-   * on the configuration. The audit row names only the name.
+   * empty YAML, or the content given, exactly as given, built for the
+   * distribution named or the catalog's default, its version 1 at that
+   * distribution's default version or the collector version given. A
+   * distribution the catalog doesn't offer is 400
+   * `collector_distribution_unknown`; then a collector version it doesn't
+   * offer, or has deprecated, is 400 `collector_version_unknown`. Either
+   * refusal writes nothing. A graph the table's checks refuse rejects with
+   * the database's 23514, and nothing is written. The flow's slug, when
+   * given, is stored on the configuration. The audit row names only the
+   * name.
    */
   create(actor: Actor, organizationId: string, input: CreateConfigurationInput): Promise<Configuration>;
   /**
    * Changes the fields given. None given, or none different from what is
    * there, changes and audits nothing, and answers the configuration as it
-   * is (decision 7).
+   * is.
    */
   update(
     actor: Actor,
@@ -319,30 +309,28 @@ export interface IConfigurationService {
     changes: ConfigurationUpdate,
   ): Promise<Configuration>;
   /**
-   * Deletes it softly (decision 8). Only its author or an organization admin
-   * may (D11b decision 2): anyone else is 403
-   * `configuration_delete_forbidden`, after the 404 for one they can't see.
-   * A published one only when no fleet uses it (D16b decision 19): 409
+   * Deletes it softly. Only its author or an organization admin may: anyone
+   * else is 403 `configuration_delete_forbidden`, after the 404 for one
+   * they can't see. A published one only when no fleet uses it: 409
    * `configuration_in_use`, 429 `rate_limited` (the person's fleet limit),
-   * or 503 `fleets_unavailable` (the usage couldn't be read), each
-   * deleting nothing.
+   * or 503 `fleets_unavailable` (the usage couldn't be read), each deleting
+   * nothing.
    */
   remove(actor: Actor, organizationId: string, configurationId: string): Promise<void>;
   /**
    * Saves the YAML over the version, exactly as given, with the builder's
-   * graph (D9a decision 6), and moves the configuration's `updated_at` (D8
-   * decision 5). It writes even when both are the ones already there: the
-   * client sends only when it is dirty. The last save wins. The version's
-   * `updatedAt` moves strictly forward: the clock's, or a millisecond past
-   * its last save's when the clock hasn't passed it (D11b Ruling 33). A graph the
-   * table's checks refuse rejects with the database's 23514, and nothing is
-   * written. A published version is 409 `configuration_version_published`
-   * (D11b decision 4), and nothing is written, the collector version
-   * included. A collector version left out keeps the one stored; the one
-   * stored is always accepted, even if deprecated since; a change must name
-   * a version the configuration's distribution offers, else 400
-   * `collector_version_unknown`, and nothing is written (D13a Preflight
-   * ruling 13). A save that changes only the pin is an ordinary save.
+   * graph, and moves the configuration's `updated_at`. It writes even when
+   * both are the ones already there: the client sends only when it is dirty.
+   * The last save wins. The version's `updatedAt` moves strictly forward: the
+   * clock's, or a millisecond past its last save's when the clock hasn't
+   * passed it. A graph the table's checks refuse rejects with the database's
+   * 23514, and nothing is written. A published version is 409
+   * `configuration_version_published`, and nothing is written, the collector
+   * version included. A collector version left out keeps the one stored; the
+   * one stored is always accepted, even if deprecated since; a change must
+   * name a version the configuration's distribution offers, else 400
+   * `collector_version_unknown`, and nothing is written. A save that changes
+   * only the pin is an ordinary save.
    */
   saveVersion(
     actor: Actor,
@@ -354,16 +342,15 @@ export interface IConfigurationService {
   /**
    * The configuration's next version, numbered the highest plus one under
    * the configuration's lock, holding the content given, created by the
-   * caller (D10 decision 5). The source must be a version of this live
-   * configuration; it is left as it was, and named in the audit row. Moves
-   * the configuration's `updated_at`. A graph the table's checks refuse
-   * rejects with the database's 23514, and nothing is written. It is built
-   * for the configuration's distribution, at the source's saved collector
-   * version or the one given, by the save's rule against the source's (D13a
-   * decision 9, Preflight ruling 16). The source's test suites and their
-   * definitions are copied to it in the same transaction, in order, sharing
-   * their inputs, the caller their creator (D14b decision 12, Preflight
-   * ruling 8); its runs are not.
+   * caller. The source must be a version of this live configuration; it is
+   * left as it was, and named in the audit row. Moves the configuration's
+   * `updated_at`. A graph the table's checks refuse rejects with the
+   * database's 23514, and nothing is written. It is built for the
+   * configuration's distribution, at the source's saved collector version
+   * or the one given, by the save's rule against the source's. The source's
+   * test suites and their definitions are copied to it in the same
+   * transaction, in order, sharing their inputs, the caller their creator;
+   * its runs are not.
    */
   createVersion(
     actor: Actor,
@@ -372,11 +359,10 @@ export interface IConfigurationService {
     input: NewConfigurationVersionInput,
   ): Promise<ConfigurationVersion>;
   /**
-   * Sets the version's label (D10 decision 6), moving neither its
-   * `updated_at` nor the configuration's. The same label as the one there
-   * writes and audits nothing, and answers the summary as it is. A
-   * published version is 409 `configuration_version_published` (D11b
-   * decision 4), whatever the label.
+   * Sets the version's label, moving neither its `updated_at` nor the
+   * configuration's. The same label as the one there writes and audits
+   * nothing, and answers the summary as it is. A published version is 409
+   * `configuration_version_published`, whatever the label.
    */
   renameVersion(
     actor: Actor,
@@ -386,9 +372,9 @@ export interface IConfigurationService {
     label: string,
   ): Promise<ConfigurationVersionSummary>;
   /**
-   * The public API's list (D25 decisions 19 and 31): `list`'s page, every
-   * configuration the caller can see, with each one's version facts read in
-   * the same transaction by one statement (Preflight ruling 6).
+   * The public API's list: `list`'s page, every configuration the caller
+   * can see, with each one's version facts read in the same transaction by
+   * one statement.
    */
   listWithFacts(
     actor: Actor,
@@ -396,25 +382,24 @@ export interface IConfigurationService {
     options: Pick<ListConfigurationsOptions, "limit" | "cursor">,
   ): Promise<ConfigurationsWithFactsPage>;
   /**
-   * The public API's read of one configuration (D25 decision 31): the live
-   * configuration the caller can see, its version facts and its latest
-   * version's YAML (the highest number; a selection never counts). 404
+   * The public API's read of one configuration: the live configuration the
+   * caller can see, its version facts and its latest version's YAML (the
+   * highest number; a selection never counts). 404
    * `configuration_not_found` otherwise, a malformed id included. No lock.
    */
   getDetail(actor: Actor, organizationId: string, configurationId: string): Promise<ConfigurationDetail>;
   /**
-   * The id of the live configuration's version numbered `versionNumber`
-   * (D25 Preflight ruling 6): 404 `configuration_not_found` for a
-   * configuration the caller can't see (a malformed id included), then 404
-   * `configuration_version_not_found` for a number it has no version of.
-   * No lock: a version is never deleted on its own, so the id stays its.
+   * The id of the live configuration's version numbered `versionNumber`:
+   * 404 `configuration_not_found` for a configuration the caller can't see
+   * (a malformed id included), then 404 `configuration_version_not_found`
+   * for a number it has no version of. No lock: a version is never deleted
+   * on its own, so the id stays its.
    */
   versionIdOf(actor: Actor, organizationId: string, configurationId: string, versionNumber: number): Promise<string>;
   /**
    * `createVersion` from the configuration's latest version, read under its
-   * lock (D25 decision 31): the latest's pin, its suites and validation
-   * pipelines copied, and the text given with an empty graph (the web
-   * rebuilds it from the text).
+   * lock: the latest's pin, its suites and validation pipelines copied, and
+   * the text given with an empty graph (the web rebuilds it from the text).
    */
   appendVersion(
     actor: Actor,
@@ -424,11 +409,11 @@ export interface IConfigurationService {
   ): Promise<ConfigurationVersion>;
   /**
    * `saveVersion` with the stored content merged under the configuration's
-   * lock (D25 decision 31): the text given or the stored one, the stored
-   * graph, and the pin given or the stored one, by `saveVersion`'s rules (a
-   * published version 409, a pin change the distribution doesn't offer
-   * 400). Neither field given changes, writes and audits nothing, and
-   * answers the version as it is, still 409 for a published one.
+   * lock: the text given or the stored one, the stored graph, and the pin
+   * given or the stored one, by `saveVersion`'s rules (a published version
+   * 409, a pin change the distribution doesn't offer 400). Neither field
+   * given changes, writes and audits nothing, and answers the version as it
+   * is, still 409 for a published one.
    */
   patchVersion(
     actor: Actor,
@@ -438,14 +423,13 @@ export interface IConfigurationService {
     input: PatchConfigurationVersionInput,
   ): Promise<ConfigurationVersion>;
   /**
-   * Records the version as the caller's selection of the configuration (D10
-   * decisions 3 and 9), which `get` then opens for them alone. Not audited
-   * (D10 decision 8).
+   * Records the version as the caller's selection of the configuration,
+   * which `get` then opens for them alone. Not audited.
    */
   selectVersion(actor: Actor, organizationId: string, configurationId: string, versionId: string): Promise<void>;
 }
 
-/** An audit row about `configurationId`, in the active organization (decision 11). */
+/** An audit row about `configurationId`, in the active organization. */
 export function auditEvent(
   actor: Actor,
   configurationId: string,
@@ -466,7 +450,7 @@ export function auditEvent(
 }
 
 /**
- * Decision 9, first in every write: the organization locked `for share`,
+ * First in every write: the organization locked `for share`,
  * which must be live, then the caller's membership re-read, which must be
  * live, both under that lock. A removal and an organization delete lock
  * the organization `for no key update` first, so they wait for a write
@@ -477,8 +461,8 @@ export function auditEvent(
  *
  * `members.find` ignores a deleted account as well as a removed membership.
  * Both are returned, as read under the lock: the membership's role is the
- * one a delete checks (D11b decision 2), never the request's, and the
- * organization's name is the one a publish registers (D11b decision 11).
+ * one a delete checks, never the request's, and the organization's name is
+ * the one a publish registers.
  */
 export async function lockAsMember(
   transaction: Pick<ConfigurationTransaction, "organization" | "members">,
@@ -492,10 +476,9 @@ export async function lockAsMember(
 }
 
 /**
- * D11b decision 2: a configuration's delete is its author's, or an admin's
- * by the role re-read under the organization's lock, else 403. A
- * configuration whose author's account is gone has no author, so only an
- * admin deletes it.
+ * A configuration's delete is its author's, or an admin's by the role re-read
+ * under the organization's lock, else 403. A configuration whose author's
+ * account is gone has no author, so only an admin deletes it.
  */
 function assertMayDelete(actor: Actor, member: Member, createdByUserId: string | null): void {
   const isAuthor = createdByUserId !== null && createdByUserId === actor.context.userId;
@@ -520,12 +503,11 @@ export async function lockedConfiguration(
 }
 
 /**
- * The collector version a write leaves a version at (D13a Preflight rulings
- * 13 and 16): `requested` when it names one, else `current`. The current
- * one is always accepted, even if the catalogue deprecated it since
- * (decision 4: a pin is never changed silently, and keeping it is no
- * change); a change must name a version `distribution` offers, else 400
- * `collector_version_unknown`.
+ * The collector version a write leaves a version at: `requested` when it names
+ * one, else `current`. The current one is always accepted, even if the
+ * catalog deprecated it since (a pin is never changed silently, and keeping
+ * it is no change); a change must name a version `distribution` offers, else
+ * 400 `collector_version_unknown`.
  */
 async function collectorVersionFor(
   transaction: ConfigurationTransaction,
@@ -540,9 +522,9 @@ async function collectorVersionFor(
 
 /**
  * The distribution a create builds a configuration for and its version 1's
- * collector version (D13a decision 9, Preflight ruling 14): the one named
- * at its default version, else the catalogue's defaults. One the catalogue
- * doesn't offer is 400 `collector_distribution_unknown`.
+ * collector version: the one named at its default version, else the
+ * catalog's defaults. One the catalog doesn't offer is 400
+ * `collector_distribution_unknown`.
  */
 async function collectorPinFor(
   transaction: ConfigurationTransaction,
@@ -555,31 +537,27 @@ async function collectorPinFor(
 }
 
 /**
- * D7 decisions 3 and 5 to 11, D8 decisions 4 to 6 and 17, D10 decisions 4
- * to 8, and D11b decisions 1, 2 and 4. Every member may do everything here
- * to a configuration they can see (their own drafts, every published one),
- * whatever their role, but two things: only its author or an admin deletes
- * it (D11b decision 2, which replaced D7 decision 3 for that), and nobody
- * changes a published version (D11b decision 4). Another member's draft is
- * 404 everywhere, as if it didn't exist.
+ * Every member may do everything here to a configuration they can see
+ * (their own drafts, every published one), whatever their role, but two
+ * things: only its author or an admin deletes it, and nobody changes a
+ * published version. Another member's draft is 404 everywhere, as if it
+ * didn't exist.
  */
 export function createConfigurationService(deps: ConfigurationServiceDependencies): IConfigurationService {
   const { withTransaction, now, afterDelete, fleetUsage, log } = deps;
 
   /**
-   * D16b decision 19, Preflight rulings 6, 7 and 12: a published
-   * configuration's delete asks the opamp-server first, outside any
-   * transaction, whether a collector group or a collector (archived
+   * A published configuration's delete asks the opamp-server first, outside
+   * any transaction, whether a collector group or a collector (archived
    * fleets' included) uses one of its published versions. In use: 409. An
-   * organization the opamp-server doesn't know holds nothing there, so
-   * nothing of it is in use (a delete never registers it). The person's
-   * fleet limit spent: 429. Anything else, a throw included: 503 with the
-   * delete's own words, logged with the ids and the result's kind (a
-   * misconfiguration's message, any other throw's name only), never a body
-   * or a URL. Each
-   * refusal deletes nothing. An assignment landing after this answer and
-   * before the delete commits is an accepted residue (ruling 7): the
-   * clean-up then keeps the published versions with its `in_use` warning.
+   * organization the opamp-server doesn't know holds nothing there, so nothing
+   * of it is in use (a delete never registers it). The person's fleet limit
+   * spent: 429. Anything else, a throw included: 503 with the delete's own
+   * words, logged with the ids and the result's kind (a misconfiguration's
+   * message, any other throw's name only), never a body or a URL. Each refusal
+   * deletes nothing. An assignment landing after this answer and before the
+   * delete commits is an accepted residue: the clean-up then keeps the
+   * published versions with its `in_use` warning.
    */
   async function refuseWhileInUse(actor: Actor, configurationId: string): Promise<void> {
     const ids = { operation: "getConfigurationUsage", organizationId: actor.context.organizationId, configurationId };
@@ -594,8 +572,8 @@ export function createConfigurationService(deps: ConfigurationServiceDependencie
         );
         throw fleetsUnavailableAtDelete();
       }
-      // Any other throw is the one 503 too (Ruling 34; decision 19): its
-      // name only, since its message could quote anything.
+      // Any other throw is the one 503 too: its name only, since its message
+      // could quote anything.
       log.error(
         { ...ids, error: error instanceof Error ? error.name : typeof error },
         "a configuration's delete couldn't check its fleet usage: asking the opamp-server failed",
@@ -646,16 +624,15 @@ export function createConfigurationService(deps: ConfigurationServiceDependencie
     const canonicalVersionId = canonicalIdOf(versionId);
     return withTransaction(actor.context, async (transaction) => {
       await lockAsMember(transaction, actor);
-      // D8 decision 6: the version is written under the configuration's
-      // lock, so a save and a delete of it have exactly one order. So is
-      // a publish's record (D11b Preflight ruling 8), so the check below
-      // holds until this transaction ends.
+      // The version is written under the configuration's lock, so a save and
+      // a delete of it have exactly one order. So is a publish's record, so
+      // the check below holds until this transaction ends.
       const current = await lockedConfiguration(transaction, id);
       // A version is found only through its configuration: one of another
       // configuration, an unknown one and a malformed id are all this 404.
       // A save's summary, without the content, says whether it is
       // published; a patch merges over the stored content, so reads it
-      // whole, under the same lock (D25 decision 31).
+      // whole, under the same lock.
       let existing: ConfigurationVersionSummary | undefined;
       let stored: ConfigurationVersion | undefined;
       if (canonicalVersionId !== undefined) {
@@ -663,8 +640,8 @@ export function createConfigurationService(deps: ConfigurationServiceDependencie
         else existing = stored = await transaction.versions.find(current.id, canonicalVersionId);
       }
       if (!existing) throw configurationNotFound();
-      // D11b decision 4: before the write, so the immutability trigger is
-      // never what refuses it.
+      // Before the write, so the immutability trigger is never what refuses
+      // it.
       if (existing.publishedAt !== null) throw configurationVersionPublished();
       let content: SaveVersionInput;
       if (write.kind === "save") {
@@ -673,7 +650,7 @@ export function createConfigurationService(deps: ConfigurationServiceDependencie
         // Read whole above: a patch's version is never only a summary.
         if (stored === undefined) throw configurationNotFound();
         const { yamlContent, collectorVersion, expectedUpdatedAt } = write.change;
-        // Ruling 165: saved since the caller validated it; to the millisecond, as a publish's check (Ruling 30).
+        // Saved since the caller validated it; to the millisecond, as a publish's check.
         if (expectedUpdatedAt !== undefined && stored.updatedAt.getTime() !== expectedUpdatedAt.getTime()) {
           throw configurationVersionChangedWhileValidating();
         }
@@ -688,8 +665,8 @@ export function createConfigurationService(deps: ConfigurationServiceDependencie
           collectorVersion,
         };
       }
-      // D13a Preflight ruling 13: after the published check, so a pin's
-      // change on a published version is 409 like any other change.
+      // After the published check, so a pin's change on a published version
+      // is 409 like any other change.
       const collectorVersion = await collectorVersionFor(
         transaction,
         current.collectorDistribution,
@@ -697,14 +674,13 @@ export function createConfigurationService(deps: ConfigurationServiceDependencie
         content.collectorVersion,
       );
       const at = now();
-      // D11b Ruling 33: every save moves the version's `updated_at`
-      // strictly forward, to the clock or a millisecond past the last
-      // save, whichever is later. A publish refuses a save the caller's
-      // tab didn't see by comparing `updated_at` to the millisecond (Ruling
-      // 30); two saves serialized by this lock can read the same
-      // millisecond from the clock, and a tab holding the first's would
-      // then pass after the second. The previous value is read under the
-      // configuration's lock, which every save holds, so none comes
+      // Every save moves the version's `updated_at` strictly forward, to the
+      // clock or a millisecond past the last save, whichever is later. A
+      // publish refuses a save the caller's tab didn't see by comparing
+      // `updated_at` to the millisecond; two saves serialized by this lock can
+      // read the same millisecond from the clock, and a tab holding the
+      // first's would then pass after the second. The previous value is read
+      // under the configuration's lock, which every save holds, so none comes
       // between. The configuration's `updated_at` keeps the clock's.
       const savedAt = new Date(Math.max(at.getTime(), existing.updatedAt.getTime() + 1));
       const version = await transaction.versions.save(
@@ -723,8 +699,8 @@ export function createConfigurationService(deps: ConfigurationServiceDependencie
       // Live under the lock just taken: these can't miss.
       if (!version) throw configurationNotFound();
       if (!(await transaction.configurations.touch(current.id, at))) throw configurationNotFound();
-      // Never the YAML, which can hold secrets (D8 decision 17), nor the
-      // graph, whose nodes hold copies of it (D9a decision 6).
+      // Never the YAML, which can hold secrets, nor the graph, whose nodes
+      // hold copies of it.
       await transaction.audit.record(
         auditEvent(actor, current.id, "configuration.version_saved", {
           versionId: version.id,
@@ -751,15 +727,15 @@ export function createConfigurationService(deps: ConfigurationServiceDependencie
     const sourceVersionId = "versionId" in from ? canonicalIdOf(from.versionId) : undefined;
     return withTransaction(actor.context, async (transaction) => {
       await lockAsMember(transaction, actor);
-      // D10 decisions 5 and 7: the number is taken under the
-      // configuration's lock, so two creates have exactly one order and
-      // never the same number, and a create and a delete have one order too.
+      // The number is taken under the configuration's lock, so two creates
+      // have exactly one order and never the same number, and a create and a
+      // delete have one order too.
       const current = await lockedConfiguration(transaction, id);
-      // The source must be a version of this live configuration (D10
-      // decision 4); its content isn't read from it, the editor sends it,
-      // so its summary is enough (Ruling 41). The public API's append takes
-      // the latest, read under the same lock (D25 decision 31): every live
-      // configuration has its version 1, so there is one.
+      // The source must be a version of this live configuration; its
+      // content isn't read from it, the editor sends it, so its summary is
+      // enough. The public API's append takes the latest, read under the
+      // same lock: every live configuration has its version 1, so there is
+      // one.
       const source =
         "versionId" in from
           ? sourceVersionId === undefined
@@ -767,9 +743,8 @@ export function createConfigurationService(deps: ConfigurationServiceDependencie
             : await transaction.versions.findSummary(current.id, sourceVersionId)
           : (await transaction.versions.listSummaries(current.id))[0];
       if (!source) throw configurationVersionNotFound();
-      // D13a decision 9 and Preflight ruling 16: the source's saved pin, or
-      // the one the editor holds for it, by the save's rule against the
-      // source's.
+      // The source's saved pin, or the one the editor holds for it, by the
+      // save's rule against the source's.
       const collectorVersion = await collectorVersionFor(
         transaction,
         current.collectorDistribution,
@@ -786,7 +761,7 @@ export function createConfigurationService(deps: ConfigurationServiceDependencie
         pipelines: input.pipelines,
         createdByUserId: actor.context.userId,
         // The configuration's distribution, read under its lock: the server
-        // stamps it, never the client (D13a decision 5, Preflight ruling 18).
+        // stamps it, never the client.
         collectorDistribution: current.collectorDistribution,
         collectorVersion,
         at,
@@ -794,18 +769,17 @@ export function createConfigurationService(deps: ConfigurationServiceDependencie
       // Live under the lock just taken: these can't miss.
       if (!version) throw configurationNotFound();
       if (!(await transaction.configurations.touch(current.id, at))) throw configurationNotFound();
-      // D14b decision 12 and Preflight ruling 8: the source's suites and
-      // definitions, under the configuration's lock just taken (which also
-      // serializes the inputs' reference count, ruling 7), as the caller,
-      // at the version's time. A failure after this rolls them back with
-      // the version.
+      // The source's suites and definitions, under the configuration's lock
+      // just taken (which also serializes the inputs' reference count), as
+      // the caller, at the version's time. A failure after this rolls them
+      // back with the version.
       const copied = await transaction.suites.copyToVersion(current.id, source.id, version.id, at);
-      // D15a decision 17 and Preflight ruling 24: the source's validation
-      // pipelines and their rules, likewise, in the source's order, those
-      // whose YAML pipeline has left the text too.
+      // The source's validation pipelines and their rules, likewise, in
+      // the source's order, those whose YAML pipeline has left the text
+      // too.
       const copiedValidation = await transaction.validationPipelines.copyToVersion(current.id, source.id, version.id, at);
-      // Never the YAML, nor the graph, nor the label (D10 decision 8);
-      // never a suite's, a definition's or a rule's text (ADR 0024): counts only.
+      // Never the YAML, nor the graph, nor the label; never a suite's, a
+      // definition's or a rule's text: counts only.
       await transaction.audit.record(
         auditEvent(actor, current.id, "configuration.version_created", {
           versionId: version.id,
@@ -849,13 +823,13 @@ export function createConfigurationService(deps: ConfigurationServiceDependencie
         const configuration = await transaction.configurations.find(id);
         if (!configuration) throw configurationNotFound();
         // The caller's own selection only: the repository filters by the
-        // person (D10 decision 3). It names a version of this configuration
-        // (the composite foreign key), so the read misses only if the
-        // configuration was deleted meanwhile, and then the highest misses too.
+        // person. It names a version of this configuration (the composite
+        // foreign key), so the read misses only if the configuration was
+        // deleted meanwhile, and then the highest misses too.
         const selectedId = await transaction.selections.find(actor.context.userId, id);
         const selected = selectedId === undefined ? undefined : await transaction.versions.find(id, selectedId);
         // Missing only if the configuration was deleted since the read above:
-        // every configuration has a version 1 (D8 decision 3).
+        // every configuration has a version 1.
         const version = selected ?? (await transaction.versions.findOpened(id));
         if (!version) throw configurationNotFound();
         return { configuration, version, versions: await summariesOf(transaction, id) };
@@ -874,7 +848,7 @@ export function createConfigurationService(deps: ConfigurationServiceDependencie
       const canonicalVersionId = canonicalIdOf(versionId);
       return withTransaction(actor.context, async (transaction) => {
         // The configuration first, so a deleted one is configuration_not_found
-        // whatever the version (D10 decision 4).
+        // whatever the version.
         const configuration = await transaction.configurations.find(id);
         if (!configuration) throw configurationNotFound();
         const version =
@@ -895,7 +869,7 @@ export function createConfigurationService(deps: ConfigurationServiceDependencie
       if (id === undefined) throw configurationNotFound();
       return withTransaction(actor.context, async (transaction) => {
         // The configuration first, as its read: one the caller can't see is
-        // 404 whatever its versions (D11b decision 1).
+        // 404 whatever its versions.
         if (!(await transaction.configurations.find(id))) throw configurationNotFound();
         if (filter === "all") return summariesOf(transaction, id);
         // None published is an empty list, not a refusal.
@@ -908,15 +882,14 @@ export function createConfigurationService(deps: ConfigurationServiceDependencie
       return withTransaction(actor.context, async (transaction) => {
         await lockAsMember(transaction, actor);
         const at = now();
-        // The distribution named at its default version, or the catalogue's
-        // default distribution and its default version (D13a decisions 3 and
-        // 9, Preflight ruling 14), read in this transaction: one default, the
-        // catalogue's, never a constant.
+        // The distribution named at its default version, or the catalog's
+        // default distribution and its default version, read in this
+        // transaction: one default, the catalog's, never a constant.
         const pin = await collectorPinFor(transaction, input.collectorDistribution);
-        // D12 decision 12 (Preflight ruling 7): a collector version given is
-        // checked against that distribution, before anything is written: the
-        // default is accepted as it is, any other must be offered and not
-        // deprecated (the save's rule, with the default as the current one).
+        // A collector version given is checked against that distribution,
+        // before anything is written: the default is accepted as it is, any
+        // other must be offered and not deprecated (the save's rule, with
+        // the default as the current one).
         const collectorVersion = await collectorVersionFor(
           transaction,
           pin.distribution,
@@ -932,8 +905,8 @@ export function createConfigurationService(deps: ConfigurationServiceDependencie
           at,
         });
         // In the same transaction, so a configuration never lacks its
-        // content (D8 decision 4). A flow's content is written exactly as
-        // given; without one, the insert is D8's, the graph the table's `[]`.
+        // content. A flow's content is written exactly as given; without one,
+        // version 1 holds `''`, the graph the table's `[]`.
         const { content } = input;
         await transaction.versions.create({
           configurationId: configuration.id,
@@ -947,8 +920,8 @@ export function createConfigurationService(deps: ConfigurationServiceDependencie
           collectorVersion,
           at,
         });
-        // The name alone, as before: never the text nor the graph (D8
-        // decision 17, D9a decision 6). The flow's slug is on the row.
+        // The name alone: never the text nor the graph. The flow's slug is on
+        // the row.
         await transaction.audit.record(
           auditEvent(actor, configuration.id, "configuration.created", { name: configuration.name }),
         );
@@ -967,7 +940,7 @@ export function createConfigurationService(deps: ConfigurationServiceDependencie
       return withTransaction(actor.context, async (transaction) => {
         await lockAsMember(transaction, actor);
         const current = await lockedConfiguration(transaction, id);
-        // Only the fields that differ from what is there (decision 7).
+        // Only the fields that differ from what is there.
         const from: ConfigurationChanges = {};
         const to: ConfigurationChanges = {};
         if (changes.name !== undefined && changes.name !== current.name) {
@@ -997,9 +970,9 @@ export function createConfigurationService(deps: ConfigurationServiceDependencie
     async remove(actor: Actor, organizationId: string, configurationId: string): Promise<void> {
       assertActiveOrganization(actor, organizationId);
       const id = canonicalIdOf(configurationId);
-      // D16b Preflight ruling 6: the rights first, in a short transaction
-      // committed before any call (no lock is held across one), with
-      // whether any of its versions is published.
+      // The rights first, in a short transaction committed before any call
+      // (no lock is held across one), with whether any of its versions is
+      // published.
       const isPublished = await withTransaction(actor.context, async (transaction) => {
         const { member } = await lockAsMember(transaction, actor);
         const current = id === undefined ? undefined : await transaction.configurations.find(id);
@@ -1012,7 +985,7 @@ export function createConfigurationService(deps: ConfigurationServiceDependencie
       const deletedId = await withTransaction(actor.context, async (transaction) => {
         const { member } = await lockAsMember(transaction, actor);
         // 404 first: a configuration the caller can't see doesn't exist for
-        // them, so it is never 403 (D11b Preflight ruling 15).
+        // them, so it is never 403.
         const current = await lockedConfiguration(transaction, id);
         // The rights re-checked under the locks: the role, or the
         // configuration, may have changed since the first read.
@@ -1022,8 +995,7 @@ export function createConfigurationService(deps: ConfigurationServiceDependencie
         await transaction.audit.record(auditEvent(actor, current.id, "configuration.deleted", { name: current.name }));
         return current.id;
       });
-      // After the commit, the other way round from a publish (D11a decision
-      // 12): a failure here only ever leaves orphaned snapshots.
+      // After the commit, the other way round from a publish: a failure here only ever leaves orphaned snapshots.
       afterDelete(organizationId, deletedId);
     },
 
@@ -1059,20 +1031,20 @@ export function createConfigurationService(deps: ConfigurationServiceDependencie
       const canonicalVersionId = canonicalIdOf(versionId);
       return withTransaction(actor.context, async (transaction) => {
         await lockAsMember(transaction, actor);
-        // D10 decision 7: under the configuration's lock, so a rename and a
-        // delete have exactly one order.
+        // Under the configuration's lock, so a rename and a delete have
+        // exactly one order.
         const current = await lockedConfiguration(transaction, id);
-        // Its summary: the old label, without the content (Ruling 41).
+        // Its summary: the old label, without the content.
         const existing =
           canonicalVersionId === undefined
             ? undefined
             : await transaction.versions.findSummary(current.id, canonicalVersionId);
         if (!existing) throw configurationVersionNotFound();
-        // D11b decision 4: a published version's label is fixed, so even its
-        // own label is refused, before anything is written.
+        // A published version's label is fixed, so even its own label is
+        // refused, before anything is written.
         if (existing.publishedAt !== null) throw configurationVersionPublished();
-        // The same label: nothing to write or audit, as D7 decision 7 has it
-        // for a configuration's change.
+        // The same label: nothing to write or audit, as for a configuration's
+        // change.
         const from = existing.label;
         if (from === label) return existing;
         const renamed = await transaction.versions.rename(current.id, existing.id, label);
@@ -1103,15 +1075,15 @@ export function createConfigurationService(deps: ConfigurationServiceDependencie
           ...(after === undefined ? {} : { after }),
           filter: "all",
         });
-        // One statement for the page (Preflight ruling 6), in the same transaction.
+        // One statement for the page, in the same transaction.
         const facts = await transaction.versions.listFacts(listed.items.map((configuration) => configuration.id));
         return { ...listed, facts };
       });
-      // Every live configuration has its version 1 (D8 decision 3): one is
-      // missing only if it was deleted between the two statements, and then
-      // it is left out, as a list read after the delete would.
-      // Whether it is published is the facts' (Ruling 165): one snapshot,
-      // so `isPublished` and `publishedVersionNumber` always agree.
+      // Every live configuration has its version 1: one is missing only if
+      // it was deleted between the two statements, and then it is left out,
+      // as a list read after the delete would. Whether it is published is
+      // the facts': one snapshot, so `isPublished` and
+      // `publishedVersionNumber` always agree.
       const items = page.items.flatMap((configuration) => {
         const facts = page.facts.get(configuration.id);
         return facts === undefined ? [] : [withFacts(configuration, facts)];
@@ -1151,7 +1123,7 @@ export function createConfigurationService(deps: ConfigurationServiceDependencie
       if (id === undefined) throw configurationNotFound();
       return withTransaction(actor.context, async (transaction) => {
         // The configuration first, as getVersion's: one the caller can't see
-        // is configuration_not_found whatever the number (D10 decision 4).
+        // is configuration_not_found whatever the number.
         if (!(await transaction.configurations.find(id))) throw configurationNotFound();
         const versionId = await transaction.versions.findIdByNumber(id, versionNumber);
         if (versionId === undefined) throw configurationVersionNotFound();
@@ -1165,7 +1137,7 @@ export function createConfigurationService(deps: ConfigurationServiceDependencie
       configurationId: string,
       input: AppendConfigurationVersionInput,
     ): Promise<ConfigurationVersion> {
-      // An empty graph: the web lays the version out from its text (D25 decision 31).
+      // An empty graph: the web lays the version out from its text.
       return createNextVersion(
         actor,
         organizationId,
@@ -1196,12 +1168,11 @@ export function createConfigurationService(deps: ConfigurationServiceDependencie
       const canonicalVersionId = canonicalIdOf(versionId);
       await withTransaction(actor.context, async (transaction) => {
         await lockAsMember(transaction, actor);
-        // D10 decision 7: under the configuration's lock, so a selection and
-        // a delete have exactly one order.
+        // Under the configuration's lock, so a selection and a delete have
+        // exactly one order.
         const current = await lockedConfiguration(transaction, id);
         // `record` reads the version through its live configuration first,
-        // and writes nothing when it isn't one of its versions (Preflight
-        // ruling 1).
+        // and writes nothing when it isn't one of its versions.
         const recorded =
           canonicalVersionId !== undefined &&
           (await transaction.selections.record(actor.context.userId, current.id, canonicalVersionId, now()));

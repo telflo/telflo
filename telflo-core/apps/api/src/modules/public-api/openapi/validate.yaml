@@ -1,7 +1,5 @@
-# Validate (D25 decision 17's route 15; decision 34; Preflight rulings 9 and
-# 17), and D27's anonymous validate (decisions 23-25; its Preflight ruling 9):
-# an open route, no token. Assembled by document.ts. An unknown or retired
-# version is 400, not 200 valid:false.
+# Validate, and the anonymous validate: an open route, no token. Assembled by
+# document.ts. An unknown or retired version is 400, not 200 valid:false.
 paths:
   /validate:
     post:

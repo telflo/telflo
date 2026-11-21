@@ -39,9 +39,8 @@ import { KUBERNETES_PIN_NOTE } from "./EditCollectorDialog.js";
 import { VARIABLES_UNDEFINED_HINT, VARIABLES_USED_LABEL, allDefinedWords } from "./VariableGroupChoice.js";
 
 /*
- * "Pin collectors" (D17b-1 decisions 8, 12 and 27; Preflight rulings 5 and
- * 13): the grid's selected collectors pinned to a chosen version in one
- * request.
+ * "Pin collectors": the grid's selected collectors pinned to a chosen version
+ * in one request.
  */
 
 const refusal = (code: string, message: string, status: number) => new ApiError(code, message, { status });
@@ -79,7 +78,7 @@ function serve() {
   serveNoVariables();
   vi.spyOn(apiClient, "getConfigurations").mockImplementation(async (organizationId, query = {}) => {
     expect(organizationId).toBe(GROUP_ID);
-    // No search (Ruling 35): a read never sends q.
+    // No search: a read never sends q.
     expect(query).toEqual({ filter: "published", limit: 100 });
     return { items: [CHECKOUT, PAYMENTS], nextCursor: null };
   });
@@ -151,13 +150,13 @@ type User = ReturnType<typeof userEvent.setup>;
 const combobox = (name: string) => screen.getByRole("combobox", { name });
 const pinButton = () => screen.getByRole("button", { name: /^(Pin \d+|Pinning…)$/ });
 
-/** Opens the Select labelled `label`, once its read has put it there, and picks `option`. */
+/** Opens the Select labeled `label`, once its read has put it there, and picks `option`. */
 async function choose(user: User, label: string, option: string | RegExp) {
   await user.click(await screen.findByRole("combobox", { name: label }));
   await user.click(await screen.findByRole("option", { name: option }));
 }
 
-/** Moves the Published version choice off "Leave as is" to "A published version" (Q103). */
+/** Moves the Published version choice off "Leave as is" to "A published version". */
 async function pickAVersion(user: User) {
   await choose(user, "Published version", "A published version");
 }
@@ -192,17 +191,17 @@ describe("BulkPinDialog's pin", () => {
   });
 });
 
-describe("BulkPinDialog (decision 27)", () => {
-  it("says decision 9's description for one selected collector", async () => {
+describe("BulkPinDialog", () => {
+  it("says the description for one selected collector", async () => {
     await renderPin(ROWS(1));
     expect(screen.getByRole("dialog")).toHaveAccessibleDescription(
       "Pin the selected collector to a published version, a variable group, or both; “Follow each collector's group” clears that pin, and “Leave as is” keeps each collector's. A pinned version wins over the group's; a pinned variable group's overrides come first, then the group's variable group's.",
     );
   });
 
-  it('opens on "Leave as is" for both choices, "Pin {n}" disabled until a choice moves and a version is complete (Q103)', async () => {
+  it('opens on "Leave as is" for both choices, "Pin {n}" disabled until a choice moves and a version is complete', async () => {
     const { user } = await renderPin(ROWS(3));
-    // D16c (decision 9): the description and the choices name published versions only.
+    // The description and the choices name published versions only.
     expect(screen.getByRole("dialog")).toHaveAccessibleDescription(
       "Pin the 3 selected collectors to a published version, a variable group, or both; “Follow each collector's group” clears that pin, and “Leave as is” keeps each collector's. A pinned version wins over the group's; a pinned variable group's overrides come first, then the group's variable group's.",
     );
@@ -220,7 +219,7 @@ describe("BulkPinDialog (decision 27)", () => {
     expect(pinButton()).toBeEnabled();
   });
 
-  // D17b-2 Ruling 35 (the owner's): no search box; more than a page is reached by "Load more".
+  // No search box; more than a page is reached by "Load more".
   it("offers no configuration search box, and no text field at all", async () => {
     const { user } = await renderPin(ROWS());
     await pickAVersion(user);
@@ -245,7 +244,7 @@ describe("BulkPinDialog (decision 27)", () => {
     expect(api.requests).toEqual([{ collectorIds: rows.map((row) => row.id), pin: { kind: "version", versionId: P2_ID } }]);
   });
 
-  // The final reviews' Minor 3: the picker's state lived in a child the Pin choice unmounts.
+  // The picker's state outlives the child the Pin choice unmounts.
   it("keeps the configuration chosen when the Pin choice switches away and back, nothing read again", async () => {
     const rows = ROWS();
     const { user, onChanged } = await renderPin(rows);
@@ -425,7 +424,7 @@ describe("BulkPinDialog (decision 27)", () => {
   });
 });
 
-// D16c (decision 10): Q18's refusal is gone; following the group is never refused.
+// Following the group is never refused.
 describe("BulkPinDialog's Follow each collector's group", () => {
   it.each([
     ["in a group with no published version", GROUPS()],
@@ -448,7 +447,6 @@ describe("BulkPinDialog's Follow each collector's group", () => {
   });
 });
 
-// D17d-1 decision 4; Preflight ruling 27.
 describe("BulkPinDialog's canary note", () => {
   it("is under the Pin select on a Kubernetes-supervisor fleet, describing it, whatever the Pin chosen", async () => {
     const { user } = await renderPin(ROWS(), GROUPS(), "kubernetes-supervisor");
@@ -467,7 +465,7 @@ describe("BulkPinDialog's canary note", () => {
   });
 });
 
-describe("BulkPinDialog's privacy (decision 32)", () => {
+describe("BulkPinDialog's privacy", () => {
   it("holds no collector, group or configuration name in an attribute: every Select open and chosen", async () => {
     const collectorName = "canary-collector-8c1d";
     const groupName = "canary-group-9d2e";
@@ -496,8 +494,8 @@ describe("BulkPinDialog's privacy (decision 32)", () => {
   });
 });
 
-// D20 (Q103; Preflight rulings 33 and 42; Ruling 50): the Variable group choice beside the version's.
-describe("BulkPinDialog's Variable group choice (Q103)", () => {
+// The Variable group choice beside the version's.
+describe("BulkPinDialog's Variable group choice", () => {
   const EU_ID = "7b000000-0000-4000-8000-0000000000e1";
   const US_ID = "7b000000-0000-4000-8000-0000000000e2";
 
@@ -575,7 +573,7 @@ describe("BulkPinDialog's Variable group choice (Q103)", () => {
     expect(pinButton()).toBeDisabled();
   });
 
-  it("words each toast with its counts (Q103; Ruling 50), never a name", () => {
+  it("words each toast with its counts, never a name", () => {
     expect(bulkPinWords({ pin: undefined, variableGroupId: EU_ID }, 1, 0)).toBe("Variable group set on 1 collector.");
     expect(bulkPinWords({ pin: undefined, variableGroupId: null }, 1, 0)).toBe("1 collector follows its group's variable group.");
     expect(bulkPinWords({ pin: undefined, variableGroupId: null }, 12, 0)).toBe("12 collectors follow their group's variable group.");
@@ -626,7 +624,7 @@ describe("BulkPinDialog's Variable group choice (Q103)", () => {
     expect(await screen.findByRole("combobox", { name: "Variable group" })).toHaveTextContent("Leave as is");
   });
 
-  // D17c-1 Ruling 66's probe: a parent's reload while the dialog is open moves nothing of its baseline.
+  // A parent's reload while the dialog is open moves nothing of its baseline.
   it("keeps the selection and the lists it offers as they were at the opening when the parent reloads", async () => {
     const opened = ROWS(2);
     const reloaded = manyCollectors(3, 10);
@@ -662,7 +660,7 @@ describe("BulkPinDialog's Variable group choice (Q103)", () => {
     expect(apiClient.getVariableGroups).toHaveBeenCalledTimes(1);
   });
 
-  it("holds no variable group's name in an attribute; its Select's trigger and list sit inside ph-no-capture (Q88)", async () => {
+  it("holds no variable group's name in an attribute; its Select's trigger and list sit inside ph-no-capture", async () => {
     const name = "canary-variable-group-5a1";
     vi.mocked(apiClient.getVariableGroups).mockResolvedValue([variableGroup({ id: EU_ID, name })]);
     const { user } = await renderPin();
@@ -685,9 +683,8 @@ describe("BulkPinDialog's Variable group choice (Q103)", () => {
   });
 });
 
-// D20 final review side 2, Minor 5 (Q86: the platform's dialogs show the names before Save too): the group dialogs'
-// "Variables used", for the published version chosen.
-describe("BulkPinDialog's Variables used (Q86)", () => {
+// The group dialogs' "Variables used", for the published version chosen: the names show before Save.
+describe("BulkPinDialog's Variables used", () => {
   beforeEach(() => {
     useUserStore.getState().setCurrent(signedInMember(GROUP_ID));
     vi.mocked(apiClient.getConfigurationVersion).mockImplementation(async (organizationId, configurationId, versionId) => {

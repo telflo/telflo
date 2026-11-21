@@ -1,11 +1,10 @@
-// New in D15a Task 2 (plan Preflight rulings 5, 8 and 9): the requests'
-// shapes, checked as openapi.yaml states them, member by member, so the
-// server refuses what the file refuses: an unknown member, a null where none
-// is allowed, a wrong type, an unknown kind or enum value, a length past its
-// cap. A refusal's message names the member's path and the rule broken,
-// never a value from the request. A rule's content (its text's byte length,
-// its OTTL, its regex) is checked later, as that rule's own error
-// (internal/rules), never the request's.
+// The requests' shapes, checked as openapi.yaml states them, member by
+// member, so the server refuses what the file refuses: an unknown member, a
+// null where none is allowed, a wrong type, an unknown kind or enum value,
+// a length past its cap. A refusal's message names the member's path and
+// the rule broken, never a value from the request. A rule's content (its
+// text's byte length, its OTTL, its regex) is checked later, as that rule's
+// own error (internal/rules), never the request's.
 
 package server
 
@@ -122,8 +121,8 @@ func decodeEvaluate(body []byte) (evaluateRequest, *shapeError) {
 }
 
 // decodeLint checks a lint request: one of the contexts, and up to three
-// arrays of strings of at most 8,192 characters, 1 to 200 strings in all
-// (D25 Task 3). A text's content (its bytes, its nesting, its parse) is the
+// arrays of strings of at most 8,192 characters, 1 to 200 strings in all.
+// A text's content (its bytes, its nesting, its parse) is the
 // item's own verdict, never the request's.
 func decodeLint(body []byte) (rules.LintInput, *shapeError) {
 	members, err := object(body, "the body", []string{"context"}, []string{"conditions", "statements", "valueExpressions"})

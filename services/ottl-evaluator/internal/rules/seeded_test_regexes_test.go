@@ -1,8 +1,8 @@
-// New in D15b Task 1 (plan Preflight ruling 2): every pattern the regex
-// library is seeded with (migration 1700000000031's seededTestRegexes)
-// passes a regex rule's own checks, the ones validate answers at Save, so a
-// pattern picked from the library is a rule that saves. The fixture,
-// testdata/seeded-test-regexes.json, is generated from the migration by
+// Every pattern the regex library is seeded with (migration 1700000000031's
+// seededTestRegexes) passes a regex rule's own checks, the ones validate
+// answers at Save, so a pattern picked from the library is a rule that
+// saves. The fixture, testdata/seeded-test-regexes.json, is generated from
+// the migration by
 // `npm run fixture:seeded-test-regexes --workspace @telflo/db`, whose suite
 // fails when it is stale.
 

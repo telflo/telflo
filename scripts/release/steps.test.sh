@@ -230,9 +230,8 @@ run -- stack-smoke --version 0.1.0 --work "$tmp/ss-full"
 check "stack-smoke on a work folder that isn't empty: refused (exit 2)" "[ $rc -eq 2 ]"
 
 # --- archive-smoke, kind-smoke: a copy of steps.sh beside stand-in smokes ---------------------
-# (decision 84, Ruling 408). Each stand-in records its argv and, when told, prints a value of
-# this run's (a tf_ token's shape and a PASSWORD= setting, made here, never printed by the test)
-# and exits with SMOKE_EXIT.
+# Each stand-in records its argv and, when told, prints a value of this run's (a tf_ token's
+# shape and a PASSWORD= setting, made here, never printed by the test) and exits with SMOKE_EXIT.
 sr="$tmp/smoke-root"
 for f in scripts/release/steps.sh scripts/release/version.sh scripts/release/oci.sh scripts/release/github-tag.sh scripts/gates/redact.sh; do
   mkdir -p "$sr/$(dirname "$f")"; cp "$root/$f" "$sr/$f"
@@ -306,7 +305,7 @@ srun -- archive-smoke --version 0.1.0 --release "$sm_rel" --work "$tmp/as1" --pr
 check "archive-smoke: smoke-compose-install.sh on the release's archive and sums, its work <work>/smoke, the options passed (exit 0)" \
   "[ $rc -eq 0 ] && [ \"\$(cat '$logs/smoke-compose-install.argv')\" = '--archive $sm_rel/telflo-compose-0.1.0.tar.gz --sums $sm_rel/SHA256SUMS --work $tmp/as1/smoke --project telflo-release-archive --http-port 41100 --agent-port 41101 --mailpit-port 41102' ] \
    && has 'smoke-compose-install: step 1 PASS' && grep -qF 'smoke-compose-install: step 1 PASS' '$tmp/as1/archive-smoke.log' && has \"secret-shaped lines in the archive smoke's output: 0\" && has 'the archive smoke passed'"
-# redact.sh failing after a passing smoke fails the step: the log may be missing lines (logged(); Ruling 409).
+# redact.sh failing after a passing smoke fails the step: the log may be missing lines (logged()).
 printf '#!/bin/bash\ncat\nexit 1\n' >"$sr/scripts/gates/redact.sh"
 srun -- archive-smoke --version 0.1.0 --release "$sm_rel" --work "$tmp/as-redact-fails"
 check "archive-smoke: redact.sh failing after the smoke passed fails the step (exit 1), saying the log may be incomplete" \

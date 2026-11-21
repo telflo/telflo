@@ -10,10 +10,10 @@ import type { OTelNode } from "~/lib/graph/types.js";
 import { GROUP_ID, MINE, versionFixture } from "~/test/configurations.js";
 
 /*
- * A change the text edits refuse (D9a decision 4) is refused whole, whatever
- * the action. The edits refuse only rare texts (editor-store.builder.test.ts
- * has two real ones); here they are made to refuse every change, so each
- * action's refusal is shown.
+ * A change the text edits refuse is refused whole, whatever the action. The
+ * edits refuse only rare texts (editor-store.builder.test.ts has two real
+ * ones); here they are made to refuse every change, so each action's refusal
+ * is shown.
  */
 
 const refuse = vi.hoisted(() => ({ on: false, bug: false }));
@@ -100,7 +100,7 @@ describe("a change the text edits refuse", () => {
     expect(error).toHaveBeenCalledWith(CANT_EDIT_ON_CANVAS_MESSAGE);
   });
 
-  it("layout changes don't reach the edits: a move, a colour and Tidy up still work", () => {
+  it("layout changes don't reach the edits: a move, a color and Tidy up still work", () => {
     refuse.on = true;
     store().setPipelineColor(store().graph.pipelines[0]!.id, "#10b981");
     now += 1000;

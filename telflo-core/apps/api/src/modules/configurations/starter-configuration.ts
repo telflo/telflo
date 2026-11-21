@@ -1,11 +1,10 @@
 /*
- * The configuration every new account starts with (D8 decision 10), the
- * "Initial Configuration". `createAccount` makes it in the account's own
+ * The configuration every new account starts with, the "Initial
+ * Configuration". `createAccount` makes it in the account's own
  * transaction, in the personal organization.
  *
- * The YAML ends in one newline (the spec's Parity Notes).
- * starter-configuration.test.ts pins its SHA-256, so an accidental edit
- * fails loudly.
+ * The YAML ends in one newline. starter-configuration.test.ts pins its
+ * SHA-256, so an accidental edit fails loudly.
  */
 
 export const STARTER_CONFIGURATION_NAME = "Initial Configuration";
@@ -13,8 +12,8 @@ export const STARTER_CONFIGURATION_NAME = "Initial Configuration";
 export const STARTER_CONFIGURATION_DESCRIPTION = "Default OTel Collector pipeline created on signup";
 
 /**
- * The starter's version 1's label (D10 decision 14). A configuration
- * created from the list has an unnamed version 1.
+ * The starter's version 1's label. A configuration created from the list has
+ * an unnamed version 1.
  */
 export const STARTER_VERSION_LABEL = "Initial version";
 

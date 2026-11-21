@@ -1,12 +1,10 @@
 #!/usr/bin/env bash
-# The platform chart's kind smoke (D33-1 spec decisions 4, 10, 19, 22, 34
-# and 35; Preflight rulings 11, 19, 20 and 21; Rulings 325, 327, 328, 331 and
-# 332; D36-2 decision 99 and Preflight ruling 4): charts/telflo (or a
-# packaged chart, --chart) installed on a throwaway kind cluster, with images
-# built from this tree (or the release's, --images), and driven end to end.
-# It runs the chart's defaults, the open source's (D36-1 Preflight ruling
-# 19): no one can register, so the first account is made by `telflo-admin
-# bootstrap` in the API's pod, and a second joins by an invitation.
+# The platform chart's kind smoke: charts/telflo (or a packaged chart,
+# --chart) installed on a throwaway kind cluster, with images built from this
+# tree (or the release's, --images), and driven end to end. It runs the
+# chart's defaults, the open source's: no one can register, so the first
+# account is made by `telflo-admin bootstrap` in the API's pod, and a second
+# joins by an invitation.
 #
 #   scripts/smoke-kind.sh [--profile <name>] [--work <dir>] [--images <version>] [--chart <tgz>]
 #       [--image-tag <tag>] [--skip-build] [--keep-images] [--otelcol-versions all|default]
@@ -30,7 +28,7 @@
 # local Docker engine, the images it loads (nginx:1.27-alpine at the chart's
 # digest, axllent/mailpit:v1.31, ghcr.io/telflo/opamp-server at
 # vendor/opamp-server/PIN's version and digest, and
-# ghcr.io/telflo/telflo/collector:<the catalogue's default version>) and,
+# ghcr.io/telflo/telflo/collector:<the catalog's default version>) and,
 # without --images, the Dockerfiles' pinned bases; 10.5 GB free in Docker's
 # disk; a telflo-core with its node_modules (--core, default this tree's) for
 # the contracts' builders, and a built CLI (--cli, default
@@ -47,33 +45,32 @@
 #      compose project of the run's own (<profile>-build) and an override
 #      naming its own tags, smoke-kind-<image>:<tag> (the tag HEAD's short id,
 #      -dirty when the build's inputs differ from HEAD; --image-tag otherwise,
-#      required outside a git checkout); never the owner's telflo-*:dev. The
-#      bases the Dockerfiles pin are used from the local engine; only
+#      required outside a git checkout); never a developer's own telflo-*:dev.
+#      The bases the Dockerfiles pin are used from the local engine; only
 #      node:24-bookworm-slim and distroless/static at their pinned digests are
-#      pulled when missing (Ruling 325), and removed again at the end.
-#      --skip-build reuses the tags.
+#      pulled when missing, and removed again at the end. --skip-build reuses
+#      the tags.
 #   3. kind create cluster --name <profile> --image <tools.lock's node, by
 #      digest> --kubeconfig <a file of the work folder> --config <the work
 #      folder's kind-config.yaml: the API server on 127.0.0.1:<--api-port>, a
 #      port the run checked free, never one kind picks>, on a Docker network of
-#      the run's own (KIND_EXPERIMENTAL_DOCKER_NETWORK=<profile>, removed at the
-#      end; never kind's shared `kind` network): one node, kind's own CNI
-#      (kindnet, which enforces NetworkPolicies: D36-2 Preflight ruling 4) and
-#      its local-path storage.
+#      the run's own (KIND_EXPERIMENTAL_DOCKER_NETWORK=<profile>, removed at
+#      the end; never kind's shared `kind` network): one node, kind's own CNI
+#      (kindnet, which enforces NetworkPolicies) and its local-path storage.
 #   4. every image loaded into the node (`kind load docker-image`), checked by
 #      image id as the engine's image store gives it (smoke-kind/image-id.sh:
 #      the config digest on the classic store, the manifest digest on
-#      containerd's; Ruling 394); the chart's own postgres:18 pinned by digest pulled inside the
-#      node (Ruling 328), so the chart's default Postgres reference runs as is.
-#   5. the release's namespace (labelled pod-security.kubernetes.io/enforce=
+#      containerd's); the chart's own postgres:18 pinned by digest pulled
+#      inside the node, so the chart's default Postgres reference runs as is.
+#   5. the release's namespace (labeled pod-security.kubernetes.io/enforce=
 #      restricted) and the collectors' namespace (no label: the collector
 #      chart's pods set no securityContext); the Mailpit fixture
 #      (smoke-kind/mailpit.yaml) in the release's.
 #   6. create-secrets.sh --init <work>/smoke.secrets.env, then
 #      create-secrets.sh against the cluster: the four required Secrets. No
 #      pull Secret: every image is local, and the chart's pull-secret lists
-#      stay their default, empty (D36-2 decision 101; the [ghcr-pull]
-#      section's mechanics are create-secrets.test.sh's).
+#      stay their default, empty (the [ghcr-pull] section's mechanics are
+#      create-secrets.test.sh's).
 #   7. helm template with the smoke's values renders no `kind: Secret`.
 #   8. helm install --wait (Postgres first; the API's migrate init container
 #      retries until Postgres answers), every pod Ready; a pod that can't
@@ -90,42 +87,41 @@
 #  11. helm upgrade (a pod annotation on every component, so every pod
 #      restarts), every pod Ready again and new; the API's migrate init
 #      container migrated nothing (pgmigrations unchanged), re-provisioned
-#      telflo_platform, and Postgres's restart skipped its initialisation.
+#      telflo_platform, and Postgres's restart skipped its initialization.
 #  12. the static facts: the management Service ClusterIP; the namespace's
 #      label; every pod of the release non-root, every container's root
 #      read-only, no service-account token mounted (spec, and inside every
 #      container with a shell).
 #  13. the NetworkPolicies, enforced by kindnet: the tester and the validator
-#      (kubectl exec, Python's urllib) reach neither the outside nor the API;
-#      a throwaway pod carrying the evaluator's labels (never Ready, so never
-#      its Service's endpoint) reaches nothing; a throwaway pod without
-#      labels reaches neither the API, Postgres, web, the sandbox nor the
-#      management port, but does reach the gateway, the agent port, Mailpit
-#      and the outside (the controls: a failed control fails the step); the
-#      gateway reaches web and the API. A throwaway pod waits 5 s before it
-#      probes (kindnet doesn't police a new pod's first moments: Preflight
-#      ruling 4). A closed target must time out (a policy's drop), and its
-#      Service must serve the port with a ready endpoint. It needs internet
-#      access: the outside control (a TCP connection to 1.1.1.1:443) must be
-#      open, so an offline machine fails this step by design.
+#      (kubectl exec, Python's urllib) reach neither the outside nor the API; a
+#      throwaway pod carrying the evaluator's labels (never Ready, so never its
+#      Service's endpoint) reaches nothing; a throwaway pod without labels
+#      reaches neither the API, Postgres, web, the sandbox nor the management
+#      port, but does reach the gateway, the agent port, Mailpit and the
+#      outside (the controls: a failed control fails the step); the gateway
+#      reaches web and the API. A throwaway pod waits 5 s before it probes
+#      (kindnet doesn't police a new pod's first moments). A closed target must
+#      time out (a policy's drop), and its Service must serve the port with a
+#      ready endpoint. It needs internet access: the outside control (a TCP
+#      connection to 1.1.1.1:443) must be open, so an offline machine fails
+#      this step by design.
 #  14. kubectl port-forward to the gateway and Mailpit on 127.0.0.1: /login
 #      200, /api/v1/auth/me 401, the API reference page
 #      (/api/public/v1/docs 301, /docs/ 200 with its CSP, nosniff and
 #      no-referrer).
-#  15. registration refused (403 registration_not_open: the chart's default
-#      is invite-only); `telflo-admin bootstrap` in the API's pod (kubectl
-#      exec) makes the first product admin and its group organization and
-#      prints its set-password link as its last line (D36-1 decision 54,
-#      Q266): its stdout goes to a 0600 file of the run's secrets, never
-#      the logs, the link is read from its last line into a variable and
-#      never printed, no email reaches the address, and the password is
-#      set; sign in (curl keeps the Secure session cookie over
+#  15. registration refused (403 registration_not_open: the chart's default is
+#      invite-only); `telflo-admin bootstrap` in the API's pod (kubectl exec)
+#      makes the first product admin and its group organization and prints its
+#      set-password link as its last line: its stdout goes to a 0600 file of
+#      the run's secrets, never the logs, the link is read from its last line
+#      into a variable and never printed, no email reaches the address, and the
+#      password is set; sign in (curl keeps the Secure session cookie over
 #      http://localhost: checked), a product admin with no Terms to accept,
-#      landing in the group organization (decision 56; the switch to it a
-#      no-op), a teammate invited, the invitation's email read and an account made
-#      from it (no Terms), in the organization as a contributor; in the
-#      group organization a configuration created, validated (valid and
-#      invalid), a test run in the tester, version 1 published.
+#      landing in the group organization (the switch to it a no-op), a teammate
+#      invited, the invitation's email read and an account made from it (no
+#      Terms), in the organization as a contributor; in the group organization
+#      a configuration created, validated (valid and invalid), a test run in
+#      the tester, version 1 published.
 #  16. a kubernetes-supervisor fleet and a gateway-role collector from this
 #      tree's charts/supervisor-collector in the collectors' namespace, its
 #      values written by the contracts' builders (smoke-kind/
@@ -138,39 +134,38 @@
 #      holds 127.0.0.1 (the gateway's peer through the port-forward).
 #  19. GET /__manifest?paths=<a double-encoded path holding a marker>&version=
 #      <the build's>: the web pod's log holds no "The URL path" line and no
-#      marker (Ruling 327).
+#      marker.
 #  20. the collector uninstalled, then 60 s with no traffic add no log line in
-#      any of the release's pods (probes are silent; decision 18, Ruling 332).
+#      any of the release's pods (probes are silent).
 #  21. every pod's log and Helm's release record searched for the secrets.
 #  22. helm uninstall: both PVCs (Postgres's and the file store's) are kept
-#      by policy (Ruling 331), then deleted explicitly.
+#      by policy, then deleted explicitly.
 #  With --keep, the chart is then installed again on fresh volumes for the
-#  walkthrough (decision 4) and the cluster is left running, with the
-#  port-forward commands printed (the processes are stopped).
+#  walkthrough and the cluster is left running, with the port-forward commands
+#  printed (the processes are stopped).
 #
-# The discipline (D18's tool rules; D26's smoke): kind writes the cluster's
-# kubeconfig only to a file in the work folder (`--kubeconfig`, for create and
-# delete); every kubectl and helm runs with --kubeconfig <a flattened file of
-# the run's> --context kind-<profile>, and KUBECACHEDIR is the work folder's;
-# your current context and your kubeconfig's sha256 and mtime are recorded
-# first and checked at the end (a changed context is restored and fails the
-# run). Helm's homes, Docker's config (`{"auths":{"telflo-smoke.invalid":{}}}`)
-# and refusing credential-helper stand-ins (first on PATH) are the work
-# folder's: a stand-in called fails the run. Every secret stays in files of
-# the work folder (mode 0600) and reaches commands through files, pipes and
-# standard input, never argv; at the end the work folder, the run's output,
-# the pods' logs (the collector's among them) and Helm's release record are
-# searched for each (the generated values, both accounts' passwords, the
-# set-password link's and the invitation email's tokens, the session cookies
-# and the bearers; each also in its base64 forms at the three alignments, and
-# in base64url), by boolean, and the files holding them are removed. The
-# run's two kubeconfigs hold the cluster's admin client key: they are removed
-# on every exit but --keep's (whose printed instructions say so). kind
-# create's output is removed once the start is checked, and again on every
-# exit. A signal to the whole process group (TERM, HUP, a closed terminal)
-# still runs the whole cleanup: the cluster deleted, its Docker network
-# removed. Diagnostics are redacted (`(PASSWORD|SECRET|KEY)=…` and runs of 40
-# or more base64 characters).
+# The discipline: kind writes the cluster's kubeconfig only to a file in the
+# work folder (`--kubeconfig`, for create and delete); every kubectl and helm
+# runs with --kubeconfig <a flattened file of the run's> --context
+# kind-<profile>, and KUBECACHEDIR is the work folder's; your current context
+# and your kubeconfig's sha256 and mtime are recorded first and checked at the
+# end (a changed context is restored and fails the run). Helm's homes, Docker's
+# config (`{"auths":{"telflo-smoke.invalid":{}}}`) and refusing
+# credential-helper stand-ins (first on PATH) are the work folder's: a stand-in
+# called fails the run. Every secret stays in files of the work folder (mode
+# 0600) and reaches commands through files, pipes and standard input, never
+# argv; at the end the work folder, the run's output, the pods' logs (the
+# collector's among them) and Helm's release record are searched for each (the
+# generated values, both accounts' passwords, the set-password link's and the
+# invitation email's tokens, the session cookies and the bearers; each also in
+# its base64 forms at the three alignments, and in base64url), by boolean, and
+# the files holding them are removed. The run's two kubeconfigs hold the
+# cluster's admin client key: they are removed on every exit but --keep's
+# (whose printed instructions say so). kind create's output is removed once the
+# start is checked, and again on every exit. A signal to the whole process
+# group (TERM, HUP, a closed terminal) still runs the whole cleanup: the
+# cluster deleted, its Docker network removed. Diagnostics are redacted
+# (`(PASSWORD|SECRET|KEY)=…` and runs of 40 or more base64 characters).
 #
 # Exit status: 0 every step passed and the cleanup completed; 1 a step or the
 # cleanup failed (after the cleanup; with --keep the cluster is left); 2
@@ -254,7 +249,7 @@ done
   refuse "--port, --mailpit-port and --api-port must differ"
 for value in "$PORT" "$MAILPIT_PORT" "$API_PORT"; do
   case "$value" in
-    50080 | 58025 | 51025 | 53000 | 8080 | 51234 | 51235) refuse "port $value is one the owner's stack or dev servers use: name another" ;;
+    50080 | 58025 | 51025 | 53000 | 8080 | 51234 | 51235) refuse "port $value is one a developer's own development stack or dev servers use: name another" ;;
   esac
 done
 [[ "$WAIT_TIMEOUT" =~ ^[1-9][0-9]{1,4}$ ]] || refuse "--timeout is a number of seconds"
@@ -272,7 +267,7 @@ done
 REPO=$(cd "$(dirname "$0")/.." && pwd -P)
 # shellcheck source=scripts/release/version.sh
 . "$REPO/scripts/release/version.sh"
-# The engine's image store (telflo_engine_store), and step 4's image-id check (Ruling 394).
+# The engine's image store (telflo_engine_store), and step 4's image-id check.
 # shellcheck source=scripts/release/oci.sh
 . "$REPO/scripts/release/oci.sh"
 # shellcheck source=scripts/smoke-kind/image-id.sh
@@ -292,7 +287,7 @@ CORE=$(cd "$CORE" && pwd -P)
 [ -n "$CLI" ] || CLI=$CORE/apps/cli/dist/index.js
 [ -f "$CLI" ] || refuse "no CLI at $CLI (build it: npm run build -w @telflo/cli in telflo-core, or name one with --cli)"
 
-# kind: the private tools' (D36-2 decision 110), never one on PATH; its node image at tools.lock's digest, local.
+# kind: the private tools', never one on PATH; its node image at tools.lock's digest, local.
 KIND=$(bash "$REPO/scripts/release/tools.sh" path kind 2>/dev/null) ||
   refuse "kind isn't fetched and checked (scripts/release/tools.sh fetch kind)"
 KIND_NODE_IMAGE=$(bash "$REPO/scripts/release/tools.sh" ref kind-node 2>/dev/null) ||
@@ -375,7 +370,7 @@ fi
 # The pinned references, read from the tree and the chart.
 OPAMP_DIGEST=$(sed -n 's/^digest=\(sha256:[0-9a-f]\{64\}\)$/\1/p' "$REPO/vendor/opamp-server/PIN")
 [ -n "$OPAMP_DIGEST" ] || refuse "vendor/opamp-server/PIN holds no digest= line"
-# The version as text from the PIN too, never written here (D36-1 decision 18).
+# The version as text from the PIN too, never written here.
 OPAMP_VERSION=$(sed -n 's/^version=\([0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\)$/\1/p' "$REPO/vendor/opamp-server/PIN")
 [ -n "$OPAMP_VERSION" ] || refuse "vendor/opamp-server/PIN holds no version= line"
 OPAMP_IMAGE="ghcr.io/telflo/opamp-server:$OPAMP_VERSION"
@@ -450,7 +445,7 @@ done
 export PATH="$WORK/bin:$PATH"
 export KUBECACHEDIR="$WORK/kube-cache"
 export TMPDIR="$WORK/tmp"
-# kind's cluster on a Docker network of the run's own, never kind's shared `kind` network (D36-2 Preflight ruling 4):
+# kind's cluster on a Docker network of the run's own, never kind's shared `kind` network:
 # kind makes it and leaves it after a delete, so the cleanup removes it.
 export KIND_EXPERIMENTAL_DOCKER_NETWORK="$PROFILE"
 KIND_KUBECONFIG=$WORK/kubeconfig
@@ -977,7 +972,7 @@ free_kb=$(docker_free_kb)
 pass "the cluster $PROFILE is new (and its node and network names), kind's node image is local by digest, the engine is yours, the local images are there, ports $PORT, $MAILPIT_PORT and $API_PORT (the API server's) free, $(awk -v k="$free_kb" 'BEGIN { printf "%.1f", k / 1024 / 1024 }') GB free in Docker's disk"
 
 # =====================================================================================================================
-# check_image_users: each platform image runs as its numeric user (D33-1 decision 12).
+# check_image_users: each platform image runs as its numeric user.
 check_image_users() {
   local name user want
   for name in $PLATFORM_IMAGES; do
@@ -1003,12 +998,12 @@ else
     if ! docker image inspect "$ref" >/dev/null 2>&1; then
       docker pull "$ref" >>"$LOGS/pull-bases.log" 2>&1 || fail "pulling the pinned base $ref failed: $(shown "$LOGS/pull-bases.log" 5)"
       pulled_bases="$pulled_bases $ref"
-      note "pulled the pinned base $ref (Ruling 325; removed at the end)"
+      note "pulled the pinned base $ref (removed at the end)"
     fi
   done
   if called=$(helpers_called); then fail "a credential helper was called while pulling the bases ($called)"; fi
   {
-    echo "# The smoke's own tags (scripts/smoke-kind.sh): never the owner's telflo-*:dev."
+    echo "# The smoke's own tags (scripts/smoke-kind.sh): never a developer's own telflo-*:dev."
     echo "services:"
     echo "  telflo-api: {image: \"$(image_of api)\"}"
     echo "  telflo-web: {image: \"$(image_of web)\"}"
@@ -1049,7 +1044,7 @@ fi
 # =====================================================================================================================
 step "kind create cluster --name $PROFILE (node $KIND_NODE_IMAGE, its kubeconfig $KIND_KUBECONFIG, the Docker network $PROFILE, the API server on 127.0.0.1:$API_PORT)"
 # The API server's host port is the run's (checked free in step 1), never one kind picks: a port kind
-# picked was taken by the time Docker bound it in a rehearsal (D36-2 Ruling 406).
+# picked was taken by the time Docker bound it in a rehearsal.
 printf 'kind: Cluster\napiVersion: kind.x-k8s.io/v1alpha4\nnetworking:\n  apiServerAddress: "127.0.0.1"\n  apiServerPort: %s\n' "$API_PORT" >"$WORK/kind-config.yaml"
 # The network is new (step 1): kind makes it, so the cleanup removes it, whatever happens from here.
 network_created=yes
@@ -1080,7 +1075,7 @@ pass "the cluster started ($server, Kubernetes $(kube version -o json 2>/dev/nul
 # =====================================================================================================================
 step "the images loaded into the node (kind load docker-image), and postgres:18 pinned pulled in the node"
 LOADED="$(for name in $PLATFORM_IMAGES; do printf '%s ' "$(image_of "$name")"; done)$NGINX_IMAGE $MAILPIT_IMAGE $OPAMP_IMAGE $COLLECTOR_IMAGE"
-# Each image's id compared as the engine's image store gives it (Ruling 394; scripts/smoke-kind/image-id.sh): the
+# Each image's id compared as the engine's image store gives it (scripts/smoke-kind/image-id.sh): the
 # config digest on the classic store, the manifest digest on containerd's (the runner's Docker may use it).
 ENGINE_STORE=$(telflo_engine_store)
 for image in $LOADED; do
@@ -1094,10 +1089,10 @@ docker exec "$NODE" crictl pull "$POSTGRES_PINNED" >"$LOGS/pull-postgres.log" 2>
 docker exec "$NODE" crictl inspecti -o json "$POSTGRES_PINNED" 2>/dev/null | jq -r '.status.repoDigests[]?' 2>/dev/null |
   grep -qx "docker.io/library/postgres@$POSTGRES_DIGEST" || fail "the node's postgres image doesn't carry the pinned digest"
 if called=$(helpers_called); then fail "a credential helper was called while the images loaded ($called)"; fi
-pass "$(echo "$LOADED" | wc -w | tr -d ' ') images loaded, each the host's image id ($ENGINE_STORE image store); postgres:18@${POSTGRES_DIGEST:0:19}… pulled in the node (Ruling 328)"
+pass "$(echo "$LOADED" | wc -w | tr -d ' ') images loaded, each the host's image id ($ENGINE_STORE image store); postgres:18@${POSTGRES_DIGEST:0:19}… pulled in the node"
 
 # =====================================================================================================================
-step "the namespaces ($NS labelled pod-security.kubernetes.io/enforce=restricted; $NS_COLLECTORS unlabelled) and the Mailpit fixture"
+step "the namespaces ($NS labeled pod-security.kubernetes.io/enforce=restricted; $NS_COLLECTORS unlabeled) and the Mailpit fixture"
 kube create namespace "$NS" >"$LOGS/namespaces.log" 2>&1 || fail "creating $NS failed"
 kube label namespace "$NS" pod-security.kubernetes.io/enforce=restricted pod-security.kubernetes.io/enforce-version=latest >>"$LOGS/namespaces.log" 2>&1 ||
   fail "labelling $NS failed"
@@ -1160,7 +1155,7 @@ pass "four Secrets created by server-side apply (no last-applied annotation; key
   done
   echo "gateway:"
   echo "  image: {digest: \"\", pullPolicy: Never}"
-  echo "# Postgres: the chart's own reference, postgres:18 at its digest, pulled into the node first (Ruling 328)."
+  echo "# Postgres: the chart's own reference, postgres:18 at its digest, pulled into the node first."
   echo "postgres:"
   echo "  size: 2Gi"
   echo "opamp-server:"
@@ -1235,7 +1230,7 @@ for script in opamp-initdb.sh telflo-initdb.sh; do
   runs=$(grep -c "running /docker-entrypoint-initdb.d/$script" "$LOGS/postgres-first-start.log" || true)
   [ "$runs" = 1 ] || fail "the first start ran $script $runs times, not once"
 done
-# telflo_platform_owner: LOGIN and CREATEROLE only (decision 15); telflo_platform: LOGIN with none of the five (Ruling 323).
+# telflo_platform_owner: LOGIN and CREATEROLE only; telflo_platform: LOGIN with none of the five.
 [ "$(pg postgres "select concat_ws(' ', rolcanlogin::text, rolcreaterole::text, rolsuper::text, rolcreatedb::text, rolbypassrls::text, rolreplication::text) from pg_roles where rolname = 'telflo_platform_owner'")" = "true true false false false false" ] ||
   fail "the role telflo_platform_owner isn't LOGIN CREATEROLE with no SUPERUSER, CREATEDB, BYPASSRLS or REPLICATION"
 [ "$(pg telflo_platform "select tableowner from pg_tables where tablename = 'pgmigrations'")" = telflo_platform_owner ] ||
@@ -1468,9 +1463,9 @@ status=$(curl -q -s -o "$REPLY_BODY" -w '%{http_code}' --max-time 30 -X POST "$G
   -H 'content-type: application/json' -H 'X-Telflo-CSRF: 1' --data-binary '{}' || true)
 [ "$status" = 403 ] && [ "$(reply_json '.error.code')" = registration_not_open ] ||
   fail "register answered $status ($(reply_code)), not 403 registration_not_open: the chart's default registration isn't invite-only"
-# The first product admin, in the API's own container (its settings and its database role; D36-1 decision 37).
-# It sends no email: its output is fixed lines and the address, then the set-password link as the last line
-# (decision 54, Q266). The link is a secret: stdout goes to a file of the run's secrets (mode 0600 by the umask,
+# The first product admin, in the API's own container (its settings and its database role).
+# It sends no email: its output is fixed lines and the address, then the set-password link as the last line.
+# The link is a secret: stdout goes to a file of the run's secrets (mode 0600 by the umask,
 # never searched, removed at the end); the logs get its other lines only.
 kns exec deploy/telflo-api -c api -- telflo-admin bootstrap --email "$EMAIL" --organization "$GROUP_NAME" \
   </dev/null >"$SECRETS_DIR/bootstrap.out" 2>"$LOGS/bootstrap.err" || {
@@ -1533,8 +1528,7 @@ GROUP_ID=$(reply_json --arg n "$GROUP_NAME" '[.organizations[] | select(.type ==
 [[ "$USER_ID" =~ ^[0-9a-f-]{36}$ ]] && [[ "$GROUP_ID" =~ ^[0-9a-f-]{36}$ ]] || fail "/me named no user, or no group organization the account admins"
 [ "$(reply_json '.isProductAdmin')" = true ] && [ "$(reply_json '.termsAcceptanceRequired')" = false ] ||
   fail "/me: the bootstrapped account isn't a product admin, or is asked for Terms (the chart's defaults set none)"
-# The first sign-in lands in the organization the bootstrap made: no earlier session, so the newest membership
-# (D36-1 decision 56, Q265).
+# The first sign-in lands in the organization the bootstrap made: no earlier session, so the newest membership.
 [ "$(reply_json '.organization.id')" = "$GROUP_ID" ] || fail "/me: the first sign-in didn't land in the bootstrap's organization"
 # Invitations act on the session's active organization: the switch to the group organization is a no-op now.
 platform PUT "$GATEWAY_URL/api/v1/auth/sessions/current/organization" "$(body switch '{organizationId: $id}' --arg id "$GROUP_ID")"
@@ -1729,7 +1723,7 @@ status=$(curl -q -s -o /dev/null -w '%{http_code}' --max-time 10 \
 [ "$status" = 200 ] || fail "the double-encoded /__manifest request answered $status, not 200: it didn't reach React Router's decode"
 sleep 2
 kns logs "$web_pod" -c web >"$LOGS/web-after-manifest.log" 2>&1 || fail "reading the web pod's log failed"
-grep -q "The URL path" "$LOGS/web-after-manifest.log" && fail "the web pod's log holds a 'The URL path' line (Ruling 327's filter isn't installed)"
+grep -q "The URL path" "$LOGS/web-after-manifest.log" && fail "the web pod's log holds a 'The URL path' line (the web server's filter for React Router's decode warning isn't installed)"
 grep -qF "$MARKER" "$LOGS/web-after-manifest.log" && fail "the web pod's log holds the marker"
 web_lines_after=$(grep -c . "$LOGS/web-after-manifest.log" || true)
 pass "answered $status; the web pod's log gained $((web_lines_after - web_lines_before)) lines, none 'The URL path', no marker (version $MANIFEST_VERSION)"

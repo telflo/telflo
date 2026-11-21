@@ -1,6 +1,5 @@
 /**
- * A person's delete by a product admin (D29 decisions 4, 10, 11, 29 and 30;
- * Preflight ruling 5; Rulings 257 and 258).
+ * A person's delete by a product admin.
  *
  *   * product_admin_delete_account(p_user_id, p_at): one SECURITY DEFINER
  *     function, migration 041's pattern (owned by the migration role,
@@ -10,10 +9,10 @@
  *     only from modules/product-admin/repositories/system-repository.ts (a
  *     test scans the source).
  *
- *     Its locks, in the order every existing path takes them (Preflight
- *     ruling 5: the person first deadlocked against an organization's
- *     delete; Ruling 258: the person, then the caller, against a revoke or
- *     a grant, which lock users by id):
+ *     Its locks, in the order every existing path takes them (the person
+ *     first would deadlock against an organization's delete; the person,
+ *     then the caller, against a revoke or a grant, which lock users by
+ *     id):
  *       1. the person's live organizations, by id (`for no key update`, as
  *          an organization's delete takes its own);
  *       2. the person's row (`for update`) and the caller's (`for share`)
@@ -34,10 +33,10 @@
  *       - not_found unless the person is a live human; self when the
  *         person is the caller (answered first: no lock is needed);
  *         forbidden when the caller, re-read under its lock, is no longer a
- *         live product admin (decision 18); blocked with product_admin
- *         when the person holds the flag, or with the block of decision 30
- *         (migration 041's list's: an organization not theirs alone, member
- *         before owner, then by name, then by id), read under the locks;
+ *         live product admin; blocked with product_admin when the person
+ *         holds the flag, or with their block (migration 041's list's: an
+ *         organization not theirs alone, member before owner, then by name,
+ *         then by id), read under the locks;
  *       - each organization (all theirs alone): its service accounts
  *         deleted as Settings › Service Accounts deletes one (their tokens
  *         revoked by the caller, their memberships removed, both
@@ -57,14 +56,13 @@
  *       - user_deletion_records written (the email before the change, the
  *         caller, p_at);
  *       - the email set to `deleted-<24 hex>@deleted-accounts.telflo.invalid`
- *         (decision 10, the address the organization's name took),
+ *         (the address the organization's name took),
  *         password_hash null, deleted_at p_at.
  *     Afterwards the original email is in no column of any table but
  *     the audit log as a whole (audit_events, append-only: any column of
  *     any row may hold it, as an actor's email or in metadata derived
  *     from it), user_deletion_records.original_email (the person's row),
- *     and invitations to it in organizations not deleted with the person
- *     (decision 10's residue; Rulings 266, 267 and 270).
+ *     and invitations to it in organizations not deleted with the person.
  *     It answers deleted with, per organization, its id, its logo id and
  *     how many service accounts it deleted, and the overall counts. Every
  *     timestamp it writes is p_at, the API's clock.
@@ -73,7 +71,7 @@
  *     migration 034 did).
  *
  * down drops the function and restores migration 034's comment on
- * sessions.revoked_reason: migration 041's catalogue exactly.
+ * sessions.revoked_reason: migration 041's catalog exactly.
  */
 
 const signature = "product_admin_delete_account(uuid, timestamptz)";
@@ -86,11 +84,10 @@ const migration034ReasonComment = `
     comment on column sessions.revoked_reason is
       'one of logout, sign_out_everywhere, refresh_token_reused,
        password_reset, account_taken_over (a federated sign-in took over an
-       unverified account, ADR 0021), organization_access_lost (the
-       session''s organization went away and the user had no other, D5
-       decision 9) or signed_out_elsewhere (one session signed out from
-       Settings › Account, D21 decision 40). Text rather than an enum until
-       a third consumer needs to branch on it.';
+       unverified account), organization_access_lost (the session''s
+       organization went away and the user had no other) or
+       signed_out_elsewhere (one session signed out from Settings › Account).
+       Text rather than an enum until a third consumer needs to branch on it.';
 `;
 
 /** The person's live organizations, by id: what the attempt locks, and what it re-reads under its locks. */
@@ -108,13 +105,12 @@ export const up = (pgm) => {
     comment on column sessions.revoked_reason is
       'one of logout, sign_out_everywhere, refresh_token_reused,
        password_reset, account_taken_over (a federated sign-in took over an
-       unverified account, ADR 0021), organization_access_lost (the
-       session''s organization went away and the user had no other, D5
-       decision 9), signed_out_elsewhere (one session signed out from
-       Settings › Account, D21 decision 40) or account_deleted (a product
-       admin deleted the person, or the organization the session acted in
-       with them, D29 decision 29). Text rather than an enum until a third
-       consumer needs to branch on it.';
+       unverified account), organization_access_lost (the session''s
+       organization went away and the user had no other),
+       signed_out_elsewhere (one session signed out from Settings › Account)
+       or account_deleted (a product admin deleted the person, or the
+       organization the session acted in with them). Text rather than an enum
+       until a third consumer needs to branch on it.';
 
     create function product_admin_delete_account(p_user_id uuid, p_at timestamptz)
     returns table (
@@ -142,7 +138,7 @@ export const up = (pgm) => {
       service_count integer;
       session_count integer;
       person_session_count integer;
-      -- The anonymous address (decision 10), made once: the account's email and its personal organization's name.
+      -- The anonymous address, made once: the account's email and its personal organization's name.
       anonymous text := 'deleted-' || encode(platform.gen_random_bytes(12), 'hex') || '@deleted-accounts.telflo.invalid';
     begin
       perform platform.assert_product_admin();
@@ -193,7 +189,7 @@ export const up = (pgm) => {
             return query select 'blocked'::text, 'product_admin'::text, null::jsonb, null::integer, null::integer;
             return;
           end if;
-          -- The block of decision 30, as migration 041's list reads it.
+          -- The block, as migration 041's list reads it.
           select case when o.owner_user_id is not distinct from p_user_id then 'owner' else 'member' end
             into found_kind
             from platform.organizations o
@@ -256,7 +252,7 @@ export const up = (pgm) => {
            where id = any (service_users) and deleted_at is null;
           get diagnostics service_count = row_count;
           -- Their own personal organization is renamed as the platform names one, after the
-          -- anonymous address: its name held the original email (Ruling 266).
+          -- anonymous address: its name held the original email.
           update platform.organizations
              set deleted_at = p_at,
                  updated_at = p_at,
@@ -264,7 +260,7 @@ export const up = (pgm) => {
                              then anonymous || '''s workspace' else name end
            where id = any (locked) and deleted_at is null;
           -- Their invitations in those organizations (accepted, revoked or expired: a pending one
-          -- would have blocked the delete) take the anonymous address too (Ruling 267).
+          -- would have blocked the delete) take the anonymous address too.
           select u.email into original from platform.users u where u.id = p_user_id;
           update platform.organization_invitations
              set email = anonymous, updated_at = p_at
@@ -274,8 +270,8 @@ export const up = (pgm) => {
            where active_organization_id = any (locked) and revoked_at is null and user_id <> p_user_id;
           get diagnostics session_count = row_count;
 
-          -- The person: sessions (revoked, and every one's address and browser forgotten,
-          -- Ruling 266), personal tokens, sign-in methods, settings, links.
+          -- The person: sessions (revoked, and every one's address and browser forgotten),
+          -- personal tokens, sign-in methods, settings, links.
           update platform.sessions
              set revoked_at = p_at, revoked_reason = 'account_deleted', ip_address = null, user_agent = null
            where user_id = p_user_id and revoked_at is null;
@@ -316,8 +312,7 @@ export const up = (pgm) => {
     $$;
 
     comment on function ${signature} is
-      'deletes a person (D29 decisions 29 and 30; Preflight ruling 5;
-       Ruling 258): not_found unless a live human, self for the caller; then
+      'deletes a person: not_found unless a live human, self for the caller; then
        their live organizations locked by id (for no key update), the person
        (for update) and the caller (for share) together by id, the
        membership set re-read under the locks (changed: the attempt rolls

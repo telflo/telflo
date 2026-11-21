@@ -27,65 +27,60 @@ import type { ValueView } from "~/lib/graph/value-view.js";
 import type { ValuesResult } from "~/lib/stores/editor-store.js";
 
 /*
- * The journald receiver's form (ADR 0018), over the form's fields (D9c
- * decision 2, D9b's contract): each field writes its own key. Collector
- * claims cite contrib v0.162.0 (`pkg/stanza/operator/input/journald/` unless
- * named).
+ * The journald receiver's form, over the form's fields: each field writes its
+ * own key. Collector claims cite contrib v0.162.0
+ * (`pkg/stanza/operator/input/journald/` unless named).
  *
- * - Kept (Parity Notes): Add unit, Add identifier and Add file append seeds
- *   (`ssh`, `sudo`, `/var/log/journal/system.journal`), and removing a list's
- *   last row removes its key (`StringListField`). The boxes write `true` or
- *   remove their key (`CheckboxField`'s `uncheckedRemoves`; Preflight ruling
- *   11). Start At is native radios (`RadioField`), End checked while unset
- *   (`config_all.go:19-24`).
- * - Fixed (D9c decisions 3 and 9; Preflight ruling 22): Add match holds a
- *   new match, `_SYSTEMD_UNIT` with no value, until a value is typed in it:
- *   never `_SYSTEMD_UNIT: ""` at once, which journalctl reads as
- *   "an empty unit" (`config_linux.go:155-192` passes `_SYSTEMD_UNIT=`).
- *   The held match is a card like the others, reading a source of its own
- *   (the fields it holds); the first value typed writes the match, as the
- *   list's last item, and the card becomes that item's in place (the same
- *   card key, so the input keeps focus and caret). Its field names can be
- *   renamed and fields added before then; only fields with a value are
- *   written (D9c Ruling 73), and Remove match drops it. It is a held row
- *   (Preflight ruling 8): dropped when the list's length changes, the form
- *   goes or a configuration loads.
- * - Fixed (decisions 3 and 9; Ruling 73): each match's fields are a
- *   `KeyValueMapField` (`"rows"`, `holdUntilValue`): Add field holds a row
- *   until both its name and its value are typed (never a `""` key; a name
- *   alone would write `_UID: ""`, which matches entries whose
- *   field is empty), a field is renamed in place on blur or Enter, and a
- *   name another field of the match has is refused under the row with "A
- *   field with this name already exists." (never merging the two).
- *   Removing a match's last field leaves `{}`. A name the
+ * - Add unit, Add identifier and Add file append seeds (`ssh`, `sudo`,
+ *   `/var/log/journal/system.journal`), and removing a list's last row removes
+ *   its key (`StringListField`). The boxes write `true` or remove their key
+ *   (`CheckboxField`'s `uncheckedRemoves`). Start At is native radios
+ *   (`RadioField`), End checked while unset (`config_all.go:19-24`).
+ * - Add match holds a new match, `_SYSTEMD_UNIT` with no value, until a
+ *   value is typed in it: never `_SYSTEMD_UNIT: ""` at once, which
+ *   journalctl reads as "an empty unit" (`config_linux.go:155-192` passes
+ *   `_SYSTEMD_UNIT=`). The held match is a card like the others, reading a
+ *   source of its own (the fields it holds); the first value typed writes
+ *   the match, as the list's last item, and the card becomes that item's in
+ *   place (the same card key, so the input keeps focus and caret). Its
+ *   field names can be renamed and fields added before then; only fields
+ *   with a value are written, and Remove match drops it. It is a held row:
+ *   dropped when the list's length changes, the form goes or a
+ *   configuration loads.
+ * - Each match's fields are a `KeyValueMapField` (`"rows"`,
+ *   `holdUntilValue`): Add field holds a row until both its name and its
+ *   value are typed (never a `""` key; a name alone would write `_UID: ""`,
+ *   which matches entries whose field is empty), a field is renamed in place
+ *   on blur or Enter, and a name another field of the match has is refused
+ *   under the row with "A field with this name already exists." (never
+ *   merging the two). Removing a match's last field leaves `{}`. A name the
  *   collector refuses (`^[_A-Z]+$`, `config_linux.go:155-165`) is written as
- *   typed (decision 3), D13's to report. The rows keep their classes
+ *   typed, for the config validation to report. The rows keep their classes
  *   (`flex gap-2` rows, icon-sized remove buttons, a small Add field).
- * - Copy (D9c decision 4, Appearance): the Linux-only alert says
- *   journalctl Path must be absolute with root_path (`config_linux.go:65-68`
- *   refuses a relative one); Files says it's ignored while Directory is set
- *   (`config_linux.go:127-134` passes `--directory` alone).
- * - Retry on Failure is the stanza receivers' section (`StanzaRetrySection`,
- *   decision 9): off while unset, its intervals' defaults as placeholders
- *   (never as values), no `multiplier`.
- * - Unset shows the collector's default (D9b decision 3; `config_all.go:19-24`):
+ * - Copy: the Linux-only alert says journalctl Path must be absolute with
+ *   root_path (`config_linux.go:65-68` refuses a relative one); Files says
+ *   it's ignored while Directory is set (`config_linux.go:127-134` passes
+ *   `--directory` alone).
+ * - Retry on Failure is the stanza receivers' section (`StanzaRetrySection`):
+ *   off while unset, its intervals' defaults as placeholders (never as
+ *   values), no `multiplier`.
+ * - Unset shows the collector's default (`config_all.go:19-24`):
  *   Priority info and journalctl Path journalctl as placeholders and hints.
  *   Clearing a field removes its key.
- * - The Operators section is the operator framework (Task 5) over
- *   `operators`, from journal (decision 8).
+ * - The Operators section is the operator framework over `operators`, from
+ *   journal.
  *
- * Ids are fixed (`priority`, `dmesg`, …; the radios
- * `start_at-<index>`, the datalist `priority-options`); match cards and rows
- * are keyed by card key and index; no value reaches an attribute (decision
- * 10).
+ * Ids are fixed (`priority`, `dmesg`, …; the radios `start_at-<index>`, the
+ * datalist `priority-options`); match cards and rows are keyed by card key
+ * and index; no value reaches an attribute.
  */
 
-/** The Linux-only alert's last sentence (D9c decision 4). */
+/** The Linux-only alert's last sentence. */
 export const JOURNALCTL_ABSOLUTE = "and give journalctl Path as an absolute path.";
-/** Files' hint (D9c decision 4). */
+/** Files' hint. */
 export const FILES_HINT = "Read specific journal files instead of a directory. Ignored while Directory is set.";
 
-/** A match's rows' words (decision 9). */
+/** A match's rows' words. */
 export const MATCH_NOUNS: KeyValueNouns = {
   key: "_SYSTEMD_UNIT",
   value: "ssh.service",
@@ -290,9 +285,9 @@ export function JournaldReceiverForm() {
 }
 
 /**
- * A `StringListField` (units, identifiers, files): editable rows,
- * Add appending the sample value, the last row's removal removing the key,
- * each remove button labelled `Remove <label> entry` (the fixed label).
+ * A `StringListField` (units, identifiers, files): editable rows, Add
+ * appending the sample value, the last row's removal removing the key, each
+ * remove button labeled `Remove <label> entry` (the fixed label).
  */
 function JournaldList({
   path,
@@ -333,7 +328,7 @@ type HeldFields = readonly (readonly [string, string])[];
 /**
  * The matches (`[]map[string]string`): a card per match, the held match's
  * card after them, and Add match. `matches` that isn't a list is read-only
- * with decision 3's hint.
+ * with `UNSHOWABLE_VALUE_MESSAGE`.
  */
 function Matches() {
   const form = useForm();
@@ -462,10 +457,10 @@ function useMatchSource(form: FormSource, index: number, held: Held | undefined)
 }
 
 /**
- * The held match's source (Preflight ruling 22): its fields are the card's
- * own until a value is typed; that value writes the match, with its fields,
- * as the list's `index`th item. A name is renamed in the card; removing its
- * last field drops the held match.
+ * The held match's source: its fields are the card's own until a value is
+ * typed; that value writes the match, with its fields, as the list's
+ * `index`th item. A name is renamed in the card; removing its last field
+ * drops the held match.
  */
 function heldMatchSource(form: FormSource, index: number, { fields, onChange, onWritten }: Held): FormSource {
   const read = (path: ValuePath): ValueView => {
@@ -493,8 +488,9 @@ function heldMatchSource(form: FormSource, index: number, { fields, onChange, on
         return "refused";
       }
     }
-    // A value typed: the match is written with the fields that have one (Ruling 73: a field is held until its
-    // name and value are typed; `_UID: ""` would match an empty field). One left without a value isn't written.
+    // A value typed: the match is written with the fields that have one (a
+    // field is held until its name and value are typed; `_UID: ""` would match
+    // an empty field). One left without a value isn't written.
     const typed = next?.filter(([, value]) => value !== "") ?? [];
     if (typed.length > 0) {
       const result = form.set(["matches", index], Object.fromEntries(typed));

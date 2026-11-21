@@ -11,10 +11,9 @@ import type { AppLayoutData } from "~/routes/app-layout.js";
  * and in the hydrating render — the layout's loader data stands in, so the
  * page is in the server-rendered markup and hydration matches it.
  *
- * Inside the playground (D31-1 decision 23, Preflight ruling 8) the sample
- * workspace's visitor comes first: the store outlives the signed-in layout,
- * so a signed-in visitor's real organization would otherwise reach the
- * reused hooks that read it.
+ * Inside the playground the sample workspace's visitor comes first: the
+ * store outlives the signed-in layout, so a signed-in visitor's real
+ * organization would otherwise reach the reused hooks that read it.
  */
 export function useCurrentUser(): StoredCurrentUser | null {
   const visitor = usePlaygroundVisitor();

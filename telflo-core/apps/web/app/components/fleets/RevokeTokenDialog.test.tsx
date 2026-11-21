@@ -24,10 +24,8 @@ import {
 } from "./RevokeTokenDialog.js";
 
 /*
- * Revoke (D17b-2 decisions 13 and 31; Preflight ruling 4's words, Preflight
- * ruling 18's MJ2 and MJ3); its tab's flow (revoke, then the reload) is in
- * `TokensTab.test.tsx`. D17b-2's `DeleteGroupDialog.test.tsx` is the
- * pattern here.
+ * Revoke; its tab's flow (revoke, then the reload) is in
+ * `TokensTab.test.tsx`. `DeleteGroupDialog.test.tsx` is the pattern here.
  */
 
 const NOW = Date.now();
@@ -101,7 +99,7 @@ async function renderDialog(
 const revokeButton = () => screen.getByRole("button", { name: /^(Revoke token|Revoking\.\.\.)$/ });
 const dialog = () => screen.getByRole("alertdialog");
 
-describe("RevokeTokenDialog's body, by kind and state (decision 31)", () => {
+describe("RevokeTokenDialog's body, by kind and state", () => {
   it("says what refusing a rotate token does, handed the current one while another valid rotate token remains", async () => {
     // The token being replaced, the current one valid beside it.
     await renderDialog(tokens.beingReplaced);
@@ -137,7 +135,7 @@ describe("RevokeTokenDialog's body, by kind and state (decision 31)", () => {
     expect(dialog()).not.toHaveTextContent(ONLY_VALID_ROTATE);
   });
 
-  it("says a rotate token's collectors can't come back through the default token while the fleet has none valid (Ruling 61)", async () => {
+  it("says a rotate token's collectors can't come back through the default token while the fleet has none valid", async () => {
     await renderDialog(tokens.beingReplaced, [tokens.current, tokens.beingReplaced, tokens.revokedDefaultToken]);
     expect(dialog()).toHaveTextContent(rotateRefusedWords(true, true));
     expect(rotateRefusedWords(true, true)).toBe(
@@ -148,7 +146,7 @@ describe("RevokeTokenDialog's body, by kind and state (decision 31)", () => {
     );
   });
 
-  it("adds the clause to the only valid rotate token's suspension while the fleet has no valid default token (Ruling 64)", async () => {
+  it("adds the clause to the only valid rotate token's suspension while the fleet has no valid default token", async () => {
     await renderDialog(tokens.current, [tokens.current, tokens.expired, tokens.revoked, tokens.revokedDefaultToken]);
     expect(onlyValidRotateWords(true)).toBe(
       "This is the fleet's only valid rotate token. Revoking it suspends the fleet: collectors that enroll or restart are sent no configuration until you rotate again (the fleet has no valid default token now: issue a new default token and re-install them).",
@@ -157,7 +155,7 @@ describe("RevokeTokenDialog's body, by kind and state (decision 31)", () => {
     expect(onlyValidRotateWords(false)).toBe(ONLY_VALID_ROTATE);
   });
 
-  it("adds the clause to the successor's sentence while the fleet has no valid default token (Ruling 64)", async () => {
+  it("adds the clause to the successor's sentence while the fleet has no valid default token", async () => {
     await renderDialog(tokens.current, [tokens.current, tokens.beingReplaced, tokens.revokedDefaultToken]);
     expect(dialog()).toHaveTextContent(
       `Another valid rotate token, one being replaced, becomes current until it expires on ${formatDateTime(tokens.beingReplaced.expiresAt)}: collectors that enroll or restart are handed it (the fleet has no valid default token now: issue a new default token and re-install them), and are refused when it expires. Rotate before then.`,
@@ -182,7 +180,7 @@ describe("RevokeTokenDialog's body, by kind and state (decision 31)", () => {
     expect(dialog()).not.toHaveTextContent(successorWords(tokens.current.expiresAt));
   });
 
-  it("says what refusing the default token does (MJ2), and that a new one can then be issued (D17c-1 decision 45)", async () => {
+  it("says what refusing the default token does, and that a new one can then be issued", async () => {
     await renderDialog(tokens.defaultToken);
     expect(dialog()).toHaveTextContent(DEFAULT_REVOKE);
     expect(DEFAULT_REVOKE).toBe(
@@ -192,7 +190,7 @@ describe("RevokeTokenDialog's body, by kind and state (decision 31)", () => {
     expect(dialog()).not.toHaveTextContent(/Collectors holding it|suspends the fleet|Another valid rotate token/);
   });
 
-  it("on a Kubernetes-supervisor fleet, ends the default token's words with Install with Helm, not hosts' install commands (Ruling 55; D17d-2 Preflight ruling 32)", async () => {
+  it("on a Kubernetes-supervisor fleet, ends the default token's words with Install with Helm, not hosts' install commands", async () => {
     await renderDialog(tokens.defaultToken, undefined, "kubernetes-supervisor");
     expect(dialog()).toHaveTextContent(DEFAULT_REVOKE_KUBERNETES);
     expect(DEFAULT_REVOKE_KUBERNETES).toBe(

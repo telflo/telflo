@@ -28,24 +28,24 @@ const testingLog = {
 };
 let fileStore: IFileStore;
 let testing: TestingDependencies;
-// The install templates (D17c-1 decision 36): both sets present, readable,
+// The install templates: both sets present, readable,
 // within bounds, every placeholder known. A broken set refuses to start,
 // naming the setting and the file, never its text.
 const installTemplates = createInstallTemplateLoader(settings.install.templatesDirectory);
 try {
   await checkInstallTemplates(installTemplates);
   // Refuses to start when the file store's root doesn't exist or can't be
-  // written (D14a Preflight ruling 11), or when the S3 store's bucket can't
-  // be written, tell a missing file or have a file removed (its startup
-  // check, D23-1 decision 23), before the server (and its logger) exists.
-  // One store for the whole server (D23-2 decision 31): the routes and the
-  // test runs' background work share it.
+  // written, or when the S3 store's bucket can't be written, tell a missing
+  // file or have a file removed (its startup check), before the server (and
+  // its logger) exists.
+  // One store for the whole server: the routes and the test runs' background
+  // work share it.
   fileStore = await createFileStore(settings.fileStore);
   // The tester's client and its health monitor are built, not started: the
   // test runs' background starter starts the monitor, the dispatcher and the
   // reaper after listen.
-  // A run's organization variables come from the opamp-server (D20
-  // decision 38), read at queue and filled in at dispatch.
+  // A run's organization variables come from the opamp-server, read at queue
+  // and filled in at dispatch.
   testing = await createTestRunsDependencies({
     settings,
     db,
@@ -58,13 +58,13 @@ try {
 }
 
 const server = buildServer({ settings, db, mailer, opampServer, otelcolValidator, fileStore, testing, installTemplates });
-// The test runs' background work (D14a decision 29): registered now, so the
+// The test runs' background work: registered now, so the
 // server's close stops it; started once the server listens.
 const testRunBackground = registerTestRunBackground(server, { db, settings, fileStore, testing });
 
 // SIGTERM and SIGINT close the server (its onClose stops the background
 // work, finishing the runs it aborts), then the pool, then exit; a hard exit
-// follows if that hangs (D14a Preflight ruling 7).
+// follows if that hangs.
 installShutdownHandlers({
   close: async () => {
     await server.close();
@@ -77,7 +77,7 @@ installShutdownHandlers({
 
 try {
   // Refuses to start as a superuser, a BYPASSRLS role or the tables' owner,
-  // which row-level security would never constrain (D5 decision 1).
+  // which row-level security would never constrain.
   await assertApplicationRole(db);
   await warmUpSessionService();
   await server.listen({ port: settings.apiPort, host: "0.0.0.0" });

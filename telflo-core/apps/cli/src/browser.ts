@@ -1,7 +1,7 @@
 /*
- * Opening the person's browser on a URL (D27 decision 20): `open` on macOS, `cmd /c start` on Windows, `xdg-open`
- * elsewhere. The URL is one argument, never a shell string. A missing
- * opener is no failure: the login prints the URL too.
+ * Opening the person's browser on a URL: `open` on macOS, `cmd /c start` on
+ * Windows, `xdg-open` elsewhere. The URL is one argument, never a shell
+ * string. A missing opener is no failure: the login prints the URL too.
  */
 
 import { spawn, type SpawnOptions } from "node:child_process";

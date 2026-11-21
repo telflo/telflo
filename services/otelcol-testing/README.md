@@ -1,9 +1,9 @@
 # otelcol-testing
 
-The collector tester (D14a, ADR 0028). It runs one test of an
-OpenTelemetry Collector configuration: it starts the pinned
-`otelcol-contrib` in a sandbox, feeds it the test's input, holds it for the
-run's duration, and answers what came out. Two things shape it:
+The collector tester. It runs one test of an OpenTelemetry Collector
+configuration: it starts the pinned `otelcol-contrib` in a sandbox, feeds
+it the test's input, holds it for the run's duration, and answers what
+came out. Two things shape it:
 
 - **It is database-free.** It holds no database or storage credentials.
   The platform's API queues runs in its own Postgres. Its dispatcher sends
@@ -49,7 +49,7 @@ as base64.
     - `output: {base64, bytesOnDisk, truncated} | null`.
     - `decodedInput: {base64, truncated} | null` (OTLP runs only).
     - `timings: {totalMs, readyMs, informerMs, replayMs, holdMs, stopMs}`.
-  - **The output** is serialised compact: one record
+  - **The output** is serialized compact: one record
     unwrapped, several as `{"records":[…]}`, at most 10 MiB. Past that,
     trailing records are dropped and R-006 is added.
 - **Errors** use the platform's envelope, `{"error":{"code","message"}}`,
@@ -61,8 +61,8 @@ as base64.
   | 404 | `not_found` | No such route (after authentication) |
   | 413 | `payload_too_large`, `input_too_large` | A body past 16 MiB or a text past 262,144 characters; an input past 10 MiB |
   | 400 | `invalid_request` | Anything else the contract refuses |
-  | 400 | `version_unknown` | A version this tester's catalogue doesn't list |
-  | 409 | `version_retired` | A version the catalogue deprecates |
+  | 400 | `version_unknown` | A version this tester's catalog doesn't list |
+  | 409 | `version_retired` | A version the catalog deprecates |
   | 503 | `tester_busy` | No slot freed within 5 s |
   | 503 | `version_unavailable` | An offered version this image doesn't hold |
   | 503 | `tester_starting`, `tester_unavailable` | kwok is starting, or has failed |
@@ -71,11 +71,11 @@ as base64.
   The platform puts a run back in its queue only on `tester_busy`,
   `tester_starting` or `tester_unavailable`, or when nothing was sent. A
   run that may have started is never sent twice. When the tester's
-  catalogue and the platform's disagree, the run fails with its own code,
+  catalog and the platform's disagree, the run fails with its own code,
   logged at warn: on `version_retired`, "Collector v{x} is no longer
-  offered by the tester. Pick a newer collector version." (D14a Ruling
-  50); on `version_unknown`, "Collector v{x} isn't available in the
-  tester. Pick another collector version." (Ruling 51).
+  offered by the tester. Pick a newer collector version."; on
+  `version_unknown`, "Collector v{x} isn't available in the tester. Pick
+  another collector version."
 
 ## A run
 
@@ -85,7 +85,7 @@ session and process group, with the collector inside it. The service only
 starts it, waits, and kills it: its own event loop parses nothing. In the
 child (`app/run.py`):
 
-1. **The neutraliser** (`app/neutralise.py`, over the validator's
+1. **The neutralizer** (`app/neutralise.py`, over the validator's
    `providers.py`, `bounded_yaml.py` and `placeholders.py`, copied byte for
    byte). It reads the text with bounds (nesting 100 deep, 100,000 nodes
    of alias expansion; anything it can't read is C-000). It finds every
@@ -101,8 +101,7 @@ child (`app/run.py`):
      replay** to a sandbox OTLP/HTTP receiver, **filelog pull** of the input
      staged as a file, or **syslog push** over TCP. The `filelog` receiver
      is spelt either way: `file_log` is its name from collector 0.149.0
-     (the catalogue's `renamedTypes`), and both take the pull (D14a Ruling
-     49);
+     (the catalog's `renamedTypes`), and both take the pull;
    - the fixture-shape advisory, F-001 to F-003 (`app/fixture_shape.py`);
    - the strategy's mutations (`app/yaml_mutations.py`).
 3. **Two checks on the exact text the collector will read**, just before
@@ -137,11 +136,10 @@ child (`app/run.py`):
 collector ready 10 s, kwok informer 5.2 s, replay 30 s, hold d, stop 6 s,
 finish 3 s. A run's process group is killed 57 + d s after its child
 starts, and a request has 64 + d s in all. At the deadline, or when the
-request is cancelled or its client goes away, the whole group is killed
+request is canceled or its client goes away, the whole group is killed
 (`killpg`) and reaped. The workspace is removed before the slot frees. The
-platform's client waits 74 + d s, and its lease is 174 + d s (since D15a,
-which follows a run's answer with the OTTL evaluator's check of its rules;
-ADR 0028, amended).
+platform's client waits 74 + d s, and its lease is 174 + d s (the platform
+follows a run's answer with the OTTL evaluator's check of its rules).
 
 ## Codes
 
@@ -161,11 +159,11 @@ inside `ph-no-capture`, and logs none of them.
 | R-005 | The other pipelines excluded: only the target pipeline runs |
 | R-006 | The output passed the 10 MiB cap (or the 16 MiB watchdog): trailing records dropped |
 | R-007 | Connectors removed |
-| R-008 | A filelog or syslog receiver re-synthesised: its operators and parsing kept, its source replaced by the input |
+| R-008 | A filelog or syslog receiver re-synthesized: its operators and parsing kept, its source replaced by the input |
 | R-100 | A Kubernetes processor's `auth_type` rewritten to the fake cluster's kubeconfig |
 | R-101 | resourcedetection's in-cluster detectors stripped |
 | R-103 | resourcedetection's cloud detectors stripped |
-| R-105 | Configuration provider references neutralised (the validator's neutraliser) |
+| R-105 | Configuration provider references neutralized (the validator's neutralizer) |
 | R-106 | *New.* resourcedetection's `consul`, `openshift` and `docker` detectors stripped, with their settings |
 
 R-102 and R-104 are reserved and never emitted.
@@ -198,8 +196,6 @@ copy both this service's tests and the web's
 read.
 
 ## The protections
-
-ADR 0028 records them, and what doesn't protect the service yet.
 
 - **The secret is in a file** (`OTELCOL_TESTING_SECRET_FILE`, at least 32
   bytes; previous secrets in `OTELCOL_TESTING_SECRETS_PREVIOUS_FILE`). A
@@ -241,7 +237,7 @@ cluster with kwok, started in the background once the service listens:
   kubectl and kube-apiserver v1.31.6, and etcd v3.5.21. They are listed in
   `kwok/binaries.json` with each one's sha256, fetched and checked by
   `scripts/download-kwok.py`, and baked under `/opt/kwok/v0.7.0/`. All are
-  Apache-2.0 (ADR 0019). kwok's code is never changed.
+  Apache-2.0. kwok's code is never changed.
 - **Its configuration**, `kwok/kwokctl.yaml`, is passed with `-c`: it pins
   Kubernetes v1.31.6, binds 127.0.0.1, names the baked binaries, and gives
   kube-apiserver `advertise-address=127.0.0.1`. Without it, kwokctl retries
@@ -268,7 +264,7 @@ cluster with kwok, started in the background once the service listens:
 | `OTELCOL_TESTING_SECRETS_PREVIOUS_FILE` | Optional. Previous secrets during a rotation, one per line. |
 | `OTELCOL_TESTING_MAX_CONCURRENCY` | Optional, default 4: runs at once. Keep it equal to the platform's `TELFLO_TEST_RUNS_PER_TESTER`. |
 | `OTELCOL_BINARY_DIR` | Optional, default `/opt/otelcol`: the collectors, as `v<version>/otelcol-contrib`. |
-| `OTELCOL_CATALOG_DIR` | Optional: the catalogue. The image sets its own copy; from the checkout, the repository's `catalog/distributions`. |
+| `OTELCOL_CATALOG_DIR` | Optional: the catalog. The image sets its own copy; from the checkout, the repository's `catalog/distributions`. |
 | `KWOK_BINARY_DIR` | Optional, default `/opt/kwok`: kwok's binaries, as `v0.7.0/{kwok,kwokctl,kubectl,etcd,kube-apiserver}`. |
 | `KWOKCTL_CONFIG` | Optional: the kwokctl configuration, `kwok/kwokctl.yaml` by default. |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | Optional: the service's own telemetry (`telemetry.py`), off unless set. |
@@ -282,7 +278,7 @@ example with `openssl rand -base64 48`.
 `Dockerfile` builds from the repository's root (so the image carries
 `catalog/`), in three stages:
 
-- **download:** the collectors from the catalogue, each checked against
+- **download:** the collectors from the catalog, each checked against
   its sha256 by the validator's `scripts/download-binaries.py`; kwok's five
   binaries; tini v0.19.0;
 - **runtime:** the default target, on the validator's pinned
@@ -291,8 +287,8 @@ example with `openssl rand -base64 48`.
 - **test:** the runtime plus the development lock, procps and the tests.
 
 The build argument `OTELCOL_VERSIONS` picks the collectors: `all` (the
-default, every version the catalogue offers; about 2.0 GB), `default` (the
-catalogue's default only; about 0.88 GB, as CI's stack job and throwaway
+default, every version the catalog offers; about 2.0 GB), `default` (the
+catalog's default only; about 0.88 GB, as CI's stack job and throwaway
 stacks build it), or a comma-separated list. A version the image doesn't
 hold answers 503 `version_unavailable`.
 
@@ -314,7 +310,7 @@ python3.12 -m venv /path/to/venv
 
 Warnings fail the run. The repository suite runs the service against fake
 collectors, and includes:
-- the neutraliser's canaries;
+- the neutralizer's canaries;
 - the identity test of the copied modules
   (`tests/test_neutraliser_identity.py`, which reads
   `../otelcol-validator/app`);
@@ -325,7 +321,7 @@ Two markers are deselected by default (`pytest.ini`):
 - **`binary`** runs a real `otelcol-contrib` from `OTELCOL_BINARY_DIR`
   (`tests/test_binary_*.py`): OTLP replay for each signal, filelog,
   syslog, the canaries, failures, UTF-16 input, R-006, a run killed at its
-  budget, and the image's catalogue;
+  budget, and the image's catalog;
 - **`kwok`** starts kwok's cluster from the image's binaries.
 
 Both run inside the image's `test` target, on every collector version it
@@ -344,11 +340,10 @@ docker run --rm --network none telflo-otelcol-testing-test pytest -m "binary or 
 the validator's lock (`-c ../otelcol-validator/requirements.txt`), so the
 packages both services ship are pinned alike. `requirements-dev.in` is
 compiled to `requirements-dev.txt` the same way. `httpx2` (BSD-3-Clause)
-stands in for `httpx`, whose `certifi` is MPL-2.0 (D14a Preflight ruling
-19).
+stands in for `httpx`, whose `certifi` is MPL-2.0.
 
 These two commands check every runtime package's license against the
-repository's `scripts/license-policy.json` (ADR 0019), and test the check
+repository's `scripts/license-policy.json`, and test the check
 itself:
 
 ```sh
@@ -356,5 +351,5 @@ PYTHON=/path/to/venv/bin/python ./scripts/check-licenses.sh
 PYTHON=/path/to/venv/bin/python ./scripts/check-licenses.test.sh
 ```
 
-The image's base, the collectors, tini and kwok's binaries are ADR 0019's
-reviewed components, pinned by digest or sha256.
+The image's base, the collectors, tini and kwok's binaries are reviewed
+components, pinned by digest or sha256.

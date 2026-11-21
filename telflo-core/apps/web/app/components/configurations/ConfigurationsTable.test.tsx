@@ -6,7 +6,7 @@ import { ConfigurationsTable } from "./ConfigurationsTable.js";
 import { ACME, CATALOGUE, CONTRIB_LABEL } from "~/test/collector-distributions.js";
 import { COLLEAGUE_EMAIL, MEMBER_EMAIL, MEMBER_ID, MINE, ORPHANED, THEIRS } from "~/test/configurations.js";
 
-/** By default every row may be deleted, as an admin's are, with the catalogue read. */
+/** By default every row may be deleted, as an admin's are, with the catalog read. */
 function renderTable(
   canDelete: (configuration: Configuration) => boolean = () => true,
   configurations: Configuration[] = [MINE, THEIRS, ORPHANED],
@@ -33,7 +33,7 @@ function row(name: string): HTMLElement {
 }
 
 describe("ConfigurationsTable", () => {
-  it("has the configurations columns, Status (D11b decision 6) and Distribution (D13a decision 10) among them, and headers that don't sort", () => {
+  it("has the configurations columns, Status and Distribution among them, and headers that don't sort", () => {
     renderTable();
 
     expect(screen.getAllByRole("columnheader").map((header) => header.textContent)).toEqual([
@@ -62,7 +62,7 @@ describe("ConfigurationsTable", () => {
     expect(cells[5]).toHaveTextContent(new Date(MINE.updatedAt).toLocaleDateString());
   });
 
-  it("shows Draft (outline) or Published (info) in the Status column, the word alone (D11b decision 6)", () => {
+  it("shows Draft (outline) or Published (info) in the Status column, the word alone", () => {
     renderTable();
 
     for (const [name, word, variantClass] of [
@@ -117,7 +117,7 @@ describe("ConfigurationsTable", () => {
     expect(onOpen).not.toHaveBeenCalled();
   });
 
-  it("has Delete only on the rows it's allowed on, and asks about each configuration (D11b decision 2)", () => {
+  it("has Delete only on the rows it's allowed on, and asks about each configuration", () => {
     const canDelete = vi.fn((configuration: Configuration) => configuration.id === MINE.id);
     renderTable(canDelete);
 
@@ -128,7 +128,7 @@ describe("ConfigurationsTable", () => {
     expect(canDelete).toHaveBeenCalledWith(THEIRS);
   });
 
-  describe("the Distribution column (D13a decision 10)", () => {
+  describe("the Distribution column", () => {
     it("renders each row's distribution as a compact tag: the mark and the short name", () => {
       renderTable(() => true, [MINE, { ...THEIRS, collectorDistribution: ACME.id }], [...CATALOGUE, ACME]);
 
@@ -136,13 +136,13 @@ describe("ConfigurationsTable", () => {
       const contrib = within(row("Production Monitoring")).getAllByRole("cell")[3]!;
       expect(contrib).toHaveTextContent(/^Otel Contrib$/);
       expect(within(contrib).getByTitle(/^Built for/).querySelector("svg")).not.toBeNull();
-      // No short name of its own: the catalogue's label.
+      // No short name of its own: the catalog's label.
       expect(within(row("Staging Logs")).getAllByRole("cell")[3]).toHaveTextContent(/^Acme Collector$/);
     });
 
-    // Every configuration has a distribution here (D13a decision 9), so the
-    // case left is one the catalogue doesn't list.
-    it("renders a distribution the catalogue doesn't list as its id, with the generic glyph", () => {
+    // Every configuration has a distribution here, so the case left is one
+    // the catalog doesn't list.
+    it("renders a distribution the catalog doesn't list as its id, with the generic glyph", () => {
       renderTable(() => true, [{ ...MINE, collectorDistribution: "grafana-alloy" }]);
 
       const cell = within(row("Production Monitoring")).getAllByRole("cell")[3]!;
@@ -151,7 +151,7 @@ describe("ConfigurationsTable", () => {
       expect(cell.querySelector("svg")).not.toBeNull();
     });
 
-    it("gives the tag fixed text for its tooltip, the catalogue's label in it, and puts no name or email in any attribute (ADR 0024)", () => {
+    it("gives the tag fixed text for its tooltip, the catalog's label in it, and puts no name or email in any attribute", () => {
       renderTable();
 
       for (const name of ["Production Monitoring", "Staging Logs", "Left Behind"]) {
@@ -167,7 +167,7 @@ describe("ConfigurationsTable", () => {
       }
     });
 
-    it("names the distribution by its id, with its mark, while the catalogue is unread", () => {
+    it("names the distribution by its id, with its mark, while the catalog is unread", () => {
       renderTable(() => true, [MINE], null);
 
       const cell = within(row("Production Monitoring")).getAllByRole("cell")[3]!;

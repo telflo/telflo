@@ -16,9 +16,8 @@ import { withDatabaseContext } from "../../../database/context.js";
 import { createTestRunRepository, type ITestRunRepository } from "./test-run-repository.js";
 
 /*
- * The test runs' repository (D14a decisions 8 and 24, Preflight ruling 15,
- * Ruling 24). Visibility is checked twice: as the API's role, where
- * row-level security stands behind the repository, and as the tables'
+ * The test runs' repository. Visibility is checked twice: as the API's role,
+ * where row-level security stands behind the repository, and as the tables'
  * owner, which it doesn't constrain, so the repository's own rule answers.
  */
 describe("test run repository", () => {
@@ -151,7 +150,7 @@ describe("test run repository", () => {
     expect(listed.map((each) => each.id)).toEqual([ids[2], ids[1]]);
   });
 
-  it("counts the person's waiting runs in the context's organization only (D14b Preflight ruling 21)", async () => {
+  it("counts the person's waiting runs in the context's organization only", async () => {
     const w = await world();
     const personal = await addConfiguration(ownerDb, { organizationId: w.anaPersonal, created_by_user_id: w.ana });
     const personalVersion = await addConfigurationVersion(ownerDb, {
@@ -177,7 +176,7 @@ describe("test run repository", () => {
     expect(await as(db, w.ben, w.group, (runs) => runs.waitingForCurrentUser())).toBe(1);
   });
 
-  it("keys the person's queue lock by person and organization (D14b Preflight ruling 21): hers elsewhere and a teammate's never wait on it; hers here does", async () => {
+  it("keys the person's queue lock by person and organization: hers elsewhere and a teammate's never wait on it; hers here does", async () => {
     const w = await world();
 
     /** How many backends of this database wait on an advisory lock. */

@@ -16,18 +16,16 @@ import { withDatabaseContext, withDispatcherContext, type DatabaseContext } from
 
 /*
  * The test-run functions of migration 1700000000028 from the API's real
- * database contexts (D14a Preflight ruling 8), and migration 1700000000030's
- * (D15a Preflight rulings 17 and 23). The dispatcher's functions (claim,
- * finish, the rules' read, release, reap, fail waiting, the tester's and the
- * evaluator's marks) work across
- * organizations, as the tables' owner, so each refuses (42501) any context
- * but withDispatcherContext's: a member's request, in organization A or B,
- * can't reach them, even after setting the dispatcher's setting itself, and
- * changes nothing. "n ahead" answers a member only for the runs they can
- * see, so it tells organization B nothing of A's queue, and a teammate
- * nothing of another member's draft.
+ * database contexts, and migration 1700000000030's. The dispatcher's functions
+ * (claim, finish, the rules' read, release, reap, fail waiting, the tester's
+ * and the evaluator's marks) work across organizations, as the tables' owner,
+ * so each refuses (42501) any context but withDispatcherContext's: a member's
+ * request, in organization A or B, can't reach them, even after setting the
+ * dispatcher's setting itself, and changes nothing. "n ahead" answers a member
+ * only for the runs they can see, so it tells organization B nothing of A's
+ * queue, and a teammate nothing of another member's draft.
  *
- * The SQL's own behaviour (the turns, the cap, the lease) is
+ * The SQL's own behavior (the turns, the cap, the lease) is
  * packages/db's test-runs.integration.test.ts's.
  */
 
@@ -192,7 +190,7 @@ describe("the test-run functions from the API's database contexts", () => {
     expect(await ahead(seeded.inB.cara)).toEqual([seeded.bRun.id]);
   });
 
-  it("counts only the context's own user's waiting runs, in the context's organization only (D14b Preflight ruling 21)", async () => {
+  it("counts only the context's own user's waiting runs, in the context's organization only", async () => {
     const seeded = await seed();
     const waiting = (context: DatabaseContext) =>
       withDatabaseContext(db, context, async (transaction) =>

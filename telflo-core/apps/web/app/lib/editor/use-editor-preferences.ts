@@ -7,9 +7,8 @@ import { useUserStore } from "~/lib/stores/user-store.js";
 import { useAppTheme } from "~/lib/theme.js";
 
 /**
- * The options every Monaco takes from the person's editor preferences (D21
- * decisions 6, 27 and 28). The tab size isn't one of them: it goes on the
- * model (`applyModelOptions`).
+ * The options every Monaco takes from the person's editor preferences. The
+ * tab size isn't one of them: it goes on the model (`applyModelOptions`).
  */
 export type EditorPreferenceOptions = {
   fontSize: number;
@@ -30,12 +29,12 @@ function isDiffModel(model: editor.ITextModel | editor.IDiffEditorModel): model 
 }
 
 /**
- * Sets the tab size on an open editor's model, Compare's two alike
- * (Preflight rulings 30 and 31): both the width a tab shows and what Tab and
- * a new level insert. Monaco's `detectIndentation` stays at its default, but
- * the width is set here explicitly, so the text's own indentation never
- * decides it and Monaco's '[yaml]' default (2) doesn't win. Existing text
- * keeps its indentation. Nothing before the model exists, or after it's gone.
+ * Sets the tab size on an open editor's model, Compare's two alike: both the
+ * width a tab shows and what Tab and a new level insert. Monaco's
+ * `detectIndentation` stays at its default, but the width is set here
+ * explicitly, so the text's own indentation never decides it and Monaco's
+ * '[yaml]' default (2) doesn't win. Existing text keeps its indentation.
+ * Nothing before the model exists, or after it's gone.
  */
 export function applyModelOptions(target: TabSizeTarget | null, tabSize: EditorTabSize): void {
   const model = target?.getModel() ?? null;
@@ -68,11 +67,10 @@ export type MonacoPreferences = {
 /**
  * The person's editor preferences for a Monaco: the user store's (Settings
  * › Editor's optimistic choice included), or contracts' defaults before the
- * store is seeded; the defaults live only there. Reads no router hook
- * (Preflight ruling 47): the editors' tests render without a data router,
- * and the editors mount only on signed-in pages, where the store holds the
- * person. Inside the playground, the visitor's (D31-1 Preflight ruling 13):
- * the defaults, never a signed-in visitor's own.
+ * store is seeded; the defaults live only there. Reads no router hook: the
+ * editors' tests render without a data router, and the editors mount only
+ * on signed-in pages, where the store holds the person. Inside the
+ * playground, the visitor's: the defaults, never a signed-in visitor's own.
  */
 export function useEditorPreferences(): MonacoPreferences {
   const visitor = usePlaygroundVisitor();

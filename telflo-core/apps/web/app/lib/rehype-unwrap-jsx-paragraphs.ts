@@ -30,8 +30,8 @@ function isParagraph(node: { type: string }): node is Element {
  *
  * MDX reads those lines as markdown, a paragraph of their own, so the page
  * renders a `<p>` inside the `<p>`. A browser parsing the server's HTML
- * closes the first before the second, and hydration then mismatches (D4
- * Ruling 16). This keeps the paragraph the post wrote and drops the one MDX
+ * closes the first before the second, and hydration then mismatches.
+ * This keeps the paragraph the post wrote and drops the one MDX
  * added, keeping its content. Where MDX made two or more paragraphs of the
  * lines, their contents are joined by a line break, which renders as a
  * space, rather than run together. Only flow JSX is handled: an inline

@@ -1,6 +1,5 @@
-# The web app (D33-1 decisions 13, 18, 19 and 23-25; Preflight rulings 7 and
-# 9; the plan's Appendix). Sourced by tests/render-tests.sh, which defines
-# every helper used here (api_words is api.sh's).
+# The web app. Sourced by tests/render-tests.sh, which defines every helper
+# used here (api_words is api.sh's).
 
 WEB_D="Deployment/telflo-web"
 WEB_POD="$WEB_D.spec.template.spec"

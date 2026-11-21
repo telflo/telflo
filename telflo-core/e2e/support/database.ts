@@ -45,9 +45,9 @@ export interface SeededUser {
 }
 
 /**
- * An address no other test uses. `@gmail.com` is one Google is
- * authoritative for (D2c Ruling 7), so the fake provider's sign-in with it
- * can create, link or take over; `@example.com` is not.
+ * An address no other test uses. `@gmail.com` is one Google is authoritative
+ * for, so the fake provider's sign-in with it can create, link or take over;
+ * `@example.com` is not.
  */
 export function uniqueEmail(domain: "gmail.com" | "example.com" = "example.com"): string {
   return `e2e-${randomUUID()}@${domain}`;
@@ -90,7 +90,7 @@ export interface SeededMembership {
 
 /**
  * Adds a member by SQL, as the tables' owner, for tests about something other
- * than joining (invitations.e2e.ts joins through D6's invitations). With no
+ * than joining (invitations.e2e.ts joins through the invitations). With no
  * `organizationId`, a new group organization (named `group-<random uuid>`, so
  * no two tests share one) is created with the user as its first member. The
  * user's sessions stay where they are: switching is the test's business.
@@ -133,10 +133,10 @@ export async function findSessions(userId: string): Promise<Selectable<SessionsT
 }
 
 /**
- * Sets a session's sign-in IP address (D21 decision 40), for the privacy
- * checks: the browser tests all sign in from the loopback, so a test writes
- * an address of its own (from TEST-NET-3, 203.0.113.0/24, never routed) and
- * then looks for it where it must not be.
+ * Sets a session's sign-in IP address, for the privacy checks: the browser
+ * tests all sign in from the loopback, so a test writes an address of its
+ * own (from TEST-NET-3, 203.0.113.0/24, never routed) and then looks for it
+ * where it must not be.
  */
 export async function setSessionIpAddress(sessionId: string, ipAddress: string): Promise<void> {
   await db().updateTable("sessions").set({ ip_address: ipAddress }).where("id", "=", sessionId).execute();
@@ -145,7 +145,7 @@ export async function setSessionIpAddress(sessionId: string, ipAddress: string):
 /**
  * Links a provider identity to the user by SQL, as a past link or a
  * federated sign-up leaves it, for tests about something other than
- * linking (D21's unlink and `identity_in_use`).
+ * linking (the unlink and `identity_in_use`).
  */
 export async function seedIdentity({
   userId,
@@ -173,7 +173,7 @@ export async function removePassword(userId: string): Promise<void> {
   await db().updateTable("users").set({ password_hash: null }).where("id", "=", userId).execute();
 }
 
-/** The user's stored theme (D21 decision 18), or undefined while there is no settings row (the default, Dark). */
+/** The user's stored theme, or undefined while there is no settings row (the default, Dark). */
 export async function findStoredTheme(userId: string): Promise<string | undefined> {
   const row = await db().selectFrom("user_settings").select("theme").where("user_id", "=", userId).executeTakeFirst();
   return row?.theme;
@@ -193,10 +193,10 @@ export async function revokeSessions(userId: string): Promise<void> {
 }
 
 /**
- * A pending contributor invitation to `email` in the organization, written
- * as the owner, as one sent while the site's registration was open would
- * be (a personal organization sends none otherwise: D36-1 decision 57).
- * Returns its token, which only the test knows (the row holds its hash).
+ * A pending contributor invitation to `email` in the organization, written as
+ * the tables' owner, as one sent while the site's registration was open would
+ * be (a personal organization sends none otherwise). Returns its token, which
+ * only the test knows (the row holds its hash).
  */
 export async function seedInvitation({ organizationId, email }: { organizationId: string; email: string }): Promise<string> {
   const token = randomBytes(32).toString("base64url");
@@ -222,11 +222,11 @@ export async function expireInvitation({ organizationId, email }: { organization
 }
 
 /**
- * Expires an active quick-deploy link at once (D17c-2 Preflight ruling 27),
- * as expireInvitation does an invitation: its expiry set to a millisecond
- * after its making, which is past by the API's clock, as 24 hours would be.
- * Its making (`created_at`) is left alone (the table checks `expires_at >
- * created_at`), so the list's order stays the order the links were made in.
+ * Expires an active quick-deploy link at once, as expireInvitation does an
+ * invitation: its expiry set to a millisecond after its making, which is
+ * past by the API's clock, as 24 hours would be. Its making (`created_at`)
+ * is left alone (the table checks `expires_at > created_at`), so the list's
+ * order stays the order the links were made in.
  */
 export async function expireQuickDeployLink({ organizationId, linkId }: { organizationId: string; linkId: string }): Promise<void> {
   const { numUpdatedRows } = await db()
@@ -240,12 +240,11 @@ export async function expireQuickDeployLink({ organizationId, linkId }: { organi
 }
 
 /**
- * Expires an unrevoked API token at once (D22 decision 53; Preflight ruling
- * 27), as expireQuickDeployLink does a link: its expiry set to a
- * millisecond after its making, past by the API's clock, as its days would
- * be. Raw SQL: the schema types `expires_at` as fixed at the insert (the
- * API never changes it), and the tables' owner may. Ids only: the error
- * names the token's id, never its name or prefix.
+ * Expires an unrevoked API token at once, as expireQuickDeployLink does a
+ * link: its expiry set to a millisecond after its making, past by the API's
+ * clock, as its days would be. Raw SQL: the schema types `expires_at` as fixed
+ * at the insert (the API never changes it), and the tables' owner may. Ids
+ * only: the error names the token's id, never its name or prefix.
  */
 export async function expireApiToken({ organizationId, tokenId }: { organizationId: string; tokenId: string }): Promise<void> {
   const { numAffectedRows } = await sql`
@@ -259,22 +258,22 @@ export async function expireApiToken({ organizationId, tokenId }: { organization
  * A configuration in `organizationId`, created by `createdByUserId`, written
  * by SQL as the tables' owner: for tests about the list rather than creating.
  * The table has no default for `created_at` or `updated_at` (the API writes
- * them from its clock, D7 decision 4), so both are written here: `updatedAt`
- * (default now) orders the list, and `created_at` takes the same value.
+ * them from its clock), so both are written here: `updatedAt` (default now)
+ * orders the list, and `created_at` takes the same value.
  *
  * Its version 1 is written with it, with `yamlContent` (default empty), as
- * every configuration has one from D8 on (D8 decision 3); without it the
- * editor would find the configuration "not found" (D8 Preflight ruling 12).
+ * every configuration has one; without it the editor would find the
+ * configuration "not found".
  *
- * A draft unless `published`, which publishes version 1 by its creator, as
- * the owner (the API's role can't insert a published version, migration
- * 021). Another member sees only a published configuration (D11b decision
- * 1), and a published version 1 can't be changed (decision 4): a test where
- * a teammate edits seeds a draft version 2 with `seedConfigurationVersion`.
+ * A draft unless `published`, which publishes version 1 by its creator, as the
+ * owner (the API's role can't insert a published version, migration 021).
+ * Another member sees only a published configuration, and a published version
+ * 1 can't be changed: a test where a teammate edits seeds a draft version 2
+ * with `seedConfigurationVersion`.
  *
- * The configuration is the catalogue's default distribution, and version 1
- * is pinned to `collectorVersion` (D13a), by default that distribution's
- * default version, read from the catalogue's tables.
+ * The configuration is the catalog's default distribution, and version 1
+ * is pinned to `collectorVersion`, by default that distribution's
+ * default version, read from the catalog's tables.
  */
 export async function seedConfiguration({
   organizationId,
@@ -343,10 +342,10 @@ export async function findConfigurationVersions(configurationId: string): Promis
 /**
  * Another version of a configuration seeded with `seedConfiguration`, written
  * by SQL as the tables' owner: for tests about switching between versions
- * rather than creating them (D10). `updatedAt` (default now) is its "last
+ * rather than creating them. `updatedAt` (default now) is its "last
  * saved", and `created_at` takes the same value. It is pinned to
  * `collectorVersion`, by default the configuration's distribution's default
- * version (D13a).
+ * version.
  */
 export async function seedConfigurationVersion({
   configurationId,
@@ -381,8 +380,8 @@ export async function seedConfigurationVersion({
 }
 
 /**
- * The collector catalogue's default distribution, as the sync wrote it from
- * catalog/ (D13a): read only. The browser tests never write the catalogue's
+ * The collector catalog's default distribution, as the sync wrote it from
+ * catalog/: read only. The browser tests never write the catalog's
  * tables: they are global, so a row one test added would be every test's,
  * and the next run's sync refuses a row the files don't list.
  */
@@ -390,7 +389,7 @@ export async function findDefaultCollectorDistribution(): Promise<Selectable<Col
   return db().selectFrom("collector_distributions").selectAll().where("is_default", "=", true).executeTakeFirstOrThrow();
 }
 
-/** The distribution's versions in the catalogue, newest first (semver, as the API orders them): read only. */
+/** The distribution's versions in the catalog, newest first (semver, as the API orders them): read only. */
 export async function findCollectorVersions(distribution: string): Promise<Selectable<CollectorVersionsTable>[]> {
   const rows = await db().selectFrom("collector_versions").selectAll().where("distribution", "=", distribution).execute();
   const parts = (version: string) => version.split(".").map(Number);
@@ -406,9 +405,9 @@ export async function findCollectorVersions(distribution: string): Promise<Selec
 
 /**
  * The person's selected version of the configuration, as the database holds
- * it (D10 decision 3), or undefined when there is none. The editor records it
- * best effort, after it settles on a version, so a test waits for it before
- * relying on it.
+ * it, or undefined when there is none. The editor records it best effort,
+ * after it settles on a version, so a test waits for it before relying on
+ * it.
  */
 export async function findConfigurationVersionSelection(
   userId: string,
@@ -423,9 +422,9 @@ export async function findConfigurationVersionSelection(
 }
 
 /**
- * Makes the user a product admin (D12 decision 3) with the README's SQL, as
- * the tables' owner: the API's own role can't change the flag (migration
- * 026's trigger). Read live on the user's next request.
+ * Makes the user a product admin with the README's SQL, as the tables' owner:
+ * the API's own role can't change the flag (migration 026's trigger). Read
+ * live on the user's next request.
  */
 export async function grantProductAdmin(email: string): Promise<void> {
   const { numUpdatedRows } = await db()
@@ -452,25 +451,24 @@ export async function revokeProductAdmin(email: string): Promise<void> {
 }
 
 /**
- * Sets the product admins' switch straight in its one row (D36-1 decision
- * 51), as the tables' owner. The browser tests' baseline is `everyone`
- * (global-setup.ts's truncation), not the migration's default
- * (`product_admins`, Q259): a test that turned it on puts `everyone` back
- * when it ends, however it ends, since the row is global and other specs
- * create organizations as ordinary accounts.
+ * Sets the product admins' switch straight in its one row, as the tables'
+ * owner. The browser tests' baseline is `everyone` (global-setup.ts's
+ * truncation), not the migration's default (`product_admins`): a test that
+ * turned it on puts `everyone` back when it ends, however it ends, since the
+ * row is global and other specs create organizations as ordinary accounts.
  */
 export async function setOrganizationCreation(value: "everyone" | "product_admins"): Promise<void> {
   await sql`update site_settings set organization_creation = ${value}`.execute(db());
 }
 
-/** The prefix of every flow a browser test writes (D12 Preflight ruling 13), so none is mistaken for a seeded one. */
+/** The prefix of every flow a browser test writes, so none is mistaken for a seeded one. */
 export const E2E_FLOW_SLUG_PREFIX = "e2e-";
 
 /**
  * Writes a flow straight into the table, as the tables' owner, for what the
- * API refuses to write (a pin the catalogue no longer offers: D12 decision
- * 16's flows, from before a version was retired). Only `e2e-` slugs; the
- * test deletes it after (deleteTestFlows).
+ * API refuses to write (a pin the catalog no longer offers: flows from
+ * before a version was retired). Only `e2e-` slugs; the test deletes it after
+ * (deleteTestFlows).
  */
 export async function insertTestFlow(flow: {
   slug: string;
@@ -526,9 +524,9 @@ export async function deleteTestFlows(slugs: readonly string[]): Promise<void> {
 }
 
 /**
- * The prefix of every test template a browser test writes (D14b Preflight
- * ruling 27): templates are global, as flows are, so every parallel test
- * sees what another wrote, and the clean-up must never reach anything else.
+ * The prefix of every test template a browser test writes: templates are
+ * global, as flows are, so every parallel test sees what another wrote, and
+ * the clean-up must never reach anything else.
  */
 export const E2E_TEMPLATE_NAME_PREFIX = "e2e-";
 
@@ -569,10 +567,9 @@ export async function findTestTemplateIdsByName(names: readonly string[]): Promi
 }
 
 /**
- * The prefix of every library file a browser test writes (D23-2 Preflight
- * ruling 22): the library is global, as templates are, so every parallel
- * test sees what another wrote (three browsers at once), and the clean-up
- * must never reach anything else.
+ * The prefix of every library file a browser test writes: the library is
+ * global, as templates are, so every parallel test sees what another wrote
+ * (three browsers at once), and the clean-up must never reach anything else.
  */
 export const E2E_LIBRARY_FILE_NAME_PREFIX = "e2e-";
 
@@ -612,10 +609,9 @@ export async function findLibraryFileIdsByName(names: readonly string[]): Promis
 }
 
 /**
- * The prefix of every regex library entry a browser test writes (D15b
- * Preflight ruling 17): the library is global, as templates are, so every
- * parallel test sees what another wrote, and the clean-up must never reach
- * a seeded entry or anyone else's.
+ * The prefix of every regex library entry a browser test writes: the library
+ * is global, as templates are, so every parallel test sees what another wrote,
+ * and the clean-up must never reach a seeded entry or anyone else's.
  */
 export const E2E_TEST_REGEX_NAME_PREFIX = "e2e-";
 
@@ -623,8 +619,8 @@ export const E2E_TEST_REGEX_NAME_PREFIX = "e2e-";
  * Writes a regex library entry straight into the table, as the tables'
  * owner, for what the API refuses to write: an entry whose regex carries
  * the fake evaluator's `invalid`, `busy` or `unavailable` marker, which the
- * API's own RE2 check turns away at create (Preflight ruling 17). Only
- * `e2e-` names; the test deletes it after (deleteTestRegexes). Its id.
+ * API's own RE2 check turns away at create. Only `e2e-` names; the test
+ * deletes it after (deleteTestRegexes). Its id.
  */
 export async function insertTestRegex(entry: { name: string; category: string; description: string | null; regex: string }): Promise<string> {
   if (!entry.name.startsWith(E2E_TEST_REGEX_NAME_PREFIX)) throw new Error(`insertTestRegex: ${entry.name} isn't a browser test's regex name`);
@@ -652,7 +648,7 @@ export async function deleteTestRegexes(ids: readonly string[]): Promise<void> {
       throw new Error(`deleteTestRegexes: regex ${row.id} isn't a browser test's (its name doesn't start ${E2E_TEST_REGEX_NAME_PREFIX})`);
     }
   }
-  // The name guard on the delete itself too (Ruling 29): a row renamed between the read and the delete stays.
+  // The name guard on the delete itself too: a row renamed between the read and the delete stays.
   await db()
     .deleteFrom("test_regex")
     .where("id", "in", ids)

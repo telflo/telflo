@@ -1,8 +1,8 @@
--- The platform's database and its owner (D33-1 decisions 15 and 25,
--- Preflight ruling 2). Run once, by the Postgres superuser, when the
--- platform's Postgres first creates its data (telflo-initdb.sh, from the
--- postgres image's /docker-entrypoint-initdb.d), beside the opamp-server's
--- own bootstrap; the two don't depend on each other's order.
+-- The platform's database and its owner. Run once, by the Postgres
+-- superuser, when the platform's Postgres first creates its data
+-- (telflo-initdb.sh, from the postgres image's
+-- /docker-entrypoint-initdb.d), beside the opamp-server's own bootstrap;
+-- the two don't depend on each other's order.
 --
 -- The owner's password comes from the environment, TELFLO_OWNER_PASSWORD,
 -- read with psql's \getenv, never from a command line (visible in the

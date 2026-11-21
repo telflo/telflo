@@ -60,7 +60,7 @@ describe("Settings → Organization", () => {
     expect(screen.getByRole("button", { name: "Create Organization" })).toBeInTheDocument();
   });
 
-  it("disables Create Organization, saying why in fixed words, while the site lets only product admins create one (D36-1 decision 51)", async () => {
+  it("disables Create Organization, saying why in fixed words, while the site lets only product admins create one", async () => {
     seed(PERSONAL, [BETA, ALPHA, PERSONAL], false);
     renderPage();
 
@@ -90,7 +90,7 @@ describe("Settings → Organization", () => {
     expect(within(cardOf("person")).getByText("P")).toBeInTheDocument();
   });
 
-  it("shows each card's logo by ids, inside ph-no-capture with alt \"\", and the initials where there is none (D23-2 decision 51)", async () => {
+  it("shows each card's logo by ids, inside ph-no-capture with alt \"\", and the initials where there is none", async () => {
     const logoId = "0193a1b2-c3d4-7e5f-8a6b-7c8d9e0f1a2b";
     const beta = { ...BETA, logoId };
     seed(beta, [beta, ALPHA, PERSONAL]);
@@ -105,7 +105,7 @@ describe("Settings → Organization", () => {
     expect(within(cardOf("Beta Team")).queryByText("BT")).not.toBeInTheDocument();
     expect(cardOf("alpha").querySelector("img")).toBeNull();
     expect(within(cardOf("alpha")).getByText("A")).toBeInTheDocument();
-    // No organization's name in any attribute (decision 57).
+    // No organization's name in any attribute.
     const attributes = [...document.querySelectorAll("*")].flatMap((element) =>
       [...element.attributes].map((attribute) => attribute.value),
     );

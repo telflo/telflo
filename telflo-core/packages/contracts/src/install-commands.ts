@@ -2,23 +2,21 @@ import { INSTALL_ENV_NAME_PATTERN, INSTALL_MASKED_TOKEN, RESERVED_INSTALL_ENV_NA
 
 /*
  * The install commands the web's dialogs and the public install route
- * (D25 decisions 36–38, Preflight ruling 10) build alike, so the API and
- * the web produce byte-identical commands: the container's `docker run`
- * (D17c-1 decision 40) and its masked preview, moved here from the web's
- * `lib/install.ts` (which re-exports them). The Quick Deploy command
- * (`quick-deploy-command.ts`) and the Helm commands (`helm.ts`) were
- * already here; the Linux bundle's "Set the token, then run" lines stay
- * the web's. Pure: no React, no request, no environment.
+ * build alike, so the API and the web produce byte-identical commands: the
+ * container's `docker run` and its masked preview, which the web's
+ * `lib/install.ts` re-exports. The Quick Deploy command
+ * (`quick-deploy-command.ts`) and the Helm commands (`helm.ts`) are here
+ * too; the Linux bundle's "Set the token, then run" lines stay the web's.
+ * Pure: no React, no request, no environment.
  *
  * Every value is single-quoted once, a `'` written `'\''`, and nothing runs
  * through `bash -c` (quotes nested inside `bash -c '…'` would break on a path
  * with a space and run a `$(…)` in the person's shell). A command holding the
- * bearer is a secret (ADR 0024, D17c-1 decision 48; D25 decision 38): the web
- * shows it only inside `ph-no-capture` and puts it on the clipboard only
- * through its copy, the API answers it only in install's `no-store` reply,
- * and neither logs it; the preview holds the masked token, never the bearer
- * (`containerPreview` takes none). The display name, the paths and the
- * variables' values are configuration text.
+ * bearer is a secret: the web shows it only inside `ph-no-capture` and puts
+ * it on the clipboard only through its copy, the API answers it only in
+ * install's `no-store` reply, and neither logs it; the preview holds the
+ * masked token, never the bearer (`containerPreview` takes none). The display
+ * name, the paths and the variables' values are configuration text.
  */
 
 const RESERVED: ReadonlySet<string> = new Set(RESERVED_INSTALL_ENV_NAMES);
@@ -43,11 +41,11 @@ export interface ContainerCommandParts {
 }
 
 /**
- * The `docker run` command, one flag a line (D17c-1 decision 40): the
- * image's volume, a `-v` per group mount (`:ro` when read-only), the
- * group's id, the endpoint, whether insecure connections are allowed, the
- * display name when one is given, the bearer, then a line per included
- * variable, and the image last.
+ * The `docker run` command, one flag a line: the image's volume, a `-v`
+ * per group mount (`:ro` when read-only), the group's id, the endpoint,
+ * whether insecure connections are allowed, the display name when one is
+ * given, the bearer, then a line per included variable, and the image
+ * last.
  */
 export function containerCommand({ facts, bearer, displayName, env }: ContainerCommandParts): string {
   const lines = ["docker run -d --restart unless-stopped --name telflo-collector", `-v ${OPAMP_VOLUME}`];

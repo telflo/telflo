@@ -104,7 +104,7 @@ describe("createFailureLimiter", () => {
     expect(limiter.size).toBe(0);
   });
 
-  it("says which window a failure was counted in, and refunds only while that window is live (Ruling 45)", () => {
+  it("says which window a failure was counted in, and refunds only while that window is live", () => {
     const { limiter, advance } = limiterAt();
     const first = limiter.recordFailure("a");
     advance(1_000);

@@ -62,14 +62,13 @@ import {
 } from "./KubernetesGroupDialog.js";
 
 /*
- * A Kubernetes fleet's group dialog (D17d-1 decisions 6, 17, 18 and 24;
- * Preflight rulings 11–13, 24 and 31–37): Assign on the Cluster before its
- * group exists creating it (one POST named cluster, never a PATCH), Add
- * gateway with a name, replicas and the address preview, Edit's prefill
- * (namespace, replicas, volumes), the name and namespace rules (with D17d-1's
- * words and limits), and the volumes' recipes and warnings
+ * A Kubernetes fleet's group dialog: Assign on the Cluster before its group
+ * exists creating it (one POST named cluster, never a PATCH), Add gateway
+ * with a name, replicas and the address preview, Edit's prefill (namespace,
+ * replicas, volumes), the name and namespace rules (with the contracts' words
+ * and limits), and the volumes' recipes and warnings
  * (`VolumesEditor.test.tsx`). `GroupDialog.test.tsx` covers the picker's and
- * the refusals' shared behaviour in depth; the cases here pin this dialog's
+ * the refusals' shared behavior in depth; the cases here pin this dialog's
  * own use of them.
  */
 
@@ -241,7 +240,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe("KubernetesGroupDialog's titles and words (decision 24)", () => {
+describe("KubernetesGroupDialog's titles and words", () => {
   it.each([
     ["Add gateway", addRow(), "Add gateway", ADD_GATEWAY_DESCRIPTION, "Create"],
     ["the Cluster before its group exists", clusterBeforeRow(), "Assign a published version to Cluster", EDIT_KUBERNETES_DESCRIPTION, "Assign"],
@@ -273,9 +272,9 @@ describe("KubernetesGroupDialog's titles and words (decision 24)", () => {
     );
   });
 
-  // D18 Ruling 27: the order Helm accepts, per role. The Agent's and the Cluster's release owns their cluster-scoped
-  // ClusterRole and binding, so an install into the new namespace is refused while it exists; a gateway owns none.
-  // Ruling 42: each role's warning says what happens to its collectors.
+  // The order Helm accepts, per role. The Agent's and the Cluster's release owns their cluster-scoped ClusterRole
+  // and binding, so an install into the new namespace is refused while it exists; a gateway owns none. Each role's
+  // warning says what happens to its collectors.
   it("says the namespace warning's words exactly for each role", () => {
     expect(namespaceChangeWarning("node", "old-ns", "new-ns")).toBe(
       "A Helm release already installed keeps running in old-ns: uninstall it there first, then install into new-ns. Helm refuses the new install while that release exists: it owns the Agent's cluster-wide role. The Agent's state is kept on each node, outside any namespace, so its collectors stay the same.",
@@ -298,7 +297,7 @@ describe("KubernetesGroupDialog's titles and words (decision 24)", () => {
   });
 });
 
-describe("KubernetesGroupDialog's Add gateway (decisions 18 and 24; Preflight ruling 12)", () => {
+describe("KubernetesGroupDialog's Add gateway", () => {
   it("creates a gateway: its name, version, namespace, replicas and volumes in one POST, trimmed, then toasts, closes and reloads", async () => {
     const toastSuccess = vi.spyOn(toast, "success");
     const { user, onOpenChange, onChanged } = await renderDialog(addRow());
@@ -394,7 +393,7 @@ describe("KubernetesGroupDialog's Add gateway (decisions 18 and 24; Preflight ru
   });
 });
 
-describe("KubernetesGroupDialog's Cluster before its group exists (Preflight ruling 31)", () => {
+describe("KubernetesGroupDialog's Cluster before its group exists", () => {
   it("assigns by one POST named cluster with its version and settings: no replicas, no address", async () => {
     const { user, onChanged } = await renderDialog(clusterBeforeRow());
     expect(screen.queryByRole("spinbutton", { name: "Replicas" })).toBeNull();
@@ -436,7 +435,7 @@ describe("KubernetesGroupDialog's Cluster before its group exists (Preflight rul
   });
 });
 
-describe("KubernetesGroupDialog's saves of a group that exists (Preflight rulings 24 and 32)", () => {
+describe("KubernetesGroupDialog's saves of a group that exists", () => {
   it("the Agent's first save writes its settings (role node) with its version, merged into the group read again", async () => {
     const agent = collectorGroup({ annotations: { other: { kept: true } } });
     const { user, onChanged } = await renderDialog(agentRow(agent));
@@ -536,7 +535,7 @@ describe("KubernetesGroupDialog's saves of a group that exists (Preflight ruling
     await retype(user, field("Namespace"), " observability ");
     expect(screen.getByText(namespaceChangeWarning("gateway", "edge", "observability"))).toBeInTheDocument();
     expect(field("Namespace")).toHaveAccessibleDescription(namespaceChangeWarning("gateway", "edge", "observability"));
-    // D17d-2 decision 4 (the owner's Q54); Preflight ruling 31: the old namespace's uninstall, quoted, in a copy box.
+    // The old namespace's uninstall, quoted, in a copy box.
     const copy = screen.getByRole("button", { name: "Copy uninstall command" });
     expect(copy.closest(".ph-no-capture")!.querySelector("code")!.textContent).toBe("helm uninstall 'gateways' -n 'edge'");
     await retype(user, field("Namespace"), "edge");
@@ -544,8 +543,8 @@ describe("KubernetesGroupDialog's saves of a group that exists (Preflight ruling
     expect(screen.queryByRole("button", { name: "Copy uninstall command" })).toBeNull();
   });
 
-  // D17d-2 Ruling 44: the Agent installs before its first save into the default namespace (the API's helmFactsOf), so a
-  // change from it is a change from where its release runs.
+  // The Agent installs before its first save into the default namespace (the API's helmFactsOf), so a change from it is
+  // a change from where its release runs.
   it("warns of a namespace change from the default for the Agent with none saved (before its first save), with its uninstall there", async () => {
     const { user } = await renderDialog(agentRow());
     expect(field("Namespace")).toHaveValue("telflo-collectors");
@@ -560,7 +559,7 @@ describe("KubernetesGroupDialog's saves of a group that exists (Preflight ruling
     expect(screen.queryByRole("button", { name: "Copy uninstall command" })).toBeNull();
   });
 
-  // D18 Ruling 27: the Cluster's words are its own (uninstall first; its state on a volume in the old namespace).
+  // The Cluster's words are its own (uninstall first; its state on a volume in the old namespace).
   it("warns the Cluster of a namespace change in its own words, with its uninstall in the namespace saved", async () => {
     const { user } = await renderDialog({
       role: "cluster",
@@ -587,7 +586,7 @@ describe("KubernetesGroupDialog's saves of a group that exists (Preflight ruling
     ["Add gateway", addRow()],
     ["the Cluster's Assign before its group exists", clusterBeforeRow()],
     ["a gateway with no settings saved (nothing installed from it)", { role: "gateway", group: gatewaysGroup() } satisfies KubernetesGroupTarget],
-    // Ruling 49: the groups the Helm facts refuse (nothing installed from them): no sentence, since there is no command.
+    // The groups the Helm facts refuse (nothing installed from them): no sentence, since there is no command.
     ["a gateway whose stored role is the Agent's", gatewaysRow({ annotations: kubernetesAnnotations({ role: "node", namespace: "edge", replicas: undefined }) })],
     ["the Agent whose stored role is a gateway's", agentRow(collectorGroup({ annotations: kubernetesAnnotations({ namespace: "edge" }) }))],
     ["a gateway named telflo-node (reserved: the Agent's release)", gatewaysRow({ name: "telflo-node" })],
@@ -599,7 +598,7 @@ describe("KubernetesGroupDialog's saves of a group that exists (Preflight ruling
     expect(screen.queryByRole("button", { name: "Copy uninstall command" })).toBeNull();
   });
 
-  it("says settings Telflo can't read are replaced by a save, its fields from the defaults; Save enabled at the opening writes them (Ruling 58)", async () => {
+  it("says settings Telflo can't read are replaced by a save, its fields from the defaults; Save enabled at the opening writes them", async () => {
     const opened = gatewaysRow({ annotations: { telflo: { kubernetes: { role: "gateway", namespace: "Not A Label", volumes: [] } } } });
     const { user, onChanged } = await renderDialog(opened);
     expect(screen.getByText(KUBERNETES_UNREADABLE)).toBeInTheDocument();
@@ -633,7 +632,7 @@ describe("KubernetesGroupDialog's saves of a group that exists (Preflight ruling
     ]);
   });
 
-  it("opens an assigned Agent with no settings saved with Save enabled, and its save writes the settings shown (role node; Ruling 58)", async () => {
+  it("opens an assigned Agent with no settings saved with Save enabled, and its save writes the settings shown (role node)", async () => {
     const agent = collectorGroup({ assignedPublishedVersionId: "p", assignedVersion: publishedVersion(), annotations: { other: { kept: true } } });
     const { user, onChanged } = await renderDialog(agentRow(agent));
     expect(screen.getByRole("dialog", { name: "Edit Agent" })).toBeInTheDocument();
@@ -658,7 +657,7 @@ describe("KubernetesGroupDialog's saves of a group that exists (Preflight ruling
   it.each([
     ["the Agent", agentRow()],
     ["a gateway", gatewaysRow({ assignedPublishedVersionId: null, assignedVersion: null })],
-  ])("keeps %s's Assign disabled until a version is picked, a settings change or not (as the Cluster's: Ruling 53)", async (_why, target) => {
+  ])("keeps %s's Assign disabled until a version is picked, a settings change or not (as the Cluster's)", async (_why, target) => {
     const { user, onChanged } = await renderDialog(target);
     expect(submit()).toHaveTextContent("Assign");
     expect(submit()).toBeDisabled();
@@ -705,7 +704,7 @@ describe("KubernetesGroupDialog's saves of a group that exists (Preflight ruling
     ]);
   });
 
-  it("keeps the opening's snapshot when the row changes under it (a poll or a reload: D17c-1 Ruling 66)", async () => {
+  it("keeps the opening's snapshot when the row changes under it (a poll or a reload)", async () => {
     const opened = gatewaysRow();
     const changed = gatewaysRow({ name: "gateways-renamed", annotations: kubernetesAnnotations({ namespace: "other", replicas: 9 }) });
     const { user, onChanged } = await renderDialog(opened, { replaced: changed });
@@ -714,7 +713,7 @@ describe("KubernetesGroupDialog's saves of a group that exists (Preflight ruling
     expect(screen.getByRole("dialog", { name: "Edit gateways" })).toBeInTheDocument();
     expect(field("Namespace")).toHaveValue("edge");
     expect(replicas()).toHaveValue(3);
-    // The namespace warning and its uninstall are the opening's too (Ruling 40): the release and namespace it opened with.
+    // The namespace warning and its uninstall are the opening's too: the release and namespace it opened with.
     await retype(user, field("Namespace"), "observability");
     expect(screen.getByText(namespaceChangeWarning("gateway", "edge", "observability"))).toBeInTheDocument();
     const copy = screen.getByRole("button", { name: "Copy uninstall command" });
@@ -727,7 +726,7 @@ describe("KubernetesGroupDialog's saves of a group that exists (Preflight ruling
   });
 });
 
-describe("KubernetesGroupDialog's rules (decision 17; the contracts' words)", () => {
+describe("KubernetesGroupDialog's rules (the contracts' words)", () => {
   it.each([
     ["an empty namespace", "", "A namespace is required."],
     ["a namespace with upper case", "Edge", "Use lowercase letters, numbers, and hyphens; must start and end with a letter or number."],
@@ -785,12 +784,12 @@ describe("KubernetesGroupDialog's rules (decision 17; the contracts' words)", ()
     ["the Agent", agentRow, true],
     ["the Cluster", clusterBeforeRow, false],
     ["Add gateway", addRow, false],
-  ] as const)("shows the Agent's own /var/log/pods mount's hint, or not, on %s (Ruling 65)", async (_label, row, shown) => {
+  ] as const)("shows the Agent's own /var/log/pods mount's hint, or not, on %s", async (_label, row, shown) => {
     await renderDialog(row());
     expect(within(dialog()).queryByText(AGENT_LOG_MOUNT_HINT) !== null).toBe(shown);
   });
 
-  it("closes the common volume paths at each opening; a recipe opened adds its row (Ruling 67)", async () => {
+  it("closes the common volume paths at each opening; a recipe opened adds its row", async () => {
     const { user } = await renderDialog(addRow());
     const toggle = () => within(dialog()).getByRole("button", { name: VOLUME_RECIPES_LABEL });
     expect(toggle()).toHaveAttribute("aria-expanded", "false");
@@ -806,7 +805,7 @@ describe("KubernetesGroupDialog's rules (decision 17; the contracts' words)", ()
     expect(screen.queryByRole("group", { name: VOLUME_RECIPES_LABEL })).toBeNull();
   });
 
-  it("refuses the Agent a volume at /var/log/pods, which its chart mounts itself, as its Volumes' hint says (Ruling 65)", async () => {
+  it("refuses the Agent a volume at /var/log/pods, which its chart mounts itself, as its Volumes' hint says", async () => {
     const { user } = await renderDialog(agentRow());
     expect(screen.getByRole("group", { name: "Volumes" })).toHaveAccessibleDescription(AGENT_LOG_MOUNT_HINT);
     await user.click(screen.getByRole("button", { name: "Add volume" }));
@@ -884,7 +883,7 @@ describe("settingsProblemsOf and kubernetesDetailKey", () => {
   });
 });
 
-describe("KubernetesGroupDialog's refusals (decision 24, as D17b-2's)", () => {
+describe("KubernetesGroupDialog's refusals (as GroupDialog's)", () => {
   it('shows the fallback "Failed to save group" for a refusal it doesn\'t know, and a 429\'s own words', async () => {
     api.answers = [refusal("internal_thing", "No.", 409), refusal("rate_limited", "Too many attempts.", 429)];
     const { user } = await renderDialog(gatewaysRow());
@@ -959,8 +958,8 @@ describe("KubernetesGroupDialog's refusals (decision 24, as D17b-2's)", () => {
   });
 });
 
-// D17d-1's paragraph of ADR 0024: a namespace, a gateway's name and a volume's paths are configuration text.
-describe("KubernetesGroupDialog's privacy (Preflight rulings 15 and 37)", () => {
+// A namespace, a gateway's name and a volume's paths are configuration text.
+describe("KubernetesGroupDialog's privacy", () => {
   /** Every attribute holding `text`: only an INPUT's value inside ph-no-capture may. */
   function expectOnlyInputValuesInsideNoCapture(text: string) {
     let holders = 0;
@@ -1025,20 +1024,20 @@ describe("KubernetesGroupDialog's privacy (Preflight rulings 15 and 37)", () => 
     );
     await retype(user, field("Namespace"), typed);
     expect(screen.getByText(namespaceChangeWarning("gateway", namespace, typed))).toBeInTheDocument();
-    // The warning's words and its uninstall command (D17d-2 Preflight ruling 31).
+    // The warning's words and its uninstall command.
     expect(expectTextInsideNoCapture(namespace)).toBe(2);
     expect(expectTextInsideNoCapture(risky)).toBe(1);
     for (const text of [namespace, typed, risky]) expectOnlyInputValuesInsideNoCapture(text);
     // The gateway's name: the title's text (the masked shell's), the address's inside ph-no-capture, no attribute.
     const titleText = (node: Node) => node.parentElement?.closest("h2") !== null;
-    // The address and the uninstall command (D17d-2 Preflight ruling 31).
+    // The address and the uninstall command.
     expect(expectTextInsideNoCapture("canary-gateway-4d12", titleText)).toBe(3);
     expect(expectOnlyInputValuesInsideNoCapture("canary-gateway-4d12")).toBe(0);
     expect(within(dialog()).getByRole("heading")).toHaveTextContent("Edit canary-gateway-4d12");
   });
 
-  // D18 Ruling 42 Nit 2: each role's warning repeats the namespaces in its own words (the Cluster's names the saved one
-  // twice, a gateway's the typed one twice): visible text inside ph-no-capture only, in no attribute.
+  // Each role's warning repeats the namespaces in its own words (the Cluster's names the saved one twice, a gateway's
+  // the typed one twice): visible text inside ph-no-capture only, in no attribute.
   it.each([
     ["the Agent", "node", "telflo-node"],
     ["the Cluster", "cluster", "telflo-cluster"],
@@ -1076,8 +1075,8 @@ describe("KubernetesGroupDialog's privacy (Preflight rulings 15 and 37)", () => 
   });
 });
 
-// D20 (default 23; Q83, Q86; Preflight rulings 32 and 33): GroupDialog's Variable group and "Variables used".
-describe("KubernetesGroupDialog's Variable group and Variables used (default 23)", () => {
+// GroupDialog's Variable group and "Variables used".
+describe("KubernetesGroupDialog's Variable group and Variables used", () => {
   const EU_ID = "7b000000-0000-4000-8000-0000000000e1";
 
   beforeEach(() => {
@@ -1142,7 +1141,7 @@ describe("KubernetesGroupDialog's Variable group and Variables used (default 23)
     await waitFor(() => expect(apiClient.getVariableGroups).toHaveBeenCalledTimes(2));
   });
 
-  it("keeps the row it opened with, its variable group included, when the row is replaced (Ruling 66)", async () => {
+  it("keeps the row it opened with, its variable group included, when the row is replaced", async () => {
     const { user, onChanged } = await renderDialog(gatewaysRow({ variableGroupId: EU_ID }), { replaced: gatewaysRow({ variableGroupId: null }) });
     expect(await screen.findByRole("combobox", { name: "Variable group" })).toHaveTextContent("eu-edge");
     fireEvent.click(screen.getByRole("button", { name: "Replace", hidden: true }));

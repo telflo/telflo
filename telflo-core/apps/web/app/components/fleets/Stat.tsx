@@ -1,16 +1,15 @@
 import type { ReactNode } from "react";
 
 /*
- * One tile of a fleet's stats strip (D17b-1 decision 20, Preflight ruling
- * 8): its label, value and hint, with no dot, value tooltip or footer
- * (D17d decides the Kubernetes-supervisor fleet's strip). The value is a
- * node, so the Token tile can hold D17a's badge and its tooltip. The label's
- * rules are written out here (there is no `tf-label` class).
+ * One tile of a fleet's stats strip: its label, value and hint, with no dot,
+ * value tooltip or footer. The value is a node, so the Token tile can hold
+ * the Token badge and its tooltip. The label's rules are written out here
+ * (there is no `tf-label` class).
  */
 
 export type StatEmphasis = "neutral" | "warn" | "danger";
 
-/** The value's colour, by emphasis. */
+/** The value's color, by emphasis. */
 export function emphasisClassName(emphasis: StatEmphasis): string {
   switch (emphasis) {
     case "danger":

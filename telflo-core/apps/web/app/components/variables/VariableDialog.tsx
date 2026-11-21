@@ -48,34 +48,31 @@ import { VariableInUseList } from "./InUseLists.js";
 import { handleSharedWriteFailure } from "./write-failures.js";
 
 /*
- * A variable's create and edit (D20 decisions 2, 8, 11 and 39; defaults 20
- * and 21; ADR 0018), with D20's one name and a description (Q81). In
- * detail:
+ * A variable's create and edit, with one name and a description. In detail:
  * - the fields are Name (upper case as typed, `^[A-Z][A-Z0-9_]*$`), Value
- *   (one line, kept as typed, never trimmed; empty allowed, Q90) and
- *   Description (optional); the contract's checks run before anything is
- *   sent, with the contract's words beside the field, and a 400's problems
- *   land there too;
+ *   (one line, kept as typed, never trimmed; empty allowed) and Description
+ *   (optional); the contract's checks run before anything is sent, with the
+ *   contract's words beside the field, and a 400's problems land there too;
  * - the titles and toasts are fixed words ("Add variable", "Edit variable";
  *   "Variable added", "Variable saved"), never a name, a value or a
  *   description;
  * - a create carries this opening's own id, so a retry after an unknown
- *   outcome is safe (Q93); an edit sends only the fields that changed, and
- *   Save waits for a change;
+ *   outcome is safe; an edit sends only the fields that changed, and Save
+ *   waits for a change;
  * - a rename (the name changed) warns, without refusing, about the drafts
- *   that reference the variable's name now (default 21, read as the dialog
- *   opens): "Drafts using OTLP_EP: edge-config"; a rename refused while a
- *   used published version references the name (409 `variable_in_use`)
- *   lists those uses, at most 100, then "… and N more published versions";
+ *   that reference the variable's name now (read as the dialog opens):
+ *   "Drafts using OTLP_EP: edge-config"; a rename refused while a used
+ *   published version references the name (409 `variable_in_use`) lists
+ *   those uses, at most 100, then "… and N more published versions";
  * - `variable_name_taken` is said under Name; any other refusal of the
  *   variables' in the dialog; an unknown outcome as `write-failures.ts`
  *   says.
- * Privacy (decision 39): every field, the reference preview, the drafts
- * warning and the in-use list sit inside `ph-no-capture` (replay records
- * nothing of them); a controlled input's own `value` is the one attribute
- * holding what is typed; no placeholder, label, title or aria attribute
- * holds a name, a value or a description. The baseline is the variable as
- * the dialog opened (D17c-1 Ruling 66): a reload behind it changes nothing.
+ * Privacy: every field, the reference preview, the drafts warning and the
+ * in-use list sit inside `ph-no-capture` (replay records nothing of
+ * them); a controlled input's own `value` is the one attribute holding
+ * what is typed; no placeholder, label, title or aria attribute holds a
+ * name, a value or a description. The baseline is the variable as the
+ * dialog opened: a reload behind it changes nothing.
  */
 
 export interface VariableDialogProps {
@@ -115,7 +112,7 @@ function VariableDialogSession({ open, onOpenChange, organizationId, variable, o
   const nameId = useId();
   const valueId = useId();
   const descriptionId = useId();
-  // The baseline, as the dialog opened (D17c-1 Ruling 66).
+  // The baseline, as the dialog opened.
   const [original] = useState(variable);
   const [createId] = useState(randomUuid);
   const [name, setName] = useState(original?.name ?? "");
@@ -131,7 +128,7 @@ function VariableDialogSession({ open, onOpenChange, organizationId, variable, o
   const isStillCurrent = useStillCurrent(organizationId);
   const openingRead = useOpeningReads(open, VARIABLES_READ_TIMEOUT_MS);
 
-  // An edit reads, once as it opens, the drafts that reference the name it opened with (default 21).
+  // An edit reads, once as it opens, the drafts that reference the name it opened with.
   useEffect(() => {
     if (original === null) return;
     void openingRead((signal) => getVariableDrafts(organizationId, original.id, { signal })).then((answer) => {

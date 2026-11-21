@@ -8,7 +8,7 @@ import {
   serviceAccountFailureMessage,
 } from "~/lib/service-accounts.js";
 
-/* Settings › Service Accounts' words (D22 decisions 42-46; Preflight ruling 30). */
+/* Settings › Service Accounts' words. */
 
 describe("the Service Accounts pages' words", () => {
   it("dates read en-US, and none reads Never", () => {

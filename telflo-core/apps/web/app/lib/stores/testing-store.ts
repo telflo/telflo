@@ -28,14 +28,13 @@ import { readsFor } from "~/lib/workspace-reads.js";
 export { abortAfter };
 
 /*
- * The Testing tab's memory (D14a decisions 7, 16 to 20; Preflight ruling 15;
- * D14b Preflight rulings 13, 14 and 17): the runs (the selection, the
- * remembered duration, My Files and the runs) and the templates
- * (`templateFiles`, `loadTemplateFiles`), with the hold over every Play
+ * The Testing tab's memory: the runs (the selection, the remembered
+ * duration, My Files and the runs) and the templates (`templateFiles`,
+ * `loadTemplateFiles`), with the hold over every Play
  * (`selectIsPlayHeld`) and the Play all under way (`playAll`, whose loops
  * are `lib/test-suites/play-all.ts`'s). Suites and definitions are
  * `test-suites-store.ts`'s; validation pipelines and their rules are
- * `validation-pipelines-store.ts`'s (D15a).
+ * `validation-pipelines-store.ts`'s.
  * - My Files are read afresh each time the run dialog opens (`loadFiles`),
  *   never once a session; they are the person's in the organization they were
  *   read in, and a read for another organization starts from none;
@@ -47,32 +46,30 @@ export { abortAfter };
  * - a run is queued by the API (`queueRun`), which answers with the run; it
  *   joins the version's runs at once, selected unless a Play all chooses
  *   otherwise (`{select}`), so every Play is held while it waits
- *   (`selectIsPlayHeld`, Preflight ruling 15), unless the tab has left that
- *   version by the time the API answers (D14a Ruling 46);
- * - one hold for every Play (D14b Preflight ruling 13): "Configure and
- *   run", ↺, a definition's Run test and both Play alls are held while the
- *   person's own run on the version is queued or running, while a Play all
- *   on it is under way (`playAll`), and while a single run is starting
- *   (`starting`: its head read, the fixture-shape question and its queue
- *   request), so a double click, or a Play during a head read, can't start
- *   two; each start checks and sets it at once, before anything is awaited
- *   (`beginStart`, `beginPlayAll`);
+ *   (`selectIsPlayHeld`), unless the tab has left that version by the time
+ *   the API answers;
+ * - one hold for every Play: "Configure and run", ↺, a definition's Run
+ *   test and both Play alls are held while the person's own run on the
+ *   version is queued or running, while a Play all on it is under way
+ *   (`playAll`), and while a single run is starting (`starting`: its head
+ *   read, the fixture-shape question and its queue request), so a double
+ *   click, or a Play during a head read, can't start two; each start
+ *   checks and sets it at once, before anything is awaited (`beginStart`,
+ *   `beginPlayAll`);
  * - the templates are read afresh each time the run dialog's Templates step
  *   shows (`loadTemplates`), never once a session; the remembered template
  *   leaves the selection when a fresh read no longer lists it; a read that
- *   never answers is aborted after 10 s, as the runs' reads are, and fails
- *   (D14b Ruling 50);
- * - the version's runs are polled here (`watchRuns`, Preflight ruling 15):
- *   the list every second while any run
- *   it lists, a teammate's included, is queued or running; stopped when none
- *   is, when the tab unmounts and when the version changes; each request
- *   aborted after 10 s, and the polling stopped after 30 failures in a row
- *   with "Failed to refresh test runs" and a retry (`retryRuns`). There is no
- *   total-time cap: every run ends by its lease or the down rule. A refusal
- *   (a 4xx but 408 and 429: the version gone, the organization left) stops it at once with
- *   the API's words, and a failed first read says "Failed to load test runs"
- *   at once (D14a Ruling 48): only a poll's
- *   failures, after something was shown, wait for 30;
+ *   never answers is aborted after 10 s, as the runs' reads are, and fails;
+ * - the version's runs are polled here (`watchRuns`): the list every second
+ *   while any run it lists, a teammate's included, is queued or running;
+ *   stopped when none is, when the tab unmounts and when the version changes;
+ *   each request aborted after 10 s, and the polling stopped after 30 failures
+ *   in a row with "Failed to refresh test runs" and a retry (`retryRuns`).
+ *   There is no total-time cap: every run ends by its lease or the down rule.
+ *   A refusal (a 4xx but 408 and 429: the version gone, the organization left)
+ *   stops it at once with the API's words, and a failed first read says
+ *   "Failed to load test runs" at once: only a poll's failures, after
+ *   something was shown, wait for 30;
  * - the selected run is read in full once it has ended (`runDetails`); an
  *   ended run never changes, so it is read once;
  * - a list answer to a request sent before this tab queued a run never
@@ -82,13 +79,13 @@ export { abortAfter };
  * Each file's first SNIFF_BYTES, for the fixture-shape check before a run, is
  * kept in memory when this tab uploads or saves it (`heads`), and read from
  * the API's `GET …/test-files/:fileId/head` for a file from an earlier
- * session (`headFor`, D14a Ruling 43).
+ * session (`headFor`).
  *
  * Its files' names, descriptions and heads, and the runs' text, logs and
- * inputs' names, are private text (ADR 0024): they never reach an
- * attribute, a log line or an analytics event, and signing out forgets them
- * (`reset`, from useLogout). An upload, a sample or a queue that answers
- * after signing out adds nothing back.
+ * inputs' names, are private text: they never reach an attribute, a log
+ * line or an analytics event, and signing out forgets them (`reset`, from
+ * useLogout). An upload, a sample or a queue that answers after signing out
+ * adds nothing back.
  */
 
 /** Where the remembered duration lives. */
@@ -97,19 +94,19 @@ export const LAST_RUN_DURATION_KEY = "telflo:lastRunDurationSeconds";
 /** The duration before one is remembered. */
 export const DEFAULT_RUN_DURATION_SECONDS = 5;
 
-/** How often the version's runs are read while any is queued or running (Preflight ruling 15). */
+/** How often the version's runs are read while any is queued or running. */
 export const RUNS_POLL_INTERVAL_MS = 1_000;
 
-/** How long one read of the runs (or of a run) may take before it is aborted: the hang guard (Preflight ruling 15). */
+/** How long one read of the runs (or of a run) may take before it is aborted: the hang guard. */
 export const RUNS_REQUEST_TIMEOUT_MS = 10_000;
 
-/** How many failed reads of the runs in a row stop the polling (Preflight ruling 15). */
+/** How many failed reads of the runs in a row stop the polling. */
 export const RUNS_FAILURES_BEFORE_STOP = 30;
 
 /** What the tab says once the polling has stopped on failures. */
 export const RUNS_REFRESH_FAILED_MESSAGE = "Failed to refresh test runs";
 
-/** What the tab says at once when the first read of a version's runs fails (D14a Ruling 48). */
+/** What the tab says at once when the first read of a version's runs fails. */
 export const RUNS_LOAD_FAILED_MESSAGE = "Failed to load test runs";
 
 /** The file the run dialog has chosen: its id and the name it showed. */
@@ -118,19 +115,19 @@ export interface SelectedTestFile {
   displayName: string;
 }
 
-/** The template the run dialog has chosen: its id and the name it showed (D14b Preflight ruling 16). */
+/** The template the run dialog has chosen: its id and the name it showed. */
 export interface SelectedTestTemplate {
   id: string;
   name: string;
 }
 
-/** The input a run or a definition is made from (D14b Preflight ruling 16): one of the person's files, or a template. */
+/** The input a run or a definition is made from: one of the person's files, or a template. */
 export type SelectedTestInput = ({ kind: "file" } & SelectedTestFile) | ({ kind: "template" } & SelectedTestTemplate);
 
-/** How a Play all queues its suite's definitions (D14b decision 10). */
+/** How a Play all queues its suite's definitions. */
 export type PlayAllMode = "parallel" | "serial";
 
-/** A Play all under way, as the hold reads it (D14b Preflight ruling 13). */
+/** A Play all under way, as the hold reads it. */
 export interface PlayAllUnderWay {
   target: RunTarget;
   suiteId: string;
@@ -158,7 +155,7 @@ export interface RunTarget {
 export interface TestingState {
   /** The organization `files` and `selectedFile` belong to; null before a read. */
   filesOrganizationId: string | null;
-  /** The person's own files in that organization, newest first (decision 7). */
+  /** The person's own files in that organization, newest first. */
   files: TestFile[];
   filesLoading: boolean;
   /** Whether `files` holds an answer for `filesOrganizationId` (a refresh keeps showing it). */
@@ -167,7 +164,7 @@ export interface TestingState {
   selectedFile: SelectedTestFile | null;
   /** The pipeline the run dialog last ran, by its name in the text; null for none (the first then). */
   selectedPipelineName: string | null;
-  /** The remembered duration, 1-60 (decision 20). */
+  /** The remembered duration, 1-60. */
   lastRunDurationSeconds: number;
   /** Each file's first SNIFF_BYTES, kept when this tab uploaded or saved it, or read it from the API (`headFor`). Private text. */
   heads: Record<string, Uint8Array>;
@@ -191,16 +188,16 @@ export interface TestingState {
   runDetails: Record<string, TestRunDetail>;
   /** The selected run whose full read failed (shown with a retry); null otherwise. */
   runDetailFailedId: string | null;
-  /** The live templates, newest first, as last read (D14b decision 13). Their names are private text. */
+  /** The live templates, newest first, as last read. Their names are private text. */
   templates: TestTemplate[];
   templatesLoading: boolean;
   /** Whether `templates` holds an answer. */
   templatesLoaded: boolean;
   /** The template the run dialog last ran with, as it opens next; null for none (a file then, or nothing). */
   selectedTemplate: SelectedTestTemplate | null;
-  /** The Play all under way, if any (D14b Preflight ruling 13): from its click until its last queue answer (parallel), or until its loop ends or stops (serial). */
+  /** The Play all under way, if any: from its click until its last queue answer (parallel), or until its loop ends or stops (serial). */
   playAll: PlayAllUnderWay | null;
-  /** The version a single run is starting on (Configure and run's Run, ↺, a definition's Run test), from its click until its queue request answers or its question is cancelled; null otherwise. */
+  /** The version a single run is starting on (Configure and run's Run, ↺, a definition's Run test), from its click until its queue request answers or its question is canceled; null otherwise. */
   starting: RunTarget | null;
 
   /** Reads the person's files afresh (each time the run dialog opens); rejects as the API did. */
@@ -214,9 +211,9 @@ export interface TestingState {
   setSelectedFile: (file: SelectedTestFile | null) => void;
   setSelectedTemplate: (template: SelectedTestTemplate | null) => void;
   /**
-   * Reads the live templates afresh (each time the Templates step shows), aborted after RUNS_REQUEST_TIMEOUT_MS (D14b
-   * Ruling 50); rejects as the API did. The templates are the product's, read for no organization; `organizationId` (the
-   * editor's) only says whose reads answer: the sample workspace's answer from the sample (D31-1 Preflight ruling 8).
+   * Reads the live templates afresh (each time the Templates step shows), aborted after RUNS_REQUEST_TIMEOUT_MS;
+   * rejects as the API did. The templates are the product's, read for no organization; `organizationId` (the
+   * editor's) only says whose reads answer: the sample workspace's answer from the sample.
    */
   loadTemplates: (organizationId?: string | null) => Promise<TestTemplate[]>;
   setSelectedPipelineName: (name: string | null) => void;
@@ -224,8 +221,7 @@ export interface TestingState {
   setLastRunDurationSeconds: (seconds: number) => void;
   /**
    * A file's first SNIFF_BYTES for the fixture-shape check: kept, or read from
-   * the API (D14a Ruling 43); null when it can't be read (the check is then
-   * skipped).
+   * the API; null when it can't be read (the check is then skipped).
    */
   headFor: (organizationId: string, fileId: string) => Promise<Uint8Array | null>;
   /**
@@ -237,10 +233,10 @@ export interface TestingState {
   /** A run read in full (a serial Play all follows its own): its row takes its state, when it is listed. */
   noteRun: (run: TestRunDetail) => void;
   /**
-   * Starts a single run on `target` (D14b Preflight ruling 13): false when
-   * Play is held for `userId` there; otherwise `starting` is set at once,
-   * before anything is awaited, and the answer releases it (once; a later
-   * start's hold is never released by an earlier one's).
+   * Starts a single run on `target`: false when Play is held for `userId`
+   * there; otherwise `starting` is set at once, before anything is
+   * awaited, and the answer releases it (once; a later start's hold is
+   * never released by an earlier one's).
    */
   beginStart: (target: RunTarget, userId: string | null) => false | (() => void);
   /**
@@ -320,7 +316,7 @@ async function headOf(file: Blob): Promise<Uint8Array | null> {
   }
 }
 
-/** Whether a run is waiting or running: the polling goes on while any listed run is (Preflight ruling 15). */
+/** Whether a run is waiting or running: the polling goes on while any listed run is. */
 export function isRunActive(run: Pick<TestRunSummary, "status">): boolean {
   return run.status === "queued" || run.status === "running";
 }
@@ -331,10 +327,10 @@ function newestFirst(left: TestRunSummary, right: TestRunSummary): number {
   return left.id < right.id ? 1 : left.id > right.id ? -1 : 0;
 }
 
-/** The list's fields, from the contract's own shape: a field the list gains can't be left out here (D14b Preflight ruling 20). */
+/** The list's fields, from the contract's own shape: a field the list gains can't be left out here. */
 const SUMMARY_KEYS = Object.keys(TestRunSummarySchema.shape) as Array<keyof TestRunSummary>;
 
-/** A run's summary, as the version's list carries it (Preflight ruling 15): exactly the summary's fields of the run. */
+/** A run's summary, as the version's list carries it: exactly the summary's fields of the run. */
 function summaryOf(run: TestRunDetail): TestRunSummary {
   return Object.fromEntries(SUMMARY_KEYS.map((key) => [key, run[key]])) as TestRunSummary;
 }
@@ -513,7 +509,7 @@ export const useTestingStore = create<TestingState>()((set, get) => {
     loadTemplates: async (organizationId = null) => {
       const thisRead = ++templatesRead;
       set({ templatesLoading: true });
-      // A read that never answers ends after the hang guard, as a failure (D14b Ruling 50).
+      // A read that never answers ends after the hang guard, as a failure.
       const timeout = abortAfter(RUNS_REQUEST_TIMEOUT_MS);
       try {
         const { templates } = await readsFor(organizationId).getTestTemplates({ signal: timeout.signal });
@@ -571,8 +567,8 @@ export const useTestingStore = create<TestingState>()((set, get) => {
       const { run } = await queueTestRun(target.organizationId, target.configurationId, target.versionId, request);
       if (session !== at) return run;
       // Shown only while its version is the one watched: an answer for a
-      // version the tab has since left touches nothing (D14a Ruling 46), so
-      // the version now shown keeps its runs, selection and polling.
+      // version the tab has since left touches nothing, so the version now
+      // shown keeps its runs, selection and polling.
       const watching = watch !== null && sameTarget(watch.target, target) ? watch : null;
       if (watching === null) return run;
       watching.queued.set(run.id, watching.sent);
@@ -721,9 +717,9 @@ export const useTestingStore = create<TestingState>()((set, get) => {
           set({ runsLoading: false });
           return;
         }
-        // A refusal (the version gone or no longer visible, the
-        // organization left): reading again won't change it (Ruling 48).
-        // A 408 or a 429 passes with time, so it counts as transient (Ruling 52).
+        // A refusal (the version gone or no longer visible, the organization
+        // left): reading again won't change it. A 408 or a 429 passes with
+        // time, so it counts as transient.
         if (isRefusal(error)) {
           watching.stopped = true;
           set({ runsLoading: false, runsError: error.message });
@@ -809,10 +805,10 @@ export const useTestingStore = create<TestingState>()((set, get) => {
 });
 
 /**
- * Whether every Play is held for `userId` on `versionId` (D14a Preflight
- * ruling 15; D14b Preflight ruling 13): while a run of theirs on that version
- * is queued or running, while a Play all on it is under way, and while a
- * single run is starting on it. A teammate's runs never hold it.
+ * Whether every Play is held for `userId` on `versionId`: while a run of
+ * theirs on that version is queued or running, while a Play all on it is under
+ * way, and while a single run is starting on it. A teammate's runs never hold
+ * it.
  */
 export function selectIsPlayHeld(
   state: Pick<TestingState, "runs" | "runsVersionId" | "playAll" | "starting">,

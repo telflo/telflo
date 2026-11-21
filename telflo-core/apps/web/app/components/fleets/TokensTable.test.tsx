@@ -7,8 +7,7 @@ import { tokensInEveryState } from "~/test/fleets.js";
 import { collectorCount, expiresBadge, tokenRowName, TokensTable } from "./TokensTable.js";
 
 /*
- * The Tokens table (D17b-2 decisions 11, 13, 26 and 34; Preflight ruling
- * 12): its rows, each status and expiry badge for a default,
+ * The Tokens table: its rows, each status and expiry badge for a default,
  * current, being-replaced, expired and revoked token, and the row actions'
  * names. The tab's flows are in `TokensTab.test.tsx`.
  */
@@ -26,7 +25,7 @@ function renderTable(list: EnrollmentTokenListed[]) {
 const cellsOf = (row: HTMLElement) => within(row).getAllByRole("cell");
 const rows = () => screen.getAllByRole("row").slice(1);
 
-describe("TokensTable (decision 26)", () => {
+describe("TokensTable", () => {
   it("has the columns Kind, Created, Expires, Status, Active in the last 5 minutes, and actions; the API's order", () => {
     const list = [tokens.current, tokens.beingReplaced, tokens.expired, tokens.revoked, tokens.defaultToken];
     renderTable(list);
@@ -55,7 +54,7 @@ describe("TokensTable (decision 26)", () => {
     const [, created, expiresCell, statusCell, activeCell, actionsCell] = cellsOf(row);
     expect(created).toHaveTextContent(`${formatDateTime(token.createdAt)}${formatRelativeTime(token.createdAt, NOW)}`);
     expect(within(expiresCell!).getByText(expires)).toHaveClass(expiresColour);
-    // The date beneath the badge; none under "Never" (no "—" line: Ruling 25).
+    // The date beneath the badge; none under "Never" (no "—" line).
     expect(expiresCell!.textContent).toBe(token.expiresAt === null ? expires : `${expires}${formatDateTime(token.expiresAt)}`);
     expect(within(statusCell!).getByText(status)).toHaveClass(statusColour);
     expect(activeCell).toHaveTextContent(new RegExp(`^${active}$`));
@@ -74,7 +73,7 @@ describe("TokensTable (decision 26)", () => {
     expect(statusCell.querySelector("[title]")).toBeNull();
   });
 
-  it("hands Current to the token being replaced once the newer one is revoked (Preflight ruling 4e)", () => {
+  it("hands Current to the token being replaced once the newer one is revoked", () => {
     const revokedCurrent = { ...tokens.current, revokedAt: new Date(NOW - 1000).toISOString() };
     renderTable([revokedCurrent, tokens.beingReplaced, tokens.defaultToken]);
     expect(within(cellsOf(rows()[0]!)[3]!).getByText("Revoked")).toBeInTheDocument();
@@ -116,7 +115,7 @@ describe("TokensTable (decision 26)", () => {
     expect(onAction).toHaveBeenCalledWith("revoke", tokens.current, revoke);
   });
 
-  // D17c-1 decision 45: a revoked default token followed by a new one.
+  // A revoked default token followed by a new one.
   it("names a default token by its date too when the fleet holds more than one", () => {
     const newDefault = { ...tokens.defaultToken, id: "c0ffee00-0000-4000-8000-0000000000d3", createdAt: new Date(NOW - DAY).toISOString() };
     renderTable([newDefault, tokens.current, tokens.revokedDefaultToken]);

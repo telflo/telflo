@@ -12,8 +12,8 @@ import {
   type UserPreferences,
 } from "./user-preferences.js";
 
-// A person's preferences (D21 decisions 17 and 19): one strict shape, its
-// defaults, the PATCH's strict deep partial, and the read that never fails.
+// A person's preferences: one strict shape, its defaults, the PATCH's strict
+// deep partial, and the read that never fails.
 
 /** A fresh, mutable copy of the defaults. */
 function defaults(): UserPreferences {

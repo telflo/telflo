@@ -32,8 +32,7 @@ import { useValidationPipelinesStore } from "~/lib/stores/validation-pipelines-s
 import { SAMPLE_ORGANIZATION_ID } from "~/lib/workspace-reads.js";
 
 /*
- * `/playground/editor/:configurationId?` (D31-1 decisions 25 and 28-31;
- * Preflight rulings 10, 11, 14 and 18): the playground editor, full screen,
+ * `/playground/editor/:configurationId?`: the playground editor, full screen,
  * outside the shell, in its own provider and the editors' surface (masked as
  * the signed-in shell; a phone page below `md`, so Monaco never mounts and
  * nothing is validated on a phone).
@@ -58,33 +57,30 @@ import { SAMPLE_ORGANIZATION_ID } from "~/lib/workspace-reads.js";
  * store and the Testing tab's stores), so nothing of the sample reaches a
  * signed-in editor afterwards.
  *
- * The open text is checked by D27's anonymous validate (`ANONYMOUS_VALIDATION`:
- * 1.5 s after an opening or a change, with "Checking paused" counting down
- * a 429). No navigation or unload guard (the banner and the pill say
- * nothing here saves). Cmd/Ctrl+S, here
- * or inside Monaco, runs the playground's Save (`useStagePlaygroundSave`):
- * the edit is staged in this browser and "Sign in to save" opens. The
- * playground tour's editor stage runs here when the list hands it over
- * (decision 15, Preflight ruling 16), on the toolbox's, the canvas's and the
- * panel's anchors (`data-tour-step`); the editor's own tour never runs on
- * this page.
+ * The open text is checked by the anonymous validate (`ANONYMOUS_VALIDATION`:
+ * 1.5 s after an opening or a change, with "Checking paused" counting down a
+ * 429). No navigation or unload guard (the banner and the pill say nothing
+ * here saves). Cmd/Ctrl+S, here or inside Monaco, runs the playground's Save
+ * (`useStagePlaygroundSave`): the edit is staged in this browser and "Sign in
+ * to save" opens. The playground tour's editor stage runs here when the list
+ * hands it over, on the toolbox's, the canvas's and the panel's anchors
+ * (`data-tour-step`); the editor's own tour never runs on this page.
  *
- * No attribute carries the name or the text (ADR 0024): they are text,
- * which replay masks; the text is inside `ph-no-capture` (YamlEditor).
+ * No attribute carries the name or the text: they are text, which replay
+ * masks; the text is inside `ph-no-capture` (YamlEditor).
  */
 
 export const handle = PLAYGROUND_HANDLE;
 
-/** The playground editor is the playground's, behind its switch: a 404 with TELFLO_PLAYGROUND off (D36-1 decision 31). */
+/** The playground editor is the playground's, behind its switch: a 404 with TELFLO_PLAYGROUND off. */
 export function loader() {
   notFoundUnless(siteSettings().playground);
   return null;
 }
 
 /**
- * One canonical for the blank editor and every sample's: `/playground/editor`
- * (Ruling 304's Nit 2), so the samples aren't indexed as pages of their
- * own.
+ * One canonical for the blank editor and every sample's: `/playground/editor`,
+ * so the samples aren't indexed as pages of their own.
  */
 export function meta({ matches }: Route.MetaArgs) {
   return playgroundMeta(matches, PLAYGROUND_TITLES.editor, "/playground/editor");
@@ -178,12 +174,12 @@ function PlaygroundEditor() {
   const isCanvasLocked = useEditorStore(selectIsCanvasLocked);
   const selectedNodeId = useEditorStore((state) => state.selectedNode?.id ?? null);
 
-  // The anonymous validate checks the open text (decision 29).
+  // The anonymous validate checks the open text.
   useCollectorValidation(ANONYMOUS_VALIDATION);
 
   // Opens the sample (or the blank configuration) with no API, forgetting
-  // first whatever the stores held (a signed-in editor's Testing tab, Ruling
-  // 291); leaving, or opening another, forgets it again.
+  // first whatever the stores held (a signed-in editor's Testing tab);
+  // leaving, or opening another, forgets it again.
   useEffect(() => {
     forgetEditor();
     const sample = blank ? blankConfiguration() : sampleConfiguration(address);

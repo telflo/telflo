@@ -1,10 +1,9 @@
 /**
- * The Testing tab's runs and results (D14a decisions 1, 8, 18, 22 and 23;
- * Preflight rulings 14 and 15): the list with its places in the queue, each
- * status's row and results, the C-003 callouts, the mutations, the viewers
- * (copy, download), Compare, the re-run of a teammate's run, the polling as
- * the tab shows it, and replay's rules (no file name, text, log or output in
- * any attribute; everything inside `ph-no-capture`).
+ * The Testing tab's runs and results: the list with its places in the queue,
+ * each status's row and results, the C-003 callouts, the mutations, the
+ * viewers (copy, download), Compare, the re-run of a teammate's run, the
+ * polling as the tab shows it, and replay's rules (no file name, text, log or
+ * output in any attribute; everything inside `ph-no-capture`).
  *
  * Rendered through TestingTab, which polls the runs (the store's
  * `watchRuns`). Monaco is stubbed: each stub records its props and shows its
@@ -44,7 +43,7 @@ vi.mock("@monaco-editor/react", () => ({
     // The library's own clean-up, after which it disposes the editor (and,
     // unless kept, the models first: the order Monaco reports as an error).
     useEffect(() => {
-      // Each model keeps the options set on it, as Monaco's does (the tab size, D21 Preflight ruling 33).
+      // Each model keeps the options set on it, as Monaco's does (the tab size).
       const modelOptions = (side: "original" | "modified") => {
         const options: Record<string, unknown> = { tabSize: 2, indentSize: 2 };
         fake.diffModelOptions[side] = options;
@@ -234,7 +233,7 @@ const VALIDATION_RULES: TestRunDetail["validationRules"] = [
   },
 ];
 
-/** A run whose collector ran and whose second rule failed (D15a decision 3). */
+/** A run whose collector ran and whose second rule failed. */
 const VALIDATION_FAILED = testRunFixture({
   ...SUCCEEDED,
   id: "0199e000-0000-7000-8000-000000000006",
@@ -252,7 +251,7 @@ const VALIDATION_FAILED = testRunFixture({
   ],
 });
 
-/** A run the rule evaluator couldn't check: Error, its output and logs kept (D15a decision 3). */
+/** A run the rule evaluator couldn't check: Error, its output and logs kept. */
 const RULES_UNAVAILABLE = testRunFixture({
   ...SUCCEEDED,
   id: "0199e000-0000-7000-8000-000000000007",
@@ -358,9 +357,9 @@ async function select(status: RegExp, ...runs: TestRunDetail[]) {
 /** The results pane (the list's sibling). */
 const results = () => screen.getByRole("region", { name: "Test results" });
 
-describe("the list (Preflight ruling 15)", () => {
-  it("shows the version's runs newest first under Created and Status: the time queued and the badge, 'Queued (n ahead)' while waiting, 'Validation Failed' for a run whose rules failed (D15a decision 3)", async () => {
-    // A run whose collector ran and one of whose rules failed (D15a decision 3).
+describe("the list", () => {
+  it("shows the version's runs newest first under Created and Status: the time queued and the badge, 'Queued (n ahead)' while waiting, 'Validation Failed' for a run whose rules failed", async () => {
+    // A run whose collector ran and one of whose rules failed.
     const validationFailed = testRunFixture({
       ...SUCCEEDED,
       id: "0199e000-0000-7000-8000-000000000006",
@@ -384,7 +383,7 @@ describe("the list (Preflight ruling 15)", () => {
     expect(listRuns).toHaveBeenCalledWith(GROUP_ID, MINE.id, VERSION.id, { signal: expect.any(AbortSignal) });
   });
 
-  it("shows a suite's run's 'Suite › Configuration' breadcrumb under its time, a one-off run none, the names as text only (D14b decision 11, Preflight ruling 18); the help says so", async () => {
+  it("shows a suite's run's 'Suite › Configuration' breadcrumb under its time, a one-off run none, the names as text only; the help says so", async () => {
     const fromSuite = testRunFixture({
       ...SUCCEEDED,
       id: "0199e000-0000-7000-8000-000000000042",
@@ -410,7 +409,7 @@ describe("the list (Preflight ruling 15)", () => {
     expect(within(results()).queryByText(/zq-smoke-tests/)).toBeNull();
 
     await user.click(screen.getByRole("button", { name: "What is this panel?" }));
-    // The panel's words, validation results included (D15a Ruling 56).
+    // The panel's words, validation results included.
     expect(await screen.findByText(/^Run tests and review past runs/)).toHaveTextContent(
       "Run tests and review past runs for this configuration version. Select a row to see its status, output, and validation results in the detail pane below.",
     );
@@ -443,7 +442,7 @@ describe("the list (Preflight ruling 15)", () => {
     expect(screen.getByText("Load a configuration version to see test runs.")).toBeInTheDocument();
   });
 
-  it("refreshes a teammate's run while it runs (decision 8)", async () => {
+  it("refreshes a teammate's run while it runs", async () => {
     vi.useFakeTimers();
     try {
       serve(TEAMMATE_RUNNING);
@@ -477,7 +476,7 @@ describe("the list (Preflight ruling 15)", () => {
     await waitFor(() => expect(screen.queryByRole("alert")).toBeNull());
   });
 
-  it("shows a failed first read at once, with Retry, not a toast (Ruling 48)", async () => {
+  it("shows a failed first read at once, with Retry, not a toast", async () => {
     listRuns.mockRejectedValueOnce(new apiClient.ApiError("network_error", "Could not reach the server."));
     const { user } = renderTab();
 
@@ -490,7 +489,7 @@ describe("the list (Preflight ruling 15)", () => {
     expect(screen.queryByRole("alert")).toBeNull();
   });
 
-  it("shows a refusal's own words at once, with Retry, and stops asking (Ruling 48)", async () => {
+  it("shows a refusal's own words at once, with Retry, and stops asking", async () => {
     listRuns.mockRejectedValue(new apiClient.ApiError("configuration_not_found", "Configuration not found", { status: 404 }));
     renderTab();
 
@@ -585,7 +584,7 @@ describe("each status's results", () => {
     expect(await screen.findByText("(no error message captured)")).toBeInTheDocument();
   });
 
-  it("a run whose rules failed: 'Validation Failed' in the list (a warn badge) and the header, then its output and its Validation grid, no Error (D15a decisions 3 and 19)", async () => {
+  it("a run whose rules failed: 'Validation Failed' in the list (a warn badge) and the header, then its output and its Validation grid, no Error", async () => {
     await select(/Validation Failed/, VALIDATION_FAILED);
 
     const badge = within(screen.getByRole("button", { name: /Validation Failed/ })).getByText("Validation Failed");
@@ -601,7 +600,7 @@ describe("each status's results", () => {
     expect(within(pane).queryByText("Error")).toBeNull();
   });
 
-  it("an evaluator outage: Error with its message, the output, the logs and the text still there, and no grid (D15a decision 3)", async () => {
+  it("an evaluator outage: Error with its message, the output, the logs and the text still there, and no grid", async () => {
     await select(/Error/, RULES_UNAVAILABLE);
 
     const message = await within(results()).findByText(RULES_UNAVAILABLE_RUN_MESSAGE);
@@ -727,14 +726,14 @@ describe("the viewers", () => {
     expect(readFile).toHaveBeenCalledWith(GROUP_ID, MINE.id, VERSION.id, SUCCEEDED.id, "input");
     const props = fake.editors.at(-1)!;
     expect(props.language).toBe("json");
-    // The store's theme: the member's default, Dark (D21 decision 27).
+    // The store's theme: the member's default, Dark.
     expect(props.theme).toBe("telflo-dark");
     expect(props).not.toHaveProperty("path");
     const options = props.options as { readOnly?: boolean; ariaContainerElement?: HTMLElement };
     expect(options.readOnly).toBe(true);
     const block = within(dialog).getByText(/"zq": "input"/).closest(".ph-no-capture");
     expect(block).not.toBeNull();
-    // The live region: the shell's one replay-blocked host, which outlives the dialog (Ruling 48).
+    // The live region: the shell's one replay-blocked host, which outlives the dialog.
     expect(options.ariaContainerElement).toBe(monacoAriaHost());
     expect(options.ariaContainerElement!.closest(".ph-no-capture")).not.toBeNull();
   });
@@ -896,11 +895,11 @@ describe("Compare", () => {
     expect(options.ariaContainerElement).toBe(monacoAriaHost());
     expect(options.ariaContainerElement!.closest(".ph-no-capture")).not.toBeNull();
     expect(readFile.mock.calls.map((call) => call[4]).sort()).toEqual(["decoded-input", "output"]);
-    // Not OTLP: no record attributes, so no rule footer (D15b's chips: CompareViewerDialog.test.tsx).
+    // Not OTLP: no record attributes, so no rule footer (the chips: CompareViewerDialog.test.tsx).
     expect(within(dialog).queryByText(/rule/i)).toBeNull();
   });
 
-  it("takes the theme and the font size, line numbers and tab size from the store, no minimap (D21 Preflight ruling 32)", async () => {
+  it("takes the theme and the font size, line numbers and tab size from the store, no minimap", async () => {
     choose("navy", { tabSize: 4, fontSize: 16, lineNumbers: false, minimap: true });
     const { user } = await select(/Success/, SUCCEEDED);
     await user.click(await screen.findByRole("button", { name: "Compare input ↔ output" }));
@@ -931,7 +930,7 @@ describe("Compare", () => {
     expect(fake.diffModelOptions.modified).toMatchObject({ tabSize: 4, indentSize: 4 });
   });
 
-  it("releases the DiffEditor's models after resetting it, before the library disposes the editor (D14a Task 11)", async () => {
+  it("releases the DiffEditor's models after resetting it, before the library disposes the editor", async () => {
     const { user } = await select(/Success/, SUCCEEDED);
     await user.click(await screen.findByRole("button", { name: "Compare input ↔ output" }));
     const dialog = await screen.findByRole("dialog", { name: "Compare input ↔ output" });
@@ -963,7 +962,7 @@ describe("Compare", () => {
   });
 });
 
-describe("the re-run (decision 18)", () => {
+describe("the re-run", () => {
   let queue: MockInstance<typeof apiClient.queueTestRun>;
 
   beforeEach(() => {
@@ -998,7 +997,7 @@ describe("the re-run (decision 18)", () => {
       yaml: `${YAML}# zq edited since\n`,
       collectorVersion: "0.162.0",
     });
-    // The fixture-shape check read the head of the run's input (D14a Ruling 46), never the whole input.
+    // The fixture-shape check read the head of the run's input, never the whole input.
     expect(readHead).toHaveBeenCalledWith(GROUP_ID, MINE.id, VERSION.id, TEAMMATE_SUCCEEDED.id, { signal: expect.any(AbortSignal) });
     expect(readFile).not.toHaveBeenCalledWith(GROUP_ID, MINE.id, VERSION.id, TEAMMATE_SUCCEEDED.id, "input");
     expect(await within(results()).findByText("Queued (0 ahead)")).toBeInTheDocument();
@@ -1008,7 +1007,7 @@ describe("the re-run (decision 18)", () => {
     expect(screen.getByRole("button", { name: "Configure and run" })).toBeDisabled();
   });
 
-  it("moves the focus to the new run's row once queued, not the held ↺ (Ruling 48's nit)", async () => {
+  it("moves the focus to the new run's row once queued, not the held ↺", async () => {
     serve(TEAMMATE_SUCCEEDED);
     const { user } = renderTab();
     await screen.findByRole("button", { name: /Success/ });
@@ -1036,7 +1035,7 @@ describe("the re-run (decision 18)", () => {
     expect(queue.mock.calls[0]?.[3]).toMatchObject({ sourceRunId: TEAMMATE_SUCCEEDED.id });
   });
 
-  it("drops the question when the run's head answers after the version changed: no question, nothing queued, the hold released (D14b Ruling 42)", async () => {
+  it("drops the question when the run's head answers after the version changed: no question, nothing queued, the hold released", async () => {
     let answer!: (bytes: Uint8Array) => void;
     readHead.mockImplementationOnce(() => new Promise((resolve) => (answer = resolve)));
     serve(TEAMMATE_SUCCEEDED);
@@ -1057,7 +1056,7 @@ describe("the re-run (decision 18)", () => {
     expect(queue).not.toHaveBeenCalled();
   });
 
-  it("closes the question already showing when another configuration opens: nothing queued, the hold released (D14b Ruling 45)", async () => {
+  it("closes the question already showing when another configuration opens: nothing queued, the hold released", async () => {
     // Raw lines on the OTLP pipeline.
     readHead.mockResolvedValueOnce(encode("zq raw line one\nzq raw line two\n"));
     serve(TEAMMATE_SUCCEEDED);
@@ -1087,7 +1086,7 @@ describe("the re-run (decision 18)", () => {
     expect(screen.queryByText("Fixture may not match the receiver")).toBeNull();
   });
 
-  it("gives up on a head read after 10 s, as the tab's other reads do, and re-runs without the check (D14a Ruling 46)", async () => {
+  it("gives up on a head read after 10 s, as the tab's other reads do, and re-runs without the check", async () => {
     vi.useFakeTimers();
     try {
       readHead.mockImplementation(
@@ -1128,7 +1127,7 @@ describe("the re-run (decision 18)", () => {
     await waitFor(() => expect(toastError).toHaveBeenCalledWith("Failed to re-run test"));
   });
 
-  it("gives the focus back to the ↺ pressed when its queue request is refused, nothing queued (D14b Ruling 50)", async () => {
+  it("gives the focus back to the ↺ pressed when its queue request is refused, nothing queued", async () => {
     let refuse!: (error: unknown) => void;
     queue.mockImplementationOnce(() => new Promise((_resolve, reject) => (refuse = reject)));
     // Raw lines on the filelog pipeline: no question.
@@ -1166,7 +1165,7 @@ describe("the re-run (decision 18)", () => {
   });
 });
 
-describe("the focus after a queue (D14b Ruling 42)", () => {
+describe("the focus after a queue", () => {
   it("drops a request to focus the selected row when no selected row shows as the list renders: a row selected later doesn't take the focus", async () => {
     // Listed, none selected (the queued run's answer was for a version left behind); nothing polls here.
     act(() => useTestingStore.setState({ runsVersionId: VERSION.id, runs: [summaryOf(TEAMMATE_RUNNING), summaryOf(SUCCEEDED)] }));
@@ -1190,7 +1189,7 @@ describe("the focus after a queue (D14b Ruling 42)", () => {
   });
 });
 
-describe("replay (ADR 0024; decision 23)", () => {
+describe("replay", () => {
   it("puts no file name, text, log, output or finding in any attribute, with the results and every viewer shown, all inside ph-no-capture", async () => {
     Object.assign(URL, { createObjectURL: vi.fn(() => "blob:stub"), revokeObjectURL: vi.fn() });
     vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
@@ -1230,7 +1229,7 @@ describe("replay (ADR 0024; decision 23)", () => {
     for (const [opener, title] of viewers) {
       await user.click(within(results()).getByRole("button", { name: opener }));
       const dialog = await screen.findByRole("dialog", { name: title });
-      // Loaded: its spinner gone (Compare's footer keeps its two status regions, D15b Ruling 32).
+      // Loaded: its spinner gone (Compare's footer keeps its two status regions).
       await waitFor(() => expect(within(dialog).queryByRole("status", { name: /^Loading/ })).toBeNull());
       expect(dialog).toHaveClass("ph-no-capture");
       scan();

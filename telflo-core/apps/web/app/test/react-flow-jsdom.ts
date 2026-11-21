@@ -1,10 +1,9 @@
 /**
  * React Flow's documented jsdom mocks (reactflow.dev, "Testing"), installed
- * per canvas test file and restored after it (Preflight ruling 17): a
- * `ResizeObserver` that reports each observed element (with a
- * `contentRect`) once the current commit is done; `DOMMatrixReadOnly`,
- * which React Flow reads the zoom from; `offsetWidth`/`offsetHeight` from
- * an element's inline size; and
+ * per canvas test file and restored after it: a `ResizeObserver` that
+ * reports each observed element (with a `contentRect`) once the current
+ * commit is done; `DOMMatrixReadOnly`, which React Flow reads the zoom
+ * from; `offsetWidth`/`offsetHeight` from an element's inline size; and
  * `getBBox` for SVG. Never in the global setup: Radix's tests rely on the
  * global no-op observer.
  *

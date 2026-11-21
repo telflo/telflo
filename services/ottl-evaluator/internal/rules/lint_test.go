@@ -1,7 +1,7 @@
-// New in D25 Task 3: the lint child's checks. Each text gets the rule
-// checks' guards before the parse, a blank one is empty, a parse error is
-// worded as a rule's, and the child writes one verdict line per text, in
-// order, with no text in it.
+// The lint child's checks. Each text gets the rule checks' guards before
+// the parse, a blank one is empty, a parse error is worded as a rule's,
+// and the child writes one verdict line per text, in order, with no text
+// in it.
 
 package rules
 

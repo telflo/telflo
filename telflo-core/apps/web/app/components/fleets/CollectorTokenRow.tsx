@@ -3,16 +3,14 @@ import { formatDateTime } from "~/lib/format.js";
 import { currentRotateToken, tokenValidAt } from "~/lib/tokens.js";
 
 /*
- * A collector's details' Token row (D17b-1 decision 25, Preflight ruling
- * 11): the token the collector last enrolled or polled with
- * (`enrollmentTokenId`) against the fleet's tokens, read with the details,
- * by the opamp-server's own rule for the current rotate token
+ * A collector's details' Token row: the token the collector last enrolled or
+ * polled with (`enrollmentTokenId`) against the fleet's tokens, read with the
+ * details, by the opamp-server's own rule for the current rotate token
  * (`GetActiveRotate` in `store/enrollmenttokens/postgres.go`: valid rotate
  * tokens ordered `do_refresh, created_at desc, id desc`, the first one
  * current; a token valid while it isn't revoked and its expiry, if any, is
  * after now, `Token.ValidAt`; both in `lib/tokens.ts`, which the Tokens tab
- * shares, D17b-2 Preflight ruling 12). The words are text, never an
- * `aria-label` or a `title`.
+ * shares). The words are text, never an `aria-label` or a `title`.
  */
 
 /** A token that no longer authenticates: the collector is refused (401) on its next poll. */

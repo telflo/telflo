@@ -51,7 +51,7 @@ describe("the vendor marks", () => {
     ["Kubernetes", KubernetesIcon, "0 0 128 128"],
     ["Datadog", DatadogIcon, "0 0 24 24"],
     ["ClickStack", ClickStackIcon, "0 0 30.38 27"],
-  ])("draw %s as a decorative silhouette in the text's colour", (_name, Icon, viewBox) => {
+  ])("draw %s as a decorative silhouette in the text's color", (_name, Icon, viewBox) => {
     const { container } = render(<Icon className="h-3.5 w-3.5" strokeWidth={1.75} />);
     const svg = container.querySelector("svg")!;
     expect(svg).toHaveAttribute("viewBox", viewBox);

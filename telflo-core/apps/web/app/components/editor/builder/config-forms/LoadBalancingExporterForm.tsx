@@ -28,49 +28,46 @@ import type { ValueChange, ValuePath } from "~/lib/graph/text-edits.js";
 import type { ValueView } from "~/lib/graph/value-view.js";
 
 /*
- * The load-balancing exporter's form (ADR 0018), over the form's fields
- * (D9d decision 2, D9b's contract): each field writes its own key.
- * Collector claims cite contrib v0.162.0, `exporter/loadbalancingexporter`.
+ * The load-balancing exporter's form, over the form's fields: each field
+ * writes its own key. Collector claims cite contrib v0.162.0,
+ * `exporter/loadbalancingexporter`.
  *
- * - Fixed (F): an absent `resolver` or `protocol` shows as unset (never a
- *   throw); a resolver type is chosen from nothing, and the OTLP Protocol
- *   fields write `protocol.otlp` as they are typed.
- * - Fixed (decisions 3 and 7; Preflight ruling 6): Custom Attributes is held
- *   until its first attribute (`config.go:66-68` refuses
- *   `routing_key: attributes` without `routing_attributes`): the select
- *   shows it and Routing Attributes shows a held row; the first attribute
- *   writes `routing_key: attributes` and `routing_attributes: [typed]` in
- *   one change. Choosing another key, or leaving, drops the hold. The last
- *   attribute's Remove is disabled while `routing_key: attributes` is in the
- *   text, with the hint. Choosing a key other than attributes removes
- *   `routing_attributes` in the same change, with a toast (`config.go:70-
- *   72` refuses them with another key).
- * - Changed (decision 7): switching the resolver removes the other
- *   resolvers' blocks and writes the new one's seed in one
- *   change, with a toast (`loadbalancer.go:63-65`: one resolver only),
- *   rather than replacing the whole `resolver`. A block the text already has
- *   for the chosen resolver is kept.
- * - Fixed (decision 3): Add Endpoint, Add Attribute and Add Port hold a row
- *   until something is typed (never `""` or `4317` items);
- *   Kubernetes ports are numeric rows written as typed (`[]int32`,
- *   `config.go`); removing the last port removes `ports` (each backend then
- *   gets 4317, `loadbalancer.go:191-194`). The last endpoint can't be
- *   removed (`resolver_static.go:36-37` refuses none).
- * - Changed (decision 4): unset shows the collector's default as the
- *   placeholder and the hint: the routing key per signal
- *   (`trace_exporter.go:76-86`, `metrics_exporter.go:69-84`,
- *   `log_exporter.go:73-84`), DNS port 4317, interval 5s and timeout 1s
- *   (`resolver_dns.go:25-26`), Kubernetes timeout 1m (`resolver_k8s.go:46`),
- *   AWS interval 30s and timeout 5s
+ * - An absent `resolver` or `protocol` shows as unset (never a throw); a
+ *   resolver type is chosen from nothing, and the OTLP Protocol fields write
+ *   `protocol.otlp` as they are typed.
+ * - Custom Attributes is held until its first attribute (`config.go:66-68`
+ *   refuses `routing_key: attributes` without `routing_attributes`): the
+ *   select shows it and Routing Attributes shows a held row; the first
+ *   attribute writes `routing_key: attributes` and
+ *   `routing_attributes: [typed]` in one change. Choosing another key, or
+ *   leaving, drops the hold. The last attribute's Remove is disabled while
+ *   `routing_key: attributes` is in the text, with the hint. Choosing a key
+ *   other than attributes removes `routing_attributes` in the same change,
+ *   with a toast (`config.go:70- 72` refuses them with another key).
+ * - Switching the resolver removes the other resolvers' blocks and writes the
+ *   new one's seed in one change, with a toast (`loadbalancer.go:63-65`: one
+ *   resolver only). A block the text already has for the chosen resolver is
+ *   kept.
+ * - Add Endpoint, Add Attribute and Add Port hold a row until
+ *   something is typed (never `""` or `4317` items); Kubernetes ports are
+ *   numeric rows written as typed (`[]int32`, `config.go`); removing the
+ *   last port removes `ports` (each backend then gets 4317,
+ *   `loadbalancer.go:191-194`). The last endpoint can't be removed
+ *   (`resolver_static.go:36-37` refuses none).
+ * - Unset shows the collector's default as the placeholder and the
+ *   hint: the routing key per signal (`trace_exporter.go:76-86`,
+ *   `metrics_exporter.go:69-84`, `log_exporter.go:73-84`), DNS port 4317,
+ *   interval 5s and timeout 1s (`resolver_dns.go:25-26`), Kubernetes timeout
+ *   1m (`resolver_k8s.go:46`), AWS interval 30s and timeout 5s
  *   (`resolver_aws_cloud_map.go:26-27`), protocol timeout 5s (the OTLP
- *   exporter's `NewDefaultTimeoutConfig`). The top-level
- *   retry and queue are off while absent (`factory.go:41-54`: a zero
- *   `BackOffConfig`, `configoptional.Default` queue), the protocol's on (the
- *   OTLP exporter's defaults). The routing keys' labels say which signals
- *   take them, `randomness` is offered (`config.go:36`), and the copy rows
- *   of the spec's Parity Notes: the attributes hint, D9b's gRPC insecure
- *   copy, the top-level timeout, the storage alert under OTLP Protocol
- *   (README: a persistent queue isn't supported there).
+ *   exporter's `NewDefaultTimeoutConfig`). The top-level retry and queue are
+ *   off while absent (`factory.go:41-54`: a zero `BackOffConfig`,
+ *   `configoptional.Default` queue), the protocol's on (the OTLP exporter's
+ *   defaults). The routing keys' labels say which signals take them,
+ *   `randomness` is offered (`config.go:36`), and the copy covers the
+ *   attributes hint, the gRPC insecure copy, the top-level timeout, the
+ *   storage alert under OTLP Protocol (README: a persistent queue isn't
+ *   supported there).
  */
 
 const ROUTING_KEYS = [
@@ -107,7 +104,7 @@ const RESOLVERS: readonly { value: ResolverType; label: string; name: string; se
   },
 ];
 
-/** Decision 7's toast for a resolver's block removed by the switch. */
+/** The toast for a resolver's block removed by the switch. */
 export function removedResolverMessage(name: string): string {
   return `Removed the ${name} resolver's settings: the collector takes one resolver. Undo to restore them.`;
 }
@@ -135,7 +132,7 @@ export function LoadBalancingExporterForm() {
   const routingKey = form.read(["routing_key"]);
   const keyText = scalarOf(routingKey);
   const attributes = form.read(["routing_attributes"]);
-  // Custom Attributes held (Preflight ruling 6): the routing key as it was when it was held; a change drops it.
+  // Custom Attributes held: the routing key as it was when it was held; a change drops it.
   const [heldOver, setHeldOver] = useState<string | null | undefined>(undefined);
   const keyNow = routingKey.kind === "absent" ? null : keyText;
   if (heldOver !== undefined && heldOver !== keyNow) setHeldOver(undefined);
@@ -246,8 +243,8 @@ export function LoadBalancingExporterForm() {
 /**
  * The fields under a block that may be absent, null or a mapping: they read
  * and write under it (a write makes it a mapping); anything else (a list, a
- * scalar) is read-only with D9b's hint. Each level is checked, so
- * `protocol: 5` doesn't crash `protocol.otlp`.
+ * scalar) is read-only with `UNSHOWABLE_VALUE_MESSAGE`. Each level is checked,
+ * so `protocol: 5` doesn't crash `protocol.otlp`.
  */
 function Block({ path, children }: { path: ValuePath; children: ReactNode }) {
   const form = useForm();

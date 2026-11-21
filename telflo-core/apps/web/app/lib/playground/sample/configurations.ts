@@ -12,12 +12,11 @@ import {
 } from "./types.js";
 
 /*
- * The sample's ten configurations (D31-1 decision 10): their names,
- * descriptions, texts and owners, in the platform's shapes. Every
- * one opens on a draft (Ruling 276); each published one also has an older
- * published version, so the editor never opens a sample read-only. The pins
- * spread across the offered Contrib versions, 0.159.0 to 0.162.0
- * (Preflight ruling 7). Hosts in the texts are on `acme.example`
+ * The sample's ten configurations: their names, descriptions, texts and
+ * owners, in the platform's shapes. Every one opens on a draft; each
+ * published one also has an older published version, so the editor never
+ * opens a sample read-only. The pins spread across the offered Contrib
+ * versions, 0.159.0 to 0.162.0. Hosts in the texts are on `acme.example`
  * (RFC 2606), never a vendor's or an internal one. The graph columns are
  * empty: the editor lays the canvas out from the text.
  */

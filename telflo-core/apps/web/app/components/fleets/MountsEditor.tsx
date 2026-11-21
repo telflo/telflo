@@ -14,12 +14,11 @@ import { Input } from "~/components/ui/input.js";
 import { Label } from "~/components/ui/label.js";
 
 /*
- * A server group's mounts (D17c-1 decisions 31 and 32; Preflight rulings 15
- * and 30; ADR 0018) for the group dialog, each mount a `-v` line of the
- * group's container install command. Per the D17c-1 Parity Notes:
+ * A server group's mounts for the group dialog, each mount a `-v` line of
+ * the group's container install command. Its details:
  *
  * - Rows of plain fields, not collapsible sections: Host path (placeholder
- *   /var/log/nginx), Container path, Read-only (a labelled Checkbox, ticked
+ *   /var/log/nginx), Container path, Read-only (a labeled Checkbox, ticked
  *   for a new mount), and "Remove mount {n}", named by the row's number,
  *   never the mount's paths. No `hostPathType` (`docker run -v` has none), no
  *   suggestions list, no host path mirrored into the container path, no
@@ -28,11 +27,11 @@ import { Label } from "~/components/ui/label.js";
  *   `CollectorGroupAnnotationsSchema`): checked when the dialog submits,
  *   each field's message under it (`problems`, keyed "{index}.{field}"),
  *   the list's own (at most 32, the annotations' bytes) under the rows.
- * - Privacy (decision 48): mount paths are configuration text. The rows sit
- *   inside `ph-no-capture`; a path is never in an attribute but an input's
- *   `value` (React writes a controlled input's), inside it: the ids are
- *   `useId`'s and the row's index, the Remove button is named by its index,
- *   and the placeholder is fixed.
+ * - Privacy: mount paths are configuration text. The rows sit inside
+ *   `ph-no-capture`; a path is never in an attribute but an input's `value`
+ *   (React writes a controlled input's), inside it: the ids are `useId`'s
+ *   and the row's index, the Remove button is named by its index, and the
+ *   placeholder is fixed.
  */
 
 /** A mount as the editor holds it: its paths as typed. */
@@ -44,17 +43,17 @@ export interface MountRow {
 
 export type MountField = keyof MountRow;
 
-/** The hint under the rows (decision 32). */
+/** The hint under the rows. */
 export const MOUNTS_HINT_BEFORE = "Each mount is a ";
 export const MOUNTS_HINT_AFTER = " line in this group's container install command. Linux installs read the host's files directly.";
 export const MOUNTS_HINT = `${MOUNTS_HINT_BEFORE}-v${MOUNTS_HINT_AFTER}`;
 
-/** What a group whose "telflo" annotation Telflo can't read shows (Preflight ruling 30). */
+/** What a group whose "telflo" annotation Telflo can't read shows. */
 export const MOUNTS_UNREADABLE = "This group's mounts were saved in a form Telflo can't read. Adding a mount here replaces them.";
 
 export const HOST_PATH_PLACEHOLDER = "/var/log/nginx";
 
-/** Why "Add mount" is disabled at the bound (Ruling 61's nit): shown beside it, and describing it. */
+/** Why "Add mount" is disabled at the bound: shown beside it, and describing it. */
 export const MOUNTS_FULL = `A group holds at most ${DOCKER_MOUNTS_MAXIMUM} mounts.`;
 
 /** A new mount's row: empty paths, read-only. */

@@ -1,16 +1,17 @@
-"""The exfiltration defence and the requirements-only rerun, against the real
+"""The exfiltration defense and the requirements-only rerun, against the real
 collectors (marked `binary`, deselected by default; run inside the image with
 `pytest -m binary`).
 
 - A canary file's contents never appear in any answer, for every YAML-escape
-  form the review of b25c81a found (D13b ruling 39): the collector decodes the
-  escape and would expand the hidden `${file:…}`, but the validator detects the
-  reference on the decoded value and splices it out first.
+  form: the collector decodes the escape and would expand the hidden
+  `${file:…}`, but the validator detects the reference on the decoded value and
+  splices it out first.
 - The re-dump drift cases (`1:30`, `on`, a date in a string field) answer
   exactly as the raw text does, because only the reference's own span changes
   (no whole-document re-dump).
-- The reviewer's masking case answers invalid with the build-stage error and
-  the directory requirement (D13b ruling 40).
+- The masking case (file_storage's missing directory hiding a build-stage
+  error) answers invalid with the build-stage error and the directory
+  requirement.
 """
 
 from __future__ import annotations
@@ -86,8 +87,8 @@ async def test_a_drift_scalar_answers_as_the_raw_text_does(version: str, scalar:
 
 
 # file_storage's directory is one no stage of the image creates (the image
-# pre-creates /var/lib/otelcol/file_storage, D13b ruling 41), so
-# the requirement fires in the image as on macOS (D13b ruling 49).
+# pre-creates /var/lib/otelcol/file_storage), so the requirement fires in the
+# image as on macOS.
 MASKING_CONFIG = """\
 receivers:
   otlp:
@@ -119,7 +120,7 @@ async def test_a_masked_build_error_surfaces_with_the_directory_requirement(vers
     """file_storage's missing directory stopped the collector before the build
     stage, hiding the no_such_detector error (valid: true). The rerun meets the
     directory, so the build error surfaces while the directory stays a
-    requirement (D13b ruling 40)."""
+    requirement."""
     result = await _run(version, MASKING_CONFIG)
 
     assert result.valid is False
@@ -133,9 +134,9 @@ async def test_a_masked_build_error_surfaces_with_the_directory_requirement(vers
     ]
 
 
-# A `GOOGLE_*` variable is an ordinary one (D13b ruling 46: protected Go names
-# are `GO` then capitals and digits): the collector gets its placeholder and
-# the configuration answers valid, with the requirement.
+# A `GOOGLE_*` variable is an ordinary one (protected Go names are `GO` then
+# capitals and digits): the collector gets its placeholder and the
+# configuration answers valid, with the requirement.
 GOOGLE_ENDPOINT_CONFIG = """\
 receivers:
   otlp:

@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 # steps.sh: the release workflows' steps that are more than one call of
-# another script (D36-2 decisions 77, 82, 84, 85, 87 and 103), so every `run:`
-# of .github/workflows/release.yml and collector.yml stays one call of a
-# committed script; scripts/release/rehearse.sh runs the same steps locally.
+# another script, so every `run:` of .github/workflows/release.yml and
+# collector.yml stays one call of a committed script;
+# scripts/release/rehearse.sh runs the same steps locally.
 #
 #   steps.sh free-disk <GB>
 #       on a GitHub-hosted Linux runner, removes the runner's unused
 #       toolchains (a fixed list: .NET, Android, GHC, CodeQL, Boost, Swift);
 #       anywhere, then checks that the root's, the runner's temporary folder's
 #       and Docker's file systems each have <GB> GB free, else exit 1 with a
-#       plain message (Preflight ruling 7: build 14, smokes 13, kind 18)
+#       plain message (the jobs' needs: build 14, smokes 13, kind 18)
 #   steps.sh pull-images [--kind]
 #       a GitHub-hosted Linux runner only: the third-party images the gates
 #       and smokes need, each pulled by its pinned digest and tagged as the
@@ -30,17 +30,17 @@
 #       and SHA256SUMS (`<sha256>  <name>` for both, sorted); refuses either
 #       existing
 #   steps.sh collector-archive --out <dir> [--registry <r>]
-#       the catalogue's default collector version's image index, as the
+#       the catalog's default collector version's image index, as the
 #       registry holds it (`crane pull --format oci` by its digest, every
 #       platform and attestation), into <dir>/collector-<v>.oci.tar and
 #       <dir>/collector-<v>.digest, the archive checked (oci.sh: both
 #       platforms, the version label); prints the version, and appends
 #       collector_version=<v> to $GITHUB_OUTPUT when that is set
 #   steps.sh collector-versions <x.y.z|all> [--publish true|false] [--registry <r>]
-#       the collector workflow's versions: <x.y.z> (offered by the catalogue)
+#       the collector workflow's versions: <x.y.z> (offered by the catalog)
 #       or every offered one. With --publish true each tag is asked of the
-#       registry (a published version is never pushed again; Ruling 399): an
-#       explicit <x.y.z> already published is refused; `all` keeps the
+#       registry (a published version is never pushed again): an explicit
+#       <x.y.z> already published is refused; `all` keeps the
 #       offered versions not yet published (each published one named), and
 #       when every one is published it prints a notice: nothing to build or
 #       publish (exit 0); a registry that can't tell is refused. Prints the
@@ -67,22 +67,22 @@
 #       fails it. The project is --project's (default telflo-release-smoke)
 #   steps.sh archive-smoke --version <v> --release <dir> --work <dir> [--project <name>]
 #                          [--http-port <p>] [--agent-port <p>] [--mailpit-port <p>]
-#       the archive smoke (decision 98) on <release>'s telflo-compose-<v>.tar.gz
+#       the archive smoke on <release>'s telflo-compose-<v>.tar.gz
 #       and SHA256SUMS: scripts/smoke-compose-install.sh --work <work>/smoke
 #       (and the options given), its output through scripts/gates/redact.sh
 #       into <work>/archive-smoke.log (and stdout)
 #   steps.sh kind-smoke --version <v> --release <dir> --work <dir> [--profile <name>]
 #                       [--port <p>] [--mailpit-port <p>] [--api-port <p>]
-#       the kind smoke (decision 99) on the release's images (local, never
-#       pulled) and <release>'s telflo-<v>.tgz: scripts/smoke-kind.sh --profile
-#       <name> (default telflo-release-kind) --work <work>/smoke --images <v>
+#       the kind smoke on the release's images (local, never pulled) and
+#       <release>'s telflo-<v>.tgz: scripts/smoke-kind.sh --profile <name>
+#       (default telflo-release-kind) --work <work>/smoke --images <v>
 #       --chart <that file> (and the ports given), its output through
 #       scripts/gates/redact.sh into <work>/kind-smoke.log (and stdout)
-#     Both (decision 84, Ruling 408): every argument is checked against a
-#     strict pattern first (a version x.y.z; folders absolute, of letters,
-#     digits, '.', '_', '-' and '/', no `..`; <work> new or empty; a project
-#     or profile name, never the owner's; ports 1000-65535), else refused
-#     (exit 2) before the smoke starts. The exit code is the smoke's; a
+#     Both: every argument is checked against a strict pattern first (a
+#     version x.y.z; folders absolute, of letters, digits, '.', '_', '-' and
+#     '/', no `..`; <work> new or empty; a project or profile name, never a
+#     developer's own stack's; ports 1000-65535), else refused (exit 2)
+#     before the smoke starts. The exit code is the smoke's; a
 #     REDACTED line in the log fails the step (exit 1 if the smoke passed).
 #   steps.sh helm-login
 #       a GitHub Actions runner only: helm registry login ghcr.io, the user
@@ -94,8 +94,8 @@
 #       release notes (release-notes.sh); then GitHub's API asked again
 #       (scripts/release/github-tag.sh, verify-tag.sh's) that refs/tags/<tag>
 #       is an annotated tag whose object is <sha>, the version job's commit
-#       (Ruling 399: the tag wasn't moved during the run); then `gh release
-#       create <tag> --verify-tag`, a normal release (never a draft, never a
+#       (the tag wasn't moved during the run); then `gh release create <tag>
+#       --verify-tag`, a normal release (never a draft, never a
 #       prerelease), with <release>'s telflo-compose-<v>.tar.gz,
 #       create-secrets.sh and SHA256SUMS, each checked against SHA256SUMS
 #       first; a Release that exists already is refused. gh reads GH_TOKEN.
@@ -185,7 +185,7 @@ free_disk() {
     note "$path: $((free / 1024 / 1024)) GB free"
     [ "$free" -ge "$need_kb" ] || low="$low $path ($((free / 1024 / 1024)) GB)"
   done
-  [ -z "$low" ] || fail "this job needs $1 GB free, and has less on:$low (a larger runner is the owner's choice)"
+  [ -z "$low" ] || fail "this job needs $1 GB free, and has less on:$low (a larger runner is the maintainers' choice)"
   note "at least $1 GB free"
 }
 
@@ -341,8 +341,7 @@ collector_versions() {
   fi
   [ -n "$versions" ] || fail "no collector version to build"
   if [ "$publish" = true ]; then
-    # A published version is never pushed again (Ruling 399): an explicit one
-    # is refused; `all` keeps the absent ones. Can't tell: refused.
+    # A published version is never pushed again: an explicit one is refused; `all` keeps the absent ones. Can't tell: refused.
     telflo_crane_find "$ROOT" || fail "no crane: scripts/release/tools.sh fetch crane"
     telflo_docker_config || exit 1
     for version in $versions; do

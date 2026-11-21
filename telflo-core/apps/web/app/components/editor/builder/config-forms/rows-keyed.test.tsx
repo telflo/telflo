@@ -14,16 +14,16 @@ import { useEditorStore } from "~/lib/stores/editor-store.js";
 import { builderStore, componentNamed, openText } from "~/test/builder-store.js";
 
 /*
- * Rows keyed by their items (D9c Ruling 68). A row emptied and left
- * removes its item (a held-row list), and the pointer going down on a
- * Remove button is what leaves it: with rows keyed by index, the next
- * item's row took the removed row's place, its Remove button with it, and
- * the click that followed removed that item too. Keyed by item, the
- * removed row's button goes with it. For each list with a Remove button:
- * a row cleared, then its own Remove clicked; a row cleared, then another
- * row's Remove clicked; and a row's typing kept on its item when another
- * row is removed. user-event's click presses, then releases, as a person
- * does, and the form renders between the two.
+ * Rows keyed by their items. A row emptied and left removes its item (a
+ * held-row list), and the pointer going down on a Remove button is what
+ * leaves it: with rows keyed by index, the next item's row would take the
+ * removed row's place, its Remove button with it, and the click that
+ * followed would remove that item too. Keyed by item, the removed row's
+ * button goes with it. For each list with a Remove button: a row cleared,
+ * then its own Remove clicked; a row cleared, then another row's Remove
+ * clicked; and a row's typing kept on its item when another row is removed.
+ * user-event's click presses, then releases, as a person does, and the form
+ * renders between the two.
  */
 
 const initialState = useEditorStore.getState();
@@ -204,7 +204,7 @@ const byId = (id: string) => document.getElementById(id) as HTMLInputElement;
 const operators = () => value().operators as Array<Record<string, unknown>>;
 const pipeline = <OperatorPipeline path={["operators"]} source="file" />;
 
-describe("retain's fields (the controller's reproduction)", () => {
+describe("retain's fields", () => {
   const RETAIN = "    operators:\n      - type: retain\n        fields:\n          - a\n          - b\n          - c\n";
   const retainRemoves = () => removes("Remove", cardOf("op-0-retain-field-0"));
 
@@ -271,7 +271,7 @@ describe("router's routes", () => {
   });
 });
 
-describe("a renamed key follows its row (Ruling 79)", () => {
+describe("a renamed key follows its row", () => {
   it.each(["rows", "staging"] as const)(
     "%s: a key renamed to an integer-like one moves to the top, keeping its row and focus; a Remove pressed as it is written removes its own",
     async (layout) => {

@@ -12,10 +12,9 @@ import { ACCOUNT_EMAIL, IDENTITY_EMAIL, LINKED_GOOGLE, held, signInMethods } fro
 import { expectNoAttributeHolds } from "~/test/fleets.js";
 
 /*
- * Sign-in methods (D21 decisions 37-39 and 45): the password's state, each
- * configured provider linked or not, Link with the password prompt when
- * there is a password, Unlink with the current password, and "Set a
- * password first" for an account with none.
+ * Sign-in methods: the password's state, each configured provider linked or
+ * not, Link with the password prompt when there is a password, Unlink with
+ * the current password, and "Set a password first" for an account with none.
  */
 
 const PASSWORD = "canary-link-pw-77aa";
@@ -57,7 +56,7 @@ describe("SignInMethodsCard", () => {
     expect(showsSignInMethods(signInMethods({ providers: [] }))).toBe(false);
     expect(showsSignInMethods(signInMethods({ providers: [], hasPassword: false }))).toBe(false);
     expect(showsSignInMethods(signInMethods())).toBe(true);
-    // A linked identity whose provider is no longer configured still shows (Preflight ruling 16).
+    // A linked identity whose provider is no longer configured still shows.
     expect(showsSignInMethods(signInMethods({ providers: [], identities: [LINKED_GOOGLE] }))).toBe(true);
   });
 
@@ -153,7 +152,7 @@ describe("SignInMethodsCard", () => {
     expect(start).toHaveBeenCalledTimes(2);
   });
 
-  it("Back from the provider after the password prompt: the restored dialog can be cancelled and Link used again", async () => {
+  it("Back from the provider after the password prompt: the restored dialog can be canceled and Link used again", async () => {
     vi.spyOn(apiClient, "createIdentityLinkRequest").mockResolvedValue({ authorizationUrl: AUTHORIZATION_URL });
     const user = renderCard(signInMethods());
 
@@ -272,7 +271,7 @@ describe("SignInMethodsCard", () => {
     expect(screen.queryByRole("button", { name: /^Link / })).not.toBeInTheDocument();
   });
 
-  it("Unlink's words say a sign-in links it again exactly when the identity's relinksByEmail does (Q126, Ruling 92)", async () => {
+  it("Unlink's words say a sign-in links it again exactly when the identity's relinksByEmail does", async () => {
     const user = renderCard(
       signInMethods({ identities: [LINKED_GOOGLE, { ...LINKED_GOOGLE, provider: "legacy-idp", relinksByEmail: false }] }),
     );

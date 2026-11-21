@@ -5,10 +5,9 @@ import { createOrganizationScope } from "../../../tenancy/organization-scope.js"
 import { visibleTo } from "../../configurations/repositories/configuration-repository.js";
 
 /*
- * Test definitions' inputs (D14b decisions 1 and 4, Preflight rulings 2 and
- * 7): each a copy made when a definition is created, its bytes in the
- * FileStore at organizations/<org>/test-definition-inputs/<id>, shared by
- * the definitions of a configuration's version copies. Through the
+ * Test definitions' inputs: each a copy made when a definition is created, its
+ * bytes in the FileStore at organizations/<org>/test-definition-inputs/<id>,
+ * shared by the definitions of a configuration's version copies. Through the
  * organization scope, as the context's user sees them: an input is visible
  * exactly when its configuration is (migration 029's select policy), and a
  * deleted configuration's are hidden.
@@ -17,14 +16,14 @@ import { visibleTo } from "../../configurations/repositories/configuration-repos
  * names it: `freeUnused` runs under the configuration's lock (the service's
  * lockAsMember, then lockedConfiguration), which every path that adds or
  * removes a reference takes, so "no definition names it" can't change under
- * it (Preflight ruling 7). fk_test_definitions_input, deferred, refuses the
- * commit of any path that forgets the lock.
+ * it. fk_test_definitions_input, deferred, refuses the commit of any path
+ * that forgets the lock.
  */
 
 /** Whom the repository reads for: the organization, and the viewer whose drafts' inputs it shows. An `AuthContext` is one. */
 export type TestDefinitionInputViewerContext = Pick<AuthContext, "organizationId" | "userId">;
 
-/** An input. Its file name is configuration text (ADR 0024). */
+/** An input. Its file name is configuration text. */
 export interface TestDefinitionInput {
   id: string;
   configurationId: string;
@@ -58,9 +57,8 @@ export interface ITestDefinitionInputRepository {
   create(input: CreateTestDefinitionInputInput): Promise<TestDefinitionInput>;
   /**
    * Deletes each of `ids` the viewer can see that no definition names, and
-   * answers the ids deleted: the reference count's free (Preflight ruling
-   * 7). Run it under the configuration's lock, after the definitions'
-   * delete.
+   * answers the ids deleted: the reference count's free. Run it under the
+   * configuration's lock, after the definitions' delete.
    */
   freeUnused(ids: readonly string[]): Promise<string[]>;
 }

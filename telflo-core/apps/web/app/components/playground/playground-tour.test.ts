@@ -26,8 +26,7 @@ import { useEditorStore } from "~/lib/stores/editor-store.js";
 import { builderStore, openText } from "~/test/builder-store.js";
 
 /*
- * The playground tour (D31-1 decision 15, Preflight ruling 16):
- * its three stages' words, with the spec's changes; the hand-over between
+ * The playground tour: its three stages' words; the hand-over between
  * pages through sessionStorage, completion in localStorage, under telflo's
  * keys; one live run; the editor stage's effects on the editor. driver.js
  * runs for real over fake timers, as the editor tour's tests run it.
@@ -129,7 +128,7 @@ describe("the stages' words", () => {
     ]);
   });
 
-  it("the editor's: six steps, no AI step (ADR 0007)", () => {
+  it("the editor's: six steps, no AI step", () => {
     expect(copy(playgroundEditorSteps(() => undefined, () => undefined))).toEqual([
       {
         title: "Your pipeline, not a wall of YAML",
@@ -178,12 +177,12 @@ describe("the stages' words", () => {
     ]);
   });
 
-  it("the wrap-up's link goes where it is given, its words following: Sign in where registration isn't open (D36-1 decision 23, Ruling 352)", () => {
+  it("the wrap-up's link goes where it is given, its words following: Sign in where registration isn't open", () => {
     expect(copy(playgroundFleetSteps("/login"))[1]?.description).toContain('<a href="/login">Sign in</a>.');
     expect(copy(playgroundFleetSteps("/login"))[1]?.description).not.toContain("Create a free account");
   });
 
-  it("points only at fixed anchors: the spec's, never fleet-usage or the AI's", () => {
+  it("points only at fixed anchors, never fleet-usage or the AI's", () => {
     const selectors = [...playgroundListSteps(() => undefined), ...playgroundEditorSteps(() => undefined, () => undefined), ...playgroundFleetSteps("/register")]
       .map((step) => step.element)
       .filter((element): element is string => typeof element === "string");
@@ -431,7 +430,7 @@ describe("one run per page", () => {
 });
 
 describe("Take the tour (restartPlaygroundTour)", () => {
-  it("cancels a stage still waiting, without giving its stage back: the page leaving can't overwrite the list's (Ruling 294)", () => {
+  it("cancels a stage still waiting, without giving its stage back: the page leaving can't overwrite the list's", () => {
     // Fleet's stage armed, its page not yet settled (no table): still on its timer.
     startPlaygroundFleetTour("/register");
     expect(isPlaygroundTourActive()).toBe(true);

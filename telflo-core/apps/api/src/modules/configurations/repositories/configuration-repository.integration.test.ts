@@ -24,7 +24,7 @@ describe("configuration repository", () => {
   /** The tables' owner: fixtures, truncation and reading rows back. */
   let ownerDb: Kysely<Database>;
   let databases: TestDatabases;
-  /** The catalogue's default distribution (D13a), which a configuration is created for. */
+  /** The catalog's default distribution, which a configuration is created for. */
   let distribution: string;
 
   beforeAll(async () => {
@@ -75,7 +75,7 @@ describe("configuration repository", () => {
 
   /**
    * Fails with 55P03 while another transaction holds a conflicting lock on
-   * the row: the deterministic way to see a lock held (D2a Ruling 6).
+   * the row: the deterministic way to see a lock held.
    */
   const probeLock = (table: "configurations" | "users", id: string) =>
     ownerDb
@@ -106,7 +106,7 @@ describe("configuration repository", () => {
         createdAt: now,
         updatedAt: now,
         createdBy: { userId: memberId, email: "member@example.com" },
-        // No version yet: a draft (D11b decision 1).
+        // No version yet: a draft.
         published: false,
         collectorDistribution: distribution,
       });
@@ -120,7 +120,7 @@ describe("configuration repository", () => {
         updated_at: now,
         deleted_at: null,
         collector_distribution: distribution,
-        // Created blank, from no flow (D12 decision 9).
+        // Created blank, from no flow.
         source_flow_slug: null,
       });
     });
@@ -188,7 +188,7 @@ describe("configuration repository", () => {
       await addMembership(ownerDb, { userId: gone.user.id, organizationId, role: "contributor" });
       const byDeparted = await addConfiguration(ownerDb, { organizationId, created_by_user_id: departed.user.id });
       const byGone = await addConfiguration(ownerDb, { organizationId, created_by_user_id: gone.user.id });
-      // Published, so the member sees them (D11b decision 1).
+      // Published, so the member sees them.
       for (const configuration of [byDeparted, byGone]) {
         await addConfigurationVersion(ownerDb, {
           configurationId: configuration.id,
@@ -235,7 +235,7 @@ describe("configuration repository", () => {
       await expect(probeLock("configurations", row.id)).resolves.toBeDefined();
     });
 
-    it("locks only the configuration: the creator's account stays free (Preflight ruling 3)", async () => {
+    it("locks only the configuration: the creator's account stays free", async () => {
       const { memberId, organizationId } = await organizationWithNeighbour();
       const row = await addConfiguration(ownerDb, { organizationId, created_by_user_id: memberId });
 
@@ -322,7 +322,7 @@ describe("configuration repository", () => {
       expect(await configurationRow(elsewhere.id)).toEqual(elsewhere);
     });
 
-    it("takes no lock on the creator's account (Preflight ruling 3)", async () => {
+    it("takes no lock on the creator's account, though it returns their email", async () => {
       const { memberId, organizationId } = await organizationWithNeighbour();
       const row = await addConfiguration(ownerDb, { organizationId, created_by_user_id: memberId });
 
@@ -660,7 +660,7 @@ describe("configuration repository", () => {
       });
     });
 
-    describe("the filter and the viewer (D11b decisions 1 and 6)", () => {
+    describe("the filter and the viewer", () => {
       /**
        * The member's own draft and published configuration; a colleague's
        * draft and published one; and a never-published and a published

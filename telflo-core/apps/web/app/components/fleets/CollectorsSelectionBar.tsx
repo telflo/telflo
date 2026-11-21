@@ -4,15 +4,15 @@ import { Button } from "~/components/ui/button.js";
 import { GROUPS_UNREADABLE_WORDS } from "./EditCollectorDialog.js";
 
 /*
- * The Collectors tab's selection bar (D17b-1 decision 27; Preflight rulings 5
- * and 13): with one or more collectors selected on the page: "{n} selected",
- * Pin, Move to group (disabled, "The groups couldn't be read." beside it,
- * while the tab holds no groups), Delete and "Clear selection". Pin and
- * Delete are named "Pin selected collectors" and "Delete selected collectors"
- * (the words shown are the same), apart from the rows' and the dialogs'
- * buttons. It names no collector. It is a region, "Selected collectors", that
- * takes the focus (`tabIndex` -1) when a bulk dialog's opener is gone as it
- * closes, with the buttons' focus ring so the focus given it is seen.
+ * The Collectors tab's selection bar: with one or more collectors selected on
+ * the page: "{n} selected", Pin, Move to group (disabled, "The groups couldn't
+ * be read." beside it, while the tab holds no groups), Delete and "Clear
+ * selection". Pin and Delete are named "Pin selected collectors" and "Delete
+ * selected collectors" (the words shown are the same), apart from the rows'
+ * and the dialogs' buttons. It names no collector. It is a region, "Selected
+ * collectors", that takes the focus (`tabIndex` -1) when a bulk dialog's
+ * opener is gone as it closes, with the buttons' focus ring so the focus given
+ * it is seen.
  */
 
 interface CollectorsSelectionBarProps {

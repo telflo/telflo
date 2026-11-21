@@ -4,7 +4,7 @@ import type { IAuditRepository } from "../identity/repositories/audit-repository
 import { currentPasswordIncorrect } from "./errors.js";
 
 /**
- * What a current password is asked for (D21 decision 44), recorded as
+ * What a current password is asked for, recorded as
  * `user.reauthentication_failed`'s only metadata.
  */
 export type ReauthenticationPurpose = "password_change" | "identity_link" | "identity_unlink";
@@ -61,15 +61,14 @@ export async function recordReauthenticationFailure(
 }
 
 /**
- * Re-authentication by the current password (D21 decisions 35 and 41),
- * shared by the password change, the link start and the unlink: one
- * Argon2id verify, outside any transaction so no row is held for its
- * duration (D3 Ruling 15). A wrong password is audited, as sign-in audits
- * its failures, then refused with `400 current_password_incorrect`.
+ * Re-authentication by the current password, shared by the password
+ * change, the link start and the unlink: one Argon2id verify, outside any
+ * transaction so no row is held for its duration. A wrong password is
+ * audited, as sign-in audits its failures, then refused with
+ * `400 current_password_incorrect`.
  *
  * The verify proves the password only as of the read: the caller rechecks
- * the hash under the user row's lock before it changes anything
- * (Preflight ruling 11).
+ * the hash under the user row's lock before it changes anything.
  */
 export async function verifyCurrentPassword(
   deps: ReauthenticationDependencies,

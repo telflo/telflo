@@ -32,13 +32,12 @@ import { builderStore, componentNamed, openText } from "~/test/builder-store.js"
 import { formControls } from "~/test/form-controls.js";
 
 /*
- * The transform and logdedup processors (D9d Task 9): their forms
- * over the form contract. Each field is driven as a person would on the
- * OTTL corpus text (comments, an anchor and its merges, flow lists, OTTL
- * written as typed with its quotes and escapes, groups before flat
- * statements, a bare `0750` the collector reads as a number), LF and CRLF,
- * and writes only its key. Seven logdedup cases are included. The fixes
- * have tests that fail if the bug returns.
+ * The transform and logdedup processors: their forms over the form
+ * contract. Each field is driven as a person would on the OTTL corpus text
+ * (comments, an anchor and its merges, flow lists, OTTL written as typed
+ * with its quotes and escapes, groups before flat statements, a bare `0750`
+ * the collector reads as a number), LF and CRLF, and writes only its key.
+ * Seven logdedup cases are included.
  *
  * Collector claims cite contrib v0.162.0: `processor/transformprocessor`,
  * `processor/logdedupprocessor`, `pkg/ottl`.
@@ -164,7 +163,7 @@ function groupCard(number: number): HTMLElement {
   return screen.getByRole("button", { name: `Statement Group ${number}` }).closest("div.rounded-lg") as HTMLElement;
 }
 
-/** A labelled field's block (its ConfigField), by its label. */
+/** A labeled field's block (its ConfigField), by its label. */
 function fieldOf(label: string): HTMLElement {
   return screen.getByText(label, { selector: "label" }).closest("div.space-y-1\\.5") as HTMLElement;
 }
@@ -173,7 +172,7 @@ function fieldOf(label: string): HTMLElement {
 const addFlat = () => screen.getAllByRole("button", { name: "Add Statement" }).at(-1)!;
 const addGroup = () => screen.getByRole("button", { name: "Add Statement Group" });
 
-// ── Sortable cards by keyboard (D9b Preflight ruling 15) ──
+// ── Sortable cards by keyboard ──
 
 const ROW_HEIGHT = 40;
 
@@ -472,7 +471,7 @@ const CASES: FieldCase[] = [
   },
 ];
 
-describe("every field writes only its key (decision 2)", () => {
+describe("every field writes only its key", () => {
   it.each(CASES.flatMap((c) => [[`${c.name}, LF`, c, false] as const, [`${c.name}, CRLF`, c, true] as const]))(
     "%s",
     async (_name, c, crlf) => {
@@ -498,7 +497,7 @@ describe("every field writes only its key (decision 2)", () => {
 
 // ── Opening writes nothing ──
 
-describe("opening writes nothing (decision 2)", () => {
+describe("opening writes nothing", () => {
   /** Opens every section and card, again until none is left. */
   async function openEverything(user: UserEvent) {
     for (let round = 0; round < 3; round++) {
@@ -506,7 +505,7 @@ describe("opening writes nothing (decision 2)", () => {
     }
   }
 
-  // One test per text, each with its own time limit (D9c Ruling 54).
+  // One test per text, each with its own time limit.
   it.each([
     // Error Mode; per group Context, Error Mode and its statements; the flat statements.
     ["transform, the OTTL corpus", TR, CORPUS, 18],
@@ -536,7 +535,7 @@ describe("opening writes nothing (decision 2)", () => {
   );
 });
 
-// ── Templates (spec decision 10) ──
+// ── Templates ──
 
 const template = (name: string) => EXAMPLE_PATTERNS.find((example) => example.name === name)!;
 
@@ -546,7 +545,7 @@ async function addTemplate(user: UserEvent, name: string, signal?: "Traces" | "M
   await user.click(within(card).getByRole("button", { name: signal ?? "Add" }));
 }
 
-describe("templates: each its own group, before the flat statements (spec decision 10)", () => {
+describe("templates: each its own group, before the flat statements", () => {
   it("two templates of different contexts both added give two groups before any flat statement, one entry each, with the toast", async () => {
     const user = renderForm(TR);
     await openSection(user, "Examples & Reference");
@@ -640,7 +639,7 @@ describe("templates: each its own group, before the flat statements (spec decisi
     ]);
   });
 
-  it("a held row's typing still waiting (no blur) is written, then the template reads the list as that left it: the statement is kept (Ruling 46)", async () => {
+  it("a held row's typing still waiting (no blur) is written, then the template reads the list as that left it: the statement is kept", async () => {
     const base = ownText("transform", '    trace_statements:\n      - set(span.name, "a")\n');
     const user = renderForm(TR, base);
     await openSection(user, "Trace Statements");
@@ -659,7 +658,7 @@ describe("templates: each its own group, before the flat statements (spec decisi
     expect(vi.mocked(toast.success).mock.calls).toEqual([["Added to Trace statements", { description: "Set Error Status" }]]);
   });
 
-  it("a template's Add after an Instance Name typed and not left (Ruling 48a): the rename is written, and the group goes into the renamed component's list, before its statement", async () => {
+  it("a template's Add after an Instance Name typed and not left: the rename is written, and the group goes into the renamed component's list, before its statement", async () => {
     openText(ownText("transform", '    trace_statements:\n      - set(span.name, "a")\n'));
     const user = userEvent.setup();
     render(<ConfigurationPanel />);
@@ -694,15 +693,14 @@ describe("templates: each its own group, before the flat statements (spec decisi
 });
 
 /*
- * The template table (Preflight ruling 15): each template's statements
- * pinned, and each checked against OTTL's grammar and the functions'
- * signatures at contrib v0.162.0 (the web app has no OTTL parser; the
- * preflight parsed all twelve with the collector, recorded in the ledger).
- * The lexer is `pkg/ottl/grammar.go:583-609`'s rules, in their order; the
- * statement shape is `editor(args) [where condition]` (grammar.go
- * `parsedStatement`), comparisons only `==`, `!=`, `<`, `<=`, `>`, `>=`
- * (grammar.go:593, `compareOpTable`); so `log.body contains "error"`
- * doesn't parse.
+ * The template table: each template's statements pinned, and each checked
+ * against OTTL's grammar and the functions' signatures at contrib v0.162.0
+ * (the web app has no OTTL parser). The lexer is
+ * `pkg/ottl/grammar.go:583-609`'s rules, in
+ * their order; the statement shape is `editor(args) [where condition]`
+ * (grammar.go `parsedStatement`), comparisons only `==`, `!=`, `<`, `<=`,
+ * `>`, `>=` (grammar.go:593, `compareOpTable`); so
+ * `log.body contains "error"` doesn't parse.
  */
 const LEXER: readonly (readonly [string, RegExp])[] = [
   ["Bytes", /^0x[a-fA-F0-9]+/],
@@ -895,7 +893,7 @@ const SIGNAL_CONTEXTS: Readonly<Record<string, readonly string[]>> = {
   all: ["resource", "scope"],
 };
 
-describe("the template table (Preflight ruling 15)", () => {
+describe("the template table", () => {
   const PINNED: Readonly<Record<string, readonly string[]>> = {
     "Redact Sensitive Headers": [
       'delete_key(span.attributes, "http.request.header.authorization")',
@@ -985,9 +983,9 @@ describe("the template table (Preflight ruling 15)", () => {
   });
 });
 
-// ── The statement lists (spec decision 10; decision 3's held rows and cards) ──
+// ── The statement lists, and their held rows and cards ──
 
-describe("transform: held rows and cards (decision 3)", () => {
+describe("transform: held rows and cards", () => {
   it("Add Statement Group holds a card; what is typed before a statement is held with it; the first statement writes the group before the flat statements, one change, focus kept", async () => {
     const user = renderForm(TR);
     await openSection(user, "Trace Statements");
@@ -1034,7 +1032,7 @@ describe("transform: held rows and cards (decision 3)", () => {
     expect(text()).toBe(CORPUS);
   });
 
-  it("a held card's place is worked out from the list it is written into: a YAML box change keeping the list's length that turns the group into a flat statement puts the group first (Ruling 46)", async () => {
+  it("a held card's place is worked out from the list it is written into: a YAML box change keeping the list's length that turns the group into a flat statement puts the group first", async () => {
     const base = ownText("transform", '    trace_statements:\n      - statements:\n          - set(span.name, "g")\n      - set(span.name, "a")\n');
     const user = renderForm(TR, base);
     await openSection(user, "Trace Statements");
@@ -1043,14 +1041,14 @@ describe("transform: held rows and cards (decision 3)", () => {
     // The YAML box (setComponentValue): the same length, the group now a flat statement.
     act(() => void builderStore().setComponentValue(componentNamed(TR).id, 'trace_statements:\n  - set(span.name, "z")\n  - set(span.name, "a")\n'));
     expect(statementsOf(valueOf(TR))).toEqual(['set(span.name, "z")', 'set(span.name, "a")']);
-    // The held card stays (Ruling 33a), shown where it goes now: first.
+    // The held card stays, shown where it goes now: first.
     expect(screen.getAllByRole("button", { name: /^Statement Group \d$/ }).map((b) => b.textContent)).toEqual(["Statement Group 1"]);
     await typeInto(user, byId("transform-trace-group-0-statements"), 'set(span.name, "new")');
     expect(statementsOf(valueOf(TR))).toEqual([{ statements: ['set(span.name, "new")'] }, 'set(span.name, "z")', 'set(span.name, "a")']);
     expect(screen.queryByText(REFUSED_ORDER_HINT)).toBeNull();
   });
 
-  it("a held card's place is worked out from the list it is written into: an undo keeping the list's length that turns a group back into a flat statement puts the group first (Ruling 46)", async () => {
+  it("a held card's place is worked out from the list it is written into: an undo keeping the list's length that turns a group back into a flat statement puts the group first", async () => {
     const base = ownText("transform", '    trace_statements:\n      - set(span.name, "a")\n      - set(span.name, "b")\n');
     const user = renderForm(TR, base);
     await openSection(user, "Trace Statements");
@@ -1122,7 +1120,7 @@ describe("transform: held rows and cards (decision 3)", () => {
     expect(entries()).toBe(1);
   });
 
-  it("a held row survives a write elsewhere in the form (Ruling 33); a change of its list's length drops it", async () => {
+  it("a held row survives a write elsewhere in the form; a change of its list's length drops it", async () => {
     const user = renderForm(TR);
     await openSection(user, "Trace Statements");
     await user.click(addFlat());
@@ -1134,7 +1132,7 @@ describe("transform: held rows and cards (decision 3)", () => {
     expect(document.getElementById("transform-trace-statement-3")).toBeNull();
   });
 
-  it("a group's only statement can't be removed (decision 10; never statements: [\"\"]); with two, Remove removes one; Remove statement group removes the group", async () => {
+  it("a group's only statement can't be removed (never statements: [\"\"]); with two, Remove removes one; Remove statement group removes the group", async () => {
     const user = renderForm(TR);
     await openSection(user, "Trace Statements");
     const only = within(groupCard(1)).getByRole("button", { name: "Remove statement" });
@@ -1203,7 +1201,7 @@ describe("transform: held rows and cards (decision 3)", () => {
     expect(screen.getByText("2 statements · log")).toBeInTheDocument();
   });
 
-  it("a group the form can't show is a card with D9b's hint, still removable; a list it can't show, the hint", async () => {
+  it("a group the form can't show is a card with the unshowable-value hint, still removable; a list it can't show, the hint", async () => {
     const text1 = ownText("transform", "    trace_statements:\n      - 5\n      - set(span.name, \"a\")\n    log_statements: oops\n");
     const user = renderForm(TR, text1);
     await openSection(user, "Trace Statements");
@@ -1220,7 +1218,7 @@ describe("transform: held rows and cards (decision 3)", () => {
     expect(hint("Default ignore")).toBeInTheDocument();
   });
 
-  it("each signal's placeholders name its own paths (Parity Notes)", async () => {
+  it("each signal's placeholders name its own paths", async () => {
     const text1 = ownText(
       "transform",
       ["trace", "metric", "log"]
@@ -1265,7 +1263,7 @@ describe("transform: held rows and cards (decision 3)", () => {
   });
 });
 
-describe("transform: the two runs, and a refused order (spec decision 10)", () => {
+describe("transform: the two runs, and a refused order", () => {
   it("dragging a group moves its own lines within the groups; the last group can't go past the flat statements", async () => {
     layOutRows();
     const user = renderForm(TR);
@@ -1273,7 +1271,7 @@ describe("transform: the two runs, and a refused order (spec decision 10)", () =
     // Handles: two groups, then two flat statements.
     expect(handles()).toHaveLength(4);
     await dragByKeyboard(handles()[0]!, 1);
-    // The comment above the first item is its own: it moves with it (text edits, D9d Ruling 38c).
+    // The comment above the first item is its own: it moves with it (text edits).
     const resource = `      # a group whose context is set, then one inferred, then flat statements\n      - context: resource\n        statements:\n${KEEP_KEYS}`;
     const status = `      - statements:\n${STATUS_500}`;
     expect(text()).toBe(CORPUS.replace(resource + status, status + resource));
@@ -1297,7 +1295,7 @@ describe("transform: the two runs, and a refused order (spec decision 10)", () =
     expect(entries()).toBe(1);
   });
 
-  it("moves in a multi-line flow list keep each statement's comment (Ruling 39)", async () => {
+  it("moves in a multi-line flow list keep each statement's comment", async () => {
     layOutRows();
     const flow = ownText(
       "transform",
@@ -1426,7 +1424,7 @@ describe("LogDedupProcessorForm (7 cases)", () => {
 });
 
 describe("logdedup: the fixes", () => {
-  it("Include Fields is locked while Exclude Fields has items, with the hint; its items can still be removed; and the mirror (decision 7)", async () => {
+  it("Include Fields is locked while Exclude Fields has items, with the hint; its items can still be removed; and the mirror", async () => {
     const user = renderForm(LD);
     await openSection(user, "Match Scope");
     const include = fieldOf("Include Fields");
@@ -1499,7 +1497,7 @@ describe("logdedup: the fixes", () => {
 
 // ── Privacy ──
 
-describe("privacy (decision 13)", () => {
+describe("privacy", () => {
   it("puts no statement, condition, context or value in any attribute: every section and card open, a held row and card", async () => {
     const MARK = "zq-mark";
     const marked = ownText(
@@ -1558,8 +1556,8 @@ describe("privacy (decision 13)", () => {
 
 // ── Copy ──
 
-describe("the spec's copy", () => {
-  it("hints read exactly as the Parity Notes give them", () => {
+describe("the forms' copy", () => {
+  it("the hints' words, exactly", () => {
     expect(REFUSED_ORDER_HINT).toBe("The collector refuses a statement group after a flat statement. Reorder them in the YAML below.");
     expect(NO_CONDITIONS).toBe("No conditions (statements always run)");
     expect(EXCLUDE_FIELDS_DESCRIPTION).toBe("Fields ignored when matching and removed from the emitted log; the entire body cannot be excluded.");

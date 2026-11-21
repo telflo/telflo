@@ -31,66 +31,62 @@ function pencilOf(row: Element | null): HTMLElement | null {
 }
 
 /*
- * The version picker (ADR 0018; D10 decision 10), in the
- * toolbar's actions: "Version:", then a Radix Select of the configuration's
- * versions, highest number first, from the editor's store. Differences, all
- * in the D10 Parity Notes:
- * - each row shows, under the label, `v{n}`, the creator's email ("—"
- *   without one) and the last saved date (`toLocaleDateString`, as D7's
+ * The version picker, in the toolbar's actions: "Version:", then a Radix
+ * Select of the configuration's versions, highest number first, from the
+ * editor's store:
+ * - each row shows, under the label, `v{n}`, the creator's email ("—" without
+ *   one) and the last saved date (`toLocaleDateString`, as the configurations
  *   list), separated by " · ", each truncating; the list is 20 rem wide so
  *   that line fits (not `v{n}` alone, 14 rem wide);
  * - choosing a row navigates to its address, replacing the history entry;
- *   while the editor is dirty D8's one navigation guard holds it and asks
- *   (the picker has no copy of the dialog of its own);
+ *   while the editor is dirty the page's one navigation guard holds it and
+ *   asks (the picker has no copy of the dialog of its own);
  * - "Create New Version" is disabled while a save or a create is under way
  *   (so a double click can't make two versions); the
  *   create is `useCreateVersion`, from the open version with its unsaved
  *   changes;
  * - every draft row has the pencil, "Rename version", described by its row's
- *   text through `aria-describedby` (opaque ids; D10 Ruling 33), so a
- *   screen reader says which version it renames. A published row has
- *   a lock in its place (D11b decisions 4 and 13): fixed text,
- *   "Published versions are immutable", as its `aria-label` and its tooltip
- *   (`title`, the toolbar's pattern), described by its row's text the same
- *   way; and the row's second line ends with "Published", as text. The lock
- *   takes the focus where the pencil would (not `aria-hidden` or
+ *   text through `aria-describedby` (opaque ids), so a screen reader says
+ *   which version it renames. A published row has a lock in its place: fixed
+ *   text, "Published versions are immutable", as its `aria-label` and its
+ *   tooltip (`title`, the toolbar's pattern), described by its row's text
+ *   the same way; and the row's second line ends with "Published", as text.
+ *   The lock takes the focus where the pencil would (not `aria-hidden` or
  *   unreachable), so a keyboard reaches what it says;
  * - the trigger is named by "Version:" and the text it shows, through
  *   `aria-labelledby` (opaque ids), not an `aria-label`. "Version:" shows
  *   on wide screens only (Tailwind's `2xl`), and the trigger narrows below
  *   them from 14 rem to 10 rem, its label truncating, so the toolbar fits
- *   beside the sidebar (D13a Ruling 42); "Version:" stays its name, read
- *   at every width (`sr-only`);
- * - the pencils and "Create New Version" are reachable by keyboard (D10
- *   Ruling 28; Radix's list swallows Tab otherwise). Tab goes
- *   from the focused row to its pencil, then to "Create New Version";
- *   Shift+Tab goes back. Enter or Space on a pencil is the button's click,
- *   which opens the rename dialog without choosing its row (Radix's row
- *   takes only keys aimed at itself); Enter on "Create New Version" opens
- *   the create dialog. The arrow keys from a pencil or from "Create New
- *   Version" move between the rows as from the pencil's row (Radix's own
- *   would start from the top), and Escape closes the list as before.
- * The rows are built from the Radix primitive, with the
- * pencil a sibling of the item's text (inside it, its clicks would choose
- * the row), stopping its pointer events, and opening its dialog only after
- * the Select has closed, whose pointer lock on the page would otherwise
+ *   beside the sidebar; "Version:" stays its name, read at every width
+ *   (`sr-only`);
+ * - the pencils and "Create New Version" are reachable by keyboard (Radix's
+ *   list swallows Tab otherwise). Tab goes from the focused row to its
+ *   pencil, then to "Create New Version"; Shift+Tab goes back. Enter or
+ *   Space on a pencil is the button's click, which opens the rename dialog
+ *   without choosing its row (Radix's row takes only keys aimed at itself);
+ *   Enter on "Create New Version" opens the create dialog. The arrow keys
+ *   from a pencil or from "Create New Version" move between the rows as
+ *   from the pencil's row (Radix's own would start from the top), and
+ *   Escape closes the list as before.
+ * The rows are built from the Radix primitive, with the pencil a sibling
+ * of the item's text (inside it, its clicks would choose the row),
+ * stopping its pointer events, and opening its dialog only after the
+ * Select has closed, whose pointer lock on the page would otherwise
  * outlast it. "Create New Version" opens its dialog the same way. "After"
  * is once the list has gone, when the Select returns focus to its trigger
  * (`onCloseAutoFocus`), not a timer: the list's closing animation can
  * outlast a timer, and its focus return would then take the focus from the
  * dialog's field, so what is typed next would reach the trigger (found by
- * the browser tests, D10 Task 5). The lock does nothing on Enter or Space.
- * When a dialog closes (Cancel, Escape, or
- * done), the focus goes back to the trigger (D10's final review): Radix's
- * dialog would return it to a dialog trigger of its own, which these
- * dialogs, opened from the list, don't have, and so leave it on the page's
- * body.
+ * the browser tests). The lock does nothing on Enter or Space. When a
+ * dialog closes (Cancel, Escape, or done), the focus goes back to the
+ * trigger: Radix's dialog would return it to a dialog trigger of its own,
+ * which these dialogs, opened from the list, don't have, and so leave it
+ * on the page's body.
  *
- * Privacy (ADR 0024; decision 10): labels and emails are text only. No
- * attribute carries them: not `title`, not `aria-label`, not an option's
- * value, which are the versions' opaque ids. Addresses keep the
- * configuration's id exactly as the address spells it (another spelling
- * would be another configuration to the page; D10 Preflight ruling 5).
+ * Privacy: labels and emails are text only. No attribute carries them: not
+ * `title`, not `aria-label`, not an option's value, which are the versions'
+ * opaque ids. Addresses keep the configuration's id exactly as the address
+ * spells it (another spelling would be another configuration to the page).
  */
 export function VersionSelect() {
   const navigate = useNavigate();
@@ -99,7 +95,7 @@ export function VersionSelect() {
   const version = useEditorStore((state) => state.version);
   const versions = useEditorStore((state) => state.versions);
   const isSaving = useEditorStore((state) => state.isSaving);
-  // The store's, the only record of a create under way (D10 Ruling 45).
+  // The store's, the only record of a create under way.
   const isCreating = useEditorStore((state) => state.isCreatingVersion);
   const { createVersion } = useCreateVersion();
   const [selectOpen, setSelectOpen] = useState(false);
@@ -107,7 +103,7 @@ export function VersionSelect() {
   const [renameTarget, setRenameTarget] = useState<ConfigurationVersionSummary | null>(null);
   const labelId = useId();
   const shownId = useId();
-  /** Each row's text's id is this and the row's index: opaque, never the label (Ruling 33). */
+  /** Each row's text's id is this and the row's index: opaque, never the label. */
   const rowTextId = useId();
   const createRef = useRef<HTMLButtonElement>(null);
   /** The pencil last focused, which Shift+Tab from "Create New Version" returns to. */
@@ -153,7 +149,7 @@ export function VersionSelect() {
    * Tab and Shift+Tab, and the arrow keys away from a row, before Radix's
    * own handler (which runs only when this one hasn't prevented the key's
    * default): Radix prevents Tab in its list, so nothing but the rows could
-   * be reached by keyboard (D10 Ruling 28).
+   * be reached by keyboard.
    */
   const handleListKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const target = event.target as HTMLElement;
@@ -188,7 +184,7 @@ export function VersionSelect() {
   return (
     <>
       <div className="flex items-center gap-1.5" data-tour-step="version-select">
-        {/* Shown on wide screens only, still the trigger's name at every width (D13a Ruling 42). */}
+        {/* Shown on wide screens only, still the trigger's name at every width. */}
         <span id={labelId} className="sr-only text-xs text-muted-foreground whitespace-nowrap 2xl:not-sr-only">
           Version:
         </span>

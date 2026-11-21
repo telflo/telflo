@@ -7,32 +7,32 @@ import { Checkbox } from "~/components/ui/checkbox.js";
 import { Label } from "~/components/ui/label.js";
 
 /*
- * The `severity_parser` operator's form (ADR 0018), over the card's scope
- * (D9c decisions 2 and 8). Ids are the card's (`op-<index>-sevp-…`); the
- * mapping rows' are `op-<index>-sevp-mapping-<level>`.
+ * The `severity_parser` operator's form, over the card's scope. Ids are the
+ * card's (`op-<index>-sevp-…`); the mapping rows' are
+ * `op-<index>-sevp-mapping-<level>`.
  *
- * Kept (Parity Notes): a mapping level typed as `a, b` is written as a
- * list, one value as a string, none removes the level, and the last
- * level's removal removes `mapping`; unticking "Custom severity mapping"
- * removes `mapping`; "Overwrite severity text…" writes `true` or `false`.
- * Fixed (decision 8):
- * - Nothing is written on render: the mapping's keys are never lower-cased
- *   in an effect, a write on opening. The
- *   collector lower-cases them itself (`helper/severity_builder.go:125-126`,
- *   `helper/severity.go:75-79`), so the rows read keys case-insensitively
- *   and write under the text's spelling (`Error:` stays `Error:`; Preflight
- *   ruling 26), through the section's shared rows.
+ * A mapping level typed as `a, b` is written as a list, one value as a
+ * string, none removes the level, and the last level's removal removes
+ * `mapping`; unticking "Custom severity mapping" removes `mapping`;
+ * "Overwrite severity text…" writes `true` or `false`.
+ *
+ * - Nothing is written on render: the mapping's keys are never lower-cased in
+ *   an effect, a write on opening. The collector lower-cases them itself
+ *   (`helper/severity_builder.go:125-126`, `helper/severity.go:75-79`), so the
+ *   rows read keys case-insensitively and write under the text's spelling
+ *   (`Error:` stays `Error:`), through the section's shared rows.
  * - The custom mapping box is on while `mapping` is there, and while it was
  *   ticked or a row typed in (not reset on every change); it is
  *   per-card state, following the card.
  * - A mapping the six rows can't show (an alias key, a number, a range, a
  *   level in two spellings, a value with a comma) is read-only with
- *   decision 3's hint (never `[object Object]` or nothing).
- * Changed (D9b decision 3; Ruling 51): an unset Preset shows the
- * collector's `default` (`severity_builder.go:18-107`) as the placeholder
- * and "Default default"; a preset outside the two (`otel`, `aliases`)
- * shows as written, an extra option. Parse From has no default: the
- * collector requires it (`severity_builder.go:149-151`).
+ *   the unshowable-value hint (never `[object Object]` or nothing).
+ *
+ * An unset Preset shows the collector's `default`
+ * (`severity_builder.go:18-107`) as the placeholder and "Default
+ * default"; a preset outside the two (`otel`, `aliases`) shows as
+ * written, an extra option. Parse From has no default: the collector
+ * requires it (`severity_builder.go:149-151`).
  */
 
 const PRESETS = [

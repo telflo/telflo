@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-/** How long the button reads "Copied" after a copy (D17a Preflight ruling 13). */
+/** How long the button reads "Copied" after a copy. */
 export const COPIED_FOR_MS = 2_000;
 
 /** `YamlEditor.tsx`'s words for a copy the browser refused. */
@@ -12,8 +12,7 @@ export const COPY_FAILED_MESSAGE = "Failed to copy to clipboard";
  * "Copied" (`copied`): for 2 s, a second copy within them starting the 2 s
  * again. A clipboard the browser refuses toasts "Failed to copy to
  * clipboard", never the error or the text. The secret's box
- * (`SecretCopyBox`) uses it (the import's YAML box that shared it went with
- * importing, D16c).
+ * (`SecretCopyBox`) uses it.
  */
 export function useCopiedText(text: string): { copied: boolean; copy: () => Promise<void> } {
   // Which copy reads "Copied" (null: none): each copy is a new one, so its 2 s start again.

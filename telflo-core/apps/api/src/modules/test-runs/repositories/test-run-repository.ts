@@ -6,41 +6,40 @@ import { createOrganizationScope } from "../../../tenancy/organization-scope.js"
 import { visibleTo } from "../../configurations/repositories/configuration-repository.js";
 
 /*
- * The test runs of the context's organization (D14a decisions 1, 8, 20 and
- * 24), through the organization scope, as the context's user sees them: a
- * run is visible exactly when its configuration is (their own draft, or a
- * published one), by the configurations' own rule (`visibleTo`), which is
- * the select policy's (migration 028's childVisible). Row-level security
- * stands behind it, so the transaction must carry a database context
- * naming the same organization and user.
+ * The test runs of the context's organization, through the organization scope,
+ * as the context's user sees them: a run is visible exactly when its
+ * configuration is (their own draft, or a published one), by the
+ * configurations' own rule (`visibleTo`), which is the select policy's
+ * (migration 028's childVisible). Row-level security stands behind it, so the
+ * transaction must carry a database context naming the same organization and
+ * user.
  *
- * A deleted configuration's runs are hidden (decision 24): the policies
- * don't hide them, so the repository does. Their rows and files are kept.
+ * A deleted configuration's runs are hidden: the policies don't hide them,
+ * so the repository does. Their rows and files are kept.
  *
  * The API's role adds a queued run and changes none: a run's status and
- * results change only through the dispatcher's functions (Preflight ruling
- * 8), so there is no update or delete here.
+ * results change only through the dispatcher's functions, so there is no
+ * update or delete here.
  *
- * A queued run snapshots its pipeline's validation rules in its own insert
- * (D15a decision 14, Preflight ruling 21): the validation pipeline of the
- * run's version named by its pipeline, of its signal, and its rules in
- * position order, read through row-level security as the context's user,
- * so a re-run takes the rules as they are now. Never from the request, with
- * one narrow, named exception (D25 decision 42): the public API's run with
- * inline rules passes them, checked and given fresh ids, as `inlineRules`,
- * and its insert writes them instead. Only the public route passes it.
+ * A queued run snapshots its pipeline's validation rules in its own insert:
+ * the validation pipeline of the run's version named by its pipeline, of its
+ * signal, and its rules in position order, read through row-level security as
+ * the context's user, so a re-run takes the rules as they are now. Never from
+ * the request, with one narrow, named exception: the public API's run with
+ * inline rules passes them, checked and given fresh ids, as `inlineRules`, and
+ * its insert writes them instead. Only the public route passes it.
  *
- * A YAML run (D25 decision 39, migration 1700000000040) has no
- * configuration: `visible()` joins every run to its configuration, so
- * `find` and the version's list never answer one; `findYamlRun` reads one,
- * its creator's own, in the context's organization (the select policy's
- * own rule, which row-level security applies too).
+ * A YAML run (migration 1700000000040) has no configuration: `visible()`
+ * joins every run to its configuration, so `find` and the version's list
+ * never answer one; `findYamlRun` reads one, its creator's own, in the
+ * context's organization (the select policy's own rule, which row-level
+ * security applies too).
  */
 
 /** Whom the repository reads for: the organization, and the viewer whose drafts' runs it shows. An `AuthContext` is one. */
 export type TestRunViewerContext = Pick<AuthContext, "organizationId" | "userId">;
 
-/** A run as a version's list shows it (Preflight ruling 15): no text, logs or results. */
+/** A run as a version's list shows it: no text, logs or results. */
 export interface TestRunSummary {
   id: string;
   configurationId: string;
@@ -65,10 +64,9 @@ export interface TestRunSummary {
   /** Null when the run stored no decoded input. */
   decodedInputSizeBytes: number | null;
   /**
-   * The breadcrumb (D14b decision 11, Preflight rulings 5 and 20): the
-   * suite and the definition a run from a definition was queued from, or a
-   * re-run of one, as they were then; all four null for every other run.
-   * The names are private text.
+   * The breadcrumb: the suite and the definition a run from a definition
+   * was queued from, or a re-run of one, as they were then; all four null
+   * for every other run. The names are private text.
    */
   suiteId: string | null;
   suiteName: string | null;
@@ -103,18 +101,17 @@ export interface TestRun extends TestRunSummary {
   /** The validation pipeline whose rules the run copied when it was queued; null when there was none. */
   validationPipelineId: string | null;
   /**
-   * The rules' snapshot (D15a decision 14): the contracts'
-   * ValidationRuleSnapshotSchema's shape, in position order; [] for none.
-   * Configuration text.
+   * The rules' snapshot: the contracts' ValidationRuleSnapshotSchema's
+   * shape, in position order; [] for none. Configuration text.
    */
   validationRules: unknown[];
-  /** The rules' results, one per rule in its order (D15a decision 15); null until checked. Configuration text. */
+  /** The rules' results, one per rule in its order; null until checked. Configuration text. */
   validationResults: unknown[] | null;
 }
 
 /**
- * A YAML run (D25 decision 39): a run with no configuration and no version,
- * otherwise a run in full. Its creator's alone.
+ * A YAML run: a run with no configuration and no version, otherwise a run in
+ * full. Its creator's alone.
  */
 export interface YamlTestRun extends Omit<TestRun, "configurationId" | "versionId"> {
   configurationId: null;
@@ -124,11 +121,11 @@ export interface YamlTestRun extends Omit<TestRun, "configurationId" | "versionI
 /** A run of either kind: a configuration version's, or a YAML run. */
 export type AnyTestRun = TestRun | YamlTestRun;
 
-/** A queued run's snapshot (decision 20), as the queue's service builds it. */
+/** A queued run's snapshot, as the queue's service builds it. */
 export interface CreateTestRunInput {
-  /** Chosen before the insert (nextId): the input was copied under it first (Preflight ruling 11). */
+  /** Chosen before the insert (nextId): the input was copied under it first. */
   id: string;
-  /** Both null for a YAML run (D25 decision 39), both set otherwise. */
+  /** Both null for a YAML run, both set otherwise. */
   configurationId: string | null;
   versionId: string | null;
   sourceRunId: string | null;
@@ -143,10 +140,10 @@ export interface CreateTestRunInput {
   /** A definition's run's (or a re-run of one's) suite and definition; null for every other run. */
   breadcrumb: TestRunBreadcrumb | null;
   /**
-   * The rules' snapshot the public API's run takes from its request (D25
-   * decision 42): checked, with fresh ids, in their order (`[]` for none).
-   * Given, it is written as it is, with no validation pipeline; left out
-   * (every other run), the insert takes the snapshot from the database.
+   * The rules' snapshot the public API's run takes from its request: checked,
+   * with fresh ids, in their order (`[]` for none). Given, it is written as it
+   * is, with no validation pipeline; left out (every other run), the insert
+   * takes the snapshot from the database.
    */
   inlineRules?: readonly ValidationRuleSnapshot[];
 }
@@ -157,8 +154,8 @@ export interface ITestRunRepository {
   /** A run the viewer can see in the organization, its configuration live; undefined otherwise. */
   find(id: string): Promise<TestRun | undefined>;
   /**
-   * A YAML run (D25 decision 39) of the viewer in the organization; undefined
-   * for any other run, another person's YAML run included.
+   * A YAML run of the viewer in the organization; undefined for any other
+   * run, another person's YAML run included.
    */
   findYamlRun(id: string): Promise<YamlTestRun | undefined>;
   /** As `find`, and only when the run is of that configuration's version. */
@@ -166,15 +163,14 @@ export interface ITestRunRepository {
   /** The version's runs the viewer can see, newest first, at most `limit`; none when its configuration is deleted. */
   listForVersion(configurationId: string, versionId: string, limit: number): Promise<TestRunSummary[]>;
   /**
-   * How many waiting runs, in every organization, start before each of
-   * `ids` that is waiting and that the viewer can see (test_runs_ahead,
-   * decision 11): a count only. Ids it doesn't answer for are absent.
+   * How many waiting runs, in every organization, start before each of `ids`
+   * that is waiting and that the viewer can see (test_runs_ahead): a count
+   * only. Ids it doesn't answer for are absent.
    */
   aheadOf(ids: readonly string[]): Promise<Map<string, number>>;
   /**
-   * Whether the version's validation pipeline named `pipeline`, of
-   * `signal`, has a rule the viewer can see (D15a Preflight ruling 21): a
-   * run of it would carry rules.
+   * Whether the version's validation pipeline named `pipeline`, of `signal`,
+   * has a rule the viewer can see: a run of it would carry rules.
    */
   hasValidationRules(versionId: string, pipeline: string, signal: TestRunSignal): Promise<boolean>;
   /**
@@ -183,15 +179,15 @@ export interface ITestRunRepository {
    * it. The configuration must be one the viewer can see (42501 otherwise).
    * The insert itself takes the rules' snapshot: the version's validation
    * pipeline named by the run's pipeline, of its signal, and its rules in
-   * position order, as the viewer sees them (none: no pipeline, `[]`);
-   * or, given `inlineRules`, those (D25 decision 42) and no pipeline. A YAML
-   * run (no configuration) is the viewer's own in the organization.
+   * position order, as the viewer sees them (none: no pipeline, `[]`); or,
+   * given `inlineRules`, those and no pipeline. A YAML run (no
+   * configuration) is the viewer's own in the organization.
    */
   create(input: CreateTestRunInput): Promise<AnyTestRun>;
   /**
    * The context's user's waiting runs in the context's organization
-   * (test_runs_waiting_for_context_user; D14b Preflight ruling 21: the cap is
-   * per person, per organization).
+   * (test_runs_waiting_for_context_user: the cap is per person, per
+   * organization).
    */
   waitingForCurrentUser(): Promise<number>;
   /**
@@ -199,7 +195,7 @@ export interface ITestRunRepository {
    * context's user in the context's organization takes before counting
    * their waiting runs there, in every API process: two of their runs
    * queued at once can't both pass the cap. Keyed by the person and the
-   * organization, as the cap counts (D14b Preflight ruling 21).
+   * organization, as the cap counts.
    */
   lockQueueForCurrentUser(): Promise<void>;
 }
@@ -328,7 +324,7 @@ function toTestRun(row: Selectable<TestRunsTable>): TestRun {
   return { ...runFieldsOf(row), ...versionIdsOf(row) };
 }
 
-/** A run of either kind, as its row is: a YAML run's ids are both null (D25 decision 39). */
+/** A run of either kind, as its row is: a YAML run's ids are both null. */
 function toAnyTestRun(row: Selectable<TestRunsTable>): AnyTestRun {
   if (row.configuration_id === null && row.configuration_version_id === null) {
     return { ...runFieldsOf(row), configurationId: null, versionId: null };
@@ -466,10 +462,10 @@ export function createTestRunRepository(
 
     async create(input) {
       if (input.inlineRules !== undefined) {
-        // The public API's run (D25 decision 42): the request's checked rules,
-        // with fresh ids, as they are; no validation pipeline. The insert
-        // policy checks the organization, the configuration (or a YAML run's
-        // creator) and the user.
+        // The public API's run: the request's checked rules, with fresh ids,
+        // as they are; no validation pipeline. The insert policy checks the
+        // organization, the configuration (or a YAML run's creator) and the
+        // user.
         const { rows } = await sql<Selectable<TestRunsTable>>`
           insert into test_runs
             (id, organization_id, configuration_id, configuration_version_id, queued_by_user_id, source_run_id,

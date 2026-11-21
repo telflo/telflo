@@ -28,18 +28,17 @@ export const TYPED_TEXT_READ_DELAY_MS = 300;
 /** The titles for manual edit mode's two buttons. */
 export const UNDO_ALL_TITLE = "Undo all changes and exit manual mode";
 export const APPLY_TOOLTIP = "Apply Changes and Exit Manual Mode";
-/** Apply's tooltips while the collector validator decides (D13b decision 2). */
+/** Apply's tooltips while the collector validator decides. */
 export const APPLY_VALIDATING_TOOLTIP = "Validating...";
 export const APPLY_ERRORS_TOOLTIP = "Validation Errors Exist";
 export const APPLY_UNCHECKED_TOOLTIP = "Validation unavailable — applying unchecked YAML";
 
 /**
- * Apply's validation gate (D13b decision 2), for the outcome of exactly the
- * text on screen: allowed when valid, unavailable or retired (both
- * unchecked), and when idle (nothing to check: empty text or text that
- * doesn't parse, where the parse gate decides alone); refused while it is
- * being checked and while the collector reports errors. The tooltip, first
- * match wins.
+ * Apply's validation gate, for the outcome of exactly the text on screen:
+ * allowed when valid, unavailable or retired (both unchecked), and when
+ * idle (nothing to check: empty text or text that doesn't parse, where the
+ * parse gate decides alone); refused while it is being checked and while
+ * the collector reports errors. The tooltip, first match wins.
  */
 export function applyValidationGate(validation: CollectorValidationOutcome): { allowed: boolean; tooltip: string } {
   switch (validation.status) {
@@ -57,93 +56,87 @@ export function applyValidationGate(validation: CollectorValidationOutcome): { a
 }
 
 /**
- * The YAML tab, where the text is the content
- * (D8 decision 1).
+ * The YAML tab, where the text is the content.
  *
- * The collector's schema (D13c decisions 2, 3 and 11): the pin on screen
- * (`collectorVersion`, an unsaved pick included) picks it, through
- * `schemaPathFor` and `setMonacoSchema`, and a pin change switches it with
- * the editor mounted. An offered version gets completion, hover and the
- * schema's markers; a null or retired pin, or a distribution without
- * schemas, gets YAML's syntax markers only. The schema's markers are
- * Warnings (yellow), which nothing here counts: the alert and Apply's gate
- * count only Error markers, YAML's syntax errors and duplicate keys, and
- * the collector validator stays the authority on whether a text runs.
+ * The collector's schema: the pin on screen (`collectorVersion`, an
+ * unsaved pick included) picks it, through `schemaPathFor` and
+ * `setMonacoSchema`, and a pin change switches it with the editor mounted.
+ * An offered version gets completion, hover and the schema's markers; a
+ * null or retired pin, or a distribution without schemas, gets YAML's
+ * syntax markers only. The schema's markers are Warnings (yellow), which
+ * nothing here counts: the alert and Apply's gate count only Error
+ * markers, YAML's syntax errors and duplicate keys, and the collector
+ * validator stays the authority on whether a text runs.
  *
- * Manual edit mode (D9a decision 2): typing in Monaco is the store's
- * `setText`, which enters the mode; while in it the header shows "Undo All"
- * and "Apply". Apply is disabled while Monaco marks an error or
- * the typed text can't be read as a configuration (read 300 ms after typing
- * pauses, since the store's `graphStatus` describes the text from before the
- * typing); why is said in the alert, as text, since the reason can quote the
- * text (never in an attribute). It is also disabled while the collector
- * validator checks the text on screen, and while it reports errors for it
- * (D13b decision 2, `applyValidationGate`), with its tooltips.
+ * Manual edit mode: typing in Monaco is the store's `setText`, which enters
+ * the mode; while in it the header shows "Undo All" and "Apply". Apply is
+ * disabled while Monaco marks an error or the typed text can't be read as a
+ * configuration (read 300 ms after typing pauses, since the store's
+ * `graphStatus` describes the text from before the typing); why is said in
+ * the alert, as text, since the reason can quote the text (never in an
+ * attribute). It is also disabled while the collector validator checks the
+ * text on screen, and while it reports errors for it
+ * (`applyValidationGate`), with its tooltips.
  *
  * Under the editor, inside its replay-blocked container, the validator's
- * status bar (`ValidationStatus`; D13b decision 14); a row that names a
- * component puts Monaco's cursor on its key, scrolled to the middle, and
- * focuses Monaco (decision 3).
+ * status bar (`ValidationStatus`); a row that names a component puts Monaco's
+ * cursor on its key, scrolled to the middle, and focuses Monaco.
  *
  * A text the store sets (a canvas or Configuration tab change, undo, Apply,
  * Undo All) is written into Monaco here, as the store sets it, and never
  * reaches `setText`: Monaco's undo group is closed before and after it
  * (`pushStackElement`), so it is its own undo step in Monaco, and the cursor
- * and scroll are put back (Preflight ruling 16). `@monaco-editor/react`'s own
- * value sync then finds nothing to do. A load under the mounted editor (a
- * created version adopted; D10 decision 11) sets Monaco's text afresh,
- * which clears Monaco's own undo history as the store's is cleared, the
- * cursor and scroll kept (D10 Ruling 22).
+ * and scroll are put back. `@monaco-editor/react`'s own value sync then
+ * finds nothing to do. A load under the mounted editor (a created version
+ * adopted) sets Monaco's text afresh, which clears Monaco's own undo history
+ * as the store's is cleared, the cursor and scroll kept.
  *
  * Monaco is reached only through initMonaco(), a dynamic import, so a server
  * render shows "Loading editor…" and never imports monaco-editor; the
  * `Editor` mounts only after it resolved, since a mount before
- * `loader.config` fetches Monaco from a CDN (Preflight ruling 16). If it
- * rejects, the tab says "The editor couldn't load." with "Try again"; the
- * text stays in the store (D8 decision 12). No `path`
- * or `defaultPath`: Monaco writes the model's URI into a `data-uri`
- * attribute, and attributes aren't masked in replay (ADR 0024).
+ * `loader.config` fetches Monaco from a CDN. If it rejects, the tab says
+ * "The editor couldn't load." with "Try again"; the text stays in the store.
+ * No `path` or `defaultPath`: Monaco writes the model's URI into a
+ * `data-uri` attribute, and attributes aren't masked in replay.
  *
- * Replay (ADR 0024; D9a decisions 7 and 16; D13c decision 12): Monaco
- * writes what it shows into attributes replay can't mask (a suggestion
- * row's `aria-label` is what it offers, "otlp, Text"), so the editor is
- * blocked from replay: its container has posthog-js's replay block
- * class, `ph-no-capture` (its default `blockClass`, which `initOptions`
- * leaves alone), and replay records only a placeholder for it. Monaco's
- * overflow widgets (completion's rows and details, hover, quick fixes,
- * find) render inside the editor's own element, and its screen-reader live
- * region, which Monaco otherwise appends to `<body>`, is put inside the
- * container too (`ariaContainerElement`). Completion offers only the
- * schema's keys and descriptions (Preflight ruling 14); word-based
- * suggestions are off, so the configuration's words aren't offered at all.
+ * Replay: Monaco writes what it shows into attributes replay can't mask (a
+ * suggestion row's `aria-label` is what it offers, "otlp, Text"), so the
+ * editor is blocked from replay: its container has posthog-js's replay
+ * block class, `ph-no-capture` (its default `blockClass`, which
+ * `initOptions` leaves alone), and replay records only a placeholder for
+ * it. Monaco's overflow widgets (completion's rows and details, hover,
+ * quick fixes, find) render inside the editor's own element, and its
+ * screen-reader live region, which Monaco otherwise appends to `<body>`,
+ * is put inside the container too (`ariaContainerElement`). Completion
+ * offers only the schema's keys and descriptions; word-based suggestions
+ * are off, so the configuration's words aren't offered at all.
  *
- * A published version is read-only (D11b decision 4; Preflight ruling 11):
- * Monaco takes `readOnly` from the store's `selectIsVersionPublished`, so
- * nothing can be typed (Copy and Download still work), and manual edit
- * mode's Apply doesn't show, which the store refuses too: text a stale tab
- * typed before the version was published stays on screen (Preflight ruling
- * 12). Undo All still shows (Ruling 31): it only puts back the text from
- * before the typing, on screen, so that tab can leave the mode and inspect
- * the canvas. The replay rules above hold for it as for any.
+ * A published version is read-only: Monaco takes `readOnly` from the store's
+ * `selectIsVersionPublished`, so nothing can be typed (Copy and Download still
+ * work), and manual edit mode's Apply doesn't show, which the store refuses
+ * too: text a stale tab typed before the version was published stays on
+ * screen. Undo All still shows: it only puts back the text from before the
+ * typing, on screen, so that tab can leave the mode and inspect the canvas.
+ * The replay rules above hold for it as for any.
  *
  * Cmd/Ctrl+S inside Monaco saves through `onSave`, the page's save; the page
- * handles it outside Monaco (D8 decision 5). Monaco stops the key's
- * propagation once its command runs, so a listener on `window` never sees it
- * and nothing saves twice.
+ * handles it outside Monaco. Monaco stops the key's propagation once its
+ * command runs, so a listener on `window` never sees it and nothing saves
+ * twice.
  */
 export function YamlEditor({ onSave }: { onSave: () => void }) {
   const text = useEditorStore((state) => state.text);
   const setText = useEditorStore((state) => state.setText);
   const isYamlEditing = useEditorStore((state) => state.isYamlEditing);
   const readOnly = useEditorStore(selectIsVersionPublished);
-  /** The person's theme and editor preferences (D21 decisions 27 and 28); the tab size goes on the model. */
+  /** The person's theme and editor preferences; the tab size goes on the model. */
   const preferences = useEditorPreferences();
-  /** The pin's collector schema, or null for syntax only (D13c decisions 2 and 11). */
+  /** The pin's collector schema, or null for syntax only. */
   const schemaPath = useEditorStore((state) =>
     schemaPathFor(state.configuration?.collectorDistribution ?? null, state.collectorVersion),
   );
   const [yamlError, setYamlError] = useState<string | null>(null);
-  /** Where Monaco's screen-reader live region goes: the shell's one replay-blocked host (useAriaContainer, Ruling 48). */
+  /** Where Monaco's screen-reader live region goes: the shell's one replay-blocked host (useAriaContainer). */
   const { ariaHost } = useAriaContainer();
   /** Why the typed text can't be applied, as last read; null when it reads, or outside manual edit mode. */
   const [unreadableReason, setUnreadableReason] = useState<string | null>(null);
@@ -210,16 +203,15 @@ export function YamlEditor({ onSave }: { onSave: () => void }) {
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => onSaveRef.current());
 
     // A text the store sets, written as its own Monaco undo step, the view
-    // kept (Preflight ruling 16). Typing's own text is already Monaco's, so
-    // it finds nothing to write.
+    // kept. Typing's own text is already Monaco's, so it finds nothing to
+    // write.
     storeSubscriptionRef.current?.();
     storeSubscriptionRef.current = useEditorStore.subscribe((state, previous) => {
       if (state.loadCount !== previous.loadCount) {
-        // A version opened under the mounted editor (a create's adoption,
-        // D10 decision 11): its text, with Monaco's own undo history gone
-        // too, as the store's is (`setValue` clears it). Written even when
-        // the text is the same, which is the adoption's usual case; the
-        // view is kept (D10 Ruling 22).
+        // A version opened under the mounted editor (a create's adoption):
+        // its text, with Monaco's own undo history gone too, as the
+        // store's is (`setValue` clears it). Written even when the text is
+        // the same, which is the adoption's usual case; the view is kept.
         const model = editor.getModel();
         if (!model) return;
         const viewState = editor.saveViewState();
@@ -251,7 +243,7 @@ export function YamlEditor({ onSave }: { onSave: () => void }) {
 
     // Listen to marker changes from monaco-yaml. Only Errors count: YAML's
     // syntax errors and duplicate keys. The schema's findings are Warnings,
-    // which never reach the alert or Apply's gate (D13c decision 3).
+    // which never reach the alert or Apply's gate.
     markerDisposableRef.current = monaco.editor.onDidChangeMarkers(() => {
       const model = editor.getModel();
       if (!model) return;

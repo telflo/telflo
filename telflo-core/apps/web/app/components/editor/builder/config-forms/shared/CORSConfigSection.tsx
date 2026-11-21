@@ -11,20 +11,18 @@ import type { ValuePath } from "~/lib/graph/text-edits.js";
 import type { ValueView } from "~/lib/graph/value-view.js";
 
 /*
- * The CORS section (ADR 0018), over the form's fields (D9b decisions 2 to
- * 4). Bound to the `cors` block's path under the form.
+ * The CORS section, over the form's fields. Bound to the `cors` block's path
+ * under the form.
  *
- * Kept (the owner's ruling): ticking the box writes
- * `allowed_origins: []`, `allowed_headers: []` and `max_age: 7200` as the
- * block, unticking removes it, each one change. The lists are written by
- * item: Add appends an empty item, a row's typing sets
- * its item, Remove removes the item's lines.
+ * Ticking the box writes `allowed_origins: []`, `allowed_headers: []` and
+ * `max_age: 7200` as the block, unticking removes it, each one change.
+ * The lists are written by item: Add appends an empty item, a row's
+ * typing sets its item, Remove removes the item's lines.
  *
- * Changed: 0 can be entered as Max Age (it never removes the key), and
- * unset shows as unset (decisions 3, 4).
- * Unset, Max Age shows the collector's default, 0 (`confighttp.CORSConfig`
- * at v0.162.0: no `Access-Control-Max-Age` header is sent), not 7200
- * (Ruling 75). Ticking the box still writes 7200.
+ * 0 can be entered as Max Age (it never removes the key), and unset shows
+ * as unset. Unset, Max Age shows the collector's default, 0
+ * (`confighttp.CORSConfig` at v0.162.0: no `Access-Control-Max-Age` header
+ * is sent), not 7200. Ticking the box still writes 7200.
  */
 
 export function CORSConfigSection({ path }: { path: ValuePath }) {
@@ -113,14 +111,14 @@ function ItemList({
 }: {
   path: ValuePath;
   placeholder: string;
-  /** A fixed label, never the value (decision 10). */
+  /** A fixed label, never the value. */
   removeLabel: string;
   emptyText: string;
   addText: string;
 }) {
   const form = useForm();
   const view = form.read(path);
-  // Rows keyed by their items (D9c Ruling 68), so a Remove click can't land on the next item's row.
+  // Rows keyed by their items, so a Remove click can't land on the next item's row.
   const cards = useCardKeys(view.kind === "list" ? view.value : []);
   if (view.kind !== "absent" && view.kind !== "list") {
     return <SectionHint>{UNSHOWABLE_VALUE_MESSAGE}</SectionHint>;

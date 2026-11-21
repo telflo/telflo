@@ -11,7 +11,7 @@ import { UNCALLED_OTELCOL_VALIDATOR } from "../../testing/otelcol-validator.js";
 import { UNCALLED_FILE_STORE } from "../../testing/file-store.js";
 import { UNCALLED_TESTING } from "../../testing/otelcol-testing.js";
 
-// The opamp-server every server needs (D11b decision 8): this file's own fake.
+// The opamp-server every server needs: this file's own fake.
 const opamp = useFakeOpampServer();
 
 /**
@@ -68,7 +68,7 @@ describe("GET /health", () => {
     expect(response.json()).toEqual({ status: "ok" });
   });
 
-  it("writes no log line, since probes call it every few seconds (D33-1 decision 18)", async () => {
+  it("writes no log line, since probes call it every few seconds", async () => {
     expect((await server.inject({ method: "GET", url: "/health" })).statusCode).toBe(200);
     expect(lines).toEqual([]);
   });

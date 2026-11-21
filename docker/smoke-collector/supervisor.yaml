@@ -1,7 +1,7 @@
-# The stack smoke collector's supervisor (D16a Preflight ruling 18): the
-# capabilities a server-class fleet's collector has, never
-# reports_remote_config (deprecated in 0.161, refused from 0.163). Every
-# per-collector value is the container's environment (see the Dockerfile).
+# The stack smoke collector's supervisor: the capabilities a server-class
+# fleet's collector has, never reports_remote_config (deprecated in 0.161,
+# refused from 0.163). Every per-collector value is the container's
+# environment (see the Dockerfile).
 server:
   endpoint: ${env:TELFLO_OPAMP_ENDPOINT}
   headers:

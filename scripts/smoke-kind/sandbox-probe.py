@@ -1,8 +1,7 @@
 # The kind smoke's HTTP probe from inside a sandboxed service
-# (scripts/smoke-kind.sh; D33-1 spec decision 35, Preflight ruling 19):
-# read by the service's own Python from its standard input through
-# `kubectl exec -i <pod> -- python - <url>...`, it asks each URL with
-# urllib and prints one line a URL: `<url> reached <status>` when anything
+# (scripts/smoke-kind.sh): read by the service's own Python from its standard
+# input through `kubectl exec -i <pod> -- python - <url>...`, it asks each URL
+# with urllib and prints one line a URL: `<url> reached <status>` when anything
 # answered (an HTTP error status included), `<url> refused <why>` otherwise
 # (a timeout, a name that doesn't resolve, a refused connection). It sends
 # nothing but a plain GET.

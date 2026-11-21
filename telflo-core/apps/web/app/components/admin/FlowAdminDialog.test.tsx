@@ -12,11 +12,10 @@ import { ACME, CONTRIB, RETIRED_VERSION, seedCatalogue } from "~/test/collector-
 import { PII_REDACTION, TAIL_SAMPLING, TAIL_SAMPLING_YAML, makeFlow } from "~/test/flows.js";
 
 /*
- * Product admin's flow dialog (D12 decisions 6, 7 and 16; Preflight rulings
- * 12 and 19): the fields and their limits, the slug following the name until
- * edited, the signals from the pipelines, its validation messages, the
- * version select, the security check, and the configuration text kept inside
- * `ph-no-capture` (ADR 0024).
+ * Product admin's flow dialog: the fields and their limits, the slug
+ * following the name until edited, the signals from the pipelines, its
+ * validation messages, the version select, the security check, and the
+ * configuration text kept inside `ph-no-capture`.
  */
 
 /** A secret a product admin might paste, which the check exists to find. */
@@ -96,7 +95,7 @@ describe("FlowAdminDialog", () => {
     expect(screen.getByText("no pipelines detected")).toBeInTheDocument();
   });
 
-  it("slugifies the name into the slug until the slug is edited; the description names no public page (D36-1 Preflight ruling 13)", async () => {
+  it("slugifies the name into the slug until the slug is edited; the description names no public page", async () => {
     const { user } = renderDialog();
 
     await user.type(field("Name"), "Hello, World 2!");
@@ -217,8 +216,8 @@ describe("FlowAdminDialog", () => {
     expect(screen.queryByText("Only product admins can do that.")).toBeNull();
   });
 
-  describe("the distribution and the version (D12 Preflight ruling 12)", () => {
-    it("offers the catalogue's distributions, and the distribution's versions newest first, the default chosen", async () => {
+  describe("the distribution and the version", () => {
+    it("offers the catalog's distributions, and the distribution's versions newest first, the default chosen", async () => {
       const { user } = renderDialog();
 
       expect(screen.getByRole("combobox", { name: "Distribution" })).toHaveTextContent(CONTRIB.label);
@@ -243,7 +242,7 @@ describe("FlowAdminDialog", () => {
       expect(onSave.mock.calls[0]![0]).toMatchObject({ collectorDistribution: ACME.id, collectorVersion: "2.36.0" });
     });
 
-    it("keeps an edited flow's pin, and marks one the catalogue no longer offers", async () => {
+    it("keeps an edited flow's pin, and marks one the catalog no longer offers", async () => {
       const { user } = renderDialog(makeFlow({ collectorVersion: RETIRED_VERSION }));
 
       const version = screen.getByRole("combobox", { name: "Collector version" });
@@ -257,7 +256,7 @@ describe("FlowAdminDialog", () => {
       ]);
     });
 
-    it("shows an edited flow's pin unmarked while the catalogue can't say", () => {
+    it("shows an edited flow's pin unmarked while the catalog can't say", () => {
       resetCollectorCatalogue();
       vi.spyOn(apiClient, "getCollectorDistributions").mockReturnValue(new Promise(() => {}));
       renderDialog(makeFlow({ collectorVersion: RETIRED_VERSION }));
@@ -279,7 +278,7 @@ describe("FlowAdminDialog", () => {
     expect(screen.getByRole("button", { name: "Save changes" })).toBeInTheDocument();
   });
 
-  describe("Run security check (D12 decision 6)", () => {
+  describe("Run security check", () => {
     it("is disabled while the YAML is blank", () => {
       renderDialog();
       expect(screen.getByRole("button", { name: "Run security check" })).toBeDisabled();
@@ -360,7 +359,7 @@ describe("FlowAdminDialog", () => {
     });
   });
 
-  describe("privacy (ADR 0024)", () => {
+  describe("privacy", () => {
     it("keeps the YAML textarea and the findings inside ph-no-capture", async () => {
       vi.spyOn(apiClient, "lintFlow").mockResolvedValue(FINDINGS);
       const { user } = renderDialog();

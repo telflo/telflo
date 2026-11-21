@@ -18,13 +18,13 @@ import {
 import { createPublicApiPlugin, PUBLIC_API_PREFIX, type RecordedPublicRoute } from "./plugin.js";
 
 /*
- * The public plugin's hooks (D25 decisions 13, 16, 25 and 26; Preflight
- * rulings 3 and 15), on a bare Fastify with the API's error handling and
- * the production token check over a store this file controls: the access
- * declaration refused at registration, the token check before any body is
- * read, the 404 only after it, HEAD, the access check, and the per-token
- * limit. Tokens are built at run time and every assertion about a reply
- * compares statuses, fixed bodies or booleans, so a failure prints none.
+ * The public plugin's hooks, on a bare Fastify with the API's error
+ * handling and the production token check over a store this file
+ * controls: the access declaration refused at registration, the token
+ * check before any body is read, the 404 only after it, HEAD, the access
+ * check, and the per-token limit. Tokens are built at run time and every
+ * assertion about a reply compares statuses, fixed bodies or booleans, so
+ * a failure prints none.
  */
 
 const newToken = () => `tf_${randomBytes(32).toString("base64url")}`;
@@ -48,7 +48,7 @@ const PERSON_ID = "0192a6b0-0000-7000-8000-0000000000d3";
 /** The person's one organization (a contributor there); ORGANIZATION_ID is not theirs. */
 const PERSON_ORGANIZATION_ID = "0192a6b0-0000-7000-8000-0000000000d2";
 
-/** A person's own live token as the lookup answers it: no organization, no role (D25 decision 21). */
+/** A person's own live token as the lookup answers it: no organization, no role. */
 function personalToken(tokenId: string, access: "read" | "write"): LiveApiToken {
   return { kind: "person", tokenId, userId: PERSON_ID, email: "person-0192a6b0@example.com", access, organizationId: null, role: null };
 }
@@ -163,7 +163,7 @@ async function harness({ extraRoute, perToken = RATE_LIMITS.publicApiPerToken }:
 
 const bearer = (token: string) => ({ authorization: `Bearer ${token}` });
 
-describe("the public plugin's routes declare their access (D25 decision 13)", () => {
+describe("the public plugin's routes declare their access", () => {
   it("refuses at registration a route without config.access: ready() rejects, naming the route", async () => {
     await expect(harness({ extraRoute: (api) => api.get("/unguarded", async () => ({})) })).rejects.toThrow(
       'a public route must declare config.access "read" or "write": GET /api/public/v1/unguarded',
@@ -191,7 +191,7 @@ describe("the public plugin's routes declare their access (D25 decision 13)", ()
   });
 });
 
-describe("the token check runs onRequest, before any body is read (D25 decision 13, Preflight ruling 3)", () => {
+describe("the token check runs onRequest, before any body is read", () => {
   it("no token with a malformed body, or a 2 MB one, answers the one 401; with a token, the body's own 400 and 413", async () => {
     const { server, writeToken } = await harness();
     const json = { "content-type": "application/json" };
@@ -223,7 +223,7 @@ describe("the token check runs onRequest, before any body is read (D25 decision 
       expect([method, url, anonymous.statusCode, anonymous.body === REFUSAL]).toEqual([method, url, 401, true]);
       const known = await server.inject({ method, url, headers: bearer(readToken) });
       expect([method, url, known.statusCode]).toEqual([method, url, 404]);
-      // The fixed unmatched URL (Ruling 173): no spelling of a public path is echoed.
+      // The fixed unmatched URL: no spelling of a public path is echoed.
       expect(known.json()).toEqual({ error: { code: "not_found", message: `No route for ${method} /api/public/v1/[unmatched]` } });
     }
   });
@@ -237,7 +237,7 @@ describe("the token check runs onRequest, before any body is read (D25 decision 
   });
 });
 
-describe("the access check (D25 decision 25)", () => {
+describe("the access check", () => {
   it("a read token on a write route answers 403 insufficient_access before its body is read; a write token passes; both read", async () => {
     const { server, readToken, writeToken } = await harness();
     const post = (token: string, payload: string) =>
@@ -255,7 +255,7 @@ describe("the access check (D25 decision 25)", () => {
   });
 });
 
-describe("the per-token limit (D25 decision 26, Preflight ruling 15)", () => {
+describe("the per-token limit", () => {
   it("60 requests a minute per token: the 61st answers 429 rate_limited with Retry-After, another token is unaffected, and the window resets", async () => {
     const { server, readToken, otherReadToken, advance } = await harness();
     const get = (token: string) => server.inject({ method: "GET", url: "/api/public/v1/things", headers: bearer(token) });
@@ -284,7 +284,7 @@ describe("the per-token limit (D25 decision 26, Preflight ruling 15)", () => {
   });
 });
 
-describe("a personal token's organization (D25 decisions 24 and 26; Ruling 160)", () => {
+describe("a personal token's organization", () => {
   const withOrganization = (token: string, organizationId?: string) => ({
     ...bearer(token),
     ...(organizationId === undefined ? {} : { "x-telflo-org": organizationId }),
@@ -353,7 +353,7 @@ describe("a personal token's organization (D25 decisions 24 and 26; Ruling 160)"
   });
 });
 
-describe("every reply under the plugin is no-store unless its route says otherwise (Ruling 185)", () => {
+describe("every reply under the plugin is no-store unless its route says otherwise", () => {
   it("the 401, a 400, the 403, the 404, the 429 and a route's own reply carry Cache-Control: no-store; a route's own Cache-Control is kept", async () => {
     const { server, readToken, writeToken } = await harness({
       perToken: { max: 2, windowMs: 60_000 },

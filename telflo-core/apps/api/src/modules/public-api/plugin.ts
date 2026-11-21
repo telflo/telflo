@@ -6,29 +6,27 @@ import { requireAcceptedApiToken, type ApiTokenCheck, type ApiTokenOrganizationC
 import { claimPublicSurface, methodsOf, publicNotFoundOptions } from "./route-guard.js";
 
 /*
- * The public surface's plugin (D25 decisions 13, 16, 25 and 26; Preflight
- * rulings 3 and 15), registered encapsulated with the prefix
+ * The public surface's plugin, registered encapsulated with the prefix
  * `/api/public/v1` by registerPublicApiRoutes (routes.ts). It holds:
  *   - an `onRoute` hook refusing a route without a valid `config.access`
  *     (access.ts), so `ready()` rejects and no route can fail open; it
  *     records each route for the OpenAPI document's coverage test;
  *   - an `onRequest` hook, run before any body is read or validated:
- *       1. the token check (D22's, authenticate-api-token.ts): every refusal
- *          the one 401;
- *       2. the per-token limit, `token:<tokenId>`, 60 a minute (decision
- *          26): counted once the check accepts the request, never on the
- *          raw bearer, and BEFORE a personal token's organization check
- *          (Ruling 160);
+ *       1. the token check (authenticate-api-token.ts): every refusal the
+ *          one 401;
+ *       2. the per-token limit, `token:<tokenId>`, 60 a minute: counted
+ *          once the check accepts the request, never on the raw bearer,
+ *          and BEFORE a personal token's organization check;
  *       3. a personal token's organization, `X-Telflo-Org`, and the
- *          person's live membership there, read on every request (decision
- *          24): required unless the route declares `organization:
- *          "optional"` (`/whoami`, `/orgs`), where a header that is sent
- *          is still checked; a service account's token ignores it. An
- *          unknown path skips it (the 404 needs no organization);
- *       4. the route's access (decision 25): a read token on a `write`
- *          route answers 403 `insufficient_access`;
+ *          person's live membership there, read on every request:
+ *          required unless the route declares `organization: "optional"`
+ *          (`/whoami`, `/orgs`), where a header that is sent is still
+ *          checked; a service account's token ignores it. An unknown path
+ *          skips it (the 404 needs no organization);
+ *       4. the route's access: a read token on a `write` route answers
+ *          403 `insufficient_access`;
  *   - an `onSend` hook giving every reply without its own Cache-Control
- *     `no-store` (Ruling 185);
+ *     `no-store`;
  *   - its own not-found handler, which the `onRequest` hook runs before: an
  *     unknown public path answers the 401 to an unauthenticated caller and
  *     `404 not_found` (the root's words) only after the check, and a 404
@@ -37,7 +35,7 @@ import { claimPublicSurface, methodsOf, publicNotFoundOptions } from "./route-gu
  * verification answers the one 401 for a request under the prefix that
  * matched any route but this plugin's (or an allowed open route), and the
  * root's registration guard refuses such a route early.
- * The router's own refusals answer before any hook (Preflight ruling 3):
+ * The router's own refusals answer before any hook:
  * a malformed escape is 400 `invalid_request`, a path parameter over 100
  * characters 414 (errors.ts' respondToFrameworkError).
  */
@@ -84,15 +82,15 @@ export function createPublicApiPlugin({ check, organization, perToken, record, r
       assertAccess(config.access, accepted.access);
     });
 
-    // Every reply here is kept by no cache unless its route set its own Cache-Control (Ruling 185): the
-    // refusals (401, 403, 404, 429, a 400) and the routes' replies alike, so no browser's disk cache keeps a
-    // try-it call's URL and answer (the reference page's) and no proxy a token's reply.
+    // Every reply here is kept by no cache unless its route set its own Cache-Control: the refusals (401,
+    // 403, 404, 429, a 400) and the routes' replies alike, so no browser's disk cache keeps a try-it call's
+    // URL and answer (the reference page's) and no proxy a token's reply.
     api.addHook("onSend", async (_request, reply, payload) => {
       if (!reply.hasHeader("cache-control")) void reply.header("cache-control", "no-store");
       return payload;
     });
 
-    // Its own, marked for the root's verification (Ruling 166): the only not-found handler that may answer under the prefix.
+    // Its own, marked for the root's verification: the only not-found handler that may answer under the prefix.
     api.setNotFoundHandler(publicNotFoundOptions(api), sendNotFound);
 
     routes(api);

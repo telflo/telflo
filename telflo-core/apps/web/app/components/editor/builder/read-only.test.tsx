@@ -15,11 +15,11 @@ import { builderStore, componentNamed, groupNamed, openText } from "~/test/build
 import { GROUP_ID, MINE, PUBLISHED_FIELDS, versionFixture } from "~/test/configurations.js";
 
 /*
- * The builder's controls over a published version (D11b decision 4;
- * Preflight ruling 11): the toolbox doesn't drag, the canvas actions are
- * disabled, and the Configuration tab shows a node with its forms disabled,
- * so it can be inspected, never changed. Each is checked enabled on a draft
- * first, so the disabling is the read-only mode's.
+ * The builder's controls over a published version: the toolbox doesn't
+ * drag, the canvas actions are disabled, and the Configuration tab shows a
+ * node with its forms disabled, so it can be inspected, never changed. Each
+ * is checked enabled on a draft first, so the disabling is the read-only
+ * mode's.
  */
 
 const STARTER = corpusText("starter.yaml");

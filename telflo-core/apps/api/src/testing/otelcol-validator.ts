@@ -2,10 +2,9 @@ import { afterAll, beforeAll } from "vitest";
 import { createOtelcolValidatorClient, type OtelcolValidatorClient } from "../otelcol-validator/client.js";
 import { startFakeOtelcolValidator, type FakeOtelcolValidator } from "./fake-otelcol-validator.js";
 
-// Every server needs a collector validator (D13b decision 12). A test file
-// about validation starts the OpenAPI-checked fake (fake-otelcol-validator.ts)
-// and passes its client as buildServer's `otelcolValidator`. One fake per
-// file:
+// Every server needs a collector validator. A test file about validation
+// starts the OpenAPI-checked fake (fake-otelcol-validator.ts) and passes its
+// client as buildServer's `otelcolValidator`. One fake per file:
 //
 //   const validator = useFakeOtelcolValidator();
 //   ...
@@ -18,8 +17,8 @@ import { startFakeOtelcolValidator, type FakeOtelcolValidator } from "./fake-ote
 // and no test read the violation. Tests that inspect the fake read
 // `validator.fake`.
 //
-// Every other test server passes UNCALLED_OTELCOL_VALIDATOR (Preflight
-// ruling 19): a test not about validation that reaches the validator fails.
+// Every other test server passes UNCALLED_OTELCOL_VALIDATOR: a test not about
+// validation that reaches the validator fails.
 
 export interface FakeOtelcolValidatorForFile {
   /** The file's fake; read it inside a hook or a test, once it has started. */

@@ -4,12 +4,12 @@ import "~/components/tour/tour-theme.css";
 import type { OrganizationType } from "@telflo/contracts";
 import { isNamedByEmail } from "~/lib/organization-names.js";
 
-/* A one-step driver.js callout (ADR 0018), shown the
+/* A one-step driver.js callout, shown the
  * first time someone lands in the app after joining an organization from an
- * invitation (D6 decision 13). The accept page goes to
- * /app?joined_org=<organizationId>; the signed-in layout consumes the
- * parameter (removing it, so a refresh never shows the callout again) and
- * points this at the sidebar's organization switcher. */
+ * invitation. The accept page goes to /app?joined_org=<organizationId>; the
+ * signed-in layout consumes the parameter (removing it, so a refresh never
+ * shows the callout again) and points this at the sidebar's organization
+ * switcher. */
 
 const SWITCHER_SELECTOR = '[data-tour-step="org-switcher"]';
 
@@ -26,8 +26,8 @@ function escapeHtml(text: string): string {
 }
 
 /** The callout's words; a personal workspace named by its owner's email is
- * "<email>'s organization" (D36-1 Q264, lib/organization-names.ts' rule):
- * "Welcome to <email>'s organization", working in <strong><email>'s</strong>
+ * "<email>'s organization" (lib/organization-names.ts' rule): "Welcome to
+ * <email>'s organization", working in <strong><email>'s</strong>
  * organization, the invite dialog's bold. */
 export function orgWelcomeMessage(
   orgName: string,

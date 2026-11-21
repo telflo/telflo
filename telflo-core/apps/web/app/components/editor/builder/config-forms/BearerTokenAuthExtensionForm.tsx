@@ -4,22 +4,20 @@ import { StringListField } from "./shared/StringListField.js";
 import type { ValueView } from "~/lib/graph/value-view.js";
 
 /*
- * The bearer token auth extension's form (ADR 0018), over the form's
- * fields (D9b decisions 2 and 3): each field writes its own key, and
- * clearing one removes it. Tokens are written by item; removing the last
- * removes `tokens`.
+ * The bearer token auth extension's form, over the form's fields: each field
+ * writes its own key, and clearing one removes it. Tokens are written by
+ * item; removing the last removes `tokens`.
  *
- * Carried forward (Parity Notes): Scheme keeps an empty value, `scheme:
- * ""`, which the collector reads as "send the bare token" (an empty scheme
- * isn't prepended, `bearertokenauth.go`, contrib v0.162.0; ClickStack's
- * shipped config uses it); once written it can't be unset here, only in
- * the YAML box.
+ * Scheme keeps an empty value, `scheme: ""`, which the collector reads as
+ * "send the bare token" (an empty scheme isn't prepended,
+ * `bearertokenauth.go`, contrib v0.162.0; ClickStack's shipped config uses
+ * it); once written it can't be unset here, only in the YAML box.
  *
  * The collector's defaults (`createDefaultConfig`, contrib v0.162.0):
  * header `Authorization`, scheme `Bearer`.
  *
  * No token reaches an attribute: the token rows' remove buttons say
- * "Remove" (decision 10; Preflight ruling 5).
+ * "Remove".
  */
 
 /** Whether the text holds a truthy value. */

@@ -1,46 +1,44 @@
 /**
- * The regex library (D15b decisions 7 and 16; Preflight rulings 1 and 2).
+ * The regex library.
  *
  *   * test_regex: named regex patterns product admins keep for the
- *     validation-rule picker: a name, a
- *     category (free text), an optional description and the regex, one row
- *     per entry, hard-deleted (nothing references a row: a rule copies the
- *     regex, not the id). Global (ADR 0008): no organization column and no
- *     row-level security, as test_templates. Migration 009's default
- *     privileges give telflo_platform_runtime select, insert, update and delete,
- *     which the API needs: members read the library through it, and only a
- *     product admin writes it, which the API decides (decision 8).
+ *     validation-rule picker: a name, a category (free text), an optional
+ *     description and the regex, one row per entry, hard-deleted (nothing
+ *     references a row: a rule copies the regex, not the id). Global: no
+ *     organization column and no row-level security, as test_templates.
+ *     Migration 009's default privileges give telflo_platform_runtime select,
+ *     insert, update and delete, which the API needs: members read the library
+ *     through it, and only a product admin writes it, which the API decides.
  *   * The name is unique (uq_test_regex_name, case-sensitive, the seed's on
- *     conflict target); the name, category and description are
- *     trimmed of ASCII's whitespace and bounded (1 to 200, 1 to 100 and 1 to
- *     2,000 characters; a description is null for none), and the regex is at
- *     most 8,192 bytes, a rule's bound, and refused when blank, but never
- *     trimmed, as a rule's pattern isn't (migration 030's
- *     ck_validation_rules_pattern_length).
- *     Unicode's whitespace is the API's check (D15a Preflight ruling 6). It
- *     gains updated_at, and neither timestamp has a default: the API writes
- *     both from its clock, as flows' (migration 026).
- *   * The 35 seeded entries (Ruling 1), as Postgres stores them, which is
+ *     conflict target); the name, category and description are trimmed of
+ *     ASCII's whitespace and bounded (1 to 200, 1 to 100 and 1 to 2,000
+ *     characters; a description is null for none), and the regex is at most
+ *     8,192 bytes, a rule's bound, and refused when blank, but never trimmed,
+ *     as a rule's pattern isn't (migration 030's
+ *     ck_validation_rules_pattern_length). Unicode's whitespace is the API's
+ *     check. It gains updated_at, and neither timestamp has a default: the API
+ *     writes both from its clock, as flows' (migration 026).
+ *   * The 35 seeded entries, as Postgres stores them, which is
  *     apps/web/app/lib/regex-library.ts's REGEX_LIBRARY (name, category,
  *     description, pattern), in its order. The migration inserts them once on
- *     every database, the owner's included, on conflict (name) do nothing, as
- *     migration 026's flows: an admin's edits stand, and later changes go
- *     through the admin screen or a new migration. They are held below as
- *     `seededTestRegexes`, each text a JSON-escaped string, and written with
- *     dollar quoting (seededTestRegexesInsert), so no backslash is ever
- *     escaped for SQL. This migration reads no file. Their timestamps are the
- *     migration's time to the millisecond, as the API's clock would write
- *     them. `seededTestRegexes`, `testRegexesInsert` and
+ *     every database, a developer's own included, on conflict (name) do
+ *     nothing, as migration 026's flows: an admin's edits stand, and later
+ *     changes go through the admin screen or a new migration. They are held
+ *     below as `seededTestRegexes`, each text a JSON-escaped string, and
+ *     written with dollar quoting (seededTestRegexesInsert), so no backslash
+ *     is ever escaped for SQL. This migration reads no file. Their timestamps
+ *     are the migration's time to the millisecond, as the API's clock would
+ *     write them. `seededTestRegexes`, `testRegexesInsert` and
  *     `seededTestRegexesInsert` are exported for the tests and their fixtures
  *     (@telflo/db/testing's insertSeededTestRegexes;
  *     seeded-test-regexes-fixture.ts, the evaluator's RE2 check of every
- *     pattern and the web's check that the seed equals REGEX_LIBRARY: Ruling
- *     2), which reach them by a dynamic import of this module.
+ *     pattern and the web's check that the seed equals REGEX_LIBRARY), which
+ *     reach them by a dynamic import of this module.
  *
  * down drops the table with its rows: exactly what up added.
  */
 
-/** The 35 seeded entries (Preflight ruling 1), in regex-library.ts's order. */
+/** The 35 seeded entries, in regex-library.ts's order. */
 export const seededTestRegexes = Object.freeze([
   // PII / GDPR
   Object.freeze({
@@ -349,31 +347,30 @@ export const up = (pgm) => {
     );
 
     comment on table test_regex is
-      'the regex library (D15b decision 7):
-       named regex patterns the validation-rule picker offers, one row per
-       entry, hard-deleted (a rule copies the regex, never the id). Global
-       (ADR 0008): no organization column, no row-level security. Members
-       read it through the API; only a product admin
-       (users.is_product_admin) writes it, which the API decides. Seeded
-       with 35 patterns by migration 1700000000031.';
+      'the regex library: named regex patterns the validation-rule picker
+       offers, one row per entry, hard-deleted (a rule copies the regex, never
+       the id). Global: no organization column, no row-level security.
+       Members read it through the API; only a product admin
+       (users.is_product_admin) writes it, which the API decides. Seeded with
+       35 patterns by migration 1700000000031.';
     comment on column test_regex.id is
       'the entry''s id (uuidv7), which the admin''s writes address: its name
        may change.';
     comment on column test_regex.name is
       'the entry''s name in the picker and the admin table: trimmed, 1 to
-       200 characters, unique (uq_test_regex_name). Configuration text (ADR
-       0024): never in a log line, an attribute, an audit row or a URL.';
+       200 characters, unique (uq_test_regex_name). Configuration text:
+       never in a log line, an attribute, an audit row or a URL.';
     comment on column test_regex.category is
       'free text grouping entries in the picker (PII / GDPR, Secrets):
-       trimmed, 1 to 100 characters. Configuration text (ADR 0024).';
+       trimmed, 1 to 100 characters. Configuration text.';
     comment on column test_regex.description is
       'what the pattern matches, trimmed, 1 to 2,000 characters, or null for
-       none. Configuration text (ADR 0024).';
+       none. Configuration text.';
     comment on column test_regex.regex is
       'the pattern a picked rule copies, byte for byte: never trimmed, not
        blank, at most 8,192 bytes as a rule''s pattern. The API checks it
        under the evaluator''s RE2 on every create and on an edit that changes
-       it. Configuration text (ADR 0024).';
+       it. Configuration text.';
     comment on column test_regex.created_at is
       'written by the API from its clock, never now(), so that it holds whole
        milliseconds as a JavaScript Date does (migration 015''s rule). No

@@ -12,13 +12,12 @@ import {
 } from "./repositories/test-regex-repository.js";
 
 /*
- * The regex library's API (D15b decisions 7 and 8; details 17 and 18;
- * Preflight rulings 3 and 4): named regex patterns, global as test
- * templates are (ADR 0008).
+ * The regex library's API: named regex patterns, global as test templates
+ * are.
  *
  * Whether the caller may write is decided before the service is reached
  * (`requireProductAdmin` on the routes); every write is audited in no
- * organization, with ids only (detail 18).
+ * organization, with ids only.
  *
  * A create, in order: the body (the contract's, 400); the name read (409
  * `test_regex_name_taken`, so a duplicate spends no check); the person's
@@ -33,22 +32,22 @@ import {
  * transaction: the entry locked, the fields that differ from the locked row
  * written (a name taken is 409 from the unique index), and the audit row
  * naming them. None differ, or none were sent: the entry as it is, no write
- * and no audit (D14b Ruling 30). A regex written is always one the
- * evaluator took: either this request's, checked, or the one already
- * stored when the request began, checked when it was saved.
+ * and no audit. A regex written is always one the evaluator took: either
+ * this request's, checked, or the one already stored when the request
+ * began, checked when it was saved.
  *
- * The check (Preflight ruling 4): the evaluator's validate with a
- * `contains_regex` rule over `output` on `logs` (RE2 answers a regex alike
- * for every signal and target), counted on the person's own checked saves
- * (`admit(userId, null)`: VALIDATION_RULE_CHECKS_PER_MINUTE_PER_USER a
- * minute, apart from every organization's count of rule saves), when the
- * evaluator is to be asked, and never given back (D15a Preflight ruling 20).
+ * The check: the evaluator's validate with a `contains_regex` rule over
+ * `output` on `logs` (RE2 answers a regex alike for every signal and target),
+ * counted on the person's own checked saves (`admit(userId, null)`:
+ * VALIDATION_RULE_CHECKS_PER_MINUTE_PER_USER a minute, apart from every
+ * organization's count of rule saves), when the evaluator is to be asked, and
+ * never given back.
  *
  * An entry's name, category, description and regex, and the evaluator's
- * words, reach no log line and no audit row (ADR 0024): a log line names
+ * words, reach no log line and no audit row: a log line names
  * the entry's id (once it has one) and the check's result, and an
  * unavailable one the client's reason, status and the envelope's code, as
- * the rules' check (D15a), nothing else.
+ * the rules' check, nothing else.
  */
 
 /** The repositories a write uses, bound to one transaction. Both are global: no database context is needed. */
@@ -69,7 +68,7 @@ export interface TestRegexServiceDependencies {
   testRegexes: Pick<ITestRegexRepository, "list" | "find" | "findByName">;
   withTransaction: WithTestRegexesTransaction;
   evaluator: Pick<OttlEvaluatorClient, "validate">;
-  /** The person's checked saves, alone (`admit(userId, null)`, Preflight ruling 4). */
+  /** The person's checked saves, alone (`admit(userId, null)`). */
   limiter: PerUserLimiter;
   /** Every entry timestamp comes from here, never SQL `now()`. */
   now: () => Date;
@@ -124,7 +123,7 @@ const MISCONFIGURATION_REASONS: ReadonlySet<OttlEvaluatorUnavailableReason> = ne
   "malformed_reply",
 ]);
 
-/** An audit row about an entry (detail 18): global, so in no organization; ids and field names only. */
+/** An audit row about an entry: global, so in no organization; ids and field names only. */
 function auditEvent(writer: TestRegexWriter, testRegexId: string, action: string, metadata: Record<string, unknown>): AuditEvent {
   return {
     action,
@@ -149,7 +148,7 @@ export function createTestRegexService(deps: TestRegexServiceDependencies): ITes
   async function check(writer: TestRegexWriter, regex: string, ids: { testRegexId?: string }): Promise<void> {
     const admission = limiter.admit(writer.userId, null);
     if (!admission.isAdmitted) throw validationRuleRateLimited(admission.retryAfterSeconds);
-    // Counted now that the evaluator is asked, and never given back (D15a Preflight ruling 20).
+    // Counted now that the evaluator is asked, and never given back.
     const result = await evaluator.validate({
       signal: "logs",
       rule: { kind: "contains_regex", target: "output", pattern: regex },
@@ -231,7 +230,7 @@ export function createTestRegexService(deps: TestRegexServiceDependencies): ITes
           const updated = await transaction.testRegexes.update(current.id, to, now());
           // Locked above, and only a delete in another transaction ends it: this can't miss.
           if (!updated) throw testRegexNotFound();
-          // The fields' names, never their values (ADR 0024).
+          // The fields' names, never their values.
           await transaction.audit.record(auditEvent(writer, current.id, "test_regex.updated", { changedFields }));
           return updated;
         }),

@@ -11,30 +11,26 @@ import { useHeldText } from "~/lib/editor/held-text.js";
 import type { ValueView } from "~/lib/graph/value-view.js";
 
 /*
- * The `retain` operator's form (ADR 0018), over the card's scope (D9c
- * decisions 2 and 8). The rows are hand-drawn (an input
- * and a "Remove" button each, "Add Field" below), written by item: a row's
- * typing sets its item (held, D9b decision 2), Remove removes the item's
- * lines. Each row's input gets a fixed id by index,
- * `op-<index>-retain-field-<row>` (decision 10).
+ * The `retain` operator's form, over the card's scope. The rows are hand-drawn
+ * (an input and a "Remove" button each, "Add Field" below), written by item: a
+ * row's typing sets its item (held), Remove removes the item's lines. Each
+ * row's input gets a fixed id by index, `op-<index>-retain-field-<row>`.
  *
- * Changed (decisions 3 and 9; Preflight ruling 8): Add Field holds a row
- * that isn't in the text; its first typing appends the item as the list's
- * last (after the pause, on blur or Enter, on a save, or when the card
- * goes), and the row becomes that item's in place (the same key, so focus
- * and caret stay). Rows are keyed by their items (`useCardKeys`; D9c
- * Ruling 68): a row emptied and left removes its item as the pointer goes
- * down on a Remove button, and with index keys the click then removed the
- * next item too. Left empty, the held row goes. A row emptied and left
- * removes its item. So `""` is never written, which the collector refuses
- * (`fields` is `[]entry.Field`, `transformer/retain/config.go:38`;
+ * Add Field holds a row that isn't in the text; its first typing appends the
+ * item as the list's last (after the pause, on blur or Enter, on a save, or
+ * when the card goes), and the row becomes that item's in place (the same key,
+ * so focus and caret stay). Rows are keyed by their items (`useCardKeys`): a
+ * row emptied and left removes its item as the pointer goes down on a Remove
+ * button, and with index keys the click would then remove the next item too.
+ * Left empty, the held row goes. A row emptied and left removes its item. So
+ * `""` is never written, which the collector refuses (`fields` is
+ * `[]entry.Field`, `transformer/retain/config.go:38`;
  * `entry/field.go:111-133`). The empty text shows while there are no rows (a
  * held row is one). A `fields` that isn't a list of scalars is read-only with
- * decision 3's hint. Fixed (decision 4; Preflight ruling 13): the hint's
- * examples are fields the collector takes. Not `timestamp` (not a field: the
- * prefix must be `body`, `attributes` or `resource`, `field.go:117-131`) and
- * bare `attributes` and `resource` ("All attributes", "Resource attributes";
- * refused without a sub-field, `field.go:119-126`) are gone; the list is
+ * the unshowable-value hint. The hint's examples are fields the collector
+ * takes: never `timestamp` (not a field: the prefix must be `body`,
+ * `attributes` or `resource`, `field.go:117-131`) or bare `attributes` and
+ * `resource` (refused without a sub-field, `field.go:119-126`); the list is
  * `body`, `attributes.user_id` and `resource["host.name"]`, a group whose
  * fields aren't named being kept whole (`docs/operators/retain.md`;
  * `retain/transformer.go:35-43`).
@@ -63,7 +59,7 @@ function RetainRow({
   onRemove: () => void;
   disabled: boolean;
 }) {
-  // An emptied row is written (removed) only once it is left, not under the cursor (Preflight ruling 8).
+  // An emptied row is written (removed) only once it is left, not under the cursor.
   const text = useHeldText(value, onCommit, { pause: (typed) => typed !== "" });
   return (
     <div className="flex gap-2">
@@ -104,8 +100,8 @@ export function RetainOperatorForm() {
   }
   const holding = shown !== null && heldAt === shown.length;
   const rows = shown === null ? [] : holding ? [...shown, ""] : shown;
-  // Rows keyed by their items (Ruling 68): a row emptied and left removes its item as the pointer goes down on
-  // its Remove, and the click must not land on the next item's row. The held row takes the key its item gets.
+  // Rows keyed by their items: a row emptied and left removes its item as the pointer goes down on its Remove, and
+  // the click must not land on the next item's row. The held row takes the key its item gets.
   const cards = useCardKeys(shown ?? []);
   const rowKeys = holding ? [...cards.keys, cards.next] : cards.keys;
   const removeItem = (index: number) => {

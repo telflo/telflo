@@ -6,31 +6,30 @@ import type { AnonymousValidationLimiter } from "../../../http/rate-limits.js";
 import type { IValidationService } from "../../configurations/validation.js";
 
 /*
- * The public surface's anonymous validate (D27 decisions 23-25; Preflight
- * ruling 9): `POST /api/public/v1/validate/anonymous`, an open route
- * (open-routes.ts, on route-guard.ts' OPEN_PUBLIC_ROUTES as POST only), so
- * no token, no organization and no per-token count. An `Authorization`
- * header sent is never read: no token check runs, so a bearer is neither
- * looked up nor counted against the address's token failures.
+ * The public surface's anonymous validate:
+ * `POST /api/public/v1/validate/anonymous`, an open route (open-routes.ts,
+ * on route-guard.ts' OPEN_PUBLIC_ROUTES as POST only), so no token, no
+ * organization and no per-token count. An `Authorization` header sent is
+ * never read: no token check runs, so a bearer is neither looked up nor
+ * counted against the address's token failures.
  *
  * The body is `/validate`'s (`PublicValidateRequestSchema`, strict), the
  * answer too, `no-store` (every reply of this route, its refusals
  * included). Once the body passed its checks, the anonymous limits admit
  * it (per address and overall, a minute's count and slots in flight: 429
- * `rate_limited` with Retry-After), before the catalogue's reads; then the
+ * `rate_limited` with Retry-After), before the catalog's reads; then the
  * validation service's `validateAnonymousText` (no organization variables;
  * the same 400s as `/validate`, and 503 `validation_unavailable`).
  *
  * Its record is the request log's line only (method, the route's path,
  * status): the text and the validator's errors go only into the reply,
- * never a log line, an error's message or a span (ADR 0024). No audit row.
- * Its OpenAPI operation is `openapi/validate.yaml`'s.
+ * never a log line, an error's message or a span. No audit row. Its OpenAPI
+ * operation is `openapi/validate.yaml`'s.
  *
- * Switched (D36-1 decisions 27 and 31, Preflight ruling 7): with
- * TELFLO_ANONYMOUS_VALIDATE off, the open source's default, it answers as a
- * path nothing serves (404 `not_found`), before the body's limit and the
- * anonymous limits count it. It stays registered, and on the open
- * surface's allowlist: unregistered, its path would answer the public
+ * Switched: with TELFLO_ANONYMOUS_VALIDATE off, the open source's default,
+ * it answers as a path nothing serves (404 `not_found`), before the body's
+ * limit and the anonymous limits count it. It stays registered, and on the
+ * open surface's allowlist: unregistered, its path would answer the public
  * plugin's 401 instead.
  */
 
@@ -38,9 +37,9 @@ import type { IValidationService } from "../../configurations/validation.js";
 export const ANONYMOUS_VALIDATE_PATH = "/validate/anonymous";
 
 /**
- * The body limit (D27 decision 23): 1 MiB, the gateway's catch-all for
- * public paths (its 2 MiB location's regex ends at `validate$`). Past it,
- * 413 `payload_too_large` in the envelope, before the limits count it.
+ * The body limit: 1 MiB, the gateway's catch-all for public paths (its 2
+ * MiB location's regex ends at `validate$`). Past it, 413
+ * `payload_too_large` in the envelope, before the limits count it.
  */
 export const ANONYMOUS_VALIDATE_BODY_LIMIT = 1024 * 1024;
 
@@ -67,7 +66,7 @@ export function registerAnonymousValidateRoute(
     ANONYMOUS_VALIDATE_PATH,
     {
       bodyLimit: ANONYMOUS_VALIDATE_BODY_LIMIT,
-      // First (Preflight ruling 7): off, nothing else runs, not even the body's limit.
+      // First: off, nothing else runs, not even the body's limit.
       onRequest: notFoundWhen(!anonymousValidate),
       onSend: noStore,
       schema: {
@@ -83,7 +82,7 @@ export function registerAnonymousValidateRoute(
       },
     },
     async (request, reply) => {
-      // Counted before the catalogue's reads (Preflight ruling 9); the slots are held until the answer.
+      // Counted before the catalog's reads; the slots are held until the answer.
       const admission = anonymousValidationLimiter.admit(request.ip);
       try {
         const answer = await validation.validateAnonymousText(request.body);

@@ -1,9 +1,8 @@
 /**
- * Play all (D14b decisions 6, 7, 10 and 24; Preflight rulings 13 to 15): the
- * store-owned loops, parallel and serial, with the text, pin, version and
- * suite captured at the click and the definitions read fresh then; at most
- * four queue requests in flight; the selection; the serial order, each run
- * followed by id until it ends; the refusals counted into one toast per
+ * Play all: the store-owned loops, parallel and serial, with the text, pin,
+ * version and suite captured at the click and the definitions read fresh then;
+ * at most four queue requests in flight; the selection; the serial order, each
+ * run followed by id until it ends; the refusals counted into one toast per
  * message; the stops (a version switch, leaving the page, signing out, 30
  * failed reads, a refusal, a session that ended); and the hold, from the
  * click.
@@ -153,7 +152,7 @@ function watch() {
   stopWatching = useTestingStore.getState().watchRuns(TARGET);
 }
 
-describe("starting (Preflight ruling 13)", () => {
+describe("starting", () => {
   it("sets the hold at once, so a synchronous second call returns false and starts nothing; nor while a single run starts", async () => {
     await serveSuite(definitions(2));
 
@@ -218,7 +217,7 @@ describe("starting (Preflight ruling 13)", () => {
   });
 });
 
-describe("in parallel (Preflight ruling 14)", () => {
+describe("in parallel", () => {
   it("queues every definition from itself with the text, pin and version of the click, in the card's order, at most 4 in flight; the hold until the last answer", async () => {
     const listed = definitions(6);
     await serveSuite(listed);
@@ -383,7 +382,7 @@ describe("in parallel (Preflight ruling 14)", () => {
   });
 });
 
-describe("serially (Preflight ruling 14)", () => {
+describe("serially", () => {
   it("queues one at a time in the card's order, following each run by id every second until it ends; each step's run selected; held between the steps", async () => {
     const listed = definitions(3);
     await serveSuite(listed);
@@ -431,7 +430,7 @@ describe("serially (Preflight ruling 14)", () => {
     );
   });
 
-  it("shows each followed run's state in its row from the follow's own reads, when the list's poll doesn't answer (noteRun; D14b Ruling 42)", async () => {
+  it("shows each followed run's state in its row from the follow's own reads, when the list's poll doesn't answer (noteRun)", async () => {
     const listed = definitions(2);
     await serveSuite(listed);
     // The list's reads hang until their abort (RUNS_REQUEST_TIMEOUT_MS, longer than this test): only the follow speaks for the runs.
@@ -597,7 +596,7 @@ describe("serially (Preflight ruling 14)", () => {
   });
 });
 
-describe("the definitions known (D14b Ruling 40)", () => {
+describe("the definitions known", () => {
   /** Starts a Play all, recording when its definitions are known and what was queued then. */
   function startWatched(mode: PlayAllMode) {
     const known: number[] = [];
@@ -650,7 +649,7 @@ describe("the definitions known (D14b Ruling 40)", () => {
   });
 });
 
-describe("a Play all that queued nothing (D14b Ruling 50)", () => {
+describe("a Play all that queued nothing", () => {
   /** Starts a Play all, recording each onNothingQueued call by whether Play was still held then. */
   function startCounted(mode: PlayAllMode) {
     const heldAtCall: boolean[] = [];
@@ -721,7 +720,7 @@ describe("a Play all that queued nothing (D14b Ruling 50)", () => {
     expect(stoppedMidRequest).toEqual([]);
   });
 
-  it("says nothing once stopped while its definitions read was under way, though the read answers, fails or times out later (D14b Ruling 52)", async () => {
+  it("says nothing once stopped while its definitions read was under way, though the read answers, fails or times out later", async () => {
     const read = await serveSuite(definitions(1));
     const other = { organizationId: GROUP_ID, configuration: MINE, version: OTHER_VERSION };
     const back = { organizationId: GROUP_ID, configuration: MINE, version: VERSION };

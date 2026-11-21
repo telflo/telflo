@@ -13,13 +13,13 @@ import {
 } from "./operator-catalog.js";
 
 /*
- * The operator catalog (D9c Task 5): its 26 types, and the seed
- * Add Operator appends for each, checked against the collector's own rules
- * at contrib v0.162.0 (`pkg/stanza/`, cited per rule): each seed decodes
- * (its keys are the operator's, its fields are fields) and builds (its
- * operator's `Build`/`Validate` accepts it). The collector's Go isn't run
- * here; each rule it applies to a seed is restated with its source, so a
- * seed that breaks one fails its row.
+ * The operator catalog: its 26 types, and the seed Add Operator appends
+ * for each, checked against the collector's own rules at contrib v0.162.0
+ * (`pkg/stanza/`, cited per rule): each seed decodes (its keys are the
+ * operator's, its fields are fields) and builds (its operator's
+ * `Build`/`Validate` accepts it). The collector's Go isn't run here; each
+ * rule it applies to a seed is restated with its source, so a seed that
+ * breaks one fails its row.
  */
 
 // ── The collector's field syntax (entry/field.go:111-226) ──
@@ -400,7 +400,7 @@ const ROWS: Record<OperatorType, Row> = {
       ],
       ["combine_field is a field, and set", "transformer/recombine/config.go:97-99", (s) => isField(s.combine_field)],
       ["overwrite_with is unset, newest or oldest", "transformer/recombine/config.go:101-109", (s) => [undefined, "newest", "oldest"].includes(s.overwrite_with as string)],
-      // Unset, combine_with is the collector's newline (config.go:24, 43); the seed leaves it so (Preflight ruling 1).
+      // Unset, combine_with is the collector's newline (config.go:24, 43); the seed leaves it so.
       ["combine_with is left to its default", "transformer/recombine/config.go:24, 43", (s) => s.combine_with === undefined],
     ],
   },
@@ -412,7 +412,7 @@ const ROWS: Record<OperatorType, Row> = {
   },
 };
 
-describe("the 26 operator types (D9c decision 1)", () => {
+describe("the 26 operator types", () => {
   it("are in four categories: 7 format parsers, 5 field parsers, 10 transforms, 4 flow", () => {
     expect(OPERATORS).toHaveLength(26);
     expect(new Set(OPERATORS.map((op) => op.type)).size).toBe(26);
@@ -446,7 +446,7 @@ describe("the 26 operator types (D9c decision 1)", () => {
   });
 });
 
-describe("every seed builds (decision 3): its keys are its operator's, and each Build rule holds", () => {
+describe("every seed builds: its keys are its operator's, and each Build rule holds", () => {
   it.each(OPERATORS.map((op) => [op.type, ROWS[op.type]] as const))("%s", (type, row) => {
     const seed = operatorSeed(type);
     // The type is the collector's operatorType constant (row.typeSource).
@@ -493,8 +493,8 @@ describe("every seed builds (decision 3): its keys are its operator's, and each 
   });
 });
 
-describe("the time layouts (decision 7; Preflight ruling 14)", () => {
-  it("epoch offers the collector's s and s.us, labelled as the two epoch presets (helper/time.go:98-106)", () => {
+describe("the time layouts", () => {
+  it("epoch offers the collector's s and s.us, labeled as the two epoch presets (helper/time.go:98-106)", () => {
     expect(LAYOUT_PRESETS.epoch.map((p) => [p.value, p.label])).toEqual([
       ["s", "Unix epoch (seconds)"],
       ["s.us", "Unix epoch with fractional"],
@@ -502,7 +502,7 @@ describe("the time layouts (decision 7; Preflight ruling 14)", () => {
     for (const preset of LAYOUT_PRESETS.epoch) expect(EPOCH_LAYOUTS).toContain(preset.value);
   });
 
-  it("strptime's first preset is labelled with what it writes; Go time offers Go layouts", () => {
+  it("strptime's first preset is labeled with what it writes; Go time offers Go layouts", () => {
     expect(LAYOUT_PRESETS.strptime[0]).toMatchObject({ value: "%Y-%m-%d %H:%M:%S", label: "%Y-%m-%d %H:%M:%S" });
     expect(LAYOUT_PRESETS.gotime.map((p) => p.value)).toEqual([
       "2006-01-02 15:04:05",
@@ -512,7 +512,7 @@ describe("the time layouts (decision 7; Preflight ruling 14)", () => {
       "02/Jan/2006:15:04:05 -0700",
       "Jan 02 15:04:05",
     ]);
-    // The same times, labelled alike.
+    // The same times, labeled alike.
     expect(LAYOUT_PRESETS.gotime.slice(1).map((p) => p.label)).toEqual(LAYOUT_PRESETS.strptime.slice(1).map((p) => p.label));
     for (const preset of LAYOUT_PRESETS.gotime) expect(preset.value).not.toContain("%");
   });
@@ -524,7 +524,7 @@ describe("the time layouts (decision 7; Preflight ruling 14)", () => {
     expect(layoutAfterSwitch("%d.%m.%Y", "epoch")).toBeUndefined();
     expect(layoutAfterSwitch("%b %d %H:%M:%S", "strptime")).toBeUndefined();
     expect(layoutAfterSwitch(undefined, "epoch")).toBeUndefined();
-    // The seven epoch layouts are epoch's, not only the two presets (helper/time.go:100; D9c Ruling 63).
+    // The seven epoch layouts are epoch's, not only the two presets (helper/time.go:100).
     expect(presetTypeOf("ms")).toBe("epoch");
     expect(layoutAfterSwitch("s.ns", "strptime")).toBe("%Y-%m-%d %H:%M:%S");
     expect(layoutSetMessage("epoch")).toBe("Layout set to the first epoch preset.");

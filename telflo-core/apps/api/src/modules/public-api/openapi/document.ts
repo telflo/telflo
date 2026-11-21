@@ -2,10 +2,9 @@ import { readFileSync } from "node:fs";
 import { parse } from "yaml";
 
 /*
- * The public surface's OpenAPI 3.1 document (D25 decision 49, Preflight
- * ruling 19): hand-written, one YAML fragment per area beside this file,
- * assembled once at start into one document, served at
- * `GET /api/public/v1/openapi.json` (open-routes.ts). A fragment holds only
+ * The public surface's OpenAPI 3.1 document: hand-written, one YAML
+ * fragment per area beside this file, assembled once at start into one
+ * document, served at `GET /api/public/v1/openapi.json` (open-routes.ts). A fragment holds only
  * `paths` and `components`; a path, or a component of any kind, named by
  * two fragments (or twice in one: yaml's unique keys) refuses the whole
  * document, so the server doesn't start with an ambiguous one. Every

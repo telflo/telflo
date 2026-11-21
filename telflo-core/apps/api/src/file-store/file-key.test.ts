@@ -11,7 +11,7 @@ const DEFINITION_INPUT = "0190f5c2-7d1a-7c4e-8a3b-6f2e3d4c5b6a";
 const LOGO = "0190f5c2-7d1a-7c4e-8a3b-7f2e3d4c5b6a";
 const LIBRARY_FILE = "0190f5c2-7d1a-7c4e-8a3b-8f2e3d4c5b6a";
 
-describe("fileKeyName (D23-1 decision 17)", () => {
+describe("fileKeyName", () => {
   const cases: [string, FileKey, string][] = [
     [
       "a person's test input",
@@ -40,12 +40,12 @@ describe("fileKeyName (D23-1 decision 17)", () => {
       `organizations/${ORGANIZATION}/test-definition-inputs/${DEFINITION_INPUT}`,
     ],
     [
-      "an organization's logo (D23-2 decision 30)",
+      "an organization's logo",
       { kind: "organization-logo", organizationId: ORGANIZATION, logoId: LOGO },
       `organizations/${ORGANIZATION}/logos/${LOGO}`,
     ],
     [
-      "a library file (D23-2 decision 30)",
+      "a library file",
       { kind: "library-file", fileId: LIBRARY_FILE },
       `global/library-files/${LIBRARY_FILE}`,
     ],
@@ -64,7 +64,7 @@ describe("fileKeyName (D23-1 decision 17)", () => {
     expect(() => fileKeyName({ kind: "unplanned-kind" } as unknown as FileKey)).toThrow(InvalidFileKeyError);
   });
 
-  it("refuses a logo or a library file whose id isn't a canonical lower-case UUID (D23-2 decision 30)", () => {
+  it("refuses a logo or a library file whose id isn't a canonical lower-case UUID", () => {
     const badLogo: FileKey = { kind: "organization-logo", organizationId: ORGANIZATION, logoId: LOGO.toUpperCase() };
     expect(() => fileKeyName(badLogo)).toThrow("The file key's logoId is not a canonical lower-case UUID.");
     const badOrganization: FileKey = { kind: "organization-logo", organizationId: "../x", logoId: LOGO };

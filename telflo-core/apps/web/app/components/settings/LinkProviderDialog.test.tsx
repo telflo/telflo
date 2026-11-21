@@ -10,7 +10,7 @@ import { ApiError } from "~/lib/api-client.js";
 import { GOOGLE } from "~/test/account.js";
 import { expectNoAttributeHolds } from "~/test/fleets.js";
 
-/* The password prompt before a link (D21 decisions 38 and 45). */
+/* The password prompt before a link. */
 
 const PASSWORD = "canary-prompt-pw-12cd";
 const AUTHORIZATION_URL = "https://accounts.example.test/authorize?state=abc";
@@ -86,7 +86,7 @@ describe("LinkProviderDialog", () => {
     await user.keyboard("{Escape}");
     expect(screen.getByRole("dialog", { name: "Link Google" })).toBeInTheDocument();
 
-    // Back from the provider: restored as it left, then usable again (Ruling 89).
+    // Back from the provider: restored as it left, then usable again.
     pageShow(true);
     expect(within(dialog).getByRole("button", { name: "Cancel" })).toBeEnabled();
     expect(within(dialog).getByLabelText("Current Password")).toBeEnabled();

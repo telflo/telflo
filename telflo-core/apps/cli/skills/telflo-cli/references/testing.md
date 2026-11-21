@@ -49,7 +49,7 @@ optional `name` is read but not sent.
 
 ## Rules for good tests
 
-1. **Assert the class of behaviour, not the sample's literals.** An exact
+1. **Assert the class of behavior, not the sample's literals.** An exact
    value belongs only in the untouched control and in values the
    configuration itself writes.
 2. **Always include three controls:** (a) the number of records that

@@ -1,9 +1,9 @@
 /*
- * The transform processor's own functions (D25 decision 33). The
- * processor registers them on top of OTTL's standard set; the evaluator
- * knows only the standard set, so a statement using one parses there as
- * "undefined function", a false error. A configuration's lint turns that
- * error into a note: the item is valid, its arguments unchecked.
+ * The transform processor's own functions. The processor registers them on
+ * top of OTTL's standard set; the evaluator knows only the standard set, so
+ * a statement using one parses there as "undefined function", a false
+ * error. A configuration's lint turns that error into a note: the item is
+ * valid, its arguments unchecked.
  */
 
 export const TRANSFORM_CUSTOM_FUNCTIONS: ReadonlySet<string> = new Set([

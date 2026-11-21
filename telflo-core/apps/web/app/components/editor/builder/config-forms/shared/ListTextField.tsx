@@ -8,23 +8,22 @@ import { useHeldText } from "~/lib/editor/held-text.js";
 import { plainNumber, type ValueChange, type ValuePath } from "~/lib/graph/text-edits.js";
 
 /*
- * A list of strings as text (D9d decision 12): Self-monitoring's comma list
- * (D9b), promoted, with a newline variant (tail sampling's "One per line"
- * values, OTTL's span and span event values) and number items (spanmetrics'
- * buckets, statsd's percentiles).
+ * A list of strings as text: Self-monitoring's comma list, with a newline
+ * variant (tail sampling's "One per line" values, OTTL's span and span
+ * event values) and number items (spanmetrics' buckets, statsd's
+ * percentiles).
  *
  * - `separator: ","` is a one-line field (Enter writes); `"\n"` a textarea,
  *   where Enter is a new line. Items show joined by `join` (`,` by default;
- *   spanmetrics and statsd pass `", "`; Preflight ruling 20)
- *   or by a line break.
+ *   spanmetrics and statsd pass `", "`) or by a line break.
  * - Typing is held (`useHeldText`). After the pause a draft is written only
- *   while it reads back as itself (Preflight ruling 5): not while it ends in
- *   a separator, a line break or whitespace, holds an empty item, or is
- *   spaced as the written list wouldn't show it; those would be written and
- *   the field would show the text again, dropping what is under the cursor
- *   (a typed line break would be dropped). On blur, Enter in
- *   the comma field, Cmd/Ctrl+S, a flush and when the field goes, the draft
- *   is written as it parses: split, trimmed, empty items dropped.
+ *   while it reads back as itself: not while it ends in a separator, a line
+ *   break or whitespace, holds an empty item, or is spaced as the written
+ *   list wouldn't show it; those would be written and the field would show
+ *   the text again, dropping what is under the cursor (a typed line break
+ *   would be dropped). On blur, Enter in the comma field, Cmd/Ctrl+S, a
+ *   flush and when the field goes, the draft is written as it parses:
+ *   split, trimmed, empty items dropped.
  * - Written by item: a changed item is set, items past the typed ones are
  *   removed by their lines (from the last), typed items past the list's are
  *   appended; an unset list is written whole. With `plainNumbers`, an item
@@ -32,12 +31,12 @@ import { plainNumber, type ValueChange, type ValuePath } from "~/lib/graph/text-
  *   other as a string (`2ms`). Emptied, the items are removed, leaving
  *   `[]`; with `emptyRemovesKey`, the key goes (Self-monitoring's), and
  *   with `removePathWhenEmpty`, that path goes (spanmetrics' `explicit`).
- * - An item it can't show (not a scalar; holding a separator or a line
- *   break; empty; spaces around it), or a value that isn't a list, makes
- *   it read-only with D9b's hint: what it would write back would change
- *   the item.
+ * - An item it can't show (not a scalar; holding a separator or a line break;
+ *   empty; spaces around it), or a value that isn't a list, makes it read-only
+ *   with the unshowable-value hint: what it would write back would change the
+ *   item.
  *
- * Ids are fixed by the form; no item reaches an attribute (decision 13).
+ * Ids are fixed by the form; no item reaches an attribute.
  */
 
 export function ListTextField({
@@ -61,7 +60,7 @@ export function ListTextField({
   id: string;
   /** What separates typed items: a comma (one line) or a line break (a textarea). */
   separator: "," | "\n";
-  /** What the comma field shows between items (Preflight ruling 20). */
+  /** What the comma field shows between items. */
   join?: string;
   label: string;
   description?: string;
@@ -131,7 +130,7 @@ export function ListTextField({
       for (let index = current.length - 1; index >= next.length; index--) changes.push({ path: [...path, index], remove: true });
       latest.apply(changes);
     },
-    // After the pause, only a draft that reads back as itself (Preflight ruling 5).
+    // After the pause, only a draft that reads back as itself.
     { pause: (typed) => typed !== "" && parse(typed).join(shownJoin) === typed },
   );
 
@@ -174,10 +173,9 @@ export function ListTextField({
 }
 
 /**
- * Comma-separated numbers (statsd's percentiles; D9d decision 12): a
- * `ListTextField` whose items are written plain when they read as numbers
- * (`50`, `99.9`), as typed otherwise (`${env:P}`), and whose emptying
- * removes the key.
+ * Comma-separated numbers (statsd's percentiles): a `ListTextField` whose
+ * items are written plain when they read as numbers (`50`, `99.9`), as
+ * typed otherwise (`${env:P}`), and whose emptying removes the key.
  */
 export function NumberListField(props: {
   path: ValuePath;

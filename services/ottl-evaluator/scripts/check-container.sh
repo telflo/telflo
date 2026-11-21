@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# Checks the running OTTL evaluator's container from the inside (D15a spec
-# decision 10, Preflight ruling 13): uid 65532, no capability in any set and
-# no-new-privileges (this process and serve, PID 1), a read-only root
-# filesystem, no route out (external addresses don't answer, an external name
-# doesn't resolve), no secret in its environment, serve not dumpable (its
-# /proc environ refused), and an evaluate child that starts as serve starts
-# one and raises its own oom_score_adj. The image is distroless, with no
-# shell or Python to pipe a probe into (the collector tester's
-# check-container.sh does that), so the binary's own `selfcheck` subcommand
-# does the checking (internal/server/selfcheck_linux.go), run by
-# `docker compose exec` as the container's user.
+# Checks the running OTTL evaluator's container from the inside: uid 65532,
+# no capability in any set and no-new-privileges (this process and serve,
+# PID 1), a read-only root filesystem, no route out (external addresses
+# don't answer, an external name doesn't resolve), no secret in its
+# environment, serve not dumpable (its /proc environ refused), and an
+# evaluate child that starts as serve starts one and raises its own
+# oom_score_adj. The image is distroless, with no shell or Python to pipe a
+# probe into (the collector tester's check-container.sh does that), so the
+# binary's own `selfcheck` subcommand does the checking
+# (internal/server/selfcheck_linux.go), run by `docker compose exec` as the
+# container's user.
 #
 # Then the forwarder (ottl-evaluator-forward), as the tester's
 # forwarder is checked: its nginx runs as uid 101, master and workers, with

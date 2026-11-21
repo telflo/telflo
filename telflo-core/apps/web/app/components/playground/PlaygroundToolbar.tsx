@@ -10,17 +10,16 @@ import { PlaygroundVersionPicker } from "./PlaygroundVersionPicker.js";
 export const PUBLISH_LOCKED_ACTION = "publish a configuration so fleets can deploy it";
 
 /*
- * The playground editor's toolbar (D31-1 decision 28; Ruling 276, Preflight
- * ruling 10): the signed-in EditorToolbar's look, cut to what a visitor
- * has. On the left, the configuration's name as text (no rename; no
- * "Unsaved" badge: nothing here saves) and the fixed collector picker
- * (`PlaygroundVersionPicker`: the pin, a change locked); no version picker.
- * On the right, under the editor tour's `toolbar-actions` anchor: the shared
- * edit actions (`EditorEditActions`: undo, redo, duplicate, delete, the same
- * DOM as the signed-in toolbar's), Save, always enabled (it stages the edit
- * and opens "Sign in to save": `onSave`), and Publish, shown and locked (the
- * sign-up prompt). Task 5's public editor toolbar is built on the same
- * pieces. The name is text, never an attribute (ADR 0024).
+ * The playground editor's toolbar: the signed-in EditorToolbar's look, cut to
+ * what a visitor has. On the left, the configuration's name as text (no
+ * rename; no "Unsaved" badge: nothing here saves) and the fixed collector
+ * picker (`PlaygroundVersionPicker`: the pin, a change locked); no version
+ * picker. On the right, under the editor tour's `toolbar-actions` anchor: the
+ * shared edit actions (`EditorEditActions`: undo, redo, duplicate, delete, the
+ * same DOM as the signed-in toolbar's), Save, always enabled (it stages the
+ * edit and opens "Sign in to save": `onSave`), and Publish, shown and locked
+ * (the sign-up prompt). The public editor's toolbar (`PublicEditorToolbar`) is
+ * built on the same pieces. The name is text, never an attribute.
  */
 export function PlaygroundToolbar({ onSave }: { onSave: () => void }) {
   const name = useEditorStore((state) => state.configuration?.name ?? "");

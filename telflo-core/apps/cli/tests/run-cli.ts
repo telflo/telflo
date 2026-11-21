@@ -1,9 +1,8 @@
 /*
- * Runs the CLI in process, its streams a test's (D27 decisions 32 and 33):
- * stdin a stream (a pipe, or a "terminal" whose raw mode is recorded),
- * stdout and stderr collected. Test support only: never built or packed
- * (Preflight ruling 4). What it collects may hold a token or a bearer:
- * tests check it with boolean canaries, never by printing it.
+ * Runs the CLI in process, its streams a test's: stdin a stream (a pipe, or a
+ * "terminal" whose raw mode is recorded), stdout and stderr collected. Test
+ * support only: never built or packed. What it collects may hold a token or a
+ * bearer: tests check it with boolean canaries, never by printing it.
  */
 
 import { PassThrough } from "node:stream";

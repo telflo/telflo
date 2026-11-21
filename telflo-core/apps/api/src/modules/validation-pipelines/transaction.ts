@@ -8,13 +8,12 @@ import type { IValidationPipelineRepository } from "./repositories/validation-pi
 import type { IValidationRuleRepository } from "./repositories/validation-rule-repository.js";
 
 /**
- * The repositories a unit of work of the validation pipelines endpoints
- * uses, bound to one transaction that carries the request's database
- * context: the active organization and its members (the lock and the
- * membership's re-read, D7 decision 9's), the configurations (read, and
- * locked for a write: one lock order) and versions as the caller sees them
- * (D11b decision 1), the validation pipelines and rules they can see, and
- * the audit trail.
+ * The repositories a unit of work of the validation pipelines endpoints uses,
+ * bound to one transaction that carries the request's database context: the
+ * active organization and its members (the lock and the membership's
+ * re-read), the configurations (read, and locked for a write: one lock order)
+ * and versions as the caller sees them, the validation pipelines and rules
+ * they can see, and the audit trail.
  */
 export interface ValidationPipelinesTransaction {
   organization: Pick<IActiveOrganizationRepository, "findActiveForShare">;

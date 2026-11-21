@@ -35,14 +35,13 @@ import { nodeAt, readValue, type ValueView } from "~/lib/graph/value-view.js";
 import { selectIsEditingLocked, TELEMETRY_BASE, useEditorStore, type EditorState } from "~/lib/stores/editor-store.js";
 
 /*
- * The Self-monitoring dialog (ADR 0018; D9b decision 7), over the dialog's
- * draft (`useTelemetryDraft`): the fields read `service.telemetry`
- * from the text as it was when the dialog opened, and write key-path changes
- * into the draft. Apply sends those changes to the store's
- * `setTelemetryValues`, which writes them by key path under
- * `service.telemetry`, as one entry, "Edit self-monitoring".
+ * The Self-monitoring dialog, over the dialog's draft (`useTelemetryDraft`):
+ * the fields read `service.telemetry` from the text as it was when the
+ * dialog opened, and write key-path changes into the draft. Apply sends
+ * those changes to the store's `setTelemetryValues`, which writes them by
+ * key path under `service.telemetry`, as one entry, "Edit self-monitoring".
  *
- * How it writes (by key path; decision 2):
+ * How it writes (by key path):
  * - a reader or an OTLP processor turned on appends its item; turned off,
  *   that one item's lines are removed (the list's key with its last item);
  * - Output Paths and Propagators, comma-separated, are
@@ -50,66 +49,61 @@ import { selectIsEditingLocked, TELEMETRY_BASE, useEditorStore, type EditorState
  *   from the end; emptied, the key goes;
  * - a resource attribute's key is renamed in place on blur or Enter; a key
  *   another attribute has is refused with `ATTRIBUTE_EXISTS_MESSAGE` under
- *   the row, as text, and the row shows its key again (as Headers'; Ruling
- *   67); the rows are keyed by their attributes, a renamed one keeping its
- *   row wherever it lands (an integer-like key goes first), so a × pressed
- *   as a rename is written removes its own attribute (D9c Ruling 79);
- *   "unset" writes `null`, unchecking writes `""` and the row stays; the
- *   remove button removes the attribute's lines (the mapping with its last);
+ *   the row, as text, and the row shows its key again (as Headers'); the
+ *   rows are keyed by their attributes, a renamed one keeping its row
+ *   wherever it lands (an integer-like key goes first), so a × pressed as a
+ *   rename is written removes its own attribute; "unset" writes `null`,
+ *   unchecking writes `""` and the row stays; the remove button removes the
+ *   attribute's lines (the mapping with its last);
  * - "Convert to Prometheus reader" appends a Prometheus reader from the
  *   address when there is none, and removes `metrics.address`;
  * - a field cleared removes its key, and a mapping the dialog added (not in
  *   the text when it opened: `metrics`, `logs`, `traces`, `resource`) goes
  *   with the key that emptied it; one the text has, an explicit null
- *   included, stays (Ruling 70);
+ *   included, stays;
  * - at Apply, a resource attribute row whose key is still empty is dropped,
- *   so `""` is never written as a key (Ruling 69; never `"": value`),
- *   through the removal
- *   above: `resource` goes with it only when the dialog added it (Ruling 79).
+ *   so `""` is never written as a key (never `"": value`), through the
+ *   removal above: `resource` goes with it only when the dialog added it.
  *
- * Fixed (decision 7): the whole of `service.telemetry` is never replaced or
- * pruned of empty values (a console reader's `{}` stays); unset-then-uncheck
- * keeps the attribute; the draft isn't re-seeded from the store while open;
- * and Apply with no change takes no entry and leaves the editor clean.
- * Apply writes only the draft's differences, never a key the
- * dialog doesn't show; a draft reading as the text (or, over a text without
- * telemetry, as an empty mapping) closes the dialog with no toast and no
- * entry. Remove Section removes `service.telemetry`'s lines (a `service`
- * left empty is `service: {}`), as one entry, "Edit self-monitoring"; it is
- * enabled whenever the key is in the text, an explicit null included (Ruling
- * 68).
+ * The whole of `service.telemetry` is never replaced or pruned of empty
+ * values (a console reader's `{}` stays); unset-then-uncheck keeps the
+ * attribute; the draft isn't re-seeded from the store while open; and Apply
+ * with no change takes no entry and leaves the editor clean. Apply writes
+ * only the draft's differences, never a key the dialog doesn't show; a draft
+ * reading as the text (or, over a text without telemetry, as an empty
+ * mapping) closes the dialog with no toast and no entry. Remove Section
+ * removes `service.telemetry`'s lines (a `service` left empty is
+ * `service: {}`), as one entry, "Edit self-monitoring"; it is enabled
+ * whenever the key is in the text, an explicit null included.
  *
- * Fixed (Rulings 65 and 66): Apply replays the draft's changes, so it writes
- * only while the text is still the one the draft was taken from. When the
- * text changed while the dialog was open (an undo, a load), Apply writes
- * nothing, keeps the dialog open with `TEXT_CHANGED_MESSAGE`, and takes the
- * draft again from the text. The dialog's undo and redo shortcuts are its
- * own (`OWN_HISTORY_PROPS`): they never reach the editor's. A write the
- * store refuses (its toast says why) keeps the dialog open with the draft;
- * only a write closes it with "Self-monitoring updated". Remove Section
- * likewise closes only when it removed (Ruling 72). Apply writes what the
- * fields still hold into the draft first, and reads the draft's changes
- * after that (Ruling 71, as Ruling 33 for saves: a click may not blur the
- * field); one refused there (a clashing key, its message under the row)
- * keeps the dialog open, writing nothing (Ruling 82). The dialog closes at
- * once: there is no close animation (ui/dialog's
- * `animate-out` classes have no CSS). The body stays mounted with the draft
- * until Radix unmounts it, so an animation added later wouldn't blank it,
- * and the draft is taken again when it opens (Rulings 73, 80).
+ * Apply replays the draft's changes, so it writes only while the text is still
+ * the one the draft was taken from. When the text changed while the dialog was
+ * open (an undo, a load), Apply writes nothing, keeps the dialog open with
+ * `TEXT_CHANGED_MESSAGE`, and takes the draft again from the text. The
+ * dialog's undo and redo shortcuts are its own (`OWN_HISTORY_PROPS`): they
+ * never reach the editor's. A write the store refuses (its toast says why)
+ * keeps the dialog open with the draft; only a write closes it with
+ * "Self-monitoring updated". Remove Section likewise closes only when it
+ * removed. Apply writes what the fields still hold into the draft first, and
+ * reads the draft's changes after that (as for saves: a click may not blur the
+ * field); one refused there (a clashing key, its message under the row) keeps
+ * the dialog open, writing nothing. The dialog closes at once: there is no
+ * close animation (ui/dialog's `animate-out` classes have no CSS). The body
+ * stays mounted with the draft until Radix unmounts it, so an animation added
+ * later wouldn't blank it, and the draft is taken again when it opens.
  *
  * A `service.telemetry` that isn't a mapping shows the fields read-only, with
- * decision 3's hint; Apply is disabled; Remove Section works. The dialog's
- * content is `OWN_HISTORY_PROPS`: Delete, Backspace and Cmd/Ctrl+D there are
- * the controls' own, never the canvas's (Preflight ruling 23), and so are
- * undo and redo. Field ids are
- * fixed, rows indexed; no value reaches an attribute (decision 10). No field
- * sits inside a `<form>` (Preflight ruling 16).
+ * a hint; Apply is disabled; Remove Section works. The dialog's content is
+ * `OWN_HISTORY_PROPS`: Delete, Backspace and Cmd/Ctrl+D there are the
+ * controls' own, never the canvas's, and so are undo and redo. Field ids are
+ * fixed, rows indexed; no value reaches an attribute. No field sits inside a
+ * `<form>`.
  */
 
-/** Above the footer when Apply found the text changed since the draft was taken (Ruling 65). */
+/** Above the footer when Apply found the text changed since the draft was taken. */
 export const TEXT_CHANGED_MESSAGE = "The configuration changed while this dialog was open. Review the settings and apply again.";
 
-/** Under a resource attribute's row whose new key another attribute has (Ruling 67). */
+/** Under a resource attribute's row whose new key another attribute has. */
 export const ATTRIBUTE_EXISTS_MESSAGE = "An attribute with this key already exists.";
 
 interface SelfMonitoringDialogProps {
@@ -132,10 +126,10 @@ const OTLP_PROCESSOR = { batch: { exporter: { otlp: { protocol: "http/protobuf",
 
 /**
  * Whether the text has `service.telemetry` with a value other than null,
- * through aliases and merges (decision 7): what `readValue` reads as not
- * absent, from the node alone, since the canvas action's selector runs on
- * every store update (a node's drag included) and a mapping's `toJS` would
- * copy the whole section each time.
+ * through aliases and merges: what `readValue` reads as not absent, from
+ * the node alone, since the canvas action's selector runs on every store
+ * update (a node's drag included) and a mapping's `toJS` would copy the
+ * whole section each time.
  */
 export function telemetryConfigured(document: ParsedText | null): boolean {
   if (document === null) return false;
@@ -147,7 +141,7 @@ export function telemetryConfigured(document: ParsedText | null): boolean {
 /** The store's "configured": the canvas action's dot and `data-configured`. */
 export const selectTelemetryConfigured = (state: EditorState): boolean => telemetryConfigured(state.document);
 
-/** Whether the text has a `service.telemetry` key, null included: what Remove Section removes (Ruling 68). */
+/** Whether the text has a `service.telemetry` key, null included: what Remove Section removes. */
 function telemetryPresent(document: ParsedText | null): boolean {
   return document !== null && nodeAt(document, TELEMETRY_BASE) !== undefined;
 }
@@ -200,12 +194,12 @@ export function SelfMonitoringDialog({ open, onOpenChange }: SelfMonitoringDialo
   /*
    * The fields' source: the draft, whose removals take with them each mapping
    * above the removed key that it empties and the text hadn't when the dialog
-   * opened. Only mapping keys are climbed (a list item's index isn't the text's
-   * once an item before it is removed), and never `service.telemetry` itself.
-   * A key the text has is kept, an explicit null (`logs:`) included, with its
-   * comment (Ruling 70), unless the draft removed it (the last resource
+   * opened. Only mapping keys are climbed (a list item's index isn't the
+   * text's once an item before it is removed), and never `service.telemetry`
+   * itself. A key the text has is kept, an explicit null (`logs:`) included,
+   * with its comment, unless the draft removed it (the last resource
    * attribute's ×) and a later change added it again: that one the dialog
-   * added (Ruling 79).
+   * added.
    */
   const form = useMemo((): FormSource => {
     const removedInDraft = (path: ValuePath) =>
@@ -236,10 +230,10 @@ export function SelfMonitoringDialog({ open, onOpenChange }: SelfMonitoringDialo
   }, [draft, document]);
 
   const handleApply = () => {
-    // What a field still holds is the draft's first: a click on Apply may not blur it (Ruling 71, as Ruling 33).
+    // What a field still holds is the draft's first: a click on Apply may not blur it.
     refused.current = false;
     flushHeldEdits();
-    // One refused (its message or toast says why): the dialog stays open, to fix it or Cancel (Ruling 82).
+    // One refused (its message or toast says why): the dialog stays open, to fix it or Cancel.
     if (refused.current) return;
     const store = useEditorStore.getState();
     // The draft's changes are replayed on the text: only on the text they were made over.
@@ -262,7 +256,7 @@ export function SelfMonitoringDialog({ open, onOpenChange }: SelfMonitoringDialo
   };
 
   const handleRemove = () => {
-    // Refused (the store's toast says why): the dialog stays open with its draft (Ruling 72, as Ruling 66).
+    // Refused (the store's toast says why): the dialog stays open with its draft.
     if (!useEditorStore.getState().removeTelemetry()) return;
     toast.success("Self-monitoring removed");
     onOpenChange(false);
@@ -282,7 +276,7 @@ export function SelfMonitoringDialog({ open, onOpenChange }: SelfMonitoringDialo
           </DialogDescription>
         </DialogHeader>
 
-        {/* Mounted as long as Radix keeps the content (no close animation today; a later one wouldn't blank it): the draft is kept until it opens again (Rulings 73, 80). */}
+        {/* Mounted as long as Radix keeps the content (no close animation today; a later one wouldn't blank it): the draft is kept until it opens again. */}
         <FormProvider form={form}>
           <div className="-mx-1 min-h-0 flex-1 overflow-y-auto px-1">
             {unshowable && <p className="mb-3 text-[11px] leading-4 text-muted-foreground">{UNSHOWABLE_VALUE_MESSAGE}</p>}
@@ -322,11 +316,10 @@ export function SelfMonitoringDialog({ open, onOpenChange }: SelfMonitoringDialo
 
 /**
  * Removes the resource attribute row Add Attribute made whose key is still
- * empty, so Apply never writes `""` as a key (Ruling 69), not even
- * `"": value`. It
- * goes through the dialog's removal, so `resource` goes with it only when
- * the dialog added it: a `resource` the text had, null or `{}`, stays (Ruling
- * 79). A `""` key the text already had is left alone.
+ * empty, so Apply never writes `""` as a key, not even `"": value`. It goes
+ * through the dialog's removal, so `resource` goes with it only when the
+ * dialog added it: a `resource` the text had, null or `{}`, stays. A `""` key
+ * the text already had is left alone.
  */
 function dropBlankAttributes(form: FormSource, document: ParsedText | null) {
   const resource = form.read(["resource"]);
@@ -595,8 +588,8 @@ function ResourceSection({ onRefused }: { onRefused: () => void }) {
   const view = form.read(["resource"]);
   const entries = view.kind === "map" ? Object.entries(view.value) : view.kind === "absent" ? [] : null;
   const keys = entries?.map(([key]) => key) ?? [];
-  // Rows keyed by their attributes (Ruling 79), a rename following its row: a key renamed as the pointer goes down
-  // on another row's × (an integer-like key reorders the rows) mustn't hand that × to another attribute.
+  // Rows keyed by their attributes, a rename following its row: a key renamed as the pointer goes down on
+  // another row's × (an integer-like key reorders the rows) mustn't hand that × to another attribute.
   const cards = useCardKeys(keys);
 
   const addResourceEntry = () => {
@@ -659,7 +652,7 @@ function ResourceRow({
   onRemove: () => void;
   /** The key was renamed: the row's key follows it. */
   onRenamed: (to: string) => void;
-  /** A rename refused: Apply, flushing it, stays open (Ruling 82). */
+  /** A rename refused: Apply, flushing it, stays open. */
   onRefused: () => void;
 }) {
   const form = useForm();

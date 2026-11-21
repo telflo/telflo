@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 // Checks that no development-only npm package is installed under a
-// workspace root (D36-1 decisions 43 and 46, Preflight ruling 25; ADR 0019's
-// "published images must not contain dev dependencies"):
+// workspace root (published images must not contain dev dependencies):
 //
 //   node scripts/check-no-dev-dependencies.mjs <package-lock.json> <root>
 //

@@ -1,4 +1,4 @@
-# YAML 1.2 core numbers and dates (Preflight ruling 2).
+# YAML 1.2 core numbers and dates.
 receivers:
   otlp: {}
 exporters:

@@ -14,45 +14,42 @@ import type { ValueChange } from "~/lib/graph/text-edits.js";
 import type { ValueView } from "~/lib/graph/value-view.js";
 
 /*
- * The metrics transform processor's form (ADR 0018), over the form's
- * fields (D9d decision 2, D9b's contract): each field writes its
- * own key under `transforms.<i>` or `transforms.<i>.operations.<j>`
- * (`ItemScope`), so keys the form doesn't show (`submatch_case`,
- * `experimental_match_labels`, `value_actions`) stay. Collector claims are
- * contrib v0.162.0's `processor/metricstransformprocessor`. The
- * collector's own name, `metrics_transform`, opens this form.
+ * The metrics transform processor's form, over the form's fields: each
+ * field writes its own key under `transforms.<i>` or
+ * `transforms.<i>.operations.<j>` (`ItemScope`), so keys the form doesn't
+ * show (`submatch_case`, `experimental_match_labels`, `value_actions`)
+ * stay. Collector claims are contrib v0.162.0's
+ * `processor/metricstransformprocessor`. The collector's own name,
+ * `metrics_transform`, opens this form.
  *
  * - The transforms are cards, not sortable, keyed by their items
  *   (`useCardKeys`, not by index); one transform starts expanded. The
  *   header is a button, "Collapse transform" / "Expand transform".
- * - Fixed (decision 3): Add Transform holds a card that isn't in the text
- *   (never `include: ""`, refused, `factory.go:70-72`). Its
- *   Metric typed writes `{include: <typed>, match_type: strict, action:
- *   update}`, the seed with what was typed (Preflight ruling 8);
- *   a match, action, name or aggregation chosen before then is held with
- *   it. Add Operation holds an operation card (its action select shown,
- *   add_label); its first field typed writes `{action, <field>}` (never
- *   `{action: add_label}`, refused without
- *   `new_label` and `new_value`, `factory.go:122-127`); an action with
- *   no other field (Toggle int/double data type) chosen writes `{action}`
- *   at once (final ruling F1). A transform's operations can be added once
- *   it is written.
- * - Changed (D9b decision 3): Action unset is blank, "Select action", with
- *   the hint "Required." (the collector has no default and refuses none,
- *   `factory.go:85-87`); Match Type unset is
- *   strict's placeholder and "Default strict" (`factory.go:145-147`).
- * - Changed (decision 6): Action offers `group` (`config.go:158-172`).
- * - Changed (decision 7): Combine writes `aggregation_type: sum` with it
- *   when the transform has none (`factory.go:97-99`), and Group writes
- *   `group_resource_labels: {}` when it has none (`factory.go:101-103`;
- *   `{}` is accepted), each with a toast.
- * - Changed (decision 4): New Name says it is required for Insert and
- *   Combine while either is chosen (`factory.go:89-95`); the empty list's
- *   alert, false (no transform is accepted, `factory.go:34-36`), is an
- *   info line.
+ * - Add Transform holds a card that isn't in the text (never
+ *   `include: ""`, refused, `factory.go:70-72`). Its Metric typed writes
+ *   `{include: <typed>, match_type: strict, action: update}`, the seed
+ *   with what was typed; a match, action, name or aggregation chosen
+ *   before then is held with it. Add Operation holds an operation card
+ *   (its action select shown, add_label); its first field typed writes
+ *   `{action, <field>}` (never `{action: add_label}`, refused without
+ *   `new_label` and `new_value`, `factory.go:122-127`); an action with no
+ *   other field (Toggle int/double data type) chosen writes `{action}` at
+ *   once. A transform's operations can be added once it is written.
+ * - Action unset is blank, "Select action", with the hint "Required." (the
+ *   collector has no default and refuses none, `factory.go:85-87`); Match
+ *   Type unset is strict's placeholder and "Default strict"
+ *   (`factory.go:145-147`).
+ * - Action offers `group` (`config.go:158-172`).
+ * - Combine writes `aggregation_type: sum` with it when the transform has
+ *   none (`factory.go:97-99`), and Group writes `group_resource_labels: {}`
+ *   when it has none (`factory.go:101-103`; `{}` is accepted), each with a
+ *   toast.
+ * - New Name says it is required for Insert and Combine while either is
+ *   chosen (`factory.go:89-95`); the empty list's alert, false (no transform
+ *   is accepted, `factory.go:34-36`), is an info line.
  * - An operation's action change rebuilds it as `{action}`:
  *   the action is set and its other keys removed, in one change, so the
- *   item keeps its own lines and comments. The action select is labelled
+ *   item keeps its own lines and comments. The action select is labeled
  *   "Operation action". Removing the last
  *   operation removes `operations`; Scale is a
  *   number field (a number as typed, or a reference).
@@ -60,16 +57,16 @@ import type { ValueView } from "~/lib/graph/value-view.js";
  *   Name and Scale cleared remove their keys.
  *
  * Ids are by index (`transform-0-include`, `t0-op1-label`), never a value;
- * the header's metric is text (decision 13).
+ * the header's metric is text.
  */
 
-/** Decision 7's toasts (the plan's copy). */
+/** The toasts for a setting a change adds with it. */
 export const COMBINE_SUM = "Aggregation Type set to sum: combine needs one.";
 export const GROUP_LABELS = "Added group_resource_labels: group needs it. Edit it in the YAML.";
 
-/** The empty list's line (decision 4; an info line, not an alert). */
+/** The empty list's line (an info line, not an alert). */
 export const NO_TRANSFORMS = "With no transforms, metrics pass through unchanged.";
-/** New Name's hint while the action is insert or combine (Preflight ruling 8). */
+/** New Name's hint while the action is insert or combine. */
 export const NEW_NAME_REQUIRED = "Required for Insert and Combine.";
 /** Under an unset Action. */
 export const ACTION_REQUIRED = "Required.";
@@ -98,7 +95,7 @@ const OPERATION_ACTIONS = [
   { value: "aggregate_label_values", label: "Aggregate label values" },
 ] as const;
 
-/** Add Transform's seed, with what is typed (Preflight ruling 8): `include` first. */
+/** Add Transform's seed, with what is typed: `include` first. */
 const TRANSFORM_SEED = { include: undefined, match_type: "strict", action: "update" };
 /** Add Operation's seed. */
 const OPERATION_SEED = { action: "add_label" };
@@ -117,7 +114,7 @@ function transformReady(item: unknown): boolean {
   return isMapping(item) && typeof item.include === "string" && item.include !== "";
 }
 
-/** Operation actions with no other field: chosen in a held card, the operation is complete (D9d final ruling F1). */
+/** Operation actions with no other field: chosen in a held card, the operation is complete. */
 const FIELDLESS_OPERATIONS: ReadonlySet<string> = new Set(["toggle_scalar_data_type"]);
 
 /**
@@ -231,7 +228,7 @@ function TransformCard({
 
   const setAction = (next: string) => {
     const changes: ValueChange[] = [{ path: ["action"], value: next }];
-    // Each message names the key it set: a later change to it in a held card drops it (D9d Ruling 41d).
+    // Each message names the key it set: a later change to it in a held card drops it.
     const messages: Notice[] = [];
     if (next === "combine" && form.read(["aggregation_type"]).kind === "absent") {
       changes.push({ path: ["aggregation_type"], value: "sum" });

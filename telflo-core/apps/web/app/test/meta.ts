@@ -1,7 +1,7 @@
 /**
  * A meta function's arguments as far as the pages read them: root's match,
- * carrying the public URL its loader passes on (D4 decision 5), or null for
- * an unset TELFLO_PUBLIC_WEB_URL.
+ * carrying the public URL its loader passes on, or null for an unset
+ * TELFLO_PUBLIC_WEB_URL.
  *
  *   meta(metaArgs<typeof meta>("https://telflo.example"))
  */

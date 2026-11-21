@@ -27,8 +27,7 @@ import { failureMessage } from "~/lib/test-runs/messages.js";
  * their placeholders, limits, messages (each shown on Create or Save, all at
  * once, each going as its field changes) and buttons ("Creating…",
  * "Saving…"); not closable while it saves; "Failed to create regex" / "Failed
- * to update regex". Per the D15b Parity Notes, with D14b's dialog conventions
- * (the Test Template dialog's):
+ * to update regex". With the Test Template dialog's conventions:
  * - the API checks the regex under RE2: its refusal, 400
  *   `test_regex_invalid`, shows the evaluator's words under Regex, and a name
  *   another entry has, 409 `test_regex_name_taken`, the API's words under
@@ -40,7 +39,7 @@ import { failureMessage } from "~/lib/test-runs/messages.js";
  *   pattern."), as the API judges a rule's pattern blank, and one past the
  *   API's 8,192 bytes is refused before it is sent, in the API's words; a
  *   name or category of whitespace alone, Go's included, is none, trimmed as
- *   the API trims (trimLibraryText, Ruling 22), which is also the text sent
+ *   the API trims (trimLibraryText), which is also the text sent
  *   and compared;
  * - any other refusal shows the API's words (429
  *   `validation_rule_rate_limited`, 503 `rules_unavailable`: the rules'
@@ -51,7 +50,7 @@ import { failureMessage } from "~/lib/test-runs/messages.js";
  *   to `/app` (`onProductAdminLost`); a session that has ended says nothing;
  * - an edit sends only the fields it changed, as the templates dialog's: an
  *   unchanged regex isn't checked again;
- * - the dialog is inside `ph-no-capture` (ADR 0024): Radix portals it out of
+ * - the dialog is inside `ph-no-capture`: Radix portals it out of
  *   the page's block. The fields' values sit under maskAllInputs too.
  */
 
@@ -86,7 +85,7 @@ function regexProblemsOf(error: ApiError): string[] {
   return messages.length > 0 ? messages : [error.message];
 }
 
-/** Whether a name or a category holds nothing once trimmed as the API trims it (trimLibraryText, Ruling 22). */
+/** Whether a name or a category holds nothing once trimmed as the API trims it (trimLibraryText). */
 const isBlankField = (text: string) => trimLibraryText(text) === "";
 
 /** What the Regex field says before anything is sent: none, "Please enter a regex pattern.", or the API's words for a regex too long. */

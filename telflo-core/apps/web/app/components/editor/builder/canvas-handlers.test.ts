@@ -255,7 +255,7 @@ describe("a connection drawn on the canvas", () => {
 });
 
 describe("the nodes the canvas is given", () => {
-  it("keeps a component in a pipeline inside its group, and leaves groups and ungrouped nodes free (Ruling 41)", () => {
+  it("keeps a component in a pipeline inside its group, and leaves groups and ungrouped nodes free", () => {
     open(corpusText("starter.yaml"));
     const graph = store().graph;
     const receiver = graph.nodes.find((n) => n.type === "receiver" && n.parentId !== undefined)!;
@@ -309,8 +309,8 @@ describe("the edges the canvas draws", () => {
   });
 });
 
-describe("the minimap's colours", () => {
-  it("is a group's pipeline colour, a component's type colour, from nothing a person wrote", () => {
+describe("the minimap's colors", () => {
+  it("is a group's pipeline color, a component's type color, from nothing a person wrote", () => {
     const group = (color: unknown) => ({ type: "pipelineGroup", data: { label: "x", componentType: "pipelineGroup", componentSubType: "", config: null, color } }) as OTelNode;
     expect(minimapNodeColor(group("#f97316"))).toBe("#f97316");
     expect(minimapNodeColor(group(undefined))).toBe("#374151");

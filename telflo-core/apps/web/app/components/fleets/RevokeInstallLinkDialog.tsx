@@ -19,10 +19,9 @@ import { FLEET_WRITE_TIMEOUT_MS, fleetRefusalMessage, isFleetGone, isUnknownOutc
 import { useOpeningKey } from "~/lib/hooks/use-opening-key.js";
 
 /*
- * Revoke (D17c-2 decisions 4 and 31; Preflight ruling 24): an AlertDialog,
- * "Revoke this install link?" with decision 31's words, "Cancel" / "Revoke
- * link" ("Revoking…") and the toast "Install link revoked". Per the D17c-2
- * Parity Notes:
+ * Revoke: an AlertDialog, "Revoke this install link?" with its words,
+ * "Cancel" / "Revoke link" ("Revoking…") and the toast "Install link
+ * revoked". Its details:
  *
  * - The words say what revoking does (further downloads refused at once,
  *   installed collectors unaffected, the link kept listed and never
@@ -44,7 +43,7 @@ import { useOpeningKey } from "~/lib/hooks/use-opening-key.js";
 
 export const REVOKE_LINK_WORDS =
   'Revoking stops further downloads at once: a host that runs the command afterwards gets "revoked". Collectors already installed keep running. The link stays listed for the record and can\'t be re-enabled: make a new one instead.';
-/** A Helm values link's addition (D17d-2 Preflight ruling 30): a downloaded file keeps the token. */
+/** A Helm values link's addition: a downloaded file keeps the token. */
 export const REVOKE_HELM_LINK_WORDS = "A values.yaml already downloaded still holds the fleet's default token.";
 export const LINK_REVOKED_MESSAGE = "Install link revoked";
 export const REVOKE_LINK_FAILED_MESSAGE = "Failed to revoke the install link";

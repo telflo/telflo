@@ -1,7 +1,7 @@
 /*
- * A stand-in `fetch` for the CLI's unit tests (D27 decision 32): every call recorded, each answered by the
- * test. Test support only: never built or packed. Recorded headers can hold
- * a token: tests check them with boolean canaries, never by printing them.
+ * A stand-in `fetch` for the CLI's unit tests: every call recorded, each answered by the test. Test
+ * support only: never built or packed. Recorded headers can hold a token: tests check them with boolean
+ * canaries, never by printing them.
  */
 
 export interface RecordedCall {

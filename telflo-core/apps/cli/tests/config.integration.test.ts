@@ -7,14 +7,14 @@ import { READ_ONLY_TOKEN_MESSAGE } from "../src/output.js";
 import { personWithToken, runCli, serviceAccountWithToken, useApiServer, type CliRun } from "./harness.js";
 
 /*
- * The config commands against the real API in process (D27 decisions 26
- * and 33): create, list (past 100, every page), get, pull, publish and
- * push's two paths (a draft patched with ?validate=true; a published
- * latest validated on its pin, then appended with its label), a 422's
- * errors, an envelope refusal, and a read token on a write (exit 3). The
- * collector validator is the api's OpenAPI-checked fake. Tokens are made
- * at run time and checked with boolean canaries only: what the CLI wrote,
- * and every line the API logged (which holds no YAML either).
+ * The config commands against the real API in process: create, list (past
+ * 100, every page), get, pull, publish and push's two paths (a draft
+ * patched with ?validate=true; a published latest validated on its pin,
+ * then appended with its label), a 422's errors, an envelope refusal, and
+ * a read token on a write (exit 3). The collector validator is the api's
+ * OpenAPI-checked fake. Tokens are made at run time and checked with
+ * boolean canaries only: what the CLI wrote, and every line the API
+ * logged (which holds no YAML either).
  */
 
 const validator = useFakeOtelcolValidator();

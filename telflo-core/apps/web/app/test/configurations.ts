@@ -11,8 +11,8 @@ import {
  * Configurations of one organization, for the configurations page's tests.
  * The signed-in member created MINE, a draft; a colleague created THEIRS;
  * ORPHANED's creator's account is gone. THEIRS and ORPHANED are published,
- * since the member sees no one else's draft (D11b decision 1). Every date is
- * at noon UTC, so it falls on the same day in any time zone the tests run in.
+ * since the member sees no one else's draft. Every date is at noon UTC, so it
+ * falls on the same day in any time zone the tests run in.
  */
 
 export const MEMBER_ID = "00000000-0000-4000-8000-000000000001";
@@ -89,10 +89,9 @@ export function signedInMember(
 export const VERSION_ID = "0199c000-0000-7000-8000-000000000001";
 
 /**
- * A version of MINE, as the API answers one (D10 decision 4): number 1,
- * unnamed, created by the member, with no graph, a draft (D11b decision 10),
- * pinned to a collector version the catalogue offers (D13a decision 8); any
- * field overridden.
+ * A version of MINE, as the API answers one: number 1, unnamed, created by
+ * the member, with no graph, a draft, pinned to a collector version the
+ * catalog offers; any field overridden.
  */
 export function versionFixture(overrides: Partial<ConfigurationVersion> = {}): ConfigurationVersion {
   return {
@@ -117,9 +116,8 @@ export function versionFixture(overrides: Partial<ConfigurationVersion> = {}): C
 }
 
 /**
- * The publish fields of a version the member published (D11b decision 10),
- * to spread over `versionFixture`'s: a published version is read-only in the
- * editor (decision 4).
+ * The publish fields of a version the member published, to spread over
+ * `versionFixture`'s: a published version is read-only in the editor.
  */
 export const PUBLISHED_FIELDS = {
   publishedAt: "2026-10-04T12:00:00.000Z",
@@ -156,8 +154,8 @@ export function versionSummaryOf({
 }
 
 /**
- * What the API answers a read of `configuration` with (D10 decision 4): the
- * version, and the version list, by default the version's summary alone.
+ * What the API answers a read of `configuration` with: the version, and the
+ * version list, by default the version's summary alone.
  */
 export function answerFor(
   configuration: Configuration,

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { PublicQueueTestRunRequestSchema, PublicTestRunSchema } from "./test-runs.js";
 
-/* The public test runs' shapes (D25 routes 26-28, decisions 40 and 43). */
+/* The public test runs' shapes (routes 26-28). */
 
 const TEXT_RULE = { kind: "contains_text", target: "output", pattern: "x" };
 const YAML = "receivers: {}\n";

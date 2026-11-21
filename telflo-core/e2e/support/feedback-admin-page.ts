@@ -4,9 +4,8 @@ import { CSRF_HEADER_NAME, CSRF_HEADER_VALUE } from "@telflo/contracts";
 import { open } from "./editor-page.js";
 import { developerEnv } from "./environment.js";
 
-// User Feedback in the browser (D29 decisions 6, 32 to 35, 37, 40 and 45;
-// Preflight ruling 18): "Contact us" in the sidebar, product admin's User
-// Feedback page, and the two emails in Mailpit.
+// User Feedback in the browser: "Contact us" in the sidebar, product admin's
+// User Feedback page, and the two emails in Mailpit.
 //
 // Feedback is global: every product admin sees every worker's items, and
 // every product admin is emailed about each. So a test sends its own marked
@@ -90,7 +89,7 @@ async function mailpitJson<T>(path: string): Promise<T> {
 
 /**
  * The texts of the admins' emails to `admin` that name `sender` (each new
- * item's email names its sender: decision 35), polled for up to ten seconds
+ * item's email names its sender), polled for up to ten seconds
  * until at least one has come. Another worker's items email every admin
  * too, so the sender narrows them to this test's. The error names neither
  * address.

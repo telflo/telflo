@@ -71,7 +71,7 @@ describe("RegisterRequestSchema", () => {
     expect(RegisterRequestSchema.parse({ ...valid, password }).password).toBe(password);
   });
 
-  it("refuses an empty or over-long accepted terms version, and takes none (D36-1 decision 29: a site without Terms sends none)", () => {
+  it("refuses an empty or over-long accepted terms version, and takes none: a site without Terms sends none", () => {
     expect(
       RegisterRequestSchema.safeParse({ ...valid, acceptedTermsVersion: "" }).success,
     ).toBe(false);
@@ -220,7 +220,7 @@ describe("IDENTITY_ERROR_CODES", () => {
     ]);
   });
 
-  it("the reserved domain's refusal says the spec's words, which name no address (D22 decision 23)", () => {
+  it("the reserved domain's refusal says its fixed words, which name no address", () => {
     expect(EMAIL_RESERVED_MESSAGE).toBe("This address can't be used");
   });
 });

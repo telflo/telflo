@@ -7,11 +7,10 @@ import { runCli } from "../../tests/run-cli.js";
 import { deleteCredentials, saveCredentials } from "../credentials.js";
 
 /*
- * The invariant (Ruling 249): every command checks its arguments and
- * options (ids, choices, numbers, limits, the files it reads) before it
- * reads the login, so a usage error is exit 2 whether logged in or not,
- * and nothing is sent. One malformed run per command, logged out and
- * logged in.
+ * The invariant: every command checks its arguments and options (ids,
+ * choices, numbers, limits, the files it reads) before it reads the login, so
+ * a usage error is exit 2 whether logged in or not, and nothing is sent. One
+ * malformed run per command, logged out and logged in.
  */
 
 const SERVER = "https://telflo.example";
@@ -76,7 +75,7 @@ const MALFORMED: ReadonlyArray<readonly [string, () => string[]]> = [
   ["skills install: --project and --global", () => ["skills", "install", "--project", "--global"]],
 ];
 
-describe("usage before login (Ruling 249)", () => {
+describe("usage before login", () => {
   it.each(MALFORMED)("%s is exit 2 logged out, nothing sent", async (_label, args) => {
     const result = await runCli(args());
     expect(result.code).toBe(2);
@@ -92,7 +91,7 @@ describe("usage before login (Ruling 249)", () => {
     expect(fake.calls).toHaveLength(0);
   });
 
-  it("commander's own usage errors with --json: the one JSON error on stderr, exit 2, nothing sent (Ruling 254)", async () => {
+  it("commander's own usage errors with --json: the one JSON error on stderr, exit 2, nothing sent", async () => {
     for (const args of [
       ["--json", "deploy", "--fleet", ID],
       ["--json", "fleet", "create", "--label", "edge", "--type", "nope"],

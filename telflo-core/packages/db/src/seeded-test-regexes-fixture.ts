@@ -2,9 +2,8 @@ import { writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 /*
- * The regex library's seeded entries as their two checks see them (D15b
- * decision 7, Preflight ruling 2, as D12's Preflight ruling 20 for the
- * flows): each entry's name, category, description and regex, from
+ * The regex library's seeded entries as their two checks see them (as
+ * seeded-flows-fixture.ts does for the flows): each entry's name, category, description and regex, from
  * migration 1700000000031's `seededTestRegexes`, committed as
  * `services/ottl-evaluator/internal/rules/testdata/seeded-test-regexes.json`.
  * The evaluator's `seeded_test_regexes_test.go` checks every pattern under
@@ -57,8 +56,8 @@ export interface SeededTestRegexesFixture {
 export function seededTestRegexesFixture(rows: readonly FixtureSourceTestRegex[]): SeededTestRegexesFixture {
   return {
     description:
-      "The regex library's seeded entries, from migration 1700000000031's seededTestRegexes (D15b decision 7, " +
-      "Preflight ruling 2). Generated: never edit by hand.",
+      "The regex library's seeded entries, from migration 1700000000031's seededTestRegexes. " +
+      "Generated: never edit by hand.",
     script: SEEDED_TEST_REGEXES_SCRIPT,
     testRegexes: rows.map((row) => ({
       name: row.name,

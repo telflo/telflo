@@ -4,26 +4,24 @@ import type { ApiTokenKind } from "../../../database/context.js";
 import { createOrganizationScope, type OrganizationScopeContext } from "../../../tenancy/organization-scope.js";
 
 /*
- * A service account's API tokens (D22 decisions 7 to 9 and 31; migration
- * 1700000000035): the context's organization's rows, reached only through
- * the organization scope, row-level security on api_tokens behind it, so
- * the transaction must carry a database context naming the same
- * organization. Every query is an account's, its first filter the
- * organization (the scope's).
+ * A service account's API tokens (migration 1700000000035): the context's
+ * organization's rows, reached only through the organization scope, row-level
+ * security on api_tokens behind it, so the transaction must carry a database
+ * context naming the same organization. Every query is an account's, its first
+ * filter the organization (the scope's).
  *
  * The token is never here, and its hash enters only through `create` and
  * leaves no method: no read selects token_hash, so an object that doesn't
  * carry it can't log it. The prefix
  * and the name are shown in the masked list only, never logged.
  *
- * The resource registry (D22 Task 1), the account's deletion (Task 4), the
- * token routes (Task 5) and the token check (Task 6) share it: "Last used",
- * the check's one write (decision 38), and the token's name, which /whoami
- * reads (decision 39), go through the scope in the token's own context.
+ * The resource registry, the account's deletion, the token routes and the
+ * token check share it: "Last used", the check's one write, and the token's
+ * name, which /whoami reads, go through the scope in the token's own context.
  * `findLiveApiTokenByHash`, below, is the definer lookup's one caller.
  */
 
-/** "Last used" is written at most once a minute per token (decision 38). */
+/** "Last used" is written at most once a minute per token. */
 const LAST_USED_INTERVAL_MS = 60_000;
 
 /** Postgres error code for a unique-constraint (or unique-index) violation. */
@@ -31,7 +29,7 @@ const UNIQUE_VIOLATION = "23505";
 
 /**
  * A name is unique, case aside, among an account's tokens not revoked,
- * expired ones included (migration 1700000000035; D22 Preflight ruling 3).
+ * expired ones included (migration 1700000000035).
  */
 const NAME_UNIQUE_INDEX = "uq_api_tokens_service_account_user_id_lower_name";
 
@@ -95,13 +93,13 @@ export interface IApiTokenRepository {
   list(serviceAccountId: string): Promise<ApiToken[]>;
   /** The account's token with this id, not revoked, or undefined: unknown, revoked and another account's alike. */
   find(serviceAccountId: string, id: string): Promise<ApiToken | undefined>;
-  /** How many of the account's tokens are live at `at`: neither revoked nor expired (the limit's count, decision 8). */
+  /** How many of the account's tokens are live at `at`: neither revoked nor expired (the limit's count). */
   countLive(serviceAccountId: string, at: Date): Promise<number>;
   /** Whether a token of the account not yet revoked, expired ones included, has the name, case aside. */
   isNameTaken(serviceAccountId: string, name: string): Promise<boolean>;
   /**
-   * Inserts the token's row (decision 31). Throws ApiTokenNameTakenError
-   * when a token of the account not yet revoked has the name.
+   * Inserts the token's row. Throws ApiTokenNameTakenError when a token of
+   * the account not yet revoked has the name.
    */
   create(input: CreateApiTokenInput): Promise<ApiToken>;
   /**
@@ -112,22 +110,22 @@ export interface IApiTokenRepository {
   revoke(serviceAccountId: string, id: string, userId: string, at: Date): Promise<boolean>;
   /**
    * Revokes every token of the account not yet revoked, expired ones
-   * included, by `userId` at `at`: the account's deletion (D22 decision 28's
-   * step 3). Resolves with how many it revoked.
+   * included, by `userId` at `at`: the account's deletion. Resolves with how
+   * many it revoked.
    */
   revokeAllOf(serviceAccountId: string, userId: string, at: Date): Promise<number>;
   /**
-   * "Last used" (decision 38): sets the token's last_used_at to `at`, unless
-   * it was set less than a minute before `at` or the token is revoked
-   * (Preflight ruling 5: a check that waited on the revoke never stamps a
-   * revoked token), in one conditional update. Concurrent checks of one
-   * token write once: each waits on the first's row lock and then reads its
-   * time. True when it wrote. A clock earlier than the token's creation
-   * fails `ck_api_tokens_last_used_after_created` (23514): the caller's
-   * best-effort catch takes it (Preflight ruling 12).
+   * "Last used": sets the token's last_used_at to `at`, unless it was set
+   * less than a minute before `at` or the token is revoked (a check that
+   * waited on the revoke never stamps a revoked token), in one conditional
+   * update. Concurrent checks of one token write once: each waits on the
+   * first's row lock and then reads its time. True when it wrote. A clock
+   * earlier than the token's creation fails
+   * `ck_api_tokens_last_used_after_created` (23514): the caller's
+   * best-effort catch takes it.
    */
   touchLastUsed(id: string, at: Date): Promise<boolean>;
-  /** The name of the token with this id, not revoked, or undefined (/whoami's read, decision 39). */
+  /** The name of the token with this id, not revoked, or undefined (/whoami's read). */
   findName(id: string): Promise<string | undefined>;
 }
 
@@ -163,9 +161,9 @@ export function createApiTokenRepository(
       .where("api_tokens.revoked_at", "is", null);
 
   /**
-   * The one revocation, a revoke's and a deletion's alike (decision 31):
-   * the account's tokens not yet revoked, revoked at `at` by `userId`. An
-   * expired token is revoked as any.
+   * The one revocation, a revoke's and a deletion's alike: the account's
+   * tokens not yet revoked, revoked at `at` by `userId`. An expired token
+   * is revoked as any.
    */
   const revocation = (serviceAccountId: string, userId: string, at: Date) =>
     scope
@@ -268,14 +266,14 @@ export function createApiTokenRepository(
 }
 
 /**
- * What the token check learns from a live token (D22 decision 18, D25
- * decision 21): enough to build the token's context, and nothing else (not
- * its name: /whoami reads that afterwards, through the policies).
+ * What the token check learns from a live token: enough to build the token's
+ * context, and nothing else (not its name: /whoami reads that afterwards,
+ * through the policies).
  * - A service account's (`kind: "service_account"`): its token's
- *   organization and the account's membership's role, as D22's.
+ *   organization and the account's membership's role.
  * - A person's own (`kind: "person"`, migration 1700000000038's
  *   personal_api_tokens): no organization and no role; the organization
- *   comes per request (decision 24).
+ *   comes per request.
  */
 export interface LiveApiToken {
   kind: ApiTokenKind;
@@ -283,7 +281,7 @@ export interface LiveApiToken {
   /** The token's user: the service account's (its user's) id, or the person's. */
   userId: string;
   /**
-   * The user's address (decision 12): a service account's
+   * The user's address: a service account's
    * `…@service-accounts.telflo.invalid`, or the person's email. Personal
    * data: never logged.
    */
@@ -296,18 +294,18 @@ export interface LiveApiToken {
 }
 
 /**
- * The token check's lookup (D22 decisions 11 and 18, D25 decision 21):
- * `find_live_api_token_by_hash`, the definer function only the API's role
- * may run, keyed by the token's sha-256 (hex). Undefined for every refusal
- * alike: an unknown hash, a revoked token or one expired at `at`; for a
- * service account's, a deleted account, user, membership or organization;
- * for a person's, a deleted user or one who isn't a person. `at` is the
- * API's clock, never the database's. It needs no database context: the
- * definer reads past row-level security, and only by the hash.
+ * The token check's lookup: `find_live_api_token_by_hash`, the definer
+ * function only the API's role may run, keyed by the token's sha-256
+ * (hex). Undefined for every refusal alike: an unknown hash, a revoked
+ * token or one expired at `at`; for a service account's, a deleted
+ * account, user, membership or organization; for a person's, a deleted
+ * user or one who isn't a person. `at` is the API's clock, never the
+ * database's. It needs no database context: the definer reads past
+ * row-level security, and only by the hash.
  *
  * Its one caller is modules/public-api/authenticate-api-token.ts, and this
- * file the only one naming the SQL function outside the migrations (D22
- * Preflight ruling 9; database/context-source.test.ts scans for others).
+ * file the only one naming the SQL function outside the migrations
+ * (database/context-source.test.ts scans for others).
  */
 export async function findLiveApiTokenByHash(
   db: Kysely<Database>,

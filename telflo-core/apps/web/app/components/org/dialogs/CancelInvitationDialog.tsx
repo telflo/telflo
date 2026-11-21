@@ -15,11 +15,11 @@ import { cancelInvitation } from "~/lib/api-client.js";
 import { isManagementLost, isRefusal, refusalMessage, useLeaveManagement } from "~/lib/organizations.js";
 
 /*
- * Cancelling an invitation (ADR 0018). Cancelling revokes the invitation, so
- * its link stops working; the row stays for the audit trail (D6 decision 2).
+ * Canceling an invitation. Canceling revokes the invitation, so its link
+ * stops working; the row stays for the audit trail.
  *
- * The dialog stays open, showing "Cancelling...", until the API
- * answers, and a refusal keeps it open, as D5's Remove Member dialog does.
+ * The dialog stays open, showing "Cancelling...", until the API answers,
+ * and a refusal keeps it open, as the Remove Member dialog does.
  */
 
 interface CancelInvitationDialogProps {

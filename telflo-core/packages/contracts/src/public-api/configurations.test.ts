@@ -10,9 +10,8 @@ import {
 } from "./configurations.js";
 
 /*
- * The public configurations' request shapes (D25 decisions 18, 19 and 31;
- * Preflight rulings 6 and 16): a version's number written plainly, the
- * platform's limits, merge-patch nulls, and strict bodies.
+ * The public configurations' request shapes: a version's number written
+ * plainly, the platform's limits, merge-patch nulls, and strict bodies.
  */
 
 describe("the public configurations' requests", () => {

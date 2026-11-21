@@ -30,15 +30,14 @@ import { isEmailAddress, organizationLabel } from "~/lib/organization-names.js";
 import { isManagementLost, refusalMessage, useLeaveManagement } from "~/lib/organizations.js";
 
 /*
- * Inviting members (ADR 0018). Its description names the organization in bold
- * (the owner, D36-1 Q261; organization content: visible text in the masked
- * shell only, never an attribute). A personal workspace under its default
- * name, its owner's email (Q263), reads "the <email>'s organization" (Q262;
- * lib/organization-names.ts' organizationLabel, the rule the other places
- * that name an organization in a sentence share, Q264). The addresses are
- * split on commas, trimmed, lowercased and checked with isEmailAddress, then
- * invited one request at a time, in order (D6 decision 13). It offers
- * Contributor and Admin, the only roles (D7 decision 2).
+ * Inviting members. Its description names the organization in bold
+ * (organization content: visible text in the masked shell only, never an
+ * attribute). A personal workspace under its default name, its owner's email,
+ * reads "the <email>'s organization" (lib/organization-names.ts'
+ * organizationLabel, the rule the other places that name an organization in a
+ * sentence share). The addresses are split on commas, trimmed, lowercased and
+ * checked with isEmailAddress, then invited one request at a time, in order.
+ * It offers Contributor and Admin, the only roles.
  *
  * Each failure is the API's refusal ("User has already been invited to this
  * organization"), or "Failed to invite" for anything else. An
@@ -59,7 +58,7 @@ interface InviteOrgMemberDialogProps {
   organizationId: string;
   /** The organization's name, in bold in the description. */
   organizationName: string;
-  /** Its type: a personal workspace named by its email reads "the <email>'s organization" (Q262, Q263). */
+  /** Its type: a personal workspace named by its email reads "the <email>'s organization". */
   organizationType: OrganizationType;
   /** Reloads the invitation list. */
   onInvited: () => void;

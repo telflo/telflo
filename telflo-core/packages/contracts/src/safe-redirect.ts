@@ -13,11 +13,11 @@
  *                  empty/null, anything not starting with a single `/`,
  *                  and anything holding a control character or a backslash.
  *
- * ADR 0018. A browser's URL parser strips tabs and newlines, so
- * `/\t/evil.example` would become `//evil.example`, another site (D2c's
- * preflight). So any C0 control character or backslash, anywhere, is now refused. One
- * implementation, here, serves the web and the API (the OIDC flow cleans
- * `redirectTo` when it starts and when it ends).
+ * A browser's URL parser strips tabs and newlines, so `/\t/evil.example` would
+ * become `//evil.example`, another site. So any C0 control character or
+ * backslash, anywhere, is refused. One implementation, here, serves the web
+ * and the API (the OIDC flow cleans `redirectTo` when it starts and when it
+ * ends).
  */
 export function safeRedirectPath(
   input: string | null | undefined,

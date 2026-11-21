@@ -74,7 +74,7 @@ expect() {
 wheel fixture-mit "License-Expression: MIT"
 expect pass "an MIT expression" "$scratch/fixture-mit.lock"
 wheel fixture-psf "License-Expression: PSF-2.0"
-expect pass "a PSF-2.0 expression (ADR 0019, amended by D13b)" "$scratch/fixture-psf.lock"
+expect pass "a PSF-2.0 expression" "$scratch/fixture-psf.lock"
 wheel fixture-gpl "License-Expression: GPL-3.0-only"
 expect fail "a GPL-3.0-only expression" "$scratch/fixture-gpl.lock"
 wheel fixture-or "License-Expression: Apache-2.0 OR GPL-3.0-only"
@@ -128,7 +128,7 @@ for args in "$scratch/no-such-policy.json $scratch/fixture-mit.lock" "../../scri
   fi
 done
 
-# A report naming a package twice (as normalised) can't be checked: the
+# A report naming a package twice (as normalized) can't be checked: the
 # second entry would hide the first. evaluate-licenses.py refuses it with
 # exit 2, whatever the licenses say; the same report with the name once passes.
 printf 'fixture-dup==1.0 \\\n    --hash=sha256:%064d\n' 0 > "$scratch/dup.lock"

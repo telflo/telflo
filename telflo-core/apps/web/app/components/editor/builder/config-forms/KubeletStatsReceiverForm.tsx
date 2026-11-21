@@ -18,41 +18,39 @@ import { Checkbox } from "~/components/ui/checkbox.js";
 import { Label } from "~/components/ui/label.js";
 
 /*
- * The kubelet stats receiver's form (ADR 0018), over the form's fields
- * (D9c decision 2, D9b's contract): each field writes its own key.
+ * The kubelet stats receiver's form, over the form's fields: each field
+ * writes its own key.
  *
- * - Fixed (D9c decision 4): the collector's `auth_type` default is `tls`
+ * - The collector's `auth_type` default is `tls`
  *   (`receiver/kubeletstatsreceiver/factory.go:43-55`); unset shows TLS
  *   Certificate as the placeholder with the hint "Default tls" (Service
- *   Account keeps "(recommended)"), and the per-auth fields follow the
- *   shown value, so an unset `auth_type` shows TLS's certificate fields
- *   (not Service Account with every per-auth field hidden until one is
- *   picked). The section opens on its own while TLS shows, as it does for
- *   `tls`: its certificate and key are required.
- * - Unset shows the collector's default (D9b decision 3): Collection
- *   Interval `10s` (`factory.go:44-45`), Initial Delay `1s` (core
- *   scraperhelper's `NewDefaultControllerConfig`), Metric Groups "Default
- *   container, pod, node" (`factory.go:27-31`, applied only while unset,
+ *   Account is marked "(recommended)"), and the per-auth fields follow the
+ *   shown value, so an unset `auth_type` shows TLS's certificate fields. The
+ *   section opens on its own while TLS shows, as it does for `tls`: its
+ *   certificate and key are required.
+ * - Unset shows the collector's default: Collection Interval `10s`
+ *   (`factory.go:44-45`), Initial Delay `1s` (core scraperhelper's
+ *   `NewDefaultControllerConfig`), Metric Groups "Default container, pod,
+ *   node" (`factory.go:27-31`, applied only while unset,
  *   `config.go:128-132`). Metric groups and extra metadata labels are
- *   checkbox lists written by item (D9c decision 5): an unset
- *   list shows none ticked, and the first tick writes that item alone.
- * - Kept (Parity Notes): Enable Kubernetes API Access writes
- *   `k8s_api_config: {auth_type: serviceAccount}` and unticking removes
- *   the block; it shows ticked while the block is in the text. Its
+ *   checkbox lists written by item: an unset list shows none ticked, and
+ *   the first tick writes that item alone.
+ * - Enable Kubernetes API Access writes
+ *   `k8s_api_config: {auth_type: serviceAccount}` and unticking removes the
+ *   block; it shows ticked while the block is in the text. Its
  *   Authentication Type has no default (`internal/k8sconfig/config.go:90-93`
  *   refuses an empty one), so unset shows none.
- * - Copy (D9c decision 4, Appearance; Ruling 38): Node Name, Volume Type,
- *   the RBAC alert and Enable Kubernetes API Access's hint say what the
- *   collector does: `config.go:137-150`, the node name is read by the node
- *   utilization metrics, which are off by default; `README.md:188-189`, the
- *   kubelet's `/pods` gives the volume type, and `README.md:232-234`, the
- *   API adds the persistent volume's details; `README.md:329-331`, the
- *   permissions.
- * - The row markup (Ruling 38): `flex items-start
- *   space-x-3` rows, `leading-none` labels, `text-xs` descriptions.
+ * - Copy: Node Name, Volume Type, the RBAC alert and Enable Kubernetes API
+ *   Access's hint say what the collector does: `config.go:137-150`, the
+ *   node name is read by the node utilization metrics, which are off by
+ *   default; `README.md:188-189`, the kubelet's `/pods` gives the volume
+ *   type, and `README.md:232-234`, the API adds the persistent volume's
+ *   details; `README.md:329-331`, the permissions.
+ * - The row markup: `flex items-start space-x-3` rows, `leading-none` labels,
+ *   `text-xs` descriptions.
  *
- * Ids are fixed, by index in the checkbox lists
- * (`metric-group-<index>`); no value reaches an attribute (decision 10).
+ * Ids are fixed, by index in the checkbox lists (`metric-group-<index>`); no
+ * value reaches an attribute.
  */
 
 const AUTH_TYPES = [

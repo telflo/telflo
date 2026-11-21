@@ -1,5 +1,5 @@
 /*
- * The `noop` operator's form (ADR 0018): text only. The operator has no keys
+ * The `noop` operator's form: text only. The operator has no keys
  * of its own (`transformer/noop/config.go`), so the form writes nothing.
  */
 export function NoopOperatorForm() {

@@ -23,12 +23,10 @@ import {
 import { GROUP_NOT_FOUND_MESSAGE } from "./GroupDialog.js";
 
 /*
- * A group's delete (D17b-2 decisions 14 and 25; Preflight ruling 4; D17d-1
- * decisions 3 and 25, Preflight ruling 30: the typed name, both fleet types).
- * Deleting after confirming, then reloading the list, is tested in
- * `GroupsTab.test.tsx`; D17b-1's `DeleteCollectorDialog.test.tsx` is the
- * pattern here. Every flow but the typed name's own types the name first
- * (`renderDialog`).
+ * A group's delete (the typed name, both fleet types). Deleting after
+ * confirming, then reloading the list, is tested in `GroupsTab.test.tsx`;
+ * `DeleteCollectorDialog.test.tsx` is the pattern here. Every flow but the
+ * typed name's own types the name first (`renderDialog`).
  */
 
 const refusal = (code: string, message: string, status: number) => new ApiError(code, message, { status });
@@ -108,7 +106,7 @@ async function renderDialog(
   return { user, onOpenChange, onDeleted, loader };
 }
 
-/** The typed-name input, found by its label: "Type {name} to confirm" (Ruling 70), white space collapsed as the query collapses the label's. */
+/** The typed-name input, found by its label: "Type {name} to confirm", white space collapsed as the query collapses the label's. */
 const confirmField = (name = "gateways") => screen.getByLabelText(groupDeleteConfirmLabel(name).replace(/\s+/g, " "));
 const deleteButton = () => screen.getByRole("button", { name: /^(Delete|Deleting\.\.\.)$/ });
 
@@ -121,7 +119,7 @@ describe("DeleteGroupDialog", () => {
     vi.useRealTimers();
   });
 
-  it("has its title form and buttons, and D17d-1 decision 25's body on a server fleet, without the Helm release's words", async () => {
+  it("has its title form and buttons, and the consequences body on a server fleet, without the Helm release's words", async () => {
     await renderDialog(gatewaysGroup(), { confirm: false });
     const dialog = screen.getByRole("alertdialog", { name: "Delete gateways" });
     expect(GROUP_DELETE_CONSEQUENCES).toBe(
@@ -141,7 +139,6 @@ describe("DeleteGroupDialog", () => {
     expect(screen.getByRole("alertdialog", { name: "Delete gateways" })).toHaveTextContent(`${GROUP_DELETE_CONSEQUENCES} ${GROUP_DELETE_HELM}`);
   });
 
-  // D17d-2 decision 25; Preflight ruling 31.
   it("follows GROUP_DELETE_HELM with the gateway's quoted helm uninstall in a copy box inside ph-no-capture, outside the description", async () => {
     const namespace = "canary-delete-ns-5f0c";
     await renderDialog(gatewaysGroup({ annotations: kubernetesAnnotations({ namespace }) }), { confirm: false, fleetType: "kubernetes-supervisor" });
@@ -153,7 +150,7 @@ describe("DeleteGroupDialog", () => {
     expect(expectTextOnlyInsideNoCapture(namespace)).toBe(1);
   });
 
-  it("keeps the opening's uninstall when the row changes under it (a poll: D17c-1 Ruling 66)", async () => {
+  it("keeps the opening's uninstall when the row changes under it (a poll)", async () => {
     await renderDialog(gatewaysGroup({ annotations: kubernetesAnnotations({ namespace: "edge" }) }), {
       confirm: false,
       fleetType: "kubernetes-supervisor",
@@ -169,7 +166,7 @@ describe("DeleteGroupDialog", () => {
   it.each([
     ["a gateway whose settings can't be read", "kubernetes-supervisor", gatewaysGroup({ annotations: { telflo: { kubernetes: "x" } } })],
     ["a gateway with no settings saved", "kubernetes-supervisor", gatewaysGroup()],
-    // Ruling 49: where the Helm facts refuse the group; a gateway named telflo-node would otherwise name the Agent's release.
+    // Where the Helm facts refuse the group; a gateway named telflo-node would otherwise name the Agent's release.
     ["a gateway whose stored role is the Agent's", "kubernetes-supervisor", gatewaysGroup({ annotations: kubernetesAnnotations({ role: "node", replicas: undefined }) })],
     ["a gateway named telflo-node", "kubernetes-supervisor", gatewaysGroup({ name: "telflo-node", annotations: kubernetesAnnotations() })],
     ["a server fleet's group", "server", gatewaysGroup({ annotations: kubernetesAnnotations() })],
@@ -218,7 +215,7 @@ describe("DeleteGroupDialog", () => {
     expect(deletes.spy).not.toHaveBeenCalled();
   });
 
-  it("shows the name bold in the label, white space kept, as text only, inside ph-no-capture with the input (Ruling 70, the owner's Q50)", async () => {
+  it("shows the name bold in the label, white space kept, as text only, inside ph-no-capture with the input", async () => {
     const name = "edge  gateways-canary-7d2a";
     await renderDialog(gatewaysGroup({ name }), { confirm: false });
     const field = confirmField(name);
@@ -457,7 +454,7 @@ describe("DeleteGroupDialog", () => {
     expect(screen.getByRole("button", { name: "Delete" })).toBeEnabled();
   });
 
-  it("holds no group name in an attribute (decision 34)", async () => {
+  it("holds no group name in an attribute", async () => {
     const canary = "canary-group-7f3a";
     await renderDialog(gatewaysGroup({ name: canary }));
     expect(screen.getByRole("alertdialog")).toHaveTextContent(`Delete ${canary}`);

@@ -14,15 +14,15 @@ import { UNCALLED_FILE_STORE } from "../../testing/file-store.js";
 import { UNCALLED_TESTING } from "../../testing/otelcol-testing.js";
 import { TEST_TERMS_VERSION } from "../../testing/site.js";
 
-// The opamp-server every server needs (D11b decision 8): this file's own fake.
+// The opamp-server every server needs: this file's own fake.
 const opamp = useFakeOpampServer();
 
-/** Every state-changing /api/v1 request carries the CSRF header (D2a decision 6). */
+/** Every state-changing /api/v1 request carries the CSRF header. */
 const csrfHeaders = { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE };
 
 /**
  * The test's own Mailpit, whose messages it deletes: never a default, which
- * would be a developer's own (Ruling 40). CI sets it (.github/workflows/ci.yml);
+ * would be a developer's own. CI sets it (.github/workflows/ci.yml);
  * a local run exports it with the rest of the test's settings.
  */
 const MAILPIT_API = mailpitApiUrl();

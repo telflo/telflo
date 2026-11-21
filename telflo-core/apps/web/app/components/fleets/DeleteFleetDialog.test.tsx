@@ -12,8 +12,7 @@ import { GROUP_ID, PERSONAL_ID } from "~/test/configurations.js";
 import { FLEET_ID, fleet } from "~/test/fleets.js";
 
 /*
- * "Delete fleet" (D17a decisions 11, 27 and 28; Preflight rulings 4 and
- * 14). D7's `DeleteConfigurationDialog.test.tsx` is the pattern.
+ * "Delete fleet". `DeleteConfigurationDialog.test.tsx` is the pattern.
  */
 
 const refusal = (code: string, message: string, status: number) => new ApiError(code, message, { status });
@@ -76,7 +75,7 @@ describe("DeleteFleetDialog", () => {
     vi.useRealTimers();
   });
 
-  it("says what the platform deletes (Preflight ruling 4)", async () => {
+  it("says what the platform deletes", async () => {
     await renderDialog();
     const dialog = screen.getByRole("alertdialog", { name: "Delete fleet" });
     expect(dialog).toHaveTextContent("You are permanently deleting edge-prod. This action cannot be undone.");
@@ -141,7 +140,7 @@ describe("DeleteFleetDialog", () => {
     ["a 503 fleets_unavailable (the API's 25 s, or a repeat while it runs), its own words", UNAVAILABLE, FLEETS_UNAVAILABLE_MESSAGE],
     ["a 500, the fallback", () => refusal("internal_error", "Something went wrong.", 500), DELETE_FLEET_FAILED_MESSAGE],
     ["no connection, the fallback", () => new ApiError("network_error", "Could not reach the server."), DELETE_FLEET_FAILED_MESSAGE],
-  ])("on %s, toasts, closes and reloads (decision 11)", async (_why, failure, words) => {
+  ])("on %s, toasts, closes and reloads", async (_why, failure, words) => {
     serveDeletes(failure());
     const error = vi.spyOn(toast, "error");
     const { user, onOpenChange, onDeleted, onReload } = await renderDialog();

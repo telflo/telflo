@@ -21,26 +21,27 @@ import { registerValidationPipelinePublicRoutes } from "./validation-pipelines/r
 export type { PublicApiRoutesDependencies } from "./area.js";
 
 /*
- * The public surface, `/api/public/v1/` (D22 decision 33, D25 decisions 13
- * and 16; api.md's second surface): the API's own, for the CLI, CI and
- * servers holding a `tf_` token. One encapsulated plugin (plugin.ts) owns
- * the prefix: its `onRequest` runs the token check, the per-token limit and
- * the access check before any body is read, and each area registers its
- * routes into it (`<area>/routes.ts`), every one declaring
- * `config.access`; between the count and the access, a personal token's
- * organization (X-Telflo-Org) is checked. No route calls `authenticate` or
- * `requireCurrentTerms` (decision 35). The open routes, /health, /openapi.json, the reference
- * page and D27's anonymous validate, are a sibling plugin with the same prefix and none of its
- * hooks (open-routes.ts); the anonymous validate gets the validation service and its own limits.
+ * The public surface, `/api/public/v1/` (api.md's second surface): the
+ * API's own, for the CLI, CI and servers holding a `tf_` token. One
+ * encapsulated plugin (plugin.ts) owns the prefix: its `onRequest` runs the
+ * token check, the per-token limit and the access check before any body is
+ * read, and each area registers its routes into it (`<area>/routes.ts`),
+ * every one declaring `config.access`; between the count and the access, a
+ * personal token's organization (X-Telflo-Org) is checked. No route calls
+ * `authenticate` or `requireCurrentTerms`. The open routes, /health,
+ * /openapi.json, the reference page and the anonymous validate, are a
+ * sibling plugin with the same prefix and none of its hooks
+ * (open-routes.ts); the anonymous validate gets the validation service and
+ * its own limits.
  *
  * CORS lists no `authorization` header (server.ts), so a cross-origin
  * browser page can't call it; the CSRF guard leaves it alone (outside
  * `/api/v1/`); the gateway's `location /api/` routes it, its access log
- * redacting any `tf_` in a URL (decision 40); the request log drops every
- * public path's query (D25 decision 47).
+ * redacting any `tf_` in a URL; the request log drops every public path's
+ * query.
  */
 
-/** The areas, in registration order (decision 17's table). */
+/** The areas, in registration order. */
 const PUBLIC_API_AREAS: readonly PublicApiArea[] = [
   registerOrganizationPublicRoutes,
   registerConfigurationPublicRoutes,
@@ -66,7 +67,7 @@ export function registerPublicApiRoutes(
   rateLimiters: RateLimiters,
 ): void {
   const { db, now } = deps;
-  // On the root, once (Preflight ruling 3): the request property's shape.
+  // On the root, once: the request property's shape.
   decorateApiTokenAuthentication(server);
   const recorded: RecordedPublicRoute[] = [];
   registeredRoutes.set(server, recorded);

@@ -9,9 +9,9 @@ import type { ParsedText } from "./parse.js";
 import { nodeAt, stringKeysOnly } from "./value-view.js";
 
 /*
- * Canvas changes are targeted edits of the text (D9a decision 4; Preflight
- * rulings 1, 5, 8 and 10). The YAML text is the content: a change on the
- * canvas is written into it in place, and nothing else in it moves.
+ * Canvas changes are targeted edits of the text. The YAML text is the content:
+ * a change on the canvas is written into it in place, and nothing else in it
+ * moves.
  *
  * `editText(text, textModel, after)` compares the configuration the
  * text describes now (`textModel`, from `readTextModel`) with the one the
@@ -32,7 +32,7 @@ import { nodeAt, stringKeysOnly } from "./value-view.js";
  * becomes `750`, big integers lose digits, folded blocks are joined, CRLF
  * becomes LF).
  *
- * Aliases and merge keys (ruling 8): a changed value under a key a map gets
+ * Aliases and merge keys: a changed value under a key a map gets
  * only from a merge is written after copying that key's whole value onto
  * the map; an alias on the path to a change, or as the whole value, is
  * replaced by a copy first; before an anchor's owner changes or goes, each
@@ -46,22 +46,21 @@ import { nodeAt, stringKeysOnly } from "./value-view.js";
  * nothing ever falls back to printing the whole document. The result is
  * checked: its own model must be `after`, or the edit throws.
  *
- * A form's changes (D9b decision 2; its Preflight rulings 1-3, 9-11, 13
- * and 14) go through the same editor by key path: `writeValues(text, base,
- * changes)` sets, removes, moves or renames what each path under `base`
- * addresses, where a number is a list item. An item's field is changed
- * where it stands; an item is added, removed or moved by its own lines (a
- * move never reprints it: `replaceList` would turn `0750` into `750`); a
- * key is renamed in place; a missing key is added under the deepest one
- * that exists. Each change is checked as it reads back, and everything
+ * A form's changes go through the same editor by key path:
+ * `writeValues(text, base, changes)` sets, removes, moves or renames what each
+ * path under `base` addresses, where a number is a list item. An item's field
+ * is changed where it stands; an item is added, removed or moved by its own
+ * lines (a move never reprints it: `replaceList` would turn `0750` into
+ * `750`); a key is renamed in place; a missing key is added under the deepest
+ * one that exists. Each change is checked as it reads back, and everything
  * outside `base` must read the same before and after.
  *
- * D9c (its Preflight rulings 1 and 2): a new string with a line break is a
- * literal block only when the block carries it cleanly, and is written
- * double-quoted otherwise (`"\n"`, rather than a `|+` block that takes the
- * blank lines after it, or a refusal), and again double-quoted when its
- * block doesn't read back as written; a `plain` change writes numbers,
- * booleans and one-line flow collections as typed (`plainValue`).
+ * A new string with a line break is a literal block only when the block
+ * carries it cleanly, and is written double-quoted otherwise (`"\n"`,
+ * rather than a `|+` block that takes the blank lines after it, or a
+ * refusal), and again double-quoted when its block doesn't read back as
+ * written; a `plain` change writes numbers, booleans and one-line flow
+ * collections as typed (`plainValue`).
  *
  * Errors never quote the text, a key or a value (the content is private).
  */
@@ -108,16 +107,15 @@ const MAXIMUM_FIXES = 1000;
 export type ValuePath = readonly (string | number)[];
 
 /**
- * One change a form makes (D9b decision 2):
+ * One change a form makes:
  * - `value`: sets what `path` addresses; index `length` appends;
  * - `plain`: sets it to characters as they were typed, written verbatim once
  *   they read back alone, in a block and in a flow collection, as a number
  *   (`1e3`, `0x1F`, `0750`), a boolean (`True`), or a one-line flow mapping
  *   or sequence (`{"k": "v"}`, `[1, a]`) with no comment, anchor, alias or
- *   tag (`plainValue`), refused otherwise (D9b Preflight ruling 14; D9c
- *   Preflight ruling 2: the add operator's value, as typed; its own kind,
- *   so a mapping `{ plain: "5" }` set as a value is written as a mapping,
- *   D9b ruling 26);
+ *   tag (`plainValue`), refused otherwise (the add operator's value, as
+ *   typed; its own kind, so a mapping `{ plain: "5" }` set as a value is
+ *   written as a mapping);
  * - `remove`: removes the key or the item, by its own lines;
  * - `moveTo`: moves list item `path` to that index, its lines as written;
  * - `renameTo`: renames the mapping key `path` in place; a clash is refused.
@@ -163,9 +161,9 @@ type Ancestors = ReadonlyArray<Document | YamlNode | Pair>;
 
 /**
  * Deep equality of values as the text's model reads them (NaN equals NaN),
- * with what YAML's own tags read as (D9d Ruling 42): a `!!timestamp`'s Date
- * by its time, a `!!binary`'s bytes, and a `!!set`'s Set or an `!!omap`'s
- * Map by their entries in the order the text gives them.
+ * with what YAML's own tags read as: a `!!timestamp`'s Date by its time, a
+ * `!!binary`'s bytes, and a `!!set`'s Set or an `!!omap`'s Map by their
+ * entries in the order the text gives them.
  */
 export function valuesEqual(a: unknown, b: unknown): boolean {
   if (Object.is(a, b)) return true;
@@ -460,10 +458,10 @@ const sourceItemsOf = new WeakMap<CST.BlockSequence, CST.BlockSequence["items"]>
 
 /** Whether `text` reads back as exactly that string when written plain in `context`. */
 function plainSafe(text: string, context: "block" | "flow" | "key" | "flowKey"): boolean {
-  // A control character (C0, DEL, C1) is never plain: `yaml` reads it, yaml.v3 refuses it (D9c review).
+  // A control character (C0, DEL, C1) is never plain: `yaml` reads it, yaml.v3 refuses it.
   // eslint-disable-next-line no-control-regex
   if (text === "" || /[\x00-\x1f\x7f-\x9f]/.test(text) || text !== text.trim()) return false;
-  // Characters the collector (yaml.v3) reads as another type are never a plain string (Ruling 69): `1_000`, `2024-01-01`.
+  // Characters the collector (yaml.v3) reads as another type are never a plain string: `1_000`, `2024-01-01`.
   if (collectorReadsAsOther(text)) return false;
   const cacheKey = `${context}\u0000${text}`;
   const cached = plainChecks.get(cacheKey);
@@ -491,14 +489,14 @@ function plainSafe(text: string, context: "block" | "flow" | "key" | "flowKey"):
 
 /**
  * Whether a literal block (`|`, `|-`) carries a string with a line break
- * cleanly (D9c Preflight ruling 1): it has a line with something on it
- * other than spaces and tabs, and no line starts or ends with a space or a
- * tab (the block would need an indentation indicator, or keep invisible
- * trailing spaces), and no carriage return or other control character
- * but a tab. Anything else is written double-quoted.
+ * cleanly: it has a line with something on it other than spaces and tabs,
+ * and no line starts or ends with a space or a tab (the block would need
+ * an indentation indicator, or keep invisible trailing spaces), and no
+ * carriage return or other control character but a tab. Anything else is
+ * written double-quoted.
  */
 function blockCarries(value: string): boolean {
-  // A carriage return or another control character (a tab inside a line aside) needs an escape (D9c review).
+  // A carriage return or another control character (a tab inside a line aside) needs an escape.
   // eslint-disable-next-line no-control-regex
   if (/[\x00-\x08\x0b-\x1f\x7f-\x9f]/.test(value)) return false;
   const lines = value.replace(/\n$/, "").split("\n");
@@ -508,7 +506,7 @@ function blockCarries(value: string): boolean {
 /**
  * DEL and the C1 controls (0x7f-0x9f) in a double-quoted scalar's source,
  * escaped (`\x7f`): JSON's and `yaml`'s printers leave them raw, which
- * yaml.v3 (the collector's reader) refuses (D9c review). Nothing else in
+ * yaml.v3 (the collector's reader) refuses. Nothing else in
  * the source changes: a raw one is never part of an escape.
  */
 function escapeRaw(doubleQuoted: string): string {
@@ -821,9 +819,9 @@ class TextEditor {
 
   /**
    * Whether an empty flow collection (`[]`, `{}`) at `path` takes its first
-   * entry in block style (the owner's Ruling 85): not inside a flow
-   * collection (block can't go there), with no anchor or tag to keep, and on
-   * one line. Anything else keeps its own flow style.
+   * entry in block style: not inside a flow collection (block can't go
+   * there), with no anchor or tag to keep, and on one line. Anything else
+   * keeps its own flow style.
    */
   private opensAsBlock(path: Path, node: YAMLMap | YAMLSeq): boolean {
     if (!node.flow || node.items.length > 0 || path.length === 0 || node.anchor || node.tag) return false;
@@ -904,17 +902,17 @@ class TextEditor {
   }
 
   /**
-   * A block sequence's source items, one for each of its items (D9c Ruling
-   * 56). A comment at the dash column after the last item (`# - type: x`,
+   * A block sequence's source items, one for each of its items.
+   * A comment at the dash column after the last item (`# - type: x`,
    * a commented-out item) is kept by the parser as an item of its own with
    * no dash and no value; it isn't one of the sequence's items, so it is
    * left out here. Its lines are no item's: removing or moving an item
    * leaves them where they are while other items remain, and an item
-   * appended goes before them (Ruling 64), as a mapping's appended key goes
+   * appended goes before them, as a mapping's appended key goes
    * before the comment lines after its last one, so an item never lands
    * under a comment that introduces what follows the list (a banner, the
    * next key's comment). Removing the only item rewrites the list as `[]`
-   * (D9a's emptied collection), and those lines go with it, as a mapping's
+   * (an emptied collection), and those lines go with it, as a mapping's
    * trailing comment does when its last key goes. A bare `-` or `- # c`
    * keeps its dash: it is an item.
    *
@@ -1091,11 +1089,11 @@ class TextEditor {
   /**
    * A scalar as `yaml` prints it, for a block context. A string with a line
    * break is a literal block (`|`, `|-`) only when the block carries it
-   * cleanly (`blockCarries`), and double-quoted otherwise (D9c Preflight
-   * ruling 1): a keep-chomping `|+` takes the blank lines after it into the
-   * value, and a first line with leading spaces needs an indentation
-   * indicator. With `quoteBreaks` set (a write whose block didn't read back
-   * as written, tried again), every such string is double-quoted.
+   * cleanly (`blockCarries`), and double-quoted otherwise: a keep-chomping
+   * `|+` takes the blank lines after it into the value, and a first line
+   * with leading spaces needs an indentation indicator. With `quoteBreaks`
+   * set (a write whose block didn't read back as written, tried again),
+   * every such string is double-quoted.
    */
   private scalarFragment(value: unknown): Fragment {
     if (typeof value !== "string") return { head: plainSource(value), lines: [] };
@@ -1106,7 +1104,7 @@ class TextEditor {
       .replace(/\n$/, "")
       .split("\n");
     const head = printed[0]!.slice("x: ".length);
-    // `yaml` prints plain what YAML 1.2 reads as a string; the collector's yaml.v3 may read it as another type (Ruling 69).
+    // `yaml` prints plain what YAML 1.2 reads as a string; the collector's yaml.v3 may read it as another type.
     if (head === value && collectorReadsAsOther(value)) return { head: quoteDouble(value), lines: [] };
     if (printed.length === 1) return { head: head.startsWith('"') ? escapeRaw(head) : head, lines: [] };
     if (/^[|>]-?$/.test(head) && blockCarries(value)) {
@@ -1162,7 +1160,7 @@ class TextEditor {
     return [first, ...fragment.lines.map((line) => indentLine(line, column))];
   }
 
-  // ── Copies from the source (ruling 8) ──
+  // ── Copies from the source ──
 
   /** The anchors inside a node (not its own, which sits before it). */
   private anchorsWithin(node: YamlNode): Array<{ start: number; end: number }> {
@@ -1298,7 +1296,7 @@ class TextEditor {
     return { head: `${tag}${first!}`, lines: rest.map((line) => rebase(line, from, this.unit)) };
   }
 
-  // ── Anchors whose owner changes (ruling 8) ──
+  // ── Anchors whose owner changes ──
 
   private aliases(): AliasUse[] {
     if (this.aliasUses) return this.aliasUses;
@@ -1574,7 +1572,7 @@ class TextEditor {
       return { start: token.offset, end: token.offset + token.source.length, text: value.source };
     }
     if (token.type === "double-quoted-scalar" && typeof value === "string" && /[\r\n]/.test(value)) {
-      // A double-quoted string stays double-quoted, its breaks escaped (`"a\nb"`), not turned into a block (D9c review).
+      // A double-quoted string stays double-quoted, its breaks escaped (`"a\nb"`), not turned into a block.
       return { start: token.offset, end: token.offset + token.source.length, text: quoteDouble(value) };
     }
     if (value instanceof PlainScalar) {
@@ -1625,13 +1623,13 @@ class TextEditor {
   ): void {
     const [start, end] = this.rangeOf(seq);
     if (items.length === 0) {
-      // Spread over lines, as a form's removals leave it (D9d Ruling 38): `[]`, or a comment of the list's own kept.
+      // Spread over lines, as a form's removals leave it: `[]`, or a comment of the list's own kept.
       if (seq.flow && seq.items.length > 0 && this.spansLines(seq)) this.apply(this.flowRemovals(seq, new Set(seq.items.keys())));
       else if (seq.flow) this.apply([{ start, end, text: "[]" }]);
       else this.replacePairValue(map, pair, { head: "[]", lines: [] });
       return;
     }
-    // An empty list's first items (Ruling 85); a pipeline's lists (`flowSeqs`) stay flow, as they are written.
+    // An empty list's first items; a pipeline's lists (`flowSeqs`) stay flow, as they are written.
     if (!flowSeqs && this.opensAsBlock(path, seq)) {
       this.replacePairValue(map, pair, this.fragment(items));
       return;
@@ -1679,7 +1677,7 @@ class TextEditor {
   }
 
   /*
-   * A flow sequence spread over lines (D9d Ruling 34), such as
+   * A flow sequence spread over lines, such as
    *
    *     receivers: [
    *       otlp, # c1
@@ -1690,8 +1688,8 @@ class TextEditor {
    * join its lines and lose its comments (a comment in a flow sequence
    * always ends a line, so "spread over lines" covers them). An item set is
    * changed where it stands (a scalar through its own token); an item
-   * removed goes with its comma and its own comment lines (`flowRemovals`,
-   * D9d Ruling 38), every item removed leaving `[]` or the bracket lines; new
+   * removed goes with its comma and its own comment lines (`flowRemovals`),
+   * every item removed leaving `[]` or the bracket lines; new
    * items go before the next item kept, or `, x` after the last item's
    * content, so its comment and the closing bracket's line stay. Other
    * items' comments stay where they are. A change that can't be written
@@ -1766,11 +1764,10 @@ class TextEditor {
    * `[ # c` and `]` (what removing every item leaves when it has a comment):
    * on a line of their own right after the `[` line, before the comment
    * lines inside the brackets, so the comments stay and stay no item's
-   * (`flowLeadLine`): removing the items gives back the text as it was (D9d
-   * Rulings 39, 40). They stand at the larger of the first comment line's
-   * indentation and a unit past the `]`'s, by column (a tab to the next
-   * multiple of 8), in spaces: a tab before the `]` or a comment isn't
-   * copied (D9d Ruling 42).
+   * (`flowLeadLine`): removing the items gives back the text as it was. They
+   * stand at the larger of the first comment line's indentation and a unit
+   * past the `]`'s, by column (a tab to the next multiple of 8), in spaces:
+   * a tab before the `]` or a comment isn't copied.
    */
   private intoEmptyFlowLines(seq: YAMLSeq, values: readonly unknown[]): Edit {
     const [open, after] = this.rangeOf(seq);
@@ -1791,17 +1788,16 @@ class TextEditor {
 
   /**
    * The splices removing a flow sequence's `deleted` items, each with its
-   * own comma (D9d Rulings 34, 38). An item that starts its line and has
-   * nothing but a comment after it on its last goes as whole lines, with
-   * the comment lines directly above it (its own; the next item keeps
-   * its), so no blank line is left. An item sharing its line goes as a
-   * slice: after another item, from that one's comma (`a, x, b` gives
-   * `a, b`; `a, x # c` gives `a # c`, the line's comment kept); first on
-   * its line, up to what follows its comma (`[x, a` gives `[a`). The last
-   * item, without a comma of its own, takes the comma of the last item kept
-   * (`a, # c` back to `a # c`). Every item gone, the brackets with nothing
-   * but white space between them are written `[]`; a comment there keeps
-   * the bracket lines.
+   * own comma. An item that starts its line and has nothing but a comment
+   * after it on its last goes as whole lines, with the comment lines
+   * directly above it (its own; the next item keeps its), so no blank line
+   * is left. An item sharing its line goes as a slice: after another item,
+   * from that one's comma (`a, x, b` gives `a, b`; `a, x # c` gives
+   * `a # c`, the line's comment kept); first on its line, up to what
+   * follows its comma (`[x, a` gives `[a`). The last item, without a comma
+   * of its own, takes the comma of the last item kept (`a, # c` back to
+   * `a # c`). Every item gone, the brackets with nothing but white space
+   * between them are written `[]`; a comment there keeps the bracket lines.
    */
   private flowRemovals(seq: YAMLSeq, deleted: ReadonlySet<number>): Edit[] {
     const nodes = seq.items.map((item) => (isNode(item) ? item : notExpressible("a pair inside a flow sequence")));
@@ -1872,7 +1868,7 @@ class TextEditor {
    * The first of a flow sequence item's own comment lines: the comment
    * lines directly above it, below the line of the previous item's comma
    * (or of the `[`), so a quoted item's line that starts with `#` isn't
-   * taken for one (D9d Ruling 39).
+   * taken for one.
    */
   private flowLeadLine(nodes: readonly YamlNode[], commas: readonly number[], open: number, index: number): number {
     const line = this.lineOf(this.propsStart(nodes[index]!));
@@ -1910,7 +1906,7 @@ class TextEditor {
     return spans;
   }
 
-  // ── Paths (ruling 8) ──
+  // ── Paths ──
 
   /**
    * Makes every key on `path` the map's own and every value on it a real
@@ -1961,7 +1957,7 @@ class TextEditor {
   /**
    * A new key in the map at `mapPath`: at the end of a block mapping (or
    * before the first of `before` it has), or at the end of a flow one. An
-   * empty one, `{}`, becomes a block mapping (Ruling 85), or takes the pair
+   * empty one, `{}`, becomes a block mapping, or takes the pair
    * between its braces inside a flow collection. A value with nothing in it
    * becomes a mapping, styled as its parent is.
    */
@@ -2145,13 +2141,13 @@ class TextEditor {
     this.setKey(path.slice(0, -1), path[path.length - 1] as string, after);
   }
 
-  // ── Values by key path (D9b decision 2) ──
+  // ── Values by key path ──
 
   /**
    * The splice setting the scalar at `path` in place when nothing needs
    * copying or protecting first (own keys and items all the way, no alias,
-   * no anchor on the way), so several can share one parse (Preflight ruling
-   * 11); undefined when the change needs more.
+   * no anchor on the way), so several can share one parse; undefined when
+   * the change needs more.
    */
   scalarEditAt(path: Path, value: unknown): Edit | undefined {
     let node: unknown = this.document.contents;
@@ -2166,9 +2162,9 @@ class TextEditor {
   }
 
   /**
-   * What `path` addresses set to `value` (Preflight rulings 1 and 3): a key
-   * as `setKey` sets it, an item in place, index `length` appended, and a
-   * path that runs out added from the deepest part that exists.
+   * What `path` addresses set to `value`: a key as `setKey` sets it, an
+   * item in place, index `length` appended, and a path that runs out
+   * added from the deepest part that exists.
    */
   setValue(path: Path, value: unknown): void {
     const parentPath = path.slice(0, -1);
@@ -2238,8 +2234,8 @@ class TextEditor {
 
   /**
    * A new last item: its lines after the last item's (at the dashes' column),
-   * or `, x` in a flow list. An empty one, `[]`, becomes a block list
-   * (Ruling 85), or `[x]` inside a flow collection.
+   * or `, x` in a flow list. An empty one, `[]`, becomes a block list,
+   * or `[x]` inside a flow collection.
    */
   private appendItem(seqPath: Path, value: unknown): void {
     this.protect(seqPath, "inside");
@@ -2267,7 +2263,7 @@ class TextEditor {
       return;
     }
     const column = this.column(this.dashOffset(seq, 0));
-    // After the last item's own lines (its deeper comments), before the list's trailing comment lines (Ruling 64).
+    // After the last item's own lines (its deeper comments), before the list's trailing comment lines.
     const [, lastLine] = this.itemRegion(seq, seq.items.length - 1);
     this.apply([this.insertAfterLine(lastLine, this.itemLines(value, false).map((line) => indentLine(line, column)))]);
   }
@@ -2288,8 +2284,8 @@ class TextEditor {
 
   /**
    * A list item removed: its lines, or its flow slice with its comma; the
-   * last item leaves `[]`. A flow item's slice starts at its anchor and tag
-   * (ruling 38), so neither is left on the item after it.
+   * last item leaves `[]`. A flow item's slice starts at its anchor and tag,
+   * so neither is left on the item after it.
    */
   private removeItem(seqPath: Path, index: number): void {
     this.protect([...seqPath, index], "replace");
@@ -2297,7 +2293,7 @@ class TextEditor {
     const item = seq.items[index];
     if (!isNode(item)) return notExpressible("a pair inside a sequence");
     if (seq.flow && this.spansLines(seq)) {
-      // Spread over lines (D9d Rulings 34, 38): the item goes with its comma and its own comments, the others' kept.
+      // Spread over lines: the item goes with its comma and its own comments, the others' kept.
       this.apply(this.flowRemovals(seq, new Set([index])));
       return;
     }
@@ -2342,14 +2338,14 @@ class TextEditor {
   }
 
   /**
-   * List item `from` moved to index `to` (Preflight ruling 2): its lines,
-   * with the comment lines directly above it, cut and put back by the
-   * target's; in a one-line flow list, the items' source slices (anchors and
-   * tags included) move between the separators; in one spread over lines,
-   * the item with its comments (`flowMoveEdits`, D9d Ruling 39). Nothing is reprinted, so the item keeps `0750`, its quoting
-   * and its comments. The list's order changes, so an alias of the list (or
-   * of what holds it) gets its own copy; the item's own anchors keep their
-   * values, so only an alias of one the move would put before it (in an
+   * List item `from` moved to index `to`: its lines, with the comment lines
+   * directly above it, cut and put back by the target's; in a one-line flow
+   * list, the items' source slices (anchors and tags included) move between
+   * the separators; in one spread over lines, the item with its comments
+   * (`flowMoveEdits`). Nothing is reprinted, so the item keeps `0750`, its
+   * quoting and its comments. The list's order changes, so an alias of the
+   * list (or of what holds it) gets its own copy; the item's own anchors keep
+   * their values, so only an alias of one the move would put before it (in an
    * item it moves down past) gets a copy. An alias moved above its anchor
    * fails the re-parse.
    */
@@ -2361,12 +2357,12 @@ class TextEditor {
     if (to > from) this.copyAliasesPassed(seqPath, from, to);
     const seq = this.seqAt(seqPath);
     if (seq.flow && this.spansLines(seq)) {
-      // Every comment an item had stays its own, or the move is refused (D9d Ruling 39).
+      // Every comment an item had stays its own, or the move is refused.
       const saved = this.save();
       const owners = this.flowCommentOwners(seq);
       this.apply(this.flowMoveEdits(seq, from, to));
       const after = this.flowCommentOwners(this.seqAt(seqPath));
-      // As many of each comment as before, and as many of each with its item as before (D9d Ruling 40).
+      // As many of each comment as before, and as many of each with its item as before.
       const kept = (key: (entry: [string, string | null]) => string | undefined) => {
         const now = tally(after, key);
         return [...tally(owners, key)].every(([entry, count]) => (now.get(entry) ?? 0) >= count);
@@ -2406,15 +2402,14 @@ class TextEditor {
   }
 
   /**
-   * The comments between a flow sequence's items, each by its text with
-   * the source of the item it belongs to: a comment line, the item it is a
+   * The comments between a flow sequence's items, each by its text with the
+   * source of the item it belongs to: a comment line, the item it is a
    * comment line of (`flowLeadLine`); a comment after text on its line, the
    * first item ending on that line. Others (`[ # c`, a comment line apart)
-   * belong to none, null. A move compares them as a multiset (D9d Ruling
-   * 40), so two comments with the same text don't make it refuse. The
-   * items' end lines and comment-line ranges are indexed once per call
-   * (D9d final ruling F10), so a long commented list isn't scanned once
-   * per comment.
+   * belong to none, null. A move compares them as a multiset, so two
+   * comments with the same text don't make it refuse. The items' end lines
+   * and comment-line ranges are indexed once per call, so a long commented
+   * list isn't scanned once per comment.
    */
   private flowCommentOwners(seq: YAMLSeq): Array<[string, string | null]> {
     const nodes = seq.items.map((item) => (isNode(item) ? item : notExpressible("a pair inside a sequence")));
@@ -2458,15 +2453,14 @@ class TextEditor {
 
   /**
    * Item `from` of a flow sequence spread over lines moved to index `to`
-   * with its own comments (D9d Ruling 39): it goes as `flowRemovals` takes
-   * it (its comment lines, its comma, the comment after it on a line of its
-   * own), and comes back before item `to`'s comment lines, moving up, or
-   * after item `to`'s line, moving down, on a line of its own at that
-   * item's indentation (or its own); next to an item sharing its line, it
-   * goes inline (`x, a`). The commas follow the order: the item that ends
-   * up last has one only when the old last did. An item with comments
-   * that can't have a line of its own there, or with a comment before its
-   * comma, is refused.
+   * with its own comments: it goes as `flowRemovals` takes it (its comment
+   * lines, its comma, the comment after it on a line of its own), and comes
+   * back before item `to`'s comment lines, moving up, or after item `to`'s
+   * line, moving down, on a line of its own at that item's indentation (or
+   * its own); next to an item sharing its line, it goes inline (`x, a`).
+   * The commas follow the order: the item that ends up last has one only
+   * when the old last did. An item with comments that can't have a line of
+   * its own there, or with a comment before its comma, is refused.
    */
   private flowMoveEdits(seq: YAMLSeq, from: number, to: number): Edit[] {
     const nodes = seq.items.map((item) => (isNode(item) ? item : notExpressible("a pair inside a sequence")));
@@ -2560,8 +2554,8 @@ class TextEditor {
   /**
    * Before item `from` moves down to `to`: each alias, in the items it
    * passes, of an anchor in it (its own or one inside it) gets its own copy,
-   * since it would come before its anchor (ruling 32). Aliases
-   * anywhere else stay as they are.
+   * since it would come before its anchor. Aliases anywhere else stay as
+   * they are.
    */
   private copyAliasesPassed(seqPath: Path, from: number, to: number): void {
     for (let fixes = 0; fixes < MAXIMUM_FIXES; fixes++) {
@@ -2591,11 +2585,11 @@ class TextEditor {
   }
 
   /**
-   * A mapping key renamed in place through its own token (Preflight ruling
-   * 13), as `renameComponent` renames: its place, quoting style, comment and
-   * value stay. A key the map has only from a merge is copied onto it first,
-   * and a merge that also gives it is expanded without it (it would come
-   * back). A name the map already has, its own or merged, is refused.
+   * A mapping key renamed in place through its own token, as
+   * `renameComponent` renames: its place, quoting style, comment and value
+   * stay. A key the map has only from a merge is copied onto it first, and a
+   * merge that also gives it is expanded without it (it would come back). A
+   * name the map already has, its own or merged, is refused.
    */
   renameKey(mapPath: Path, from: string, to: string): void {
     this.prepare(mapPath);
@@ -2857,12 +2851,11 @@ export interface EditedText {
 /**
  * The text with the difference between `textModel` (the model the text
  * describes, `readTextModel`) and `after` (`deriveModel` of the graph after
- * the change) written into it, and nothing else (D9a decision 4; Preflight
- * rulings 1 and 5), with the edited text's document and its model, so the
- * editor's store doesn't parse the text again before the next change (a
- * parse of a very large text costs about 220 ms). Throws `TextEditError`
- * when a difference can't be written as a splice, or the result doesn't
- * describe `after`.
+ * the change) written into it, and nothing else, with the edited text's
+ * document and its model, so the editor's store doesn't parse the text
+ * again before the next change (a parse of a very large text costs about
+ * 220 ms). Throws `TextEditError` when a difference can't be written as a
+ * splice, or the result doesn't describe `after`.
  */
 export function editText(text: string, textModel: Model, after: Model, options: GraphChangeOptions = {}): EditedText {
   const editor = new TextEditor(text, options.document);
@@ -2934,8 +2927,8 @@ function isPathSegment(segment: unknown): segment is string | number {
 /**
  * The number characters read as, written plain in a block and in a flow
  * collection, when they are all one scalar (`1 # c` isn't). A form's
- * number field asks it which change to send (D9b Task 3): a number is a
- * `plain` change, anything else a string (`plainValue` gates the change).
+ * number field asks it which change to send: a number is a `plain`
+ * change, anything else a string (`plainValue` gates the change).
  */
 export function plainNumber(source: string): number | undefined {
   if (/[\r\n\t]/.test(source) || source !== source.trim() || source === "") return undefined;
@@ -2952,21 +2945,20 @@ export function plainNumber(source: string): number | undefined {
 }
 
 /**
- * What a `plain` change's characters read as (D9c Preflight ruling 2), or
- * undefined when they aren't written verbatim: they must read back, alone
- * on one line in a block and in a flow collection, as the same number, a
- * boolean (any YAML 1.2 core spelling: `true`, `True`, `TRUE`, …), or a
- * flow mapping or sequence (`{"k": "v"}`, `[1, a]`) with no anchor, alias
- * or tag in it, every key a string once per mapping (`stringKeysOnly`:
- * `{1: a, "1": b}` would read as one key), and nothing after it (`{} # c`
- * isn't). A string, a null or
- * a block collection is written through `value` instead. `NumberField`
- * still asks `plainNumber`.
+ * What a `plain` change's characters read as, or undefined when they
+ * aren't written verbatim: they must read back, alone on one line in a
+ * block and in a flow collection, as the same number, a boolean (any YAML
+ * 1.2 core spelling: `true`, `True`, `TRUE`, …), or a flow mapping or
+ * sequence (`{"k": "v"}`, `[1, a]`) with no anchor, alias or tag in it,
+ * every key a string once per mapping (`stringKeysOnly`: `{1: a, "1": b}`
+ * would read as one key), and nothing after it (`{} # c` isn't). A
+ * string, a null or a block collection is written through `value`
+ * instead. `NumberField` still asks `plainNumber`.
  *
- * A plain string inside a flow collection that the collector's yaml.v3
- * would read as another type (`[2024-01-01]`, `{a: 1_000}`; Ruling 69) is
- * written double-quoted, the rest as typed (Ruling 78): `source` then says
- * what is written (`["2024-01-01"]`), which reads as the same value.
+ * A plain string inside a flow collection that the collector's yaml.v3 would
+ * read as another type (`[2024-01-01]`, `{a: 1_000}`) is written
+ * double-quoted, the rest as typed: `source` then says what is written
+ * (`["2024-01-01"]`), which reads as the same value.
  */
 export function plainValue(source: string): { value: unknown; source?: string } | undefined {
   if (/[\r\n\t]/.test(source) || source !== source.trim() || source === "") return undefined;
@@ -3011,8 +3003,8 @@ export function plainValue(source: string): { value: unknown; source?: string } 
 
 /**
  * A flow collection's characters with each plain string the collector
- * would read as another type (keys included; Ruling 69) double-quoted, and
- * everything else as typed (Ruling 78).
+ * would read as another type (keys included) double-quoted, and
+ * everything else as typed.
  */
 function quoteMisread(source: string): string {
   const offset = "k: ".length;
@@ -3087,13 +3079,13 @@ function outsidePath(before: unknown, after: unknown, path: ValuePath): [unknown
 
 /**
  * Whether the value at `base` (a component's) reads as before apart from
- * what's at the `edited` paths below it (D9d Ruling 40), so a splice that
- * changes another of its values (an anchor's alias re-bound by a moved
- * item) is refused. A `base` the text hadn't is new: its changes are each
- * read back. The paths are taken out last index first, so taking one out
- * doesn't shift another's; a list moved or with an item removed is taken
- * out whole, so the changes' paths, each read against the text the earlier
- * ones left, still name the same values in the text before.
+ * what's at the `edited` paths below it, so a splice that changes another
+ * of its values (an anchor's alias re-bound by a moved item) is refused. A
+ * `base` the text hadn't is new: its changes are each read back. The paths
+ * are taken out last index first, so taking one out doesn't shift
+ * another's; a list moved or with an item removed is taken out whole, so
+ * the changes' paths, each read against the text the earlier ones left,
+ * still name the same values in the text before.
  */
 function onlyEditedChanged(before: unknown, after: unknown, base: ValuePath, edited: readonly ValuePath[]): boolean {
   let was = before;
@@ -3120,20 +3112,19 @@ function onlyEditedChanged(before: unknown, after: unknown, base: ValuePath, edi
 /**
  * The text with `changes` written under `base` (`["receivers", "otlp"]`,
  * `["service", "telemetry"]`), each at `[...base, ...change.path]`, in
- * order, each path read against the text the earlier changes left (D9b
- * decision 2; Preflight rulings 1-3, 10, 11, 13 and 14). Every change is a
- * splice through the editor, with its alias, merge and anchor protection
- * (D9a Preflight ruling 8); consecutive changes of a scalar in place share
- * one parse. Each change is checked as it reads back (a set value as set,
- * a removed key absent, a list with the item gone or moved, the moved
- * item's own text unchanged, a renamed key's value under its new name),
- * and the whole document's value outside `base`, and the component's
- * apart from what the changes edit (`onlyEditedChanged`, D9d Ruling 40),
- * must be the same before and after; a remove, move or rename also leaves
- * the component as before apart from its own paths, compared across that
- * change alone (Ruling 42). Throws `TextEditError` when a change can't be
- * written as a splice, a path leaves `base`, or a check fails; the text
- * isn't touched then (the caller keeps it).
+ * order, each path read against the text the earlier changes left. Every
+ * change is a splice through the editor, with its alias, merge and anchor
+ * protection; consecutive changes of a scalar in place share one parse.
+ * Each change is checked as it reads back (a set value as set, a removed
+ * key absent, a list with the item gone or moved, the moved item's own
+ * text unchanged, a renamed key's value under its new name), and the
+ * whole document's value outside `base`, and the component's apart from
+ * what the changes edit (`onlyEditedChanged`), must be the same before
+ * and after; a remove, move or rename also leaves the component as before
+ * apart from its own paths, compared across that change alone. Throws
+ * `TextEditError` when a change can't be written as a splice, a path
+ * leaves `base`, or a check fails; the text isn't touched then (the
+ * caller keeps it).
  */
 export function writeValues(
   text: string,
@@ -3158,9 +3149,9 @@ export function writeValues(
     const list = nodeValue(editor.document, nodeAt(editor.document, path));
     return Array.isArray(list) ? list : refuse();
   };
-  // What the changes edit, below `base`: the rest of the component must read as before (D9d Ruling 40).
+  // What the changes edit, below `base`: the rest of the component must read as before.
   const edited: ValuePath[] = [];
-  // The component's value as the text now reads it, kept while the text is the same (D9d Ruling 42).
+  // The component's value as the text now reads it, kept while the text is the same.
   let component: { text: string; value: unknown } | undefined;
   const componentValue = () => {
     if (component?.text !== editor.text) component = { text: editor.text, value: nodeValue(editor.document, nodeAt(editor.document, base)) };
@@ -3168,7 +3159,7 @@ export function writeValues(
   };
   // A remove, move or rename changes nothing in the component but what's at its own paths, compared
   // before and after that change: a later change can't re-bind an alias inside a path an earlier one
-  // edited, which the check of the whole write, those paths taken out, can't see (D9d Ruling 42).
+  // edited, which the check of the whole write, those paths taken out, can't see.
   const onlyThisChanged = (was: unknown, paths: readonly ValuePath[]) => {
     if (!onlyEditedChanged(was, componentValue(), [], paths)) throw new TextEditError("A change reached a value outside the one it edits.");
   };
@@ -3233,7 +3224,7 @@ export function writeValues(
       continue;
     }
 
-    // Setting what `base` itself is would reprint its whole value: a change sets what's inside it (ruling 30).
+    // Setting what `base` itself is would reprint its whole value: a change sets what's inside it.
     if (change.path.length === 0) refuse();
     edited.push(change.path);
     let value: unknown;
@@ -3271,7 +3262,7 @@ export function writeValues(
       continue;
     }
     // A string with a line break whose block didn't read back as written (a comment line indented into it)
-    // is written again, double-quoted, rather than refused (D9c Preflight ruling 1).
+    // is written again, double-quoted, rather than refused.
     const saved = editor.save();
     try {
       editor.setValue(path, value);
@@ -3299,10 +3290,10 @@ export function writeValues(
 }
 
 /**
- * The component's own text for the Configuration tab's YAML box (D9a
- * decision 4): its value below its key (or after it, when written on the
- * key's line), comments included, at column 0 with `\n` line endings.
- * `document`, when the caller has the text's parse, saves parsing it again.
+ * The component's own text for the Configuration tab's YAML box: its value
+ * below its key (or after it, when written on the key's line), comments
+ * included, at column 0 with `\n` line endings. `document`, when the caller
+ * has the text's parse, saves parsing it again.
  */
 export function componentValueText(text: string, key: string, document?: ParsedText): string {
   return new TextEditor(text, document).componentText(splitKey(key));
@@ -3329,8 +3320,8 @@ function readBox(boxText: string): { box: Document.Parsed; value: unknown } | nu
 
 /**
  * Whether the YAML box's text reads as a component's value, a mapping or
- * empty (D9a decision 4): what `writeComponentValue` needs before it writes.
- * While it doesn't, the box says so and nothing is written.
+ * empty: what `writeComponentValue` needs before it writes. While it doesn't,
+ * the box says so and nothing is written.
  */
 export function boxTextReads(boxText: string): boolean {
   return readBox(boxText) !== null;
@@ -3338,13 +3329,13 @@ export function boxTextReads(boxText: string): boolean {
 
 /**
  * The component's value in the text replaced by what the YAML box holds,
- * comments included (D9a decision 4; Preflight ruling 22 debounces the
- * calls). `{ ok: false }`, with why, when the box doesn't read as a mapping
- * (or empty) or reuses an anchor name the text defines elsewhere: nothing is
- * written. An empty box leaves the component with no value (`otlp:`).
- * `document`, when the caller has the text's parse, saves parsing it again;
- * the edited text's document and model are kept (as `editText` does), so
- * the editor's store doesn't parse the text again.
+ * comments included (the calls are debounced). `{ ok: false }`, with why, when
+ * the box doesn't read as a mapping (or empty) or reuses an anchor name the
+ * text defines elsewhere: nothing is written. An empty box leaves the
+ * component with no value (`otlp:`). `document`, when the caller has the
+ * text's parse, saves parsing it again; the edited text's document and model
+ * are kept (as `editText` does), so the editor's store doesn't parse the text
+ * again.
  */
 export function writeComponentValue(
   text: string,

@@ -6,7 +6,7 @@ import { CreatedFleetTokens } from "./CreatedFleetTokens.js";
 const DEFAULT_BEARER = "tfd_default-bearer-canary";
 const ROTATE_BEARER = "tfr_rotate-bearer-canary";
 
-describe("CreatedFleetTokens (D17a decision 24)", () => {
+describe("CreatedFleetTokens", () => {
   it("shows the default token, which never expires, and the rotate token with its expiry, each in its own ph-no-capture box", () => {
     render(
       <CreatedFleetTokens

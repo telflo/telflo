@@ -15,10 +15,9 @@ import { deleteOrganization } from "~/lib/api-client.js";
 import { isManagementLost, refusalMessage, useLeaveManagement } from "~/lib/organizations.js";
 
 /*
- * New in D5 (decision 9; its copy is in the Parity Notes' Appearance table).
- * Built from the shadcn Dialog in the style of the member confirmations. The
- * button is enabled only when the organization's exact name is typed:
- * case-sensitive and untrimmed.
+ * Deleting an organization. Built from the shadcn Dialog in the style of the
+ * member confirmations. The button is enabled only when the organization's
+ * exact name is typed: case-sensitive and untrimmed.
  */
 
 interface DeleteOrganizationDialogProps {
@@ -58,7 +57,7 @@ export function DeleteOrganizationDialog({ open, onOpenChange, organization }: D
     setIsLoading(false);
     toast.success(`${organization.name} has been deleted`);
     handleOpenChange(false);
-    // The session now acts in the user's fallback organization (decision 9).
+    // The session now acts in the user's fallback organization.
     // This page is never /app, so going there reloads the layout's data, and
     // the layout re-seeds the store from the fresh /me.
     await navigate("/app");
