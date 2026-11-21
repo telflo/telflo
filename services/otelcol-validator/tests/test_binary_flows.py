@@ -1,8 +1,9 @@
 """The seeded flows against their collectors (marked `binary`, run inside
 the image with `pytest -m binary`).
 
-`fixtures/seeded-flows.json` holds each of the 13 seeded flows' slug, pin
-and YAML, from migration 1700000000026's `seededFlows`. The db workspace
+`fixtures/seeded-flows.json` holds each of the 16 seeded flows' slug, pin
+and YAML, from the `seededFlows` of migrations 1700000000026 and
+1700000000045. The db workspace
 writes it (`npm run fixture:seeded-flows --workspace @telflo/db`,
 telflo-core/packages/db/src/seeded-flows-fixture.ts) and its suite fails
 when it is stale. Each flow must pass the service's check on its checked
@@ -88,12 +89,34 @@ EXPECTED_REQUIREMENTS: dict[str, list[tuple[str, str, str | None]]] = {
         env("AWS_REGION"),
         env("OVERFLOW_S3_BUCKET"),
     ],
+    "monitor-supabase": [
+        env("SUPABASE_SECRET_KEY"),
+        env("SUPABASE_HOST"),
+        env("SUPABASE_PROJECT_REF"),
+        env("OTLP_ENDPOINT"),
+        env("OTLP_AUTH_HEADER"),
+        env("SUPABASE_DRAIN_TOKEN"),
+    ],
+    "ship-otel-data-to-greptimedb": [
+        env("DEPLOYMENT_ENVIRONMENT"),
+        env("GREPTIMEDB_ENDPOINT"),
+        env("GREPTIMEDB_DATABASE"),
+        env("GREPTIMEDB_USERNAME"),
+        env("GREPTIMEDB_PASSWORD"),
+    ],
+    "otel-to-serenedb": [
+        env("SERENEDB_OTLP_ENDPOINT"),
+        env("OTLP_ENDPOINT"),
+        env("OTLP_AUTH_HEADER"),
+        env("SERENEDB_USERNAME"),
+        env("SERENEDB_PASSWORD"),
+    ],
 }
 
 
 def test_the_fixture_holds_every_listed_flow_once() -> None:
     slugs = [flow["slug"] for flow in FLOWS]
-    assert len(slugs) == 13
+    assert len(slugs) == 16
     assert sorted(slugs) == sorted(EXPECTED_REQUIREMENTS)
 
 

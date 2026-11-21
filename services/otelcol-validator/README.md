@@ -307,12 +307,12 @@ python3.12 -m venv .venv
   `tests/test_builder_texts.py` checks);
 - the component forms' cases, each with its answer per version, and the
   start-only cases (`tests/test_binary_handoffs.py`);
-- the 13 seeded flows (`tests/test_binary_flows.py`): each text of
+- the 16 seeded flows (`tests/test_binary_flows.py`): each text of
   `tests/fixtures/seeded-flows.json` passes its own pin's collector with no
   error, its requirements exactly as listed. The db workspace writes the
-  fixture from migration 1700000000026's `seededFlows`
-  (`npm run fixture:seeded-flows --workspace @telflo/db`, from `telflo-core/`)
-  and its suite fails while it is stale. A pin is checked only by an image
+  fixture from the `seededFlows` of migrations 1700000000026 and
+  1700000000045 (`npm run fixture:seeded-flows --workspace @telflo/db`, from
+  `telflo-core/`) and its suite fails while it is stale. A pin is checked only by an image
   that holds it: `OTELCOL_VERSIONS=all`, or a list naming every pin (0.159.0
   and 0.162.0 today).
 

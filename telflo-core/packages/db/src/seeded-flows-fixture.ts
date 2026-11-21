@@ -3,18 +3,19 @@ import { fileURLToPath } from "node:url";
 
 /*
  * The seeded flows as the collector checks see them: each flow's slug, its
- * pin and its YAML, from migration 1700000000026's `seededFlows`, committed
- * as `services/otelcol-validator/tests/fixtures/seeded-flows.json`. The
- * validator's binary tests run each flow's pin over it
+ * pin and its YAML, from the `seededFlows` of every migration that seeds
+ * flows (1700000000026 and 1700000000045, seeded-flows-migrations.ts),
+ * committed as `services/otelcol-validator/tests/fixtures/seeded-flows.json`.
+ * The validator's binary tests run each flow's pin over it
  * (`tests/test_binary_flows.py`), and the web's schema tests read it
  * (`otelcol-schema.test.ts`, `otelcol-schema-warnings.test.ts`), so all of
- * them check the migration's one copy of the text.
+ * them check the migrations' one copy of the text.
  *
  * `npm run fixture:seeded-flows --workspace @telflo/db` writes it
  * (write-seeded-flows-fixture.ts); `seeded-flows-fixture.test.ts` checks the
  * committed file is what this produces from the migration today, and never
  * writes it. Pure: the flows come in as an argument, so nothing here loads
- * the migration (its loader is test support, @telflo/db/testing).
+ * the migrations (seeded-flows-migrations.ts does).
  */
 
 /** The command that writes the fixture. */
@@ -29,7 +30,7 @@ const REPOSITORY_ROOT = new URL("../../../../", import.meta.url);
 /** The fixture's absolute path. */
 export const SEEDED_FLOWS_FIXTURE_PATH = fileURLToPath(new URL(SEEDED_FLOWS_FIXTURE, REPOSITORY_ROOT));
 
-/** The part of a seeded flow (the migration's `seededFlows` row) the fixture holds. */
+/** The part of a seeded flow (a migration's `seededFlows` row) the fixture holds. */
 export interface FixtureSourceFlow {
   readonly slug: string;
   readonly collector_distribution: string;
@@ -55,7 +56,7 @@ export interface SeededFlowsFixture {
 export function seededFlowsFixture(flows: readonly FixtureSourceFlow[]): SeededFlowsFixture {
   return {
     description:
-      "The seeded flows' slugs, pins and YAML, from migration 1700000000026's seededFlows. " +
+      "The seeded flows' slugs, pins and YAML, from the seededFlows of migrations 1700000000026 and 1700000000045. " +
       "Generated: never edit by hand.",
     script: SEEDED_FLOWS_SCRIPT,
     flows: flows.map((flow) => ({
