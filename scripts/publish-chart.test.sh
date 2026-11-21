@@ -611,6 +611,17 @@ run --dry-run --chart
 check "--chart without a name refused" "[ $rc -eq 2 ] && has \"--chart needs a chart's name\" && no_helm"
 run --dry-run --chart telflo --chart supervisor-collector
 check "--chart twice refused" "[ $rc -eq 2 ] && has '--chart given more than once' && no_helm"
+for bad in telflo/telflo telflo-platform "" platform Telflo; do
+  run --dry-run --chart telflo --namespace "$bad"
+  check "--namespace '$bad' refused (only telflo or telflo-staging)" \
+    "[ $rc -eq 2 ] && has '--namespace must be telflo (the public one) or telflo-staging' && no_helm && no_crane"
+done
+run --dry-run --namespace telflo-staging
+check "--namespace telflo-staging for the supervisor-collector chart refused (it is published to the public namespace alone)" \
+  "[ $rc -eq 2 ] && has 'goes with --chart telflo only' && no_helm && no_crane"
+run --package "$tmp" --chart telflo --namespace telflo-staging
+check "--namespace with --package refused (it reads no registry)" \
+  "[ $rc -eq 2 ] && has '--namespace goes with --dry-run and --push-package only' && no_helm"
 make_copy; edit "$copy/$PLATFORM/Chart.yaml" 's/^appVersion: .*/appVersion: "9.9.9"/'
 run_script "$copy/scripts/publish-chart.sh" --dry-run --chart telflo
 check "telflo: an appVersion not the version refused" \
@@ -655,6 +666,13 @@ check "telflo: the package is HEAD's chart with the vendored opamp-server chart,
 STANDIN_CRANE=absent STANDIN_PUSH=ok run --push-package "$platform_pkg/telflo-$PLATFORM_VERSION.tgz" --chart telflo
 check "telflo: --push-package pushes that file to oci://ghcr.io/telflo/telflo/charts (no --plain-http for ghcr.io), with a temporary configuration holding no login, then reads it back (here: still absent, refused)" \
   "[ $rc -eq 1 ] && has 'after the push' && [ \"\$(tr '\n' ' ' <'$logs/push-args')\" = 'push $platform_pkg/telflo-$PLATFORM_VERSION.tgz oci://ghcr.io/telflo/telflo/charts ' ] && grep -qx 'registry.json={\"auths\":{\"telflo-publish.invalid\":{}}}' '$logs/push-env' && crane_read ghcr.io/telflo/telflo/charts/telflo:$PLATFORM_VERSION"
+
+STANDIN_CRANE=absent STANDIN_PUSH=ok run --push-package "$platform_pkg/telflo-$PLATFORM_VERSION.tgz" --chart telflo --namespace telflo-staging
+check "telflo: --push-package --namespace telflo-staging pushes that file to a release's stage, oci://ghcr.io/telflo/telflo-staging/charts, and reads it back there" \
+  "[ $rc -eq 1 ] && has 'after the push' && [ \"\$(tr '\n' ' ' <'$logs/push-args')\" = 'push $platform_pkg/telflo-$PLATFORM_VERSION.tgz oci://ghcr.io/telflo/telflo-staging/charts ' ] && crane_read ghcr.io/telflo/telflo-staging/charts/telflo:$PLATFORM_VERSION && ! grep -q 'ghcr.io/telflo/telflo/charts' '$logs/crane-calls.log'"
+STANDIN_CRANE=absent prun --dry-run --namespace telflo-staging
+check "telflo: a dry run with --namespace telflo-staging asks the stage and prints its push" \
+  "[ $rc -eq 0 ] && [ \"\$(cat '$logs/crane-calls.log')\" = 'manifest ghcr.io/telflo/telflo-staging/charts/telflo:$PLATFORM_VERSION ' ] && printf '%s\n' \"\$printed\" | grep -qE \"'oci://ghcr\\.io/telflo/telflo-staging/charts'\\\$\""
 
 # 7d. the vendored chart's tree and version, on HEAD's extraction, before Helm runs (exit 1)
 vendoring_refused() { # <name> <expected words>
