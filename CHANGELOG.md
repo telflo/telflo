@@ -7,6 +7,8 @@ release's images, Helm chart and Compose install are on its
 
 ## Unreleased
 
+## 0.2.1 - 2026-11-20
+
 ### Security
 
 - The gateway runs nginx 1.30.7 (`nginx:1.30-alpine`, pinned by digest) in
@@ -14,11 +16,6 @@ release's images, Helm chart and Compose install are on its
   development stack's two forwarders. Before, they ran 1.27.5, which no
   longer gets fixes. Its HTTP/2 vulnerabilities, CVE-2026-123633 and
   CVE-2026-123007, never applied: the gateway speaks only HTTP/1.1.
-
-## 0.2.1 - 2026-11-20
-
-### Security
-
 - The development stack's `docker-compose.yml` publishes Postgres, Mailpit
   and the gateway on `127.0.0.1` only. Before, they listened on every
   interface, and Postgres used its committed development password. The
