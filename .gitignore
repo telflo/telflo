@@ -12,6 +12,7 @@ build/
 # Test output
 coverage/
 .vitest/
+.vitest-reports/
 test-results/
 playwright-report/
 
