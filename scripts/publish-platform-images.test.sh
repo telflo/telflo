@@ -271,8 +271,15 @@ run --dry-run --builder b --version latest
 check "the version 'latest' refused" "[ $rc -eq 2 ] && has 'must be x.y.z' && nothing_asked"
 run --dry-run --builder b --version
 check "--version without a value refused" "[ $rc -eq 2 ] && has '--version needs a value' && nothing_asked"
-check "no option names a repository: the script's only repository path is telflo/telflo" \
-  "[ \"\$(grep -cE '^REPOSITORY_PATH=\"telflo/telflo\"\$' '$root/scripts/publish-platform-images.sh')\" -eq 1 ] && ! grep -qE 'telflo/platform|ghcr\.io/telflo/collector' '$root/scripts/publish-platform-images.sh'"
+for bad in telflo/telflo telflo-platform platform "" Telflo telflo-staging/x; do
+  run --push-oci "$tmp" --namespace "$bad"
+  check "--namespace '$bad' refused (only telflo or telflo-staging), nothing asked" \
+    "[ $rc -eq 2 ] && has '--namespace must be telflo (the public one) or telflo-staging' && nothing_asked"
+done
+run --build-oci "$tmp" --builder b --namespace telflo-staging
+check "--namespace with --build-oci refused" "[ $rc -eq 2 ] && has '--namespace goes with --dry-run and --push-oci only' && nothing_asked"
+check "no option names a repository: the script's one repository path is oci.sh's namespace's (telflo/telflo or telflo/telflo-staging)" \
+  "[ \"\$(grep -c '^ *REPOSITORY_PATH=' '$root/scripts/publish-platform-images.sh')\" -eq 1 ] && grep -qF 'REPOSITORY_PATH=\"\$(telflo_namespace_path \"\$namespace\")\"' '$root/scripts/publish-platform-images.sh' && ! grep -qE 'telflo/platform|ghcr\.io/telflo/collector' '$root/scripts/publish-platform-images.sh'"
 
 # --- 2. --dry-run: checks, asks the registry, prints the builds --------------------------
 STANDIN_CRANE=absent run --dry-run --builder owner-builder
@@ -295,6 +302,11 @@ check "--image=<name>, a --version equal to the appVersion; NAME_UNKNOWN is abse
   "[ $rc -eq 0 ] && [ \"\$(asked)\" = '$R/web:1.2.3' ] && has '$R/web:1.2.3 is not in the registry yet'"
 STANDIN_CRANE=absent run --dry-run --builder owner-builder --image api --registry 127.0.0.1:5999
 check "--dry-run --registry 127.0.0.1:<port>: <registry>/telflo/telflo/<name>" "[ $rc -eq 0 ] && [ \"\$(asked)\" = '127.0.0.1:5999/telflo/telflo/api:1.2.3' ]"
+STANDIN_CRANE=absent run --dry-run --builder owner-builder --image api --image web --namespace telflo-staging
+check "--dry-run --namespace telflo-staging: ghcr.io/telflo/telflo-staging/<name> (a release's stage)" \
+  "[ $rc -eq 0 ] && [ \"\$(asked)\" = 'ghcr.io/telflo/telflo-staging/api:1.2.3 ghcr.io/telflo/telflo-staging/web:1.2.3' ]"
+STANDIN_CRANE=absent run --dry-run --builder owner-builder --image api --namespace=telflo
+check "--namespace=telflo: the public one, as the default" "[ $rc -eq 0 ] && [ \"\$(asked)\" = '$R/api:1.2.3' ]"
 STANDIN_CRANE=absent run --dry-run --builder owner-builder --version 1.2.4
 check "a --version other than HEAD's appVersion refused" \
   "[ $rc -eq 1 ] && has 'is not HEAD' && nothing_asked"
@@ -466,6 +478,14 @@ if $push_ok; then
   pr "$rel" --registry "$REG"
   check "a re-run skips every tag holding the archive's digest, with a line; nothing pushed" \
     "[ $rc -eq 0 ] && has 'holds $(cat "$rel/api.digest") already' && nothing_pushed && [ \"\$(printf '%s\n' \"\$stdout_only\" | grep -c '@sha256:')\" -eq 5 ]"
+  pr "$rel" --registry "$REG" --namespace telflo-staging
+  staged=true
+  for i in api web otelcol-validator otelcol-testing ottl-evaluator; do
+    [ "$(DOCKER_CONFIG="$TR_CONFIG" "$real_crane" digest "$REG/telflo/telflo-staging/$i:1.2.3" 2>/dev/null)" = "$(cat "$rel/$i.digest")" ] || staged=false
+    printf '%s\n' "$stdout_only" | grep -qxF "$REG/telflo/telflo-staging/$i:1.2.3@$(cat "$rel/$i.digest")" || staged=false
+  done
+  check "--push-oci --namespace telflo-staging copies the same archives to <registry>/telflo/telflo-staging/<name>, the public tags untouched" \
+    "[ $rc -eq 0 ] && $staged && ! grep -qE '^push [^ ]+ $REG/telflo/telflo/' '$logs/crane-calls.log' && [ \"\$(remote_of api)\" = \"\$(cat '$rel/api.digest')\" ]"
   # Another archive for one image (variant B): its tag holds A's digest.
   other="$tmp/other"; mkdir -p "$other"
   for i in api web otelcol-validator otelcol-testing; do cp "$rel/$i.oci.tar" "$rel/$i.digest" "$other/"; done

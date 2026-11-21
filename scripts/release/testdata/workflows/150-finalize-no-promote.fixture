@@ -1,0 +1,8 @@
+# Breaks one rule: finalize.yml without the copy by digest (promote.sh).
+file: finalize.yml
+rule: required-steps
+<<<
+        run: bash scripts/release/promote.sh --version "$VERSION" --digests "$RUNNER_TEMP/finalize/digests.txt"
+===
+        run: bash scripts/release/verify-collector-artifacts.sh
+>>>

@@ -1,0 +1,12 @@
+# Breaks one rule: finalize.yml pushing an archive (it copies by digest only, never builds or pushes).
+file: finalize.yml
+rule: finalize-only
+<<<
+      - name: The pull-back of the public tags, by digest
+===
+      - env:
+          DOCKER_CONFIG: ${{ runner.temp }}/docker
+          HELM_REGISTRY_CONFIG: ${{ runner.temp }}/helm/registry/config.json
+        run: bash scripts/publish-platform-images.sh --push-oci "$RUNNER_TEMP/oci"
+      - name: The pull-back of the public tags, by digest
+>>>

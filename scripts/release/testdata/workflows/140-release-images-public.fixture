@@ -1,0 +1,8 @@
+# Breaks one rule: the publish job pushing the images to the public namespace, not the stage.
+file: release.yml
+rule: required-steps
+<<<
+run: bash scripts/publish-platform-images.sh --push-oci "$RUNNER_TEMP/oci" --namespace telflo-staging
+===
+run: bash scripts/publish-platform-images.sh --push-oci "$RUNNER_TEMP/oci"
+>>>

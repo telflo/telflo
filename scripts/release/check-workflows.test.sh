@@ -6,6 +6,7 @@
 #   file: <the workflow it changes>    rule: <the rule it breaks>
 #   <<< (text found exactly once) === (its replacement) >>>, one or more
 #   extra: <a file added to the folder>
+#   remove: <a file taken out of the folder>
 # so the fixtures follow the real files: one whose text is no longer there
 # fails here. Needs node and telflo-core's node_modules (the `yaml` package).
 # Run:  bash scripts/release/check-workflows.test.sh   (bash 3.2 compatible)
@@ -26,7 +27,7 @@ run() { out="$("$shell" "$check_sh" "$@" 2>&1)"; rc=$?; }
 has() { printf '%s\n' "$out" | grep -qF -- "$1"; }
 
 run
-check "the real release.yml, collector.yml and ci.yml pass (exit 0)" "[ $rc -eq 0 ] && has 'check-workflows: OK'"
+check "the real release.yml, finalize.yml, collector.yml and ci.yml pass (exit 0)" "[ $rc -eq 0 ] && has 'check-workflows: OK'"
 run --bogus
 check "an unknown argument: usage (exit 2)" "[ $rc -eq 2 ]"
 mkdir -p "$tmp/no-yaml"
@@ -48,7 +49,10 @@ text = open(fixture, encoding="utf-8").read()
 file = re.search(r"^file: (\S+)$", text, re.M).group(1)
 rule = re.search(r"^rule: (\S+)$", text, re.M).group(1)
 extra = re.search(r"^extra: (\S+)$", text, re.M)
-if extra:
+remove = re.search(r"^remove: (\S+)$", text, re.M)
+if remove:
+    os.remove(os.path.join(copy, remove.group(1)))
+elif extra:
     with open(os.path.join(copy, extra.group(1)), "w") as handle:
         handle.write("name: extra\non: push\njobs: {}\n")
 else:
@@ -74,7 +78,7 @@ PY
   run --dir "$copy" --root "$root"
   check "$name: the check fails (exit 1) naming the rule $rule in $file" "[ $rc -eq 1 ] && has 'check-workflows: $file: $rule: '"
 done
-check "the fixtures are there (at least one per rule)" "[ $count -ge 139 ]"
+check "the fixtures are there (at least one per rule)" "[ $count -ge 163 ]"
 # Every rule check-workflows.mjs lists in its header has a fixture that breaks it.
 rules="$(sed -n 's#^//   \([a-z][a-z-]*\)  .*#\1#p' "$root/scripts/release/check-workflows.mjs" | sort -u)"
 covered="$(sed -n 's/^rule: //p' "$fixtures"/*.fixture | sort -u)"

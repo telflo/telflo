@@ -1,0 +1,104 @@
+# A release's stage made public (docs/releasing.md), started by hand from
+# main with the version once its end-to-end tests have passed: the draft
+# GitHub Release v<version> checked (its tag annotated, on main) and its
+# digests.txt read; every staged image and the chart copied from
+# ghcr.io/telflo/telflo-staging to ghcr.io/telflo/telflo by digest, each
+# copy checked by digest (scripts/release/promote.sh); the public tags pulled
+# back against those digests; then the draft published. Nothing is built,
+# packaged or re-tagged here: the only inputs are the version and the
+# draft's digests.txt, the record of the bytes the release workflow staged.
+#
+# Every `run:` is tool setup or one call of a committed script
+# (scripts/release/rehearse.sh runs the same scripts locally); the version
+# reaches a script only through `env:`, never `${{ }}` inside `run:`, and is
+# checked there first. scripts/release/check-workflows.sh holds these rules.
+#
+# A run that stopped part way is run again: the copy skips every public tag
+# already holding its digest and refuses one holding another.
+name: Finalize
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: The staged version to publish, x.y.z
+        type: string
+        required: true
+
+permissions: {}
+
+# The release workflow's group: a stage and a finalize never run at once.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  # The `release` environment's reviewer approves the job before it starts.
+  # The only token is this job's GITHUB_TOKEN; Docker's and Helm's logins go
+  # to files under the runner's temporary folder, never the runner's home.
+  finalize:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    environment: release
+    permissions:
+      contents: write # the GitHub Release
+      packages: write # the images and the chart, in GHCR
+    env:
+      # crane is tools.sh's checked one only.
+      TELFLO_CRANE: ""
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
+        with:
+          version: v4.2.1
+      - run: bash scripts/release/tools.sh fetch crane
+      - run: mkdir -p "$RUNNER_TEMP/finalize"
+      - name: The draft Release, its tag on main, and its digests.txt
+        env:
+          VERSION: ${{ inputs.version }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash scripts/release/steps.sh finalize-check --version "$VERSION" --out "$RUNNER_TEMP/finalize"
+      - name: Log in to GHCR (Docker and crane)
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        env:
+          DOCKER_CONFIG: ${{ runner.temp }}/docker
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Log in to GHCR (Helm)
+        env:
+          DOCKER_CONFIG: ${{ runner.temp }}/docker
+          HELM_REGISTRY_CONFIG: ${{ runner.temp }}/helm/registry/config.json
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash scripts/release/steps.sh helm-login
+      - name: The stage to the public namespace, by digest
+        env:
+          DOCKER_CONFIG: ${{ runner.temp }}/docker
+          HELM_REGISTRY_CONFIG: ${{ runner.temp }}/helm/registry/config.json
+          VERSION: ${{ inputs.version }}
+        run: bash scripts/release/promote.sh --version "$VERSION" --digests "$RUNNER_TEMP/finalize/digests.txt"
+      - name: The pull-back of the public tags, by digest
+        env:
+          DOCKER_CONFIG: ${{ runner.temp }}/docker
+          HELM_REGISTRY_CONFIG: ${{ runner.temp }}/helm/registry/config.json
+          VERSION: ${{ inputs.version }}
+        run: bash scripts/release/pull-back.sh --digests "$RUNNER_TEMP/finalize/digests.txt" --version "$VERSION" --namespace telflo
+      - name: The collector images and chart still exist
+        env:
+          DOCKER_CONFIG: ${{ runner.temp }}/docker
+          HELM_REGISTRY_CONFIG: ${{ runner.temp }}/helm/registry/config.json
+        run: bash scripts/release/verify-collector-artifacts.sh
+      # The tag and the draft asked of GitHub's API once more first.
+      - name: The GitHub Release published (last)
+        env:
+          DOCKER_CONFIG: ${{ runner.temp }}/docker
+          HELM_REGISTRY_CONFIG: ${{ runner.temp }}/helm/registry/config.json
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ inputs.version }}
+        run: bash scripts/release/steps.sh finalize-publish --version "$VERSION" --digests "$RUNNER_TEMP/finalize/digests.txt"

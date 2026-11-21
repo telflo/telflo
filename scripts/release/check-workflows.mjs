@@ -1,18 +1,19 @@
 #!/usr/bin/env node
 // check-workflows.mjs: the workflows' static check. It reads
-// .github/workflows/release.yml, collector.yml and ci.yml with the `yaml`
-// package telflo-core already holds, and their raw text, and holds every rule
-// below; each failure is printed as `check-workflows: <file>: <rule>: <why>`.
+// .github/workflows/release.yml, finalize.yml, collector.yml and ci.yml with
+// the `yaml` package telflo-core already holds, and their raw text, and holds
+// every rule below; each failure is printed as
+// `check-workflows: <file>: <rule>: <why>`.
 //
 //   node scripts/release/check-workflows.mjs [--dir <workflows folder>] [--root <repository>]
 //
 // The rules every file holds (their ids):
-//   workflow-files       the folder holds exactly ci.yml, collector.yml and release.yml
+//   workflow-files       the folder holds exactly ci.yml, collector.yml, finalize.yml and release.yml
 //   yaml                 each file parses with no error, duplicate key, anchor or alias; every
 //                        job and step is a block mapping (no flow-style `{ … }` step)
 //   workflow-keys        the top level holds only name, on, permissions, concurrency and jobs
 //
-// release.yml's and collector.yml's rules (they hold the token and publish):
+// release.yml's, finalize.yml's and collector.yml's rules (they hold the token and publish):
 //   matrix               each job's strategy exactly its spec's: release.yml's
 //                        build `matrix: { image: [api, web, otelcol-validator, otelcol-testing,
 //                        ottl-evaluator] }`; collector.yml's build, test and publish `matrix:
@@ -30,15 +31,21 @@
 //   needs                each job needs exactly its set (release: static, build and package
 //                        version; stack-smoke version, build; archive-smoke and kind-smoke
 //                        version, build, package; collector: build check, test check and
-//                        build)
+//                        build; finalize's one job nothing)
 //   required-steps       each job holds its safety steps, in order, each the exact run: line
 //                        (and env values) below: version verify-tag.sh, the collector checks
 //                        and archive; static static.sh; build and package their scripts; the
 //                        smokes load-images.sh then their steps.sh step (stack-smoke,
 //                        archive-smoke, kind-smoke: the smoke's output through redact.sh);
-//                        publish the push scripts, pull-back.sh, the collector check and
-//                        steps.sh github-release last;
+//                        publish the push scripts to the stage (--namespace telflo-staging),
+//                        pull-back.sh from it, the collector check, steps.sh digests and
+//                        steps.sh github-release --draft last; finalize.yml's job steps.sh
+//                        finalize-check, promote.sh, pull-back.sh --digests of the public
+//                        namespace, the collector check and steps.sh finalize-publish last;
 //                        collector.yml's check, build, test, publish and chart likewise
+//   finalize-only        finalize.yml's run: steps are its required steps, tools.sh fetch crane,
+//                        its mkdir and steps.sh helm-login, nothing else: it copies by digest,
+//                        never builds, packages, pushes an archive or re-tags
 //   job-outputs          a job's outputs are exactly its spec's (release's version: tag,
 //                        version and commit from steps.tag, the verify-tag.sh step, and
 //                        collector_version from steps.collector; collector's check: versions
@@ -64,21 +71,25 @@
 //                        smoke-test-stack.sh): the smokes run only through steps.sh, their output
 //                        through redact.sh, so an extra step beside the required one can't
 //                        reach an unfiltered log
-//   trigger              release.yml: only `push: tags: ["v*"]`; collector.yml: only
-//                        workflow_dispatch
+//   trigger              release.yml: only `push: tags: ["v*"]`; collector.yml and
+//                        finalize.yml: only workflow_dispatch
 //   pull-request-target  no pull_request_target anywhere
 //   dispatch-inputs      collector.yml's inputs: collector_version (string, required)
-//                        and publish (boolean, default false), nothing else
+//                        and publish (boolean, not required, default false); finalize.yml's:
+//                        version (string, required); nothing else, and no key of an input's
+//                        but description and those
 //   permissions-top      the top-level permissions is {}
 //   jobs                 exactly the expected jobs
 //   job-permissions      each job's permissions exactly its allowlist (release: version
 //                        contents+packages read, publish contents+packages write, the rest
-//                        contents read; collector: check contents+packages read, publish
-//                        and chart contents read + packages write, the rest contents read)
+//                        contents read; finalize: contents+packages write; collector: check
+//                        contents+packages read, publish and chart contents read + packages
+//                        write, the rest contents read)
 //   runs-on              every job on ubuntu-24.04 (never -latest)
 //   timeout              every job has timeout-minutes, 1-360
-//   concurrency          one workflow-level group (release / collector), cancel-in-progress
-//                        false; no job-level concurrency
+//   concurrency          one workflow-level group (release, which finalize.yml shares, so a
+//                        stage and a finalize never run at once / collector),
+//                        cancel-in-progress false; no job-level concurrency
 //   uses-allowed         only the actions of the allow-list below (Actions' "Allow select
 //                        actions" lists exactly these) but ci.yml's own (setup-go,
 //                        setup-python), no local or docker:// action, no reusable workflow:
@@ -90,7 +101,8 @@
 //   setup-pins           setup-helm's version v4.2.1; setup-qemu's binfmt image by digest
 //   persist-credentials  every checkout has persist-credentials: false
 //   checkout-ref         release.yml: `version` checks out github.sha (fetch-depth 0), every
-//                        other job needs.version.outputs.commit; collector.yml: github.sha
+//                        other job needs.version.outputs.commit; collector.yml: github.sha;
+//                        finalize.yml: github.sha (fetch-depth 0: the tag's ancestry)
 //   expression-in-run    no `${{` inside a run: (values come through env:)
 //   run-form             every run: is one line: `bash <tracked script> <args>`, `npm ci` or
 //                        `npm run build -w @telflo/cli` (in telflo-core), `mkdir -p
@@ -110,7 +122,8 @@
 //   token-env            the job's token is `${{ secrets.GITHUB_TOKEN }}` only (never
 //                        github.token), and only docker/login-action's password or a step's
 //                        env: GH_TOKEN on release.yml's version job's verify-tag.sh (the
-//                        lightweight-tag fallback) or on steps.sh github-release,
+//                        lightweight-tag fallback), on steps.sh github-release, or on
+//                        finalize.yml's steps.sh finalize-check and finalize-publish,
 //                        GHCR_TOKEN on steps.sh helm-login; never a job's env, another
 //                        action's input or any other place
 //   telflo-crane         TELFLO_CRANE never set to a value at any level (each parsed env:, and
@@ -122,9 +135,12 @@
 //                        every script step after it have HELM_REGISTRY_CONFIG
 //                        ${{ runner.temp }}/helm/registry/config.json
 //   publish-needs        release.yml's publish needs every other job; collector.yml's publish
-//                        needs check and test, its chart check and publish
-//   publish-environment  the publishing jobs, and only they, run in the `release` environment
-//   publish-if           a job's if: is exactly its spec's: release.yml's jobs none;
+//                        needs check and test, its chart check and publish; finalize.yml's
+//                        job nothing
+//   publish-environment  the publishing jobs (finalize.yml's one job among them), and only
+//                        they, run in the `release` environment
+//   publish-if           a job's if: is exactly its spec's: release.yml's and finalize.yml's
+//                        jobs none;
 //                        collector.yml's build and test `${{ needs.check.outputs.has == 'true' }}`
 //                        (nothing to build: skipped), publish that and
 //                        inputs.publish, chart CHART_IF
@@ -268,6 +284,8 @@ const SMOKE_LOADS = [
 const VERIFY_TAG = 'bash scripts/release/verify-tag.sh "$TAG" --expect "$EXPECT"';
 const COLLECTOR_ARCHIVE = 'bash scripts/release/steps.sh collector-archive --out "$RUNNER_TEMP/collector"';
 const COLLECTOR_VERSIONS = 'bash scripts/release/steps.sh collector-versions "$COLLECTOR_VERSION" --publish "$PUBLISH"';
+const INPUT_VERSION = "${{ inputs.version }}";
+const FINALIZE_DIGESTS = '"$RUNNER_TEMP/finalize/digests.txt"';
 
 const SPECS = {
   "release.yml": {
@@ -368,20 +386,63 @@ const SPECS = {
         disk: 13,
         publishing: true,
         needs: "all",
+        // The stage: ghcr.io/telflo/telflo-staging only (finalize.yml makes it public), and a
+        // draft Release.
         required: [
-          { run: 'bash scripts/publish-platform-images.sh --push-oci "$RUNNER_TEMP/oci"' },
+          { run: 'bash scripts/publish-platform-images.sh --push-oci "$RUNNER_TEMP/oci" --namespace telflo-staging' },
           {
-            run: 'bash scripts/publish-chart.sh --chart telflo --push-package "$RUNNER_TEMP/release/telflo-$VERSION.tgz"',
+            run: 'bash scripts/publish-chart.sh --chart telflo --push-package "$RUNNER_TEMP/release/telflo-$VERSION.tgz" --namespace telflo-staging',
             env: { VERSION: VERSION_OUT },
           },
           {
-            run: 'bash scripts/release/pull-back.sh --oci "$RUNNER_TEMP/oci" --version "$VERSION" --chart "$RUNNER_TEMP/release/telflo-$VERSION.tgz"',
+            run: 'bash scripts/release/pull-back.sh --oci "$RUNNER_TEMP/oci" --version "$VERSION" --chart "$RUNNER_TEMP/release/telflo-$VERSION.tgz" --namespace telflo-staging',
             env: { VERSION: VERSION_OUT },
           },
           { run: "bash scripts/release/verify-collector-artifacts.sh" },
           {
-            run: 'bash scripts/release/steps.sh github-release --tag "$TAG" --commit "$COMMIT" --oci "$RUNNER_TEMP/oci" --release "$RUNNER_TEMP/release"',
+            run: 'bash scripts/release/steps.sh digests --oci "$RUNNER_TEMP/oci" --version "$VERSION" --chart "$RUNNER_TEMP/release/telflo-$VERSION.tgz" --out "$RUNNER_TEMP/release/digests.txt"',
+            env: { VERSION: VERSION_OUT },
+          },
+          {
+            run: 'bash scripts/release/steps.sh github-release --draft --tag "$TAG" --commit "$COMMIT" --oci "$RUNNER_TEMP/oci" --release "$RUNNER_TEMP/release"',
             env: { TAG: "${{ needs.version.outputs.tag }}", COMMIT: COMMIT, GH_TOKEN: TOKEN },
+            last: true,
+          },
+        ],
+      },
+    },
+  },
+  "finalize.yml": {
+    trigger: "dispatch",
+    inputs: { version: { type: "string", required: true } },
+    group: "release",
+    jobs: {
+      finalize: {
+        permissions: { contents: "write", packages: "write" },
+        ref: SHA,
+        fullHistory: true,
+        publishing: true,
+        needs: [],
+        // Copies only, by digest: nothing builds, packages or re-tags (finalize-only).
+        otherRuns: [
+          "bash scripts/release/tools.sh fetch crane",
+          'mkdir -p "$RUNNER_TEMP/finalize"',
+          "bash scripts/release/steps.sh helm-login",
+        ],
+        required: [
+          {
+            run: `bash scripts/release/steps.sh finalize-check --version "$VERSION" --out "$RUNNER_TEMP/finalize"`,
+            env: { VERSION: INPUT_VERSION, GH_TOKEN: TOKEN },
+          },
+          { run: `bash scripts/release/promote.sh --version "$VERSION" --digests ${FINALIZE_DIGESTS}`, env: { VERSION: INPUT_VERSION } },
+          {
+            run: `bash scripts/release/pull-back.sh --digests ${FINALIZE_DIGESTS} --version "$VERSION" --namespace telflo`,
+            env: { VERSION: INPUT_VERSION },
+          },
+          { run: "bash scripts/release/verify-collector-artifacts.sh" },
+          {
+            run: `bash scripts/release/steps.sh finalize-publish --version "$VERSION" --digests ${FINALIZE_DIGESTS}`,
+            env: { VERSION: INPUT_VERSION, GH_TOKEN: TOKEN },
             last: true,
           },
         ],
@@ -390,6 +451,10 @@ const SPECS = {
   },
   "collector.yml": {
     trigger: "dispatch",
+    inputs: {
+      collector_version: { type: "string", required: true },
+      publish: { type: "boolean", required: false, default: false },
+    },
     group: "collector",
     jobs: {
       check: {
@@ -468,7 +533,7 @@ const SPECS = {
     },
   },
 };
-const WORKFLOW_FILES = ["ci.yml", "collector.yml", "release.yml"];
+const WORKFLOW_FILES = ["ci.yml", "collector.yml", "finalize.yml", "release.yml"];
 const WORKFLOW_KEYS = ["name", "on", "permissions", "concurrency", "jobs"];
 const JOB_KEYS = ["needs", "if", "runs-on", "timeout-minutes", "permissions", "outputs", "strategy", "environment", "env", "steps"];
 const STEP_KEYS = ["name", "id", "uses", "with", "env", "run", "working-directory"];
@@ -726,16 +791,18 @@ for (const [file, spec] of Object.entries(SPECS)) {
       problem(file, "trigger", `only workflow_dispatch (got ${JSON.stringify(on)})`);
     }
     const inputs = isMap(on) && isMap(on.workflow_dispatch) ? on.workflow_dispatch.inputs : undefined;
-    const cv = isMap(inputs) ? inputs.collector_version : undefined;
-    const pb = isMap(inputs) ? inputs.publish : undefined;
-    if (!isMap(inputs) || !same(Object.keys(inputs).sort(), ["collector_version", "publish"])) {
-      problem(file, "dispatch-inputs", "the inputs are exactly collector_version and publish");
+    const names = Object.keys(spec.inputs);
+    if (!isMap(inputs) || !same(Object.keys(inputs).sort(), [...names].sort())) {
+      problem(file, "dispatch-inputs", `the inputs are exactly ${names.join(" and ")}`);
     }
-    if (!isMap(cv) || cv.type !== "string" || cv.required !== true) {
-      problem(file, "dispatch-inputs", "collector_version is a required string");
-    }
-    if (!isMap(pb) || pb.type !== "boolean" || pb.default !== false) {
-      problem(file, "dispatch-inputs", "publish is a boolean whose default is false");
+    // Each input exactly its spec's keys and values, and a description at most.
+    for (const [name, want] of Object.entries(spec.inputs)) {
+      const input = isMap(inputs) ? inputs[name] : undefined;
+      const said = want.type === "boolean" ? `a boolean whose default is ${want.default}` : `a${want.required ? " required" : ""} ${want.type}`;
+      const extra = isMap(input) ? Object.keys(input).filter((k) => k !== "description" && !(k in want)) : [];
+      if (!isMap(input) || extra.length || Object.entries(want).some(([k, v]) => input[k] !== v)) {
+        problem(file, "dispatch-inputs", `${name} is ${said} (${JSON.stringify(want)}, a description at most beside it)`);
+      }
     }
   } else if (!same(wf.on, spec.trigger)) {
     problem(file, "trigger", `only ${JSON.stringify(spec.trigger)} (got ${JSON.stringify(wf.on)})`);
@@ -932,6 +999,12 @@ for (const [file, spec] of Object.entries(SPECS)) {
       }
       if ("run" in step) {
         const call = checkRun(file, name, index, step);
+        if (js.otherRuns && typeof step.run === "string") {
+          const line = step.run.trim();
+          if (!js.otherRuns.includes(line) && !(js.required || []).some((want) => want.run === line)) {
+            problem(file, "finalize-only", `${where}: ${line}: finalize copies by digest only (its required steps, tools.sh fetch crane, its mkdir and helm-login), never builds, packages or pushes`);
+          }
+        }
         if (typeof step.run === "string" && /smoke-(compose-install|kind|test-stack)\.sh/.test(step.run)) {
           problem(file, "smoke-direct", `${where}: a smoke runs only through scripts/release/steps.sh (its output through redact.sh), never called directly`);
         }
@@ -946,9 +1019,11 @@ for (const [file, spec] of Object.entries(SPECS)) {
             v === TOKEN &&
             ((k === "GH_TOKEN" && file === "release.yml" && name === "version" && call !== null && call.startsWith("scripts/release/verify-tag.sh ")) ||
               (k === "GH_TOKEN" && call !== null && call.startsWith("scripts/release/steps.sh github-release ")) ||
+              (k === "GH_TOKEN" && file === "finalize.yml" && call !== null &&
+                (call.startsWith("scripts/release/steps.sh finalize-check ") || call.startsWith("scripts/release/steps.sh finalize-publish "))) ||
               (k === "GHCR_TOKEN" && call !== null && call.startsWith("scripts/release/steps.sh helm-login")));
           if (allowed) tokenPlaced += 1;
-          else problem(file, "token-env", `${where}.env.${k}: the token only as GH_TOKEN on release.yml's version job's verify-tag.sh or steps.sh github-release, or GHCR_TOKEN on steps.sh helm-login`);
+          else problem(file, "token-env", `${where}.env.${k}: the token only as GH_TOKEN on release.yml's version job's verify-tag.sh, steps.sh github-release or finalize.yml's steps.sh finalize-check and finalize-publish, or GHCR_TOKEN on steps.sh helm-login`);
         }
         if (call && call.startsWith("scripts/release/steps.sh helm-login")) {
           if (packages !== "write") problem(file, "helm-login", `${where}: helm-login only in a job writing packages`);

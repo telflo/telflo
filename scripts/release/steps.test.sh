@@ -420,6 +420,281 @@ run "${GR[@]}" -- github-release --tag v0.1.0 --commit "$gr_commit" --oci "$gh_o
 check "github-release with a file that doesn't match SHA256SUMS: exit 1, no Release" "[ $rc -eq 1 ] && has \"create-secrets.sh doesn't match SHA256SUMS\""
 cp "$tmp/cs.keep" "$rel/create-secrets.sh"
 
+# --- github-release --draft (stand-in gh): the stage's draft, with its record --------------------
+record_of() { # <oci dir> <chart digest> <package sha256>: a stage's digests.txt
+  printf 'api %s\notelcol-testing %s\notelcol-validator %s\nottl-evaluator %s\nweb %s\ncharts/telflo %s\ncharts/telflo.tgz %s\n' \
+    "$(cat "$1/api.digest")" "$(cat "$1/otelcol-testing.digest")" "$(cat "$1/otelcol-validator.digest")" \
+    "$(cat "$1/ottl-evaluator.digest")" "$(cat "$1/web.digest")" "$2" "$3"
+}
+chart_sum="sha256:$(sha "$rel/telflo-0.1.0.tgz")"
+SEVENS=sha256:7777777777777777777777777777777777777777777777777777777777777777
+: >"$logs/gh.log"
+run "${GR[@]}" -- github-release --draft --tag v0.1.0 --commit "$gr_commit" --oci "$gh_oci" --release "$rel"
+check "github-release --draft without <release>/digests.txt: refused (exit 1), no Release" \
+  "[ $rc -eq 1 ] && has \"digests.txt is missing or isn't a stage's record\" && ! grep -q '^release ' '$logs/gh.log'"
+record_of "$gh_oci" "$SEVENS" "$chart_sum" | sed 's/^web .*/web sha256:9999999999999999999999999999999999999999999999999999999999999999/' >"$rel/digests.txt"
+run "${GR[@]}" -- github-release --draft --tag v0.1.0 --commit "$gr_commit" --oci "$gh_oci" --release "$rel"
+check "github-release --draft with a record whose image digest isn't this run's: refused (exit 1), no Release" \
+  "[ $rc -eq 1 ] && has \"digests.txt's web isn't\" && ! grep -q '^release ' '$logs/gh.log'"
+record_of "$gh_oci" "$SEVENS" "$SEVENS" >"$rel/digests.txt"
+run "${GR[@]}" -- github-release --draft --tag v0.1.0 --commit "$gr_commit" --oci "$gh_oci" --release "$rel"
+check "github-release --draft with a record whose package isn't this chart's: refused (exit 1), no Release" \
+  "[ $rc -eq 1 ] && has \"digests.txt's charts/telflo.tgz isn't\" && ! grep -q '^release ' '$logs/gh.log'"
+record_of "$gh_oci" "$SEVENS" "$chart_sum" >"$rel/digests.txt"
+: >"$logs/gh.log"
+run "${GR[@]}" -- github-release --draft --tag v0.1.0 --commit "$gr_commit" --oci "$gh_oci" --release "$rel"
+# shellcheck disable=SC2034 # read by check's eval
+create_line="$(grep '^release create' "$logs/gh.log" 2>/dev/null || true)"
+check "github-release --draft: gh release create v0.1.0 --verify-tag --draft, with the three files and digests.txt (exit 0)" \
+  "[ $rc -eq 0 ] && printf '%s' \"\$create_line\" | grep -qE '^release create v0\\.1\\.0 --repo telflo/telflo --verify-tag --draft --title Telflo 0\\.1\\.0 --notes-file [^ ]+ $rel/telflo-compose-0\\.1\\.0\\.tar\\.gz $rel/create-secrets\\.sh $rel/SHA256SUMS $rel/digests\\.txt\$' && has 'the finalize workflow publishes it'"
+check "github-release --draft: never a prerelease, the tag asked of GitHub first, no token on argv" \
+  "! grep -q -- '--prerelease' '$logs/gh.log' && [ \"\$(grep -n '' '$logs/gh.log' | grep -E 'git/ref/tags/v0\\.1\\.0\$' | cut -d: -f1)\" = 1 ] && ! grep -qF '$token' '$logs/gh.log'"
+rm -f "$rel/digests.txt"
+
+# --- digests: refusals ---------------------------------------------------------------------
+run -- digests --oci "$gh_oci" --version 0.1 --chart "$rel/telflo-0.1.0.tgz" --out "$tmp/d.txt"
+check "digests with a bad version: refused (exit 2)" "[ $rc -eq 2 ]"
+run -- digests --oci "$tmp/no-such" --version 0.1.0 --chart "$rel/telflo-0.1.0.tgz" --out "$tmp/d.txt"
+check "digests without the digest files' folder: refused (exit 2)" "[ $rc -eq 2 ]"
+run -- digests --oci "$gh_oci" --version 0.1.0 --chart "$rel/telflo-0.1.0.tgz" --out "$tmp/d.txt" --registry docker.io
+check "digests --registry docker.io: refused (exit 2)" "[ $rc -eq 2 ]"
+: >"$tmp/exists.txt"
+run -- digests --oci "$gh_oci" --version 0.1.0 --chart "$rel/telflo-0.1.0.tgz" --out "$tmp/exists.txt"
+check "digests onto a file that exists: refused, never overwritten (exit 1)" "[ $rc -eq 1 ] && has 'never overwritten' && [ ! -s '$tmp/exists.txt' ]"
+
+# --- finalize-check, finalize-publish (a throwaway repository, stand-in gh) -----------------------
+# The repository: main holds charts/telflo/Chart.yaml at 0.1.0, tagged v0.1.0 (annotated), and a
+# branch off main holds 0.2.0, tagged v0.2.0; a clone of it (origin/main) holds steps.sh and its
+# helpers. The stand-in gh answers GitHub's API (the tag's ref and object, the latest Release)
+# and `gh release view/download/edit` from the files in $FZ (the draft's state and digests.txt).
+g() { git -c user.name=steps-test -c user.email=steps-test@example.invalid -c tag.gpgSign=false -c commit.gpgSign=false \
+  -c init.defaultBranch=main -c core.hooksPath=/dev/null "$@"; }
+fsrc="$tmp/fin-src"
+g init -q "$fsrc"
+mkdir -p "$fsrc/charts/telflo"
+printf 'apiVersion: v2\nname: telflo\nversion: 0.1.0\nappVersion: "0.1.0"\n' >"$fsrc/charts/telflo/Chart.yaml"
+g -C "$fsrc" add -A && g -C "$fsrc" commit -qm one
+fc1="$(g -C "$fsrc" rev-parse HEAD)"
+g -C "$fsrc" tag -a v0.1.0 -m "telflo 0.1.0"
+g -C "$fsrc" checkout -q -b side
+printf 'apiVersion: v2\nname: telflo\nversion: 0.2.0\nappVersion: "0.2.0"\n' >"$fsrc/charts/telflo/Chart.yaml"
+g -C "$fsrc" commit -qam two
+fc2="$(g -C "$fsrc" rev-parse HEAD)"
+g -C "$fsrc" tag -a v0.2.0 -m "telflo 0.2.0"
+g -C "$fsrc" checkout -q main
+fin="$tmp/fin"
+g clone -q "$fsrc" "$fin"
+g -C "$fin" fetch -q --tags origin
+mkdir -p "$fin/scripts/release"
+for f in steps.sh version.sh oci.sh github-tag.sh; do cp "$root/scripts/release/$f" "$fin/scripts/release/"; done
+FZ="$tmp/fz"; mkdir -p "$FZ" "$tmp/fzbin"
+ftag_sha=abababababababababababababababababababab
+cat >"$tmp/fzbin/gh" <<'GH'
+#!/bin/bash
+printf '%s\n' "$*" >>"$FZ/gh.log"
+case "$1 $2" in
+  "api --hostname")
+    case "${!#}" in
+      repos/telflo/telflo/git/ref/tags/v*) t="${!#}"; t="${t##*/}"
+        printf '{"ref":"refs/tags/%s","object":{"sha":"%s","type":"tag"}}\n' "$t" "$FZ_TAG_SHA" ;;
+      repos/telflo/telflo/git/tags/*) printf '{"sha":"%s","tag":"%s","object":{"sha":"%s","type":"commit"}}\n' "$FZ_TAG_SHA" "$FZ_TAG" "$FZ_COMMIT" ;;
+      repos/telflo/telflo/releases/latest)
+        [ -f "$FZ/latest" ] || { echo "gh: Not Found (HTTP 404)" >&2; exit 1; }
+        printf '{"tag_name":"%s"}\n' "$(cat "$FZ/latest")" ;;
+      *) echo "UNEXPECTED $*" >>"$FZ/gh.log"; exit 97 ;;
+    esac ;;
+  "release view")
+    [ -f "$FZ/state" ] || { echo "release not found" >&2; exit 1; }
+    assets='[]'; [ ! -f "$FZ/digests.txt" ] || assets='[{"name":"telflo-compose-0.1.0.tar.gz"},{"name":"digests.txt"}]'
+    printf '{"tagName":"%s","isDraft":%s,"assets":%s}\n' "$3" "$([ "$(cat "$FZ/state")" = draft ] && echo true || echo false)" "$assets" ;;
+  "release download")
+    dir=""; while [ $# -gt 0 ]; do [ "$1" = --dir ] && dir="$2"; shift; done
+    mkdir -p "$dir" && cp "$FZ/digests.txt" "$dir/digests.txt" ;;
+  "release edit") echo published >"$FZ/state" ;;
+  *) echo "UNEXPECTED $*" >>"$FZ/gh.log"; exit 97 ;;
+esac
+GH
+chmod +x "$tmp/fzbin/gh"
+export FZ
+FIN=("${ACTIONS[@]}" PATH="$tmp/fzbin:$PATH" GITHUB_REPOSITORY=telflo/telflo GH_TOKEN="$token" FZ_TAG_SHA="$ftag_sha" FZ_TAG=v0.1.0 FZ_COMMIT="$fc1")
+frun() { # <env assignments...> -- <args...>: the clone's steps.sh; sets rc, out
+  local envs=()
+  while [ $# -gt 0 ] && [ "$1" != -- ]; do envs+=("$1"); shift; done
+  shift
+  : >"$FZ/gh.log"
+  out="$(env TMPDIR="$tmp/t" DOCKER_CONFIG="$tmp/stub" ${envs[@]+"${envs[@]}"} "$shell" "$fin/scripts/release/steps.sh" "$@" 2>&1 </dev/null)"; rc=$?
+}
+fz_reset() { rm -f "$FZ/latest" "$FZ/digests.txt"; echo draft >"$FZ/state"; record_of "$gh_oci" "$SEVENS" "$chart_sum" >"$FZ/digests.txt"; rm -rf "$tmp/fout"; mkdir -p "$tmp/fout"; }
+fz_reset
+frun -- finalize-check --version 0.1.0 --out "$tmp/fout"
+check "finalize-check outside Actions: refused (exit 2)" "[ $rc -eq 2 ] && has 'GitHub Actions job only'"
+frun "${FIN[@]}" GITHUB_REPOSITORY=telflo/other -- finalize-check --version 0.1.0 --out "$tmp/fout"
+check "finalize-check for another repository: refused (exit 2)" "[ $rc -eq 2 ]"
+frun "${FIN[@]}" GH_TOKEN= -- finalize-check --version 0.1.0 --out "$tmp/fout"
+check "finalize-check without GH_TOKEN: refused (exit 2)" "[ $rc -eq 2 ] && has 'GH_TOKEN must be set'"
+for bad in 0.1 v0.1.0 "\$(echo EXPANDED)"; do
+  frun "${FIN[@]}" -- finalize-check --version "$bad" --out "$tmp/fout"
+  check "finalize-check --version '$bad': refused (exit 2), nothing expanded" "[ $rc -eq 2 ] && ! has EXPANDED && [ ! -s '$FZ/gh.log' ]"
+done
+frun "${FIN[@]}" -- finalize-check --version 0.1.0 --out "$tmp/fout"
+check "finalize-check: the tag on main, annotated on GitHub, the draft's digests.txt downloaded into <out> (exit 0)" \
+  "[ $rc -eq 0 ] && cmp -s '$tmp/fout/digests.txt' '$FZ/digests.txt' && has 'v0.1.0 is the annotated tag $ftag_sha of $fc1, on main' && [ \"\$(printf '%s\n' \"\$out\" | tail -n 1)\" = '$tmp/fout/digests.txt' ]"
+frun "${FIN[@]}" -- finalize-check --version 0.1.0 --out "$tmp/fout"
+check "finalize-check again: <out>/digests.txt never overwritten (exit 1)" "[ $rc -eq 1 ] && has 'never overwritten'"
+fz_reset; rm -f "$FZ/state"
+frun "${FIN[@]}" -- finalize-check --version 0.1.0 --out "$tmp/fout"
+check "finalize-check with no draft Release: refused (exit 1), nothing downloaded" "[ $rc -eq 1 ] && has 'there is no draft Release v0.1.0' && [ ! -e '$tmp/fout/digests.txt' ]"
+fz_reset; echo published >"$FZ/state"
+frun "${FIN[@]}" -- finalize-check --version 0.1.0 --out "$tmp/fout"
+check "finalize-check when the Release is published already: refused (exit 1)" "[ $rc -eq 1 ] && has 'published already: nothing to finalize'"
+fz_reset; rm -f "$FZ/digests.txt"
+frun "${FIN[@]}" -- finalize-check --version 0.1.0 --out "$tmp/fout"
+check "finalize-check with a draft that holds no digests.txt: refused (exit 1)" "[ $rc -eq 1 ] && has 'holds no digests.txt'"
+fz_reset; sed -i.bak '1d' "$FZ/digests.txt"; rm -f "$FZ/digests.txt.bak"
+frun "${FIN[@]}" -- finalize-check --version 0.1.0 --out "$tmp/fout"
+check "finalize-check with a draft whose digests.txt isn't a stage's record: refused (exit 1), nothing written" \
+  "[ $rc -eq 1 ] && has \"isn't a stage's record\" && [ ! -e '$tmp/fout/digests.txt' ]"
+fz_reset
+frun "${FIN[@]}" FZ_COMMIT="$fc2" -- finalize-check --version 0.1.0 --out "$tmp/fout"
+check "finalize-check when GitHub's tag names another commit than the checkout's: refused (exit 1), the Release not asked" \
+  "[ $rc -eq 1 ] && has 'tags another commit' && ! grep -q '^release ' '$FZ/gh.log'"
+frun "${FIN[@]}" FZ_TAG=v0.2.0 FZ_COMMIT="$fc2" -- finalize-check --version 0.2.0 --out "$tmp/fout"
+check "finalize-check for a tag whose commit isn't on main: refused (exit 1), GitHub not asked" \
+  "[ $rc -eq 1 ] && has \"v0.2.0's commit $fc2 isn't on main\" && [ ! -s '$FZ/gh.log' ]"
+frun "${FIN[@]}" -- finalize-check --version 0.3.0 --out "$tmp/fout"
+check "finalize-check for a version with no tag: refused (exit 1)" "[ $rc -eq 1 ] && has 'the checkout has no tag v0.3.0'"
+
+fz_reset; cp "$FZ/digests.txt" "$tmp/promoted.txt"
+frun "${FIN[@]}" -- finalize-publish --version 0.1.0 --digests "$tmp/promoted.txt"
+check "finalize-publish, no Release latest yet: gh release edit v0.1.0 --draft=false --latest=true, then published (exit 0)" \
+  "[ $rc -eq 0 ] && grep -qx 'release edit v0.1.0 --repo telflo/telflo --draft=false --latest=true' '$FZ/gh.log' && [ \"\$(cat '$FZ/state')\" = published ] && has 'is published (latest: true)'"
+fz_reset; echo v0.2.0 >"$FZ/latest"
+frun "${FIN[@]}" -- finalize-publish --version 0.1.0 --digests "$tmp/promoted.txt"
+check "finalize-publish when the latest Release is a higher version (a patch of an older line): --latest=false (exit 0)" \
+  "[ $rc -eq 0 ] && grep -qx 'release edit v0.1.0 --repo telflo/telflo --draft=false --latest=false' '$FZ/gh.log' && has 'a higher version'"
+fz_reset; echo v0.0.9 >"$FZ/latest"
+frun "${FIN[@]}" -- finalize-publish --version 0.1.0 --digests "$tmp/promoted.txt"
+check "finalize-publish when the latest Release is a lower version: --latest=true (exit 0)" \
+  "[ $rc -eq 0 ] && grep -qx 'release edit v0.1.0 --repo telflo/telflo --draft=false --latest=true' '$FZ/gh.log'"
+fz_reset; sed 's/^web .*/web sha256:9999999999999999999999999999999999999999999999999999999999999999/' "$FZ/digests.txt" >"$tmp/promoted-other.txt"
+frun "${FIN[@]}" -- finalize-publish --version 0.1.0 --digests "$tmp/promoted-other.txt"
+check "finalize-publish when the draft's digests.txt isn't the promoted record: refused (exit 1), not published" \
+  "[ $rc -eq 1 ] && has \"isn't the record that was promoted\" && ! grep -q '^release edit' '$FZ/gh.log' && [ \"\$(cat '$FZ/state')\" = draft ]"
+fz_reset; echo published >"$FZ/state"
+frun "${FIN[@]}" -- finalize-publish --version 0.1.0 --digests "$tmp/promoted.txt"
+check "finalize-publish when the Release is no longer a draft: refused (exit 1), no edit" "[ $rc -eq 1 ] && has 'no longer a draft' && ! grep -q '^release edit' '$FZ/gh.log'"
+check "finalize: no token on gh's argv" "! grep -qF '$token' '$FZ/gh.log'"
+
+# --- abandon-stage (stand-in gh: the owner's packages API and Releases) ---------------------------
+# Each package's versions are $AB/<package, its / as %2F>.json (absent: 404); the Release v0.1.0
+# is $AB/release (draft or published; absent: not found). Every call is logged.
+AB="$tmp/ab"; mkdir -p "$AB" "$tmp/abbin"
+cat >"$tmp/abbin/gh" <<'GH'
+#!/bin/bash
+printf '%s\n' "$*" >>"$AB/gh.log"
+case "$1" in
+  api)
+    path="${!#}"
+    case " $* " in
+      *" -X DELETE "*) [ ! -f "$AB/delete-fails" ] || { echo "gh: Forbidden (HTTP 403)" >&2; exit 1; }; exit 0 ;;
+    esac
+    [ ! -f "$AB/api-fails" ] || { echo "gh: Bad Gateway (HTTP 502)" >&2; exit 1; }
+    package="${path#orgs/telflo/packages/container/}"; package="${package%%/versions*}"
+    [ -f "$AB/$package.json" ] || { echo "gh: Package not found. (HTTP 404)" >&2; exit 1; }
+    cat "$AB/$package.json" ;;
+  release)
+    case "$2" in
+      view) [ -f "$AB/release" ] || { echo "release not found" >&2; exit 1; }
+        printf '{"tagName":"%s","isDraft":%s,"assets":[]}\n' "$3" "$([ "$(cat "$AB/release")" = draft ] && echo true || echo false)" ;;
+      delete) exit 0 ;;
+      *) exit 97 ;;
+    esac ;;
+  *) exit 97 ;;
+esac
+GH
+chmod +x "$tmp/abbin/gh"
+export AB
+AR=(PATH="$tmp/abbin:$PATH")
+hex() { printf '%064d' "$1"; }
+# versions <file> <id:tag[,tag]...>...: a page of package versions (two pages when a fifth is given).
+versions() {
+  local file="$1" item id tags first=true
+  shift
+  {
+    printf '['
+    for item in "$@"; do
+      id="${item%%:*}"; tags="${item#*:}"
+      $first || printf ','; first=false
+      printf '{"id":%s,"name":"sha256:%s","metadata":{"package_type":"container","container":{"tags":[%s]}}}' \
+        "$id" "$(hex "$id")" "$(printf '%s' "$tags" | sed 's/[^,][^,]*/"&"/g')"
+    done
+    printf ']\n'
+  } >"$file"
+}
+ab_reset() {
+  rm -f "$AB"/*.json "$AB/release" "$AB/gh.log" "$AB/api-fails" "$AB/delete-fails"
+  local name n=10
+  for name in api otelcol-testing otelcol-validator ottl-evaluator web; do
+    versions "$AB/telflo%2F$name.json" "$n:0.0.9"
+    versions "$AB/telflo-staging%2F$name.json" "$((n + 1)):0.1.0" "$((n + 2)):0.0.8"
+    n=$((n + 10))
+  done
+  versions "$AB/telflo%2Fcharts%2Ftelflo.json" "90:0.0.9"
+  # The staged chart; and beside the staged api, a referrers fallback tag naming its digest.
+  versions "$AB/telflo-staging%2Fcharts%2Ftelflo.json" "91:0.1.0"
+  versions "$AB/telflo-staging%2Fapi.json" "11:0.1.0" "12:0.0.8" "13:sha256-$(hex 11)"
+  echo draft >"$AB/release"
+}
+deletes() { grep -c -- '-X DELETE' "$AB/gh.log" 2>/dev/null || true; }
+ab_reset
+run "${ACTIONS[@]}" "${AR[@]}" -- abandon-stage --version 0.1.0
+check "abandon-stage in a GitHub Actions job: refused (exit 2), nothing asked" "[ $rc -eq 2 ] && has 'a workflow never abandons a stage' && [ ! -s '$AB/gh.log' ]"
+for bad in 0.1 v0.1.0 "\$(echo EXPANDED)"; do
+  run "${AR[@]}" -- abandon-stage --version "$bad"
+  check "abandon-stage --version '$bad': refused (exit 2), nothing asked" "[ $rc -eq 2 ] && ! has EXPANDED && [ ! -s '$AB/gh.log' ]"
+done
+run "${AR[@]}" -- abandon-stage --version 0.1.0 --dry-run
+check "abandon-stage --dry-run: what it would delete listed (the six staged versions, the fallback tag's, the draft), nothing deleted (exit 0)" \
+  "[ $rc -eq 0 ] && [ \$(deletes) -eq 0 ] && [ \$(printf '%s\n' \"\$out\" | grep -c 'to delete: ghcr.io/telflo/telflo-staging/') -eq 7 ] && has 'to delete: the draft Release v0.1.0' && has 'dry run: nothing deleted' && ! grep -q '^release delete' '$AB/gh.log'"
+run "${AR[@]}" -- abandon-stage --version 0.1.0
+# shellcheck disable=SC2034 # read by check's eval
+want_deletes="$(for p in api:11 api:13 otelcol-testing:21 otelcol-validator:31 ottl-evaluator:41 web:51 charts%2Ftelflo:91; do
+  echo "api --hostname github.com -H Accept: application/vnd.github+json -X DELETE orgs/telflo/packages/container/telflo-staging%2F${p%%:*}/versions/${p#*:}"; done)"
+check "abandon-stage: each staged version tagged 0.1.0 deleted (and the fallback tag's beside api), never another version or a public one (exit 0)" \
+  "[ $rc -eq 0 ] && [ \"\$(grep -- '-X DELETE' '$AB/gh.log')\" = \"\$want_deletes\" ]"
+check "abandon-stage: the draft Release deleted, never its tag; the owner told to delete the tag" \
+  "grep -qx 'release delete v0.1.0 --repo telflo/telflo --yes' '$AB/gh.log' && ! grep -q -- '--cleanup-tag' '$AB/gh.log' && has 'git push origin :refs/tags/v0.1.0'"
+check "abandon-stage: every public package asked before anything was deleted" \
+  "[ \"\$(grep -n 'container/telflo%2F' '$AB/gh.log' | tail -n 1 | cut -d: -f1)\" -lt \"\$(grep -n -- '-X DELETE' '$AB/gh.log' | head -n 1 | cut -d: -f1)\" ]"
+ab_reset; versions "$AB/telflo%2Fweb.json" "50:0.0.9" "52:0.1.0"
+run "${AR[@]}" -- abandon-stage --version 0.1.0
+check "abandon-stage when a public image holds the version: refused (exit 1), spent, nothing deleted" \
+  "[ $rc -eq 1 ] && has 'ghcr.io/telflo/telflo/web:0.1.0 is public' && has 'nothing deleted' && [ \$(deletes) -eq 0 ] && ! grep -q '^release delete' '$AB/gh.log'"
+ab_reset; echo published >"$AB/release"
+run "${AR[@]}" -- abandon-stage --version 0.1.0
+check "abandon-stage when the Release is published: refused (exit 1), nothing deleted" \
+  "[ $rc -eq 1 ] && has 'the Release v0.1.0 is published' && [ \$(deletes) -eq 0 ]"
+ab_reset; versions "$AB/telflo-staging%2Fweb.json" "51:0.1.0,keep" "52:0.0.8"
+run "${AR[@]}" -- abandon-stage --version 0.1.0
+check "abandon-stage when a staged version holds another tag too: refused (exit 1), nothing deleted" \
+  "[ $rc -eq 1 ] && has 'also holds the tag(s) keep' && [ \$(deletes) -eq 0 ]"
+ab_reset; rm -f "$AB/telflo-staging%2Fottl-evaluator.json"; printf '[]\n' >"$AB/telflo-staging%2Fweb.json"
+run "${AR[@]}" -- abandon-stage --version 0.1.0
+check "abandon-stage with a staged package missing (404) or holding no 0.1.0: the rest deleted (exit 0)" \
+  "[ $rc -eq 0 ] && has 'there is no package telflo-staging/ottl-evaluator' && has 'telflo-staging/web holds no version tagged 0.1.0' && [ \$(deletes) -eq 5 ]"
+ab_reset; printf '[{"id":1,"name":"sha256:%s","metadata":{"container":{"tags":["0.1.0"]}}}][{"id":2,"name":"sha256:%s","metadata":{"container":{"tags":["0.0.1"]}}}]\n' "$(hex 1)" "$(hex 2)" >"$AB/telflo-staging%2Fweb.json"
+run "${AR[@]}" -- abandon-stage --version 0.1.0 --dry-run
+check "abandon-stage reads every page gh --paginate gives (two JSON arrays)" "[ $rc -eq 0 ] && has 'telflo-staging/web version 1 '"
+ab_reset; printf '{"message":"x"}\n' >"$AB/telflo-staging%2Fweb.json"
+run "${AR[@]}" -- abandon-stage --version 0.1.0
+check "abandon-stage with an answer that isn't a list of versions: refused (exit 1), nothing deleted" "[ $rc -eq 1 ] && has \"isn't a list of versions\" && [ \$(deletes) -eq 0 ]"
+ab_reset; : >"$AB/api-fails"
+run "${AR[@]}" -- abandon-stage --version 0.1.0
+check "abandon-stage when GitHub's API fails (not a 404): refused (exit 1), nothing deleted" "[ $rc -eq 1 ] && has \"didn't answer for the package\" && [ \$(deletes) -eq 0 ]"
+ab_reset; for f in "$AB"/telflo-staging*.json; do printf '[]\n' >"$f"; done; rm -f "$AB/release"
+run "${AR[@]}" -- abandon-stage --version 0.1.0
+check "abandon-stage with nothing staged and no draft: nothing to abandon (exit 0)" "[ $rc -eq 0 ] && has 'nothing to abandon' && [ \$(deletes) -eq 0 ]"
+
 # --- against a throwaway registry: collector-archive, chart-if-new --------------------------
 reg_ok=false
 real_crane="$("$shell" "$root/scripts/release/tools.sh" path crane 2>/dev/null || command -v crane 2>/dev/null || true)"
@@ -451,6 +726,30 @@ if $reg_ok; then
   mkdir -p "$tmp/cn2"
   run "${RC[@]}" HELM_REGISTRY_CONFIG="$TR_CONFIG/config.json" -- chart-if-new --out "$tmp/cn2" --registry "$REG"
   check "chart-if-new again: a notice, nothing packaged (exit 0)" "[ $rc -eq 0 ] && has 'is published already' && [ -z \"\$(ls -A '$tmp/cn2')\" ]"
+  # digests: the stage's record, the chart's digest read from the stage.
+  dg="$tmp/dg"; mkdir -p "$dg/chart/telflo/templates"
+  printf 'apiVersion: v2\nname: telflo\nversion: 0.1.0\nappVersion: "0.1.0"\n' >"$dg/chart/telflo/Chart.yaml"
+  printf 'apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: x\n' >"$dg/chart/telflo/templates/cm.yaml"
+  (cd "$dg/chart" && helm package telflo --destination "$dg" >/dev/null)
+  run "${RC[@]}" -- digests --oci "$gh_oci" --version 0.1.0 --chart "$dg/telflo-0.1.0.tgz" --out "$dg/digests.txt" --registry "$REG"
+  check "digests, the chart not staged: exit 1, nothing written" "[ $rc -eq 1 ] && has \"the chart isn't staged\" && [ ! -e '$dg/digests.txt' ]"
+  HELM_REGISTRY_CONFIG="$TR_CONFIG/config.json" helm push --plain-http "$dg/telflo-0.1.0.tgz" "oci://$REG/telflo/telflo-staging/charts" >/dev/null 2>&1
+  staged_chart="$(DOCKER_CONFIG="$TR_CONFIG" "$real_crane" digest "$REG/telflo/telflo-staging/charts/telflo:0.1.0" 2>/dev/null)"
+  run "${RC[@]}" -- digests --oci "$gh_oci" --version 0.1.0 --chart "$dg/telflo-0.1.0.tgz" --out "$dg/digests.txt" --registry "$REG"
+  check "digests: a stage's record written: the images' digest files, the staged chart's OCI digest, its package's sha256 (exit 0)" \
+    "[ $rc -eq 0 ] && [ \"\$(cat '$dg/digests.txt')\" = \"\$(record_of '$gh_oci' '$staged_chart' 'sha256:$(sha "$dg/telflo-0.1.0.tgz")')\" ] && has '$REG/telflo/telflo-staging/charts/telflo:0.1.0 $staged_chart'"
+  "$shell" "$root/scripts/release/release-notes.sh" --oci "$gh_oci" --chart "$dg/telflo-0.1.0.tgz" --version 0.1.0 >"$dg/notes.md" 2>/dev/null
+  notes_match=true
+  for i in api otelcol-testing otelcol-validator ottl-evaluator web; do
+    grep -qF "| \`ghcr.io/telflo/telflo/$i:0.1.0\` | \`$(awk -v n="$i" '$1 == n { print $2 }' "$dg/digests.txt")\` |" "$dg/notes.md" || notes_match=false
+  done
+  grep -qF "(package sha256 \`$(awk '$1 == "charts/telflo.tgz" { print $2 }' "$dg/digests.txt" | sed 's/^sha256://')\`)" "$dg/notes.md" || notes_match=false
+  check "digests.txt reads back exactly what release-notes.sh names: each image's index digest, the chart's package sha256" "$notes_match"
+  mkdir -p "$dg/other"; cp -R "$dg/chart" "$dg/other/"; printf '# other\n' >>"$dg/other/chart/telflo/templates/cm.yaml"
+  (cd "$dg/other/chart" && helm package telflo --destination "$dg/other" >/dev/null)
+  run "${RC[@]}" -- digests --oci "$gh_oci" --version 0.1.0 --chart "$dg/other/telflo-0.1.0.tgz" --out "$dg/other.txt" --registry "$REG"
+  check "digests with another package of the version than the staged one: refused (exit 1), nothing written" \
+    "[ $rc -eq 1 ] && has \"chart layer is\" && [ ! -e '$dg/other.txt' ]"
   check "no file of the test's folders or output holds the registry's login (boolean)" "! tr_secret_in '$tmp/ca' '$tmp/cn' '$tmp/t' '$logs' && ! { printf '%s' \"\$out\" >'$tmp/out.txt'; tr_secret_in '$tmp/out.txt'; }"
 else
   for c in "collector-archive" "chart-if-new against a registry"; do skip "$c" "${TR_SKIP:-no crane or helm}"; done

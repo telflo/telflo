@@ -2062,14 +2062,18 @@ the ports and that no development secret was written, on every release.
 
 The steps for whoever releases are in `docs/releasing.md`.
 
-Two workflows publish, and nothing else does:
-`.github/workflows/release.yml`, on a `v*` tag (the five platform images,
-the chart `telflo` and the GitHub Release), and
-`.github/workflows/collector.yml`, started by hand (the collector images and
-the supervisor-collector chart). Every step of either is tool setup, moving
-artifacts, or one call of a committed script, so each rule below is held by
-a script and its self-test, and `scripts/release/check-workflows.sh` (a
-static gate) holds the workflow files themselves.
+Three workflows publish, and nothing else does:
+`.github/workflows/release.yml`, on a `v*` tag, stages a release (the five
+platform images and the chart `telflo` in `ghcr.io/telflo/telflo-staging`,
+and a draft GitHub Release); `.github/workflows/finalize.yml`, started by
+hand once the end-to-end tests have passed on that stage, copies the same
+bytes by digest to `ghcr.io/telflo/telflo` and publishes the Release; and
+`.github/workflows/collector.yml`, started by hand, publishes the collector
+images and the supervisor-collector chart. Every step of each is tool
+setup, moving artifacts, or one call of a committed script, so each rule
+below is held by a script and its self-test, and
+`scripts/release/check-workflows.sh` (a static gate) holds the workflow
+files themselves.
 
 - **The job's own `GITHUB_TOKEN`, and nothing else.** No repository or
   organization secret, no personal token, no deploy key: a publish logs
@@ -2080,20 +2084,37 @@ static gate) holds the workflow files themselves.
 - **Least privilege.** The top-level `permissions: {}`; each job asks for
   `contents: read` only; the jobs that check what exists add `packages:
   read` (they read the packages); only the jobs that publish hold
-  `packages: write`, and only the release workflow's `publish` `contents:
-  write` (the GitHub Release).
+  `packages: write`, and only the release workflow's `publish` and the
+  finalize workflow's job `contents: write` (the draft GitHub Release, and
+  publishing it).
 - **The triggers.** `release.yml` runs only on `push: tags: ["v*"]`;
   `collector.yml` only on `workflow_dispatch`, from `main`, its `publish`
-  input false by default. No `pull_request`, no `pull_request_target`.
+  input false by default; `finalize.yml` only on `workflow_dispatch`, from
+  `main`, its one input the version, which reaches its scripts through
+  `env:` and is checked there (x.y.z) before anything reads it. No
+  `pull_request`, no `pull_request_target`.
 - **The yes.** Only repository admins create, move or delete `v*` tags (a
   tag ruleset, `docs/releasing.md`), and `scripts/release/verify-tag.sh`
   refuses a lightweight tag, a tag that isn't `v` plus `Chart.yaml`'s
-  version, a commit off `main`, and a version of which anything is on GHCR
-  already. Pushing the tag is the maintainers' yes to publish. The
-  publishing jobs run in the protected `release` environment (admitting
-  only `v*` tags and `main`), whose required reviewer, a maintainer, must
-  approve each publish. A collector run with `publish: true` is a
+  version, a commit off `main`, a version of which anything is public
+  already, and one staged already and not abandoned (so a stale stage is
+  never promoted by mistake). Pushing the tag is the maintainers' yes to
+  stage. The publishing jobs run in the protected `release` environment
+  (admitting only `v*` tags and `main`), whose required reviewer, a
+  maintainer, must approve each one: the stage, and again the finalize
+  that makes it public. A collector run with `publish: true` is a
   maintainer's yes alike.
+- **Two fixed namespaces, and nothing else.** The release scripts name a
+  repository only through `scripts/release/oci.sh`'s
+  `telflo_namespace_path`: `telflo` is `ghcr.io/telflo/telflo` (what users
+  install), `telflo-staging` is `ghcr.io/telflo/telflo-staging` (a stage);
+  any other value is refused, and so is any registry but `ghcr.io` and a
+  loopback one (the rehearsal's). The collector images and the
+  supervisor-collector chart are published to the public namespace only.
+  Nothing the release ships names the stage: the chart's `image.registry`
+  and the Compose file's `TELFLO_IMAGE_REGISTRY` default to the public
+  registry, and point an end-to-end test at the stage only at install
+  time.
 - **Every action pinned by its full commit SHA**, its version in a
   comment, and the same SHA as the opamp-server's workflow where the action
   is the same. The repository's Actions setting allows only the selected
@@ -2147,15 +2168,18 @@ static gate) holds the workflow files themselves.
   the annotated tag of the version job's commit
   (`scripts/release/github-tag.sh`, which `verify-tag.sh` uses too); the
   version job's token is unset once its API calls are done, before any
-  registry read.
+  registry read. The finalize workflow asks again, before it copies
+  anything (`steps.sh finalize-check`: the tag annotated, its commit on
+  `main`, the Release a draft holding `digests.txt`) and before it
+  publishes (`finalize-publish`).
 - **Attestations required off loopback**: `--push-oci` refuses, before any
   registry call, an archive without its SBOM and provenance for any registry
   but a loopback one (`--no-attest` is for a rehearsal on a builder too old
   to attest), and `check-workflows.sh` refuses `--no-attest` in a workflow
   file.
-- **What is published is what was tested**: each image is built once into an
-  OCI archive, which the test jobs and the publish all take from the same
-  run's artifacts. The push checks every archive first (index.json's one
+- **What is published is what was tested, then what was tested end to
+  end**: each image is built once into an OCI archive, which the test jobs
+  and the stage all take from the same run's artifacts. The push checks every archive first (index.json's one
   entry is the digest file's, both platforms, the version and revision
   labels, and every blob hashed: pass 1) and asks every tag before it pushes
   any; then, for each, it checks the archive again and the unpacked layout's
@@ -2163,11 +2187,29 @@ static gate) holds the workflow files themselves.
   another digest refuses the run, nothing overwritten; `helm push`
   overwrites a chart version silently, so `publish-chart.sh` compares the
   version's content digest with the file's sha256 first.
-  `scripts/release/pull-back.sh` compares once more before the GitHub
-  Release is made.
+  `scripts/release/pull-back.sh` compares once more before the draft
+  GitHub Release is made, and `steps.sh digests` records the staged digests
+  in its `digests.txt`. The finalize workflow builds, packages and re-tags
+  nothing: its only inputs are the version and that `digests.txt`
+  (`check-workflows.sh` holds its `run:` steps to the copy, the checks and
+  their setup). `scripts/release/promote.sh` checks the whole stage against
+  the record and asks every public tag before it copies any, copies each by
+  digest (`crane copy <staged>@<digest>`: the index with its attestations,
+  byte for byte), reads every public tag's digest back, and never
+  overwrites a public tag holding another digest; `pull-back.sh --digests`
+  compares the public tags with the record once more, and the Release is
+  published last, after the draft's `digests.txt` is checked to be the
+  record that was promoted.
+- **An abandoned stage is the owner's.** `steps.sh abandon-stage` runs on
+  a repository admin's own machine with their GitHub CLI login, never in a
+  workflow (no workflow token can delete a package version), refuses when
+  anything of the version is public, and deletes only the staged versions
+  tagged with it (and their referrers' fallback tags) and the draft
+  Release: never a tag, never a public package version.
 - **One run at a time.** The workflow's concurrency group, never canceled
-  part way, keeps two runs of a version from both passing the "absent" check
-  before either pushes. GitHub keeps one pending run per group: a newer one
+  part way and shared with the finalize workflow, keeps two runs of a
+  version from both passing the "absent" check before either pushes, and a
+  stage and a finalize from running at once. GitHub keeps one pending run per group: a newer one
   cancels an older waiting one, which must then be re-run by hand, so
   release tags are pushed one at a time (`docs/releasing.md`).
 - **A published collector version is never pushed again**: the collector

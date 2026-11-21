@@ -1,0 +1,8 @@
+# Breaks one rule: the publish job making a published Release, not the stage's draft.
+file: release.yml
+rule: required-steps
+<<<
+github-release --draft --tag "$TAG"
+===
+github-release --tag "$TAG"
+>>>
