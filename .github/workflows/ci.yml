@@ -445,10 +445,13 @@ jobs:
       # on the compose network, where the development default
       # (host.docker.internal) doesn't resolve on Linux.
       OPAMP_SERVER_URL: http://opamp-server:51234/opamp/api/v1
+      # The runner's stack is a throwaway one: a project name that isn't the
+      # development stack's (telflo-dev) lets the smoke run its throwaway-only
+      # steps (the product admins' switch, the product-admin checks).
+      COMPOSE_PROJECT_NAME: telflo-ci
       # The smoke in its saas mode, with the SaaS's site values (as
-      # scripts/gates/smoke-env.sh sets them): its oss mode runs only on a
-      # throwaway stack (scripts/gates/stack.sh), which the release's
-      # stack-smoke job runs in both modes.
+      # scripts/gates/smoke-env.sh sets them); the release's stack-smoke job
+      # runs both modes on its own throwaway stacks.
       TELFLO_SMOKE_SITE: saas
       TELFLO_REGISTRATION: open
       TELFLO_PLAYGROUND: "true"
