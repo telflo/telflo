@@ -1,0 +1,12 @@
+# Breaks one rule: a job on ubuntu-latest.
+file: ci.yml
+rule: ci-runs-on
+<<<
+  stack:
+    runs-on: ubuntu-24.04
+
+===
+  stack:
+    runs-on: ubuntu-latest
+
+>>>

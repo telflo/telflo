@@ -1,0 +1,11 @@
+# Breaks one rule: the token given to finalize.yml's promote step.
+file: finalize.yml
+rule: token-env
+<<<
+          VERSION: ${{ inputs.version }}
+        run: bash scripts/release/promote.sh
+===
+          VERSION: ${{ inputs.version }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash scripts/release/promote.sh
+>>>

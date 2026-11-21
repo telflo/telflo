@@ -1,0 +1,13 @@
+# Breaks one rule: finalize.yml with a second input (another way in than the version).
+file: finalize.yml
+rule: dispatch-inputs
+<<<
+        type: string
+        required: true
+===
+        type: string
+        required: true
+      digests:
+        type: string
+        required: false
+>>>

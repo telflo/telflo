@@ -1,11 +1,14 @@
-# A release, from its annotated tag v<version> on main (docs/releasing.md):
-# the tag checked before anything builds; the five platform images built
-# once for amd64 and arm64 with their attestations; the chart and the
-# Compose archive packaged; the stack smoke (open-source mode), the install
-# from the Compose archive and the packaged chart in kind, each on those
-# exact bytes; only then the same bytes copied to ghcr.io/telflo/telflo
-# (digests kept), pulled back by digest, and a GitHub Release made with the
-# archive, create-secrets.sh and SHA256SUMS.
+# A release's stage, from its annotated tag v<version> on main
+# (docs/releasing.md): the tag checked before anything builds; the five
+# platform images built once for amd64 and arm64 with their attestations; the
+# chart and the Compose archive packaged; the stack smoke (open-source mode),
+# the install from the Compose archive and the packaged chart in kind, each on
+# those exact bytes; only then the same bytes copied to the stage,
+# ghcr.io/telflo/telflo-staging (digests kept), pulled back by digest, their
+# digests recorded in digests.txt, and a draft GitHub Release made with the
+# archive, create-secrets.sh, SHA256SUMS and digests.txt. The end-to-end tests
+# run against the stage; .github/workflows/finalize.yml then copies the same
+# bytes, by digest, to ghcr.io/telflo/telflo and publishes the Release.
 #
 # Every `run:` is tool setup, artifact handling or one call of a committed
 # script (scripts/release/rehearse.sh runs the same scripts locally); values
@@ -16,8 +19,8 @@
 #
 # There is no workflow_dispatch: a run that stopped part way is resumed with
 # "Re-run failed jobs", which reuses this run's artifacts, so the bytes
-# published are still the bytes tested; a re-run skips what is already
-# published with the same digest and refuses anything else.
+# staged are still the bytes tested; a re-run skips what is already staged
+# with the same digest and refuses anything else.
 name: Release
 
 on:
@@ -38,11 +41,11 @@ jobs:
   # Refused before anything builds: a tree in which gitleaks finds a secret
   # .gitleaksignore doesn't list; a tag that isn't v<x.y.z>, isn't
   # annotated, doesn't match charts/telflo/Chart.yaml at its commit, isn't
-  # on main, or whose version is already published; then the collector
-  # artifacts the release points at must exist, and the default collector's
-  # image is kept for the smokes. The full history (fetch-depth 0) brings
-  # every tag; one the checkout holds as lightweight is asked of GitHub's
-  # API with this job's read-only token.
+  # on main, or whose version is already published or staged; then the
+  # collector artifacts the release points at must exist, and the default
+  # collector's image is kept for the smokes. The full history (fetch-depth
+  # 0) brings every tag; one the checkout holds as lightweight is asked of
+  # GitHub's API with this job's read-only token.
   version:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -342,11 +345,12 @@ jobs:
           VERSION: ${{ needs.version.outputs.version }}
         run: bash scripts/release/steps.sh kind-smoke --version "$VERSION" --release "$RUNNER_TEMP/release" --work "$RUNNER_TEMP/kind-smoke"
 
-  # The publish, after every test job passed. The `release` environment
-  # admits only v* tags (a repository setting); pushing the tag is the
-  # maintainers' go-ahead to publish. The only token is this job's
-  # GITHUB_TOKEN; Docker's and Helm's logins go to files under the runner's
-  # temporary folder, never the runner's home.
+  # The stage, after every test job passed: the images and the chart to
+  # ghcr.io/telflo/telflo-staging, never the public namespace, and a draft
+  # Release. The `release` environment admits only v* tags and main (a
+  # repository setting), and its reviewer approves this job. The only token
+  # is this job's GITHUB_TOKEN; Docker's and Helm's logins go to files under
+  # the runner's temporary folder, never the runner's home.
   publish:
     needs: [version, static, build, package, stack-smoke, archive-smoke, kind-smoke]
     runs-on: ubuntu-24.04
@@ -392,35 +396,41 @@ jobs:
           GHCR_USER: ${{ github.actor }}
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: bash scripts/release/steps.sh helm-login
-      - name: The images (the archives' bytes, digests kept)
+      - name: The images, to the stage (the archives' bytes, digests kept)
         env:
           DOCKER_CONFIG: ${{ runner.temp }}/docker
           HELM_REGISTRY_CONFIG: ${{ runner.temp }}/helm/registry/config.json
-        run: bash scripts/publish-platform-images.sh --push-oci "$RUNNER_TEMP/oci"
-      - name: The chart (the packaged file)
-        env:
-          DOCKER_CONFIG: ${{ runner.temp }}/docker
-          HELM_REGISTRY_CONFIG: ${{ runner.temp }}/helm/registry/config.json
-          VERSION: ${{ needs.version.outputs.version }}
-        run: bash scripts/publish-chart.sh --chart telflo --push-package "$RUNNER_TEMP/release/telflo-$VERSION.tgz"
-      - name: The pull-back, by digest
+        run: bash scripts/publish-platform-images.sh --push-oci "$RUNNER_TEMP/oci" --namespace telflo-staging
+      - name: The chart, to the stage (the packaged file)
         env:
           DOCKER_CONFIG: ${{ runner.temp }}/docker
           HELM_REGISTRY_CONFIG: ${{ runner.temp }}/helm/registry/config.json
           VERSION: ${{ needs.version.outputs.version }}
-        run: bash scripts/release/pull-back.sh --oci "$RUNNER_TEMP/oci" --version "$VERSION" --chart "$RUNNER_TEMP/release/telflo-$VERSION.tgz"
+        run: bash scripts/publish-chart.sh --chart telflo --push-package "$RUNNER_TEMP/release/telflo-$VERSION.tgz" --namespace telflo-staging
+      - name: The pull-back from the stage, by digest
+        env:
+          DOCKER_CONFIG: ${{ runner.temp }}/docker
+          HELM_REGISTRY_CONFIG: ${{ runner.temp }}/helm/registry/config.json
+          VERSION: ${{ needs.version.outputs.version }}
+        run: bash scripts/release/pull-back.sh --oci "$RUNNER_TEMP/oci" --version "$VERSION" --chart "$RUNNER_TEMP/release/telflo-$VERSION.tgz" --namespace telflo-staging
       - name: The collector images and chart still exist
         env:
           DOCKER_CONFIG: ${{ runner.temp }}/docker
           HELM_REGISTRY_CONFIG: ${{ runner.temp }}/helm/registry/config.json
         run: bash scripts/release/verify-collector-artifacts.sh
+      - name: The stage's record (digests.txt, what finalize copies)
+        env:
+          DOCKER_CONFIG: ${{ runner.temp }}/docker
+          HELM_REGISTRY_CONFIG: ${{ runner.temp }}/helm/registry/config.json
+          VERSION: ${{ needs.version.outputs.version }}
+        run: bash scripts/release/steps.sh digests --oci "$RUNNER_TEMP/oci" --version "$VERSION" --chart "$RUNNER_TEMP/release/telflo-$VERSION.tgz" --out "$RUNNER_TEMP/release/digests.txt"
       # The tag asked of GitHub's API once more first: still the annotated tag
       # of the commit the version job checked.
-      - name: The GitHub Release (last)
+      - name: The draft GitHub Release (last)
         env:
           DOCKER_CONFIG: ${{ runner.temp }}/docker
           HELM_REGISTRY_CONFIG: ${{ runner.temp }}/helm/registry/config.json
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ needs.version.outputs.tag }}
           COMMIT: ${{ needs.version.outputs.commit }}
-        run: bash scripts/release/steps.sh github-release --tag "$TAG" --commit "$COMMIT" --oci "$RUNNER_TEMP/oci" --release "$RUNNER_TEMP/release"
+        run: bash scripts/release/steps.sh github-release --draft --tag "$TAG" --commit "$COMMIT" --oci "$RUNNER_TEMP/oci" --release "$RUNNER_TEMP/release"

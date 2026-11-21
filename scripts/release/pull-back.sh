@@ -1,14 +1,23 @@
 #!/usr/bin/env bash
-# pull-back.sh: what the registry serves is what was tested, after --push-oci
-# and --push-package and before the GitHub Release.
+# pull-back.sh: what the registry serves is what was tested: after --push-oci
+# and --push-package (the release's stage, before its draft GitHub Release),
+# and after the finalize workflow's promote (the public tags, before the
+# Release is published).
 #
 #   scripts/release/pull-back.sh --oci <dir> --version <v> (--chart <tgz> | --no-chart)
-#                                [--image <name>]... [--registry <r>] [--no-attest]
+#                                [--image <name>]... [--registry <r>] [--namespace <n>] [--no-attest]
+#   scripts/release/pull-back.sh --digests <file> --version <v> [--registry <r>] [--namespace <n>] [--no-attest]
 #
-# For each image (api, web, otelcol-validator, otelcol-testing and
-# ottl-evaluator by default, or those --image names; `collector` reads
-# <dir>/collector-<v>.digest), with <ref> = <registry>/telflo/telflo/<name>:<v>:
-#   - `crane digest <ref>` answers the archive's index digest (its digest file);
+# The digests each image must have come from --oci's digest files
+# (<dir>/<name>.digest; `collector` reads <dir>/collector-<v>.digest), or,
+# with --digests, from a stage's digests.txt (scripts/release/oci.sh's
+# format: the five images, then the chart's OCI digest and its package's
+# sha256), for the finalize workflow, which has no archives. For each image
+# (api, web, otelcol-validator, otelcol-testing and ottl-evaluator by default,
+# or those --image names; not with --digests), with
+# <ref> = <registry>/<namespace's path>/<name>:<v>:
+#   - `crane digest <ref>` answers the index digest (its digest file's, or its
+#     digests.txt line);
 #   - `crane manifest <ref>` is an image index holding a linux/amd64 and a
 #     linux/arm64 image and, unless --no-attest (a rehearsal's builds only),
 #     an attestation manifest naming each;
@@ -16,12 +25,17 @@
 #     the engine's image id is that manifest's config digest (its manifest
 #     digest on an engine using containerd's image store; the pulled
 #     reference is untagged afterwards).
-# Then the chart: `helm pull oci://<registry>/telflo/telflo/charts/<name>
+# Then the chart: `helm pull oci://<registry>/<namespace's path>/charts/<name>
 # --version <v>` (--plain-http for a loopback registry) answers a file whose
 # sha256 is the packaged .tgz's (<name> and <v> are the .tgz's own Chart.yaml's,
-# its version <v>). --no-chart skips it (the collector workflow's images).
-# --registry is ghcr.io (the default) or a loopback 127.0.0.1:<port> or
-# localhost:<port>.
+# its version <v>), or, with --digests, the chart telflo whose tag answers the
+# charts/telflo line (`crane digest`) and whose pulled file's sha256 is the
+# charts/telflo.tgz line. --no-chart skips it (the collector workflow's
+# images). --registry is ghcr.io (the default) or a loopback 127.0.0.1:<port>
+# or localhost:<port>. --namespace is telflo (the default: telflo/telflo, the
+# public one) or telflo-staging (telflo/telflo-staging, a release's stage;
+# never for `collector`, which is published to the public one alone), mapped
+# by oci.sh's telflo_namespace_path: nothing else can be named.
 #
 # Exit 0 everything equal; 1 at the first difference, naming it; 2 usage.
 # crane and docker read the caller's DOCKER_CONFIG once checked, helm the
@@ -42,9 +56,11 @@ DIGEST_RE='^sha256:[0-9a-f]{64}$'
 usage() {
   cat >&2 <<'EOF'
 usage: scripts/release/pull-back.sh --oci <dir> --version <v> (--chart <tgz> | --no-chart)
-                                    [--image <name>]... [--registry <r>] [--no-attest]
+                                    [--image <name>]... [--registry <r>] [--namespace <n>] [--no-attest]
+       scripts/release/pull-back.sh --digests <file> --version <v> [--registry <r>] [--namespace <n>] [--no-attest]
 images: api web otelcol-validator otelcol-testing ottl-evaluator collector
 registry: ghcr.io (the default), 127.0.0.1:<port> or localhost:<port>
+namespace: telflo (the default, the public one) or telflo-staging (a release's stage)
 EOF
 }
 fail() { echo "pull-back: $1" >&2; exit 1; }
@@ -53,10 +69,12 @@ refuse_usage() { echo "pull-back: $1" >&2; usage; exit 2; }
 note() { echo "pull-back: $1" >&2; }
 
 oci_dir=""
+digests=""
 version=""
 chart_file=""
 no_chart=false
 registry="ghcr.io"
+namespace=telflo
 attest=true
 selected=()
 add_image() {
@@ -71,6 +89,8 @@ add_image() {
 while [ $# -gt 0 ]; do
   case "$1" in
     --oci) [ $# -ge 2 ] || refuse_usage "--oci needs a folder"; oci_dir="$2"; shift 2 ;;
+    --digests) [ $# -ge 2 ] || refuse_usage "--digests needs a file"; digests="$2"; shift 2 ;;
+    --namespace) [ $# -ge 2 ] || refuse_usage "--namespace needs a value"; namespace="$2"; shift 2 ;;
     --version) [ $# -ge 2 ] || refuse_usage "--version needs a value"; version="$2"; shift 2 ;;
     --chart) [ $# -ge 2 ] || refuse_usage "--chart needs a package"; chart_file="$2"; shift 2 ;;
     --no-chart) no_chart=true; shift ;;
@@ -81,23 +101,47 @@ while [ $# -gt 0 ]; do
     *) refuse_usage "unknown argument: $1" ;;
   esac
 done
-[ -n "$oci_dir" ] && [ -d "$oci_dir" ] || refuse_usage "--oci <dir> must be an existing directory (got '$oci_dir')"
+if [ -n "$digests" ]; then
+  [ -z "$oci_dir" ] || refuse_usage "--oci or --digests, not both"
+  [ -f "$digests" ] || refuse_usage "--digests <file> must be an existing file (a stage's digests.txt; got '$digests')"
+  [ -z "$chart_file" ] && ! $no_chart || refuse_usage "--digests names the chart itself: no --chart or --no-chart"
+  [ "${#selected[@]}" -eq 0 ] || refuse_usage "--digests checks the five images and the chart it names: no --image"
+else
+  [ -n "$oci_dir" ] && [ -d "$oci_dir" ] || refuse_usage "--oci <dir> must be an existing directory (got '$oci_dir')"
+fi
 telflo_version_ok "$version" || refuse_usage "--version must be x.y.z (got '$version')"
 telflo_registry_ok "$registry" \
   || refuse_usage "--registry must be ghcr.io or a loopback registry, 127.0.0.1:<port> or localhost:<port> (got '$registry')"
-if $no_chart; then
-  [ -z "$chart_file" ] || refuse_usage "--chart or --no-chart, not both"
-else
-  [ -n "$chart_file" ] && [ -f "$chart_file" ] || refuse_usage "--chart <tgz> (an existing file) or --no-chart is required"
+namespace_path="$(telflo_namespace_path "$namespace")" \
+  || refuse_usage "--namespace must be telflo (the public one) or telflo-staging (a release's stage) (got '$namespace')"
+if [ -z "$digests" ]; then
+  if $no_chart; then
+    [ -z "$chart_file" ] || refuse_usage "--chart or --no-chart, not both"
+  else
+    [ -n "$chart_file" ] && [ -f "$chart_file" ] || refuse_usage "--chart <tgz> (an existing file) or --no-chart is required"
+  fi
 fi
 [ "${#selected[@]}" -gt 0 ] || selected=("${PLATFORM_IMAGES[@]}")
-
-base_of() { if [ "$1" = collector ]; then printf 'collector-%s\n' "$version"; else printf '%s\n' "$1"; fi; }
 for image in "${selected[@]}"; do
-  f="$oci_dir/$(base_of "$image").digest"
-  [ -f "$f" ] && [ "$(grep -c '' "$f")" -eq 1 ] && [[ "$(cat "$f")" =~ $DIGEST_RE ]] \
-    || fail "$f is missing or isn't one line sha256:<64 hex>"
+  [ "$image" != collector ] || [ "$namespace" = telflo ] \
+    || refuse_usage "the collector image is published to the public namespace alone: no --namespace $namespace"
 done
+
+# want_of <image>: the digest the image must have (its digest file's, or its
+# digests.txt line).
+base_of() { if [ "$1" = collector ]; then printf 'collector-%s\n' "$version"; else printf '%s\n' "$1"; fi; }
+if [ -n "$digests" ]; then
+  telflo_digests_ok "$digests" \
+    || fail "$digests isn't a stage's digests.txt (one '<name> sha256:<hex>' line each: $TELFLO_DIGESTS_NAMES, in that order)"
+  want_of() { telflo_digests_get "$digests" "$1"; }
+else
+  for image in "${selected[@]}"; do
+    f="$oci_dir/$(base_of "$image").digest"
+    [ -f "$f" ] && [ "$(grep -c '' "$f")" -eq 1 ] && [[ "$(cat "$f")" =~ $DIGEST_RE ]] \
+      || fail "$f is missing or isn't one line sha256:<64 hex>"
+  done
+  want_of() { cat "$oci_dir/$(base_of "$1").digest"; }
+fi
 
 tmp="$(mktemp -d "${TMPDIR:-/tmp}/pull-back.XXXXXX")" || fail "no temporary directory"
 [ -n "$tmp" ] && [ -d "$tmp" ] || fail "no temporary directory"
@@ -131,13 +175,13 @@ config_of() { # <manifest file>
 }
 
 for image in "${selected[@]}"; do
-  want="$(cat "$oci_dir/$(base_of "$image").digest")"
-  ref="$registry/telflo/telflo/$image"
+  want="$(want_of "$image")"
+  ref="$registry/$namespace_path/$image"
   status=0
   telflo_remote_digest "$ref:$version" || status=$?
   remote="$TELFLO_REMOTE_DIGEST"
   [ "$status" -eq 0 ] || differs "$ref:$version can't be read ($TELFLO_REMOTE_ANSWER)"
-  [ "$remote" = "$want" ] || differs "$ref:$version is $remote, not the archive's $want"
+  [ "$remote" = "$want" ] || differs "$ref:$version is $remote, not the tested $want"
   status=0
   telflo_remote_manifest "$ref@$want" "$tmp/index.json" || status=$?
   [ "$status" -eq 0 ] || differs "$ref@$want's manifest can't be read ($TELFLO_REMOTE_ANSWER)"
@@ -166,13 +210,27 @@ for image in "${selected[@]}"; do
   note "$ref:$version is $want (linux/amd64, linux/arm64$($attest && echo ', attested'); the amd64 image pulled)"
 done
 
+sum() { if command -v sha256sum >/dev/null 2>&1; then sha256sum "$1" | awk '{ print $1 }'; else shasum -a 256 "$1" | awk '{ print $1 }'; fi; }
 if ! $no_chart; then
-  members="$(tar -tzf "$chart_file" 2>/dev/null)" || fail "$chart_file isn't a readable .tgz"
-  chart_name="$(printf '%s\n' "$members" | sed 's#/.*##' | sort -u)"
-  [[ "$chart_name" =~ ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$ ]] || fail "$chart_file must hold one top-level folder, its chart"
-  chart_version="$(tar -xzOf "$chart_file" "$chart_name/Chart.yaml" 2>/dev/null \
-    | sed -n 's/^version:[[:space:]]*"\{0,1\}\([^"[:space:]]*\)"\{0,1\}[[:space:]]*$/\1/p')"
-  [ "$chart_version" = "$version" ] || fail "$chart_file is version '$chart_version', not $version"
+  if [ -n "$digests" ]; then
+    # The chart digests.txt names: its tag's manifest digest, then its package's sha256.
+    chart_name=telflo
+    want_package="$(want_of charts/telflo.tgz)"
+    want="$(want_of charts/telflo)"
+    status=0
+    telflo_remote_digest "$registry/$namespace_path/charts/$chart_name:$version" || status=$?
+    [ "$status" -eq 0 ] || differs "$registry/$namespace_path/charts/$chart_name:$version can't be read ($TELFLO_REMOTE_ANSWER)"
+    [ "$TELFLO_REMOTE_DIGEST" = "$want" ] \
+      || differs "$registry/$namespace_path/charts/$chart_name:$version is $TELFLO_REMOTE_DIGEST, not the stage's $want"
+  else
+    members="$(tar -tzf "$chart_file" 2>/dev/null)" || fail "$chart_file isn't a readable .tgz"
+    chart_name="$(printf '%s\n' "$members" | sed 's#/.*##' | sort -u)"
+    [[ "$chart_name" =~ ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$ ]] || fail "$chart_file must hold one top-level folder, its chart"
+    chart_version="$(tar -xzOf "$chart_file" "$chart_name/Chart.yaml" 2>/dev/null \
+      | sed -n 's/^version:[[:space:]]*"\{0,1\}\([^"[:space:]]*\)"\{0,1\}[[:space:]]*$/\1/p')"
+    [ "$chart_version" = "$version" ] || fail "$chart_file is version '$chart_version', not $version"
+    want_package="sha256:$(sum "$chart_file")"
+  fi
   command -v helm >/dev/null 2>&1 || fail "helm is not on PATH"
   caller_registry_config="${HELM_REGISTRY_CONFIG:-}"
   for v in $(env | sed -n 's/^\(HELM_[A-Za-z0-9_]*\)=.*/\1/p'); do unset "$v"; done
@@ -187,14 +245,13 @@ if ! $no_chart; then
   fi
   flags=()
   if telflo_registry_loopback "$registry"; then flags=(--plain-http); fi
-  chart_ref="oci://$registry/telflo/telflo/charts/$chart_name"
+  chart_ref="oci://$registry/$namespace_path/charts/$chart_name"
   helm pull ${flags[@]+"${flags[@]}"} "$chart_ref" --version "$version" --destination "$tmp/pulled" >/dev/null 2>"$tmp/helm.err" \
     || { tail -n 1 "$tmp/helm.err" >&2; differs "helm pull $chart_ref --version $version failed"; }
   pulled="$tmp/pulled/$chart_name-$version.tgz"
   [ -f "$pulled" ] || differs "helm pull made no $chart_name-$version.tgz"
-  sum() { if command -v sha256sum >/dev/null 2>&1; then sha256sum "$1" | awk '{ print $1 }'; else shasum -a 256 "$1" | awk '{ print $1 }'; fi; }
-  [ "$(sum "$pulled")" = "$(sum "$chart_file")" ] \
-    || differs "$chart_ref $version's sha256 is $(sum "$pulled"), not the package's $(sum "$chart_file")"
-  note "$chart_ref $version is the package (sha256 $(sum "$chart_file"))"
+  [ "sha256:$(sum "$pulled")" = "$want_package" ] \
+    || differs "$chart_ref $version's sha256 is $(sum "$pulled"), not the package's ${want_package#sha256:}"
+  note "$chart_ref $version is the package (sha256 ${want_package#sha256:})"
 fi
 note "pulled back: everything is what was tested"

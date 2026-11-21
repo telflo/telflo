@@ -1,5 +1,11 @@
 import { coverageConfigDefaults, defineConfig } from "vitest/config";
 
+// A `--shard` run covers only its part of the suite, so its coverage is
+// below the thresholds by design; it writes a blob report instead, and the
+// `--merge-reports` run that joins the parts checks the thresholds on the
+// whole (ci.yml's unit and unit-coverage jobs).
+const shardRun = process.argv.some((arg) => arg === "--shard" || arg.startsWith("--shard="));
+
 // Coverage is a whole-run concern (one report spanning every workspace
 // project), so it is configured here at the root rather than duplicated
 // into each package's vitest.config.ts. vitest.workspace.ts still lists the
@@ -40,7 +46,7 @@ export default defineConfig({
         // built or packed, not product code.
         "apps/cli/tests/**",
       ],
-      thresholds: {
+      thresholds: shardRun ? undefined : {
         // Set from a measurement of 97.06% statements, 93.5% branches, 92.7%
         // functions and 97.06% lines (with **dist/, **build/ and
         // vitest.setup.ts excluded, see the `exclude` comment above), each a

@@ -1,0 +1,10 @@
+# Breaks one rule: a uses: line whose comment isn't its version.
+file: ci.yml
+rule: ci-uses-version-comment
+<<<
+--reporter=blob
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+===
+--reporter=blob
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+>>>

@@ -1,0 +1,10 @@
+# Breaks one rule: finalize.yml's pull-back of the stage, not of the public tags.
+file: finalize.yml
+rule: required-steps
+<<<
+--version "$VERSION" --namespace telflo
+
+===
+--version "$VERSION" --namespace telflo-staging
+
+>>>

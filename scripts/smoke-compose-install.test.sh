@@ -13,13 +13,16 @@
 #   a relative --work, a --work that isn't empty, one with a space;
 #   an archive not named telflo-compose-<x.y.z>.tar.gz, one without
 #   compose.yaml, one whose compose.yaml doesn't name a Telflo image at its
-#   version;
+#   version, one whose compose.yaml names an image through another variable
+#   than ${TELFLO_IMAGE_REGISTRY:-ghcr.io/telflo/telflo}/;
 #   README.md without its begin marker, without its end marker, with
 #   you@example.com twice in the commands, without its bootstrap command,
-#   at another version than the archive's;
+#   at another version than the archive's, with a command naming
+#   TELFLO_IMAGE_REGISTRY;
 #   an image missing from the engine (a release at 9.9.9, whose images no
-#   engine holds: the real `docker image inspect`; SKIP when no Docker
-#   engine answers).
+#   engine holds: the real `docker image inspect`, asked for the default
+#   registry's name, ghcr.io/telflo/telflo/<name>:9.9.9, even with the
+#   caller's TELFLO_IMAGE_REGISTRY set; SKIP when no Docker engine answers).
 #
 # Run: scripts/smoke-compose-install.test.sh
 # Prints PASS/FAIL/SKIP lines only; exit 1 when any case failed. It starts
@@ -147,9 +150,13 @@ fresh; rm -rf "$c/archive"; mkdir -p "$c/archive/telflo-compose-$VERSION" && : >
   tar -czf "$c/release/telflo-compose-$VERSION.tar.gz" -C "$c/archive" "telflo-compose-$VERSION"
 run_args; expect_refused "an archive without compose.yaml" "holds no telflo-compose-$VERSION/compose.yaml"
 fresh; rm -rf "$c/archive" "$c/release"/*; mkdir -p "$c/release"
-sed "s#ghcr.io/telflo/telflo/web:$VERSION#ghcr.io/telflo/telflo/web:9.9.8#" "$REPO_DIR/deploy/compose/compose.yaml" >"$c/compose.yaml"
+sed "s#ghcr.io/telflo/telflo}/web:$VERSION#ghcr.io/telflo/telflo}/web:9.9.8#" "$REPO_DIR/deploy/compose/compose.yaml" >"$c/compose.yaml"
 make_archive "$VERSION" "$c/compose.yaml"
 run_args; expect_refused "an archive whose compose.yaml names web at another version" "doesn't name ghcr.io/telflo/telflo/web:$VERSION"
+fresh; rm -rf "$c/archive" "$c/release"/*; mkdir -p "$c/release"
+sed 's#{TELFLO_IMAGE_REGISTRY:-\(ghcr.io/telflo/telflo}/web:\)#{TELFLO_REGISTRY:-\1#' "$REPO_DIR/deploy/compose/compose.yaml" >"$c/compose.yaml"
+make_archive "$VERSION" "$c/compose.yaml"
+run_args; expect_refused "an archive whose compose.yaml names web through another variable" "names an image through a variable other than as \${TELFLO_IMAGE_REGISTRY:-ghcr.io/telflo/telflo}/<name>:<version>"
 
 # ---- README.md's Quick start.
 fresh; grep -v '^<!-- quick-start:begin -->$' "$REPO_DIR/README.md" >"$c/tree/README.md"
@@ -161,19 +168,25 @@ fresh; sed 's#^docker compose exec -T api telflo-admin bootstrap --email you@exa
 run_args; expect_refused "you@example.com twice in the commands" "don't hold you@example.com exactly once"
 fresh; awk '/telflo-admin bootstrap/ { print "# (removed)"; next } { print }' "$REPO_DIR/README.md" >"$c/tree/README.md"
 run_args; expect_refused "no bootstrap command (nor its email and organization)" "exactly once"
-fresh; sed 's#^\(    image: ghcr\.io/telflo/telflo/[a-z-]*:\)[0-9][0-9.]*$#\19.9.9#' "$REPO_DIR/deploy/compose/compose.yaml" >"$c/compose.yaml"
+# at_9_9_9 <compose file>: the real compose.yaml with every Telflo image at 9.9.9.
+# shellcheck disable=SC2016 # Compose's ${...}, matched as text
+at_9_9_9() { sed 's#^\(    image: "${TELFLO_IMAGE_REGISTRY:-ghcr\.io/telflo/telflo}/[a-z-]*:\)[0-9][0-9.]*"$#\19.9.9"#' "$REPO_DIR/deploy/compose/compose.yaml" >"$1"; }
+fresh; at_9_9_9 "$c/compose.yaml"
 make_archive 9.9.9 "$c/compose.yaml"
 run_args 9.9.9; expect_refused "README.md (v$VERSION) at another version than the archive's (9.9.9)" "isn't v9.9.9's"
+fresh; sed 's#^docker compose up -d$#TELFLO_IMAGE_REGISTRY=registry.example.com/telflo docker compose up -d#' "$REPO_DIR/README.md" >"$c/tree/README.md"
+run_args; expect_refused "a Quick start command naming TELFLO_IMAGE_REGISTRY" "the Quick start's commands name TELFLO_IMAGE_REGISTRY"
 
 # ---- An image missing from the engine: a release at 9.9.9 (the README and compose.yaml both), whose images no
 # engine holds, so the real docker image inspect answers none.
 if [ "$docker_answers" = yes ]; then
   fresh; sed "s#${VERSION//./\\.}#9.9.9#g" "$REPO_DIR/README.md" >"$c/tree/README.md"
-  sed 's#^\(    image: ghcr\.io/telflo/telflo/[a-z-]*:\)[0-9][0-9.]*$#\19.9.9#' "$REPO_DIR/deploy/compose/compose.yaml" >"$c/compose.yaml"
+  at_9_9_9 "$c/compose.yaml"
   make_archive 9.9.9 "$c/compose.yaml"
-  run_args 9.9.9; expect_refused "a release image missing from the engine, never pulled" "isn't in the local engine: this smoke never pulls one"
-  grep -q 'ghcr.io/telflo/telflo/[a-z-]*:9.9.9 isn' "$c/out" && { echo "PASS - the refusal names the missing image"; passed=$((passed + 1)); } ||
-    { echo "FAIL - the refusal doesn't name the missing image"; failed=$((failed + 1)); }
+  TELFLO_IMAGE_REGISTRY=registry.example.com/telflo run_args 9.9.9
+  expect_refused "a release image missing from the engine, never pulled" "isn't in the local engine: this smoke never pulls one"
+  grep -q 'ghcr.io/telflo/telflo/[a-z-]*:9.9.9 isn' "$c/out" && { echo "PASS - the refusal names the missing image, by the default registry's name (the caller's TELFLO_IMAGE_REGISTRY not read)"; passed=$((passed + 1)); } ||
+    { echo "FAIL - the refusal doesn't name the missing image by the default registry's name"; failed=$((failed + 1)); }
   if [ -s "$c/work/credential-helpers.log" ]; then
     echo "FAIL - a docker credential helper was called"; failed=$((failed + 1))
   else

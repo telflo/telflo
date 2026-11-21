@@ -1,0 +1,11 @@
+# Breaks one rule: a gate that runs only after a failure.
+file: ci.yml
+rule: ci-step-if
+<<<
+      - name: No skipped tests
+
+===
+      - name: No skipped tests
+        if: failure()
+
+>>>

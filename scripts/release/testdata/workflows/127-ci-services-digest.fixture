@@ -1,0 +1,12 @@
+# Breaks one rule: a service digest that isn't tools.lock's.
+file: ci.yml
+rule: ci-services
+<<<
+        image: axllent/mailpit:v1.31@sha256:74d609a42ec279aa63c6b4622a6fa9b5408d1ad5b1d76a1c4be40a265ce0863d
+        ports: ["1025:1025", "8025:8025"]
+    # As unit's.
+===
+        image: axllent/mailpit:v1.31@sha256:74d609a42ec279aa63c6b4622a6fa9b5408d1ad5b1d76a1c4be40a265ce0863e
+        ports: ["1025:1025", "8025:8025"]
+    # As unit's.
+>>>

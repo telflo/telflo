@@ -9,7 +9,10 @@
 # tagged ghcr.io/telflo/telflo/<name>:9.9.97, are removed here at the end by
 # name and then by id (the platform a later case replaced is untagged, not
 # gone). Refusing credential-helper stand-ins come first on PATH: none may be
-# called.
+# called. Offline, too: the name it loads each image under is the one the
+# Compose install's compose.yaml gives it with TELFLO_IMAGE_REGISTRY unset
+# (scripts/release/version.sh's TELFLO_COMPOSE_IMAGE_DEFAULT), which the
+# archive smoke looks for.
 # Run:  bash scripts/release/load-images.test.sh
 # (TELFLO_LOAD_IMAGES_NAME names the script's registry container.) bash 3.2
 # compatible.
@@ -115,6 +118,15 @@ printf 'not a digest\n' >"$oci/ottl-evaluator.digest"; : >"$oci/ottl-evaluator.o
 run --oci "$oci" --version "$V" --image ottl-evaluator
 check "a malformed digest file refused before docker is asked (exit 1)" "[ $rc -eq 1 ] && has \"ottl-evaluator.digest isn't one line\" && no_docker"
 rm -f "$oci/ottl-evaluator.digest" "$oci/ottl-evaluator.oci.tar"
+# The release name: load-images.sh's RELEASE_BASE, version.sh's default for
+# TELFLO_IMAGE_REGISTRY, and every Telflo image line of compose.yaml through
+# it.
+base="$(sed -n 's/^RELEASE_BASE="\(.*\)"$/\1/p' "$script")"
+default="$("$shell" -c '. "$1"; printf "%s\n" "$TELFLO_COMPOSE_IMAGE_DEFAULT"' _ "$root/scripts/release/version.sh")"
+prefix="$("$shell" -c '. "$1"; printf "%s\n" "$TELFLO_COMPOSE_IMAGE_PREFIX"' _ "$root/scripts/release/version.sh")"
+compose_lines="$(grep -cF "    image: \"$prefix" "$root/deploy/compose/compose.yaml")"
+check "each image is loaded under the name compose.yaml gives it with TELFLO_IMAGE_REGISTRY unset ($base)" \
+  "[ -n '$base' ] && [ '$base' = '$default' ] && [ '\${TELFLO_IMAGE_REGISTRY:-$base}/' = '$prefix' ] && [ '$compose_lines' -ge 5 ]"
 
 # --- 2. the loads, with the real docker and crane --------------------------------------
 if tr_tools "$root" && [ -n "$real_docker" ] && [ -n "$real_crane" ]; then

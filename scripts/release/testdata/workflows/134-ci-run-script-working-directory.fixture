@@ -1,0 +1,11 @@
+# Breaks one rule: a root script run from the job's working directory.
+file: ci.yml
+rule: ci-run-script
+<<<
+      - run: bash scripts/release/steps.sh free-disk 14
+        working-directory: .
+      # The `test` target: the runtime
+===
+      - run: bash scripts/release/steps.sh free-disk 14
+      # The `test` target: the runtime
+>>>

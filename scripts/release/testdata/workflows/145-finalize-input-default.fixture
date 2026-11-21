@@ -1,0 +1,11 @@
+# Breaks one rule: finalize.yml's version input with a default (a run started without naming the version).
+file: finalize.yml
+rule: dispatch-inputs
+<<<
+        type: string
+        required: true
+===
+        type: string
+        required: true
+        default: 0.2.2
+>>>

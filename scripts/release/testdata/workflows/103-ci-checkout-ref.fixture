@@ -1,0 +1,11 @@
+# Breaks one rule: a checkout of the pull request's head by ref.
+file: ci.yml
+rule: ci-checkout-keys
+<<<
+          persist-credentials: false
+      - run: bash scripts/release/steps.sh free-disk 13
+===
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+      - run: bash scripts/release/steps.sh free-disk 13
+>>>

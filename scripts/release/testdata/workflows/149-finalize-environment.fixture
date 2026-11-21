@@ -1,0 +1,11 @@
+# Breaks one rule: finalize.yml's job not in the release environment (no approval).
+file: finalize.yml
+rule: publish-environment
+<<<
+    timeout-minutes: 30
+    environment: release
+
+===
+    timeout-minutes: 30
+
+>>>

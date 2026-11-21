@@ -1,0 +1,11 @@
+# Breaks one rule: finalize.yml's job needing another.
+file: finalize.yml
+rule: publish-needs
+<<<
+  finalize:
+    runs-on: ubuntu-24.04
+===
+  finalize:
+    needs: check
+    runs-on: ubuntu-24.04
+>>>

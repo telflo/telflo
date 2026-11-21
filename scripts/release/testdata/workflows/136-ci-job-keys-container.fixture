@@ -1,0 +1,14 @@
+# Breaks one rule: a job in a container image.
+file: ci.yml
+rule: ci-job-keys
+<<<
+  stack:
+    runs-on: ubuntu-24.04
+
+===
+  stack:
+    runs-on: ubuntu-24.04
+    container:
+      image: node:24
+
+>>>

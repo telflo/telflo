@@ -1,0 +1,11 @@
+# Breaks one rule: finalize.yml's job with more than contents and packages write.
+file: finalize.yml
+rule: job-permissions
+<<<
+      contents: write # the GitHub Release
+      packages: write # the images and the chart, in GHCR
+===
+      contents: write # the GitHub Release
+      packages: write # the images and the chart, in GHCR
+      actions: write
+>>>

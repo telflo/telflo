@@ -1,0 +1,8 @@
+# Breaks one rule: an action of finalize.yml named by its tag.
+file: finalize.yml
+rule: uses-pin
+<<<
+      - uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
+===
+      - uses: azure/setup-helm@v5.0.1 # v5.0.1
+>>>

@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 # Builds the platform's images into OCI archives and copies those same bytes
-# to ghcr.io/telflo/telflo/<name>: api, web, otelcol-validator,
+# to ghcr.io/telflo/telflo/<name> (or a release's stage,
+# ghcr.io/telflo/telflo-staging/<name>): api, web, otelcol-validator,
 # otelcol-testing and ottl-evaluator, from HEAD's committed files.
 #
-#   scripts/publish-platform-images.sh --dry-run --builder <name> [--image <name>]... [--version x.y.z] [--registry <r>]
+#   scripts/publish-platform-images.sh --dry-run --builder <name> [--image <name>]... [--version x.y.z] [--registry <r>] [--namespace <n>]
 #   scripts/publish-platform-images.sh --build --image <name> --builder <name> [--platform <p>] [--version x.y.z]
 #   scripts/publish-platform-images.sh --build-oci <dir> --builder <name> [--image <name>]... [--no-attest] [--version x.y.z]
-#   scripts/publish-platform-images.sh --push-oci <dir> [--image <name>]... [--version x.y.z] [--registry <r>]
+#   scripts/publish-platform-images.sh --push-oci <dir> [--image <name>]... [--version x.y.z] [--registry <r>] [--namespace <n>]
 #
 # Exactly one mode:
 #   --dry-run    checks everything --build-oci checks, asks the registry
@@ -31,7 +32,7 @@
 #                before anything builds; a failed build leaves neither.
 #                Prints `<name> <digest>` per image.
 #   --push-oci   copies each image's archive, unchanged, to
-#                <registry>/telflo/telflo/<name>:<version> with crane: it
+#                <registry>/<namespace's path>/<name>:<version> with crane: it
 #                reads <dir>/<name>.oci.tar and <dir>/<name>.digest only.
 #                Every archive is checked (as above, against its digest
 #                file and HEAD's version and revision) and every tag is asked
@@ -60,8 +61,12 @@
 # new version.
 #
 # --registry is ghcr.io (the default) or a loopback registry, 127.0.0.1:<port>
-# or localhost:<port> (the rehearsal's); the repository is always
-# <registry>/telflo/telflo/<name>: nothing else can be named.
+# or localhost:<port> (the rehearsal's). --namespace is telflo (the default:
+# telflo/telflo, the public one) or telflo-staging (telflo/telflo-staging, a
+# release's stage, which the finalize workflow copies to the public one by
+# digest); scripts/release/oci.sh's telflo_namespace_path maps the name, so the
+# repository is always <registry>/telflo/telflo/<name> or
+# <registry>/telflo/telflo-staging/<name>: nothing else can be named.
 #
 # --builder names the buildx builder (a docker-container builder: two
 # platforms need one; this script never creates one). --build and
@@ -76,8 +81,9 @@
 # a --builder with --push-oci, or a malformed name; an unknown image;
 # --build with no --image or more than one; --platform without --build, or
 # not linux/amd64, linux/arm64 or both; --no-attest without --build-oci;
-# --registry with --build or --build-oci, or a registry that isn't ghcr.io or
-# a loopback one; a --version that isn't x.y.z; a --build-oci or --push-oci
+# --registry or --namespace with --build or --build-oci, a registry that isn't
+# ghcr.io or a loopback one, or a namespace that isn't telflo or
+# telflo-staging; a --version that isn't x.y.z; a --build-oci or --push-oci
 # folder that isn't an existing directory.
 #
 # Refused next (exit 1), --dry-run too:
@@ -138,7 +144,6 @@ export GIT_NO_REPLACE_OBJECTS=1
 # shellcheck source=scripts/release/oci.sh
 . "$ROOT/scripts/release/oci.sh"
 
-REPOSITORY_PATH="telflo/telflo"
 IMAGES=(api web otelcol-validator otelcol-testing ottl-evaluator)
 CHART_YAML="charts/telflo/Chart.yaml"
 SCRIPT_PATH="scripts/publish-platform-images.sh"
@@ -155,13 +160,14 @@ DRY_RUN_DIR="OCI_DIR"
 
 usage() {
   cat >&2 <<'EOF'
-usage: scripts/publish-platform-images.sh --dry-run --builder <name> [--image <name>]... [--version x.y.z] [--registry <r>]
+usage: scripts/publish-platform-images.sh --dry-run --builder <name> [--image <name>]... [--version x.y.z] [--registry <r>] [--namespace <n>]
        scripts/publish-platform-images.sh --build --image <name> --builder <name> [--platform <p>] [--version x.y.z]
        scripts/publish-platform-images.sh --build-oci <dir> --builder <name> [--image <name>]... [--no-attest] [--version x.y.z]
-       scripts/publish-platform-images.sh --push-oci <dir> [--image <name>]... [--version x.y.z] [--registry <r>]
+       scripts/publish-platform-images.sh --push-oci <dir> [--image <name>]... [--version x.y.z] [--registry <r>] [--namespace <n>]
 images: api web otelcol-validator otelcol-testing ottl-evaluator
 platforms (--build): linux/amd64 (the default), linux/arm64, linux/amd64,linux/arm64
 registry: ghcr.io (the default), 127.0.0.1:<port> or localhost:<port>
+namespace: telflo (the default, the public one) or telflo-staging (a release's stage)
 EOF
 }
 fail() { echo "publish-platform-images: $1" >&2; exit 1; }
@@ -308,6 +314,8 @@ version_given=""
 oci_dir=""
 no_attest=false
 registry=""
+namespace=telflo
+namespace_given=false
 selected=()
 
 set_mode() { # <--mode>
@@ -354,6 +362,10 @@ while [ $# -gt 0 ]; do
       [ $# -ge 2 ] || refuse_usage "--registry needs a value"
       registry="$2"; shift 2 ;;
     --registry=*) registry="${1#--registry=}"; shift ;;
+    --namespace)
+      [ $# -ge 2 ] || refuse_usage "--namespace needs a value"
+      namespace="$2"; namespace_given=true; shift 2 ;;
+    --namespace=*) namespace="${1#--namespace=}"; namespace_given=true; shift ;;
     -h | --help) usage; exit 0 ;;
     *) refuse_usage "unknown argument: $1" ;;
   esac
@@ -374,8 +386,12 @@ case "$mode" in
   dry-run | push-oci)
     registry="${registry:-ghcr.io}"
     telflo_registry_ok "$registry" \
-      || refuse_usage "--registry must be ghcr.io or a loopback registry, 127.0.0.1:<port> or localhost:<port> (got '$registry')" ;;
-  *) [ -z "$registry" ] || refuse_usage "--registry goes with --dry-run and --push-oci only" ;;
+      || refuse_usage "--registry must be ghcr.io or a loopback registry, 127.0.0.1:<port> or localhost:<port> (got '$registry')"
+    REPOSITORY_PATH="$(telflo_namespace_path "$namespace")" \
+      || refuse_usage "--namespace must be telflo (the public one) or telflo-staging (a release's stage) (got '$namespace')" ;;
+  *)
+    [ -z "$registry" ] || refuse_usage "--registry goes with --dry-run and --push-oci only"
+    $namespace_given && refuse_usage "--namespace goes with --dry-run and --push-oci only" ;;
 esac
 if [ "$mode" = build ]; then
   [ "${#selected[@]}" -eq 1 ] || refuse_usage "--build builds one image: name it with --image (got ${#selected[@]})"

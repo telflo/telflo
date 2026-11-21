@@ -1,0 +1,11 @@
+# Breaks one rule: a docker:// action.
+file: ci.yml
+rule: ci-uses-allowed
+<<<
+      - name: go mod tidy
+
+===
+      - uses: docker://alpine:3.20
+      - name: go mod tidy
+
+>>>

@@ -7,6 +7,29 @@ release's images, Helm chart and Compose install are on its
 
 ## Unreleased
 
+## 0.2.2 - 2026-11-21
+
+### Added
+
+- `TELFLO_IMAGE_REGISTRY` for the Compose install: where its five Telflo
+  images come from, `ghcr.io/telflo/telflo` when unset or empty. Set it in
+  the install's `.env` to pull from a mirror
+  ([`docs/compose.md`](docs/compose.md), "Where the images come from").
+- CI on every pull request and every push to `main`: the secret scan, the
+  static gates, the unit and integration suites, the browser tests
+  (Chromium on a pull request, all three browsers on `main`), the three
+  services' tests and the full stack. `ci` is the one check a merge needs.
+
+### Changed
+
+- A release is published in two steps. The tag's run tests the images,
+  the chart and the Compose archive as before, then publishes them to
+  `ghcr.io/telflo/telflo-staging` with a draft GitHub Release. The
+  Finalize workflow then copies the same bytes, by digest, to
+  `ghcr.io/telflo/telflo` and publishes the Release, so a version can be
+  tested end to end before it's public
+  ([`docs/releasing.md`](docs/releasing.md)).
+
 ## 0.2.1 - 2026-11-20
 
 ### Security

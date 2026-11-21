@@ -1,0 +1,8 @@
+# Breaks one rule: the ci job no longer waiting for one job (it stops being required).
+file: ci.yml
+rule: ci-needs
+<<<
+otelcol-testing, stack]
+===
+otelcol-testing]
+>>>

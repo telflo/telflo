@@ -1,0 +1,14 @@
+# Breaks one rule: a service tag that misnames tools.lock's image.
+file: ci.yml
+rule: ci-services
+<<<
+        shard: [1, 2]
+    services:
+      postgres:
+        image: postgres:18@
+===
+        shard: [1, 2]
+    services:
+      postgres:
+        image: postgres:16@
+>>>

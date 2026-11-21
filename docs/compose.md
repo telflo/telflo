@@ -12,6 +12,7 @@ relay, the settings you can change, upgrades and backups.
 - [TLS in front](#tls-in-front)
 - [Mail](#mail)
 - [The settings in `.env`](#the-settings-in-env)
+- [Where the images come from](#where-the-images-come-from)
 - [Upgrading](#upgrading)
 - [Backups](#backups)
 - [Connecting collectors](#connecting-collectors)
@@ -42,8 +43,9 @@ one-shot services run on every start and stop: `db-bootstrap`,
 `mailpit` (`setup.sh --mailpit`).
 
 The Telflo images are named by the release's version
-(`ghcr.io/telflo/telflo/<name>:<version>`); Postgres, nginx, Mailpit and
-the opamp-server by digest.
+(`ghcr.io/telflo/telflo/<name>:<version>`, unless
+[`TELFLO_IMAGE_REGISTRY`](#where-the-images-come-from) names another
+registry); Postgres, nginx, Mailpit and the opamp-server by digest.
 
 ## Installing
 
@@ -212,15 +214,58 @@ Google sign-in (`TELFLO_OIDC_GOOGLE_CLIENT_ID`,
 `TELFLO_OIDC_GOOGLE_CLIENT_SECRET`), SendGrid (`TELFLO_MAIL_TRANSPORT=sendgrid`
 and `TELFLO_SENDGRID_API_KEY`), the sales inquiries' recipient
 (`TELFLO_SALES_INQUIRY_TO`), analytics (`TELFLO_POSTHOG_KEY`,
-`TELFLO_POSTHOG_HOST`), and a rotation's previous keys
+`TELFLO_POSTHOG_HOST`), a rotation's previous keys
 (`TELFLO_QUICK_DEPLOY_PREVIOUS_ENCRYPTION_KEYS`,
-`TELFLO_LIBRARY_LINK_SIGNING_KEYS_PREVIOUS`).
-[docs/configuration.md](configuration.md) has each one's rules.
+`TELFLO_LIBRARY_LINK_SIGNING_KEYS_PREVIOUS`), and the Telflo images'
+registry (`TELFLO_IMAGE_REGISTRY`, [below](#where-the-images-come-from)).
+[docs/configuration.md](configuration.md) has the others' rules.
 
 **Anything else** (a private relay's CA file, the collector image's
 repository for a mirror, the test runs' limits, the install templates)
 goes in a `compose.override.yaml` beside `compose.yaml`, which Compose
 reads with it. Copy it, with `.env` and `secrets/`, at every upgrade.
+
+## Where the images come from
+
+`compose.yaml` names each Telflo image as
+`${TELFLO_IMAGE_REGISTRY:-ghcr.io/telflo/telflo}/<name>:<version>`.
+Unset or empty, `TELFLO_IMAGE_REGISTRY` is `ghcr.io/telflo/telflo`, where
+every release is published. `setup.sh` doesn't write it, so an install
+pulls from there unless you set it.
+
+Set it to pull the Telflo images from somewhere else:
+
+- **A mirror of your own**, for a machine that can't reach `ghcr.io`, or
+  a registry your organization requires. Copy the five images to it under
+  the same names and tags: `<mirror>/api:<version>`,
+  `<mirror>/web:<version>`, `<mirror>/otelcol-validator:<version>`,
+  `<mirror>/otelcol-testing:<version>` and
+  `<mirror>/ottl-evaluator:<version>`.
+- **A release staged for testing** before it's published: the registry
+  path its images were staged under, at the same version.
+
+It changes only where the five Telflo images come from. Their names and
+tags stay the release's, and Postgres, nginx, Mailpit and the
+opamp-server keep their pinned images from their own registries.
+Mirroring those, or the collector image, goes in a `compose.override.yaml`,
+as [anything else](#the-settings-in-env) does.
+
+Add the line to `.env`, the registry and its path with no `https://` and
+no final `/`, then download the images and recreate the services:
+
+```text
+TELFLO_IMAGE_REGISTRY=registry.example.com/telflo
+```
+
+```sh
+docker compose pull
+docker compose up -d
+```
+
+A registry that needs a login takes `docker login registry.example.com`
+first. `.env` moves to every upgrade, and the setting with it: the mirror
+must hold the new release's images before its `docker compose pull`.
+Remove the line, or leave it empty, to go back to `ghcr.io/telflo/telflo`.
 
 ## Upgrading
 

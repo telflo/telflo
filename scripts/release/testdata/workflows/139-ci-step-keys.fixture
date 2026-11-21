@@ -1,0 +1,9 @@
+# Breaks one rule: a step with its own shell.
+file: ci.yml
+rule: ci-step-keys
+<<<
+        run: ./scripts/smoke-test-stack.sh
+===
+        shell: sh
+        run: ./scripts/smoke-test-stack.sh
+>>>

@@ -89,12 +89,19 @@ check "--dry-run: exit 0, nothing started, the work folder not made" "[ $rc -eq 
 pos() { printf '%s\n' "$plan" | grep -nE "^[0-9]+ $1:" | head -n 1 | cut -d: -f1; }
 order_ok=true
 last=0
-for s in collector-builder 'collector-build-[0-9.]+' collector-chart version-tag version-collectors version-collector-archive static build-builder build-api package-chart package-archive package-files smokes-load stack-smoke archive-smoke kind-smoke publish-images publish-chart publish-pull-back publish-collectors publish-notes; do
+for s in collector-builder 'collector-build-[0-9.]+' collector-chart version-tag version-collectors version-collector-archive static build-builder build-api package-chart package-archive package-files smokes-load stack-smoke archive-smoke kind-smoke publish-images publish-chart publish-pull-back publish-collectors publish-digests publish-notes finalize-promote finalize-pull-back finalize-collectors; do
   p="$(pos "$s")"
   if [ -z "$p" ] || [ "$p" -le "$last" ]; then order_ok=false; echo "     (order: $s at '${p:-none}' after $last)"; fi
   last="${p:-$last}"
 done
-check "the steps in the workflows' order: the collector path (its builder first), version, static, build, package, the three smokes, publish, notes" "$order_ok"
+check "the steps in the workflows' order: the collector path (its builder first), version, static, build, package, the three smokes, the stage, its record and notes, then finalize" "$order_ok"
+check "the stage pushes and pulls back --namespace telflo-staging; finalize promotes from its digests.txt, then pulls back the public tags by those digests" \
+  "printf '%s\n' \"\$plan\" | grep -qE '^[0-9]+ publish-images: [^ ]*bash scripts/publish-platform-images\.sh --push-oci $tmp/w/oci --registry 127\.0\.0\.1:5999 --namespace telflo-staging\$' \
+   && printf '%s\n' \"\$plan\" | grep -qE '^[0-9]+ publish-chart: .* --registry 127\.0\.0\.1:5999 --namespace telflo-staging\$' \
+   && printf '%s\n' \"\$plan\" | grep -qE '^[0-9]+ publish-pull-back: .* --namespace telflo-staging\$' \
+   && printf '%s\n' \"\$plan\" | grep -qE '^[0-9]+ publish-digests: [^ ]*bash scripts/release/steps\.sh digests --oci $tmp/w/oci --version $version --chart $tmp/w/release/telflo-$version\.tgz --out $tmp/w/digests\.txt --registry 127\.0\.0\.1:5999\$' \
+   && printf '%s\n' \"\$plan\" | grep -qE '^[0-9]+ finalize-promote: [^ ]*bash scripts/release/promote\.sh --version $version --digests $tmp/w/digests\.txt --registry 127\.0\.0\.1:5999\$' \
+   && printf '%s\n' \"\$plan\" | grep -qE '^[0-9]+ finalize-pull-back: [^ ]*bash scripts/release/pull-back\.sh --digests $tmp/w/digests\.txt --version $version --registry 127\.0\.0\.1:5999 --namespace telflo\$'"
 check "the three smokes run through steps.sh (their output through redact.sh, as release.yml calls them), never a smoke script directly" \
   "printf '%s\n' \"\$plan\" | grep -qE '^[0-9]+ stack-smoke: [^ ]*bash scripts/release/steps\.sh stack-smoke --version $version ' \
    && printf '%s\n' \"\$plan\" | grep -qE '^[0-9]+ archive-smoke: [^ ]*bash scripts/release/steps\.sh archive-smoke --version $version --release $tmp/w/release --work $tmp/w/archive-smoke --project telflo-rehearse-archive --http-port [0-9]+ --agent-port [0-9]+ --mailpit-port [0-9]+\$' \
@@ -108,7 +115,7 @@ check "every offered collector version built, loaded, tested, pushed and pulled 
 check "every registry the plan names is the loopback one given (no ghcr.io, no other)" \
   "! printf '%s\n' \"\$plan\" | grep -E '^[0-9]+ ' | grep -qE 'ghcr\\.io|--registry (\\\\?[^1\\\\]|1[^2])' && [ \$(printf '%s\n' \"\$plan\" | grep -c -- '--registry 127.0.0.1:5999') -ge 8 ]"
 check "every push, pull-back and registry read carries --registry 127.0.0.1:5999" \
-  "! printf '%s\n' \"\$plan\" | grep -E -- '--push-oci|--push-package|pull-back\\.sh|verify-tag\\.sh|verify-collector-artifacts\\.sh|collector-archive|chart-if-new' | grep -qv -- '--registry 127.0.0.1:5999'"
+  "! printf '%s\n' \"\$plan\" | grep -E -- '--push-oci|--push-package|pull-back\\.sh|verify-tag\\.sh|verify-collector-artifacts\\.sh|collector-archive|chart-if-new|promote\\.sh|steps\\.sh digests' | grep -qv -- '--registry 127.0.0.1:5999'"
 check "the tag is verified in the throwaway clone, with --expect HEAD" \
   "printf '%s\n' \"\$plan\" | grep -qE '^[0-9]+ version-tag: env TELFLO_TOOLS_DIR=[^ ]*/\.tools [^ ]*bash $tmp/w/clone/scripts/release/verify-tag.sh v$version --registry 127.0.0.1:5999 --expect $(git -C "$root" rev-parse HEAD)\$'"
 check "without --no-attest, no step builds or checks without attestations" "! has '--no-attest'"
@@ -121,7 +128,7 @@ check "the dry run names the checks of a real run (power, disk, ports, kube)" \
   "has 'the power source (pmset' && has 'GB for Docker' && has 'kubeconfig' && has 'ports'"
 run --version "$version" --work "$tmp/w" --dry-run --no-attest
 check "--no-attest: on every build and pull-back, and said" \
-  "[ $rc -eq 0 ] && has 'no attestations' && [ \$(printf '%s\n' \"\$out\" | grep -E '^[0-9]+ (collector-build-|build-(api|web|otelcol|ottl)|collector-pull-back|publish-pull-back)' | grep -vc -- '--no-attest') -eq 0 ]"
+  "[ $rc -eq 0 ] && has 'no attestations' && [ \$(printf '%s\n' \"\$out\" | grep -E '^[0-9]+ (collector-build-|build-(api|web|otelcol|ottl)|collector-pull-back|publish-pull-back|finalize-pull-back)' | grep -vc -- '--no-attest') -eq 0 ]"
 run --version "$version" --work "$tmp/w" --dry-run
 check "without --registry: the registry it starts, on 127.0.0.1" "[ $rc -eq 0 ] && has '--registry 127.0.0.1:\\<port\\>'"
 run --version "$version" --work "$tmp/w" --dry-run --port-base 41000
@@ -145,7 +152,7 @@ done
 for f in scripts/build-collector-image.sh scripts/release/load-images.sh scripts/release/steps.sh scripts/release/pull-back.sh \
   scripts/release/verify-tag.sh scripts/release/verify-collector-artifacts.sh scripts/gates/static.sh scripts/publish-platform-images.sh \
   scripts/publish-chart.sh scripts/release/build-compose-archive.sh \
-  scripts/release/release-notes.sh scripts/release/tools.sh; do
+  scripts/release/release-notes.sh scripts/release/promote.sh scripts/release/tools.sh; do
   mkdir -p "$copy/$(dirname "$f")"
   cat >"$copy/$f" <<'SH'
 #!/bin/bash
@@ -342,7 +349,7 @@ hrun() { # [VAR=value ...] -- <rehearse.sh args...>
 steps_ran() { [ -f "$sd/steps.log" ] && grep -c '' "$sd/steps.log" || echo 0; }
 removals() { grep -E '^(rm|rmi|volume rm|network rm)( |$)' "$sd/docker.log" 2>/dev/null; }
 listed() { grep -qxF -- "$2" "$sd/$1"; }
-plan_n=$(( 1 + 2 * 5 + 1 + 3 + 1 + 1 + 5 + 3 + 2 + 3 + 5 ))  # the collector builder; the copy offers 0.162.0 and 0.161.0
+plan_n=$(( 1 + 2 * 5 + 1 + 3 + 1 + 1 + 5 + 3 + 2 + 3 + 6 + 3 ))  # the collector builder; the copy offers 0.162.0 and 0.161.0
 
 # A full run, on AC power.
 reset
@@ -352,8 +359,8 @@ check "it wraps itself in caffeinate -is" "[ \"\$(head -n 1 '$sd/caffeinate.log'
 check "it asked pmset for the power source" "grep -qx -- '-g batt' '$sd/pmset.log'"
 check "the prep first: tools.sh fetch, then pull registry, then the other five pins, before any step" \
   "[ \"\$(grep -v '^tools.sh ref ' '$sd/steps.log' | head -n 7 | cut -d' ' -f1-3)\" = \"\$(printf 'tools.sh fetch\ntools.sh pull registry\ntools.sh pull buildkit\ntools.sh pull syft-scanner\ntools.sh pull kind-node\ntools.sh pull postgres\ntools.sh pull mailpit')\" ]"
-check "every step ran, in the plan's order (collector path first, release notes last)" \
-  "grep -q '^build-collector-image.sh 0.162.0 --build-oci' '$sd/steps.log' && [ \"\$(tail -n 1 '$sd/steps.log' | cut -d' ' -f1)\" = release-notes.sh ] && grep -q '^steps.sh archive-smoke --version $version --release $tmp/w1/release --work $tmp/w1/archive-smoke --project telflo-rehearse-archive ' '$sd/steps.log' \
+check "every step ran, in the plan's order (collector path first, the stage, its notes, then finalize: the promote, the public pull-back, the collector check last)" \
+  "grep -q '^build-collector-image.sh 0.162.0 --build-oci' '$sd/steps.log' && [ \"\$(tail -n 4 '$sd/steps.log' | cut -d' ' -f1 | tr '\n' ' ')\" = 'release-notes.sh promote.sh pull-back.sh verify-collector-artifacts.sh ' ] && grep -q '^steps.sh archive-smoke --version $version --release $tmp/w1/release --work $tmp/w1/archive-smoke --project telflo-rehearse-archive ' '$sd/steps.log' \
    && grep -q '^steps.sh kind-smoke --version $version --release $tmp/w1/release --work $tmp/w1/kind-smoke --profile telflo-rehearse-kind ' '$sd/steps.log'"
 check "the summary: each step with its exit and seconds, the total, REDACTED 0, the kube check" \
   "has 'prep-tools' && has 'publish-notes' && has 'total 0 h 0 min' && has '$plan_n of $plan_n steps passed' \

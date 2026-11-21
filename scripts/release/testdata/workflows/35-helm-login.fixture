@@ -2,13 +2,13 @@
 file: release.yml
 rule: helm-login
 <<<
-      - name: The chart (the packaged file)
+      - name: The chart, to the stage (the packaged file)
         env:
           DOCKER_CONFIG: ${{ runner.temp }}/docker
           HELM_REGISTRY_CONFIG: ${{ runner.temp }}/helm/registry/config.json
 
 ===
-      - name: The chart (the packaged file)
+      - name: The chart, to the stage (the packaged file)
         env:
           DOCKER_CONFIG: ${{ runner.temp }}/docker
 

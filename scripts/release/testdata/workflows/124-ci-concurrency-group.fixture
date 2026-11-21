@@ -1,0 +1,8 @@
+# Breaks one rule: one group for every push to main (a queued run is replaced).
+file: ci.yml
+rule: ci-concurrency
+<<<
+  group: ci-${{ github.event.pull_request.number || github.sha }}
+===
+  group: ci-${{ github.ref }}
+>>>

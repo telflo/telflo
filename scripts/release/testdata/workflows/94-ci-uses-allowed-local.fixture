@@ -1,0 +1,11 @@
+# Breaks one rule: a local action (the pull request's own code as an action).
+file: ci.yml
+rule: ci-uses-allowed
+<<<
+      - name: go mod tidy
+
+===
+      - uses: ./.github/actions/setup
+      - name: go mod tidy
+
+>>>

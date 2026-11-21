@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # rehearse.sh: the release, rehearsed on this machine before any tag (an
 # end-to-end test anyone can re-run from a clean checkout with one command;
-# docs/releasing.md "Rehearse a release on your machine"): the scripts the two
-# workflows call, in their order, on the local Docker engine with the private
-# tools, a throwaway registry:2 on 127.0.0.1 standing in for GHCR. Nothing
+# docs/releasing.md "Rehearse a release on your machine"): the scripts the
+# three release workflows call (collector.yml, release.yml, finalize.yml), in
+# their order, on the local Docker engine with the private tools, a throwaway
+# registry:2 on 127.0.0.1 standing in for GHCR. Nothing
 # reaches GitHub or GHCR: no push but to that registry, no login, no GitHub
 # Release.
 #
@@ -43,9 +44,15 @@
 #               stack-smoke (oss), archive-smoke and kind-smoke, as
 #               release.yml calls them (each smoke's output through
 #               redact.sh)
-#     publish   --push-oci, --push-package, pull-back.sh,
-#               verify-collector-artifacts.sh, all against the registry, and
-#               release-notes.sh into <work>/release-notes.md (no Release)
+#     publish   the stage: --push-oci and --push-package with --namespace
+#               telflo-staging, pull-back.sh of the stage,
+#               verify-collector-artifacts.sh, all against the registry,
+#               steps.sh digests into <work>/digests.txt (the stage's record)
+#               and release-notes.sh into <work>/release-notes.md (no Release)
+#   finalize.yml:
+#     finalize  promote.sh from that digests.txt (the stage copied to the
+#               registry's telflo/telflo by digest), pull-back.sh --digests of
+#               the public tags, verify-collector-artifacts.sh (no Release)
 #
 # Refused before anything runs (exit 2): usage; a GitHub Actions job (the
 # workflow is the real run); TELFLO_REHEARSE_KUBECONFIG named with CI set (a
@@ -126,8 +133,8 @@
 # .../collector:<v>, absent before the run: rehearse.state records each
 # one's image id right after the step that loads it, and it is removed only
 # while its id is still that one), and everything in <work> except the logs
-# (rehearse.log, logs/, summary.txt, release-notes.md, rehearse.state,
-# static/logs and static/summary.txt). --keep leaves the registry, <work>,
+# (rehearse.log, logs/, summary.txt, release-notes.md, digests.txt,
+# rehearse.state, static/logs and static/summary.txt). --keep leaves the registry, <work>,
 # the images and the builder for inspection (its marker is removed), says
 # what it kept, and names the command that removes them:
 #   rehearse.sh --cleanup --work <dir>  removes what <dir>'s run made (its
@@ -456,11 +463,15 @@ add archive-smoke "$B" scripts/release/steps.sh archive-smoke --version "$versio
   --project "$PREFIX-archive" --http-port $((port_base + 100)) --agent-port $((port_base + 101)) --mailpit-port $((port_base + 102))
 add kind-smoke "$B" scripts/release/steps.sh kind-smoke --version "$version" --release "$W/release" --work "$W/kind-smoke" \
   --profile "$PREFIX-kind" --port $((port_base + 110)) --mailpit-port $((port_base + 111)) --api-port $((port_base + 112))
-add publish-images "$B" scripts/publish-platform-images.sh --push-oci "$W/oci" --registry "$reg"
-add publish-chart "$B" scripts/publish-chart.sh --chart telflo --push-package "$W/release/telflo-$version.tgz" --registry "$reg"
-add publish-pull-back "$B" scripts/release/pull-back.sh --oci "$W/oci" --version "$version" --chart "$W/release/telflo-$version.tgz" --registry "$reg" ${attest[@]+"${attest[@]}"}
+add publish-images "$B" scripts/publish-platform-images.sh --push-oci "$W/oci" --registry "$reg" --namespace telflo-staging
+add publish-chart "$B" scripts/publish-chart.sh --chart telflo --push-package "$W/release/telflo-$version.tgz" --registry "$reg" --namespace telflo-staging
+add publish-pull-back "$B" scripts/release/pull-back.sh --oci "$W/oci" --version "$version" --chart "$W/release/telflo-$version.tgz" --registry "$reg" --namespace telflo-staging ${attest[@]+"${attest[@]}"}
 add publish-collectors "$B" scripts/release/verify-collector-artifacts.sh --registry "$reg"
+add publish-digests "$B" scripts/release/steps.sh digests --oci "$W/oci" --version "$version" --chart "$W/release/telflo-$version.tgz" --out "$W/digests.txt" --registry "$reg"
 add publish-notes "$B" scripts/release/release-notes.sh --oci "$W/oci" --chart "$W/release/telflo-$version.tgz" --version "$version"
+add finalize-promote "$B" scripts/release/promote.sh --version "$version" --digests "$W/digests.txt" --registry "$reg"
+add finalize-pull-back "$B" scripts/release/pull-back.sh --digests "$W/digests.txt" --version "$version" --registry "$reg" --namespace telflo ${attest[@]+"${attest[@]}"}
+add finalize-collectors "$B" scripts/release/verify-collector-artifacts.sh --registry "$reg"
 
 say_lines() { # <prefix letter or ""> <lines...>
   local letter="$1" line n=0 name
@@ -690,7 +701,7 @@ finish() {
     for entry in * .[!.]*; do
       [ -e "$entry" ] || continue
       case "$entry" in
-        rehearse.log | logs | summary.txt | release-notes.md | rehearse.state) ;;
+        rehearse.log | logs | summary.txt | release-notes.md | digests.txt | rehearse.state) ;;
         static)
           for inner in static/* static/.[!.]*; do
             [ -e "$inner" ] || continue
@@ -736,7 +747,7 @@ finish() {
   $kube_ok || rc=1
   [ "$redacted" -eq 0 ] || { log "$PROGRAM: FAIL: secret-shaped text reached the output ($redacted lines)"; rc=1; }
   if [ "$rc" -eq 0 ]; then
-    log "$PROGRAM: PASS: every step of the release rehearsed against $registry; notes in $W/release-notes.md"
+    log "$PROGRAM: PASS: every step of the release rehearsed against $registry, its stage and its finalize; notes in $W/release-notes.md"
   else
     log "$PROGRAM: FAIL (exit $rc): the summary is $W/summary.txt, each step's log is in $W/logs/"
   fi
