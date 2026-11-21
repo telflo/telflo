@@ -11,7 +11,7 @@ import {
   addMembership,
   catalogueDefaults,
   createUserWithOrganization,
-  loadFlowsMigration,
+  loadSeededFlows,
   truncateAll,
   withFailingInsert,
 } from "@telflo/db/testing";
@@ -998,9 +998,9 @@ describe("configuration routes", () => {
     const VERSION_UNKNOWN = ["collector_version_unknown", "That collector version isn't available."] as const;
     const DISTRIBUTION_UNKNOWN = ["collector_distribution_unknown", "That collector distribution isn't available."] as const;
 
-    /** A seeded flow as migration 1700000000026 holds it. */
+    /** A seeded flow as its migration holds it. */
     const seededFlow = async (slug: string) => {
-      const { seededFlows } = await loadFlowsMigration();
+      const seededFlows = await loadSeededFlows();
       const flow = seededFlows.find((candidate) => candidate.slug === slug);
       if (!flow) throw new Error(`no seeded flow ${slug}`);
       return flow;
@@ -1127,6 +1127,31 @@ describe("configuration routes", () => {
       }
       // The audit row as before: the name alone, never the text, the graph or the slug.
       expect((await configurationAudits()).map((audit) => audit.metadata)).toEqual([{ name: flow.name }]);
+    });
+
+    it("creates from every seeded flow at its pin, the later migrations' included: each answers 201 and its version 1 holds the flow's YAML byte for byte at that pin", async () => {
+      const seededFlows = await loadSeededFlows();
+      expect(seededFlows).toHaveLength(16);
+      const { organization, access } = await personalUser();
+
+      for (const flow of seededFlows) {
+        const response = await create(access, organization.id, {
+          name: flow.name,
+          description: flow.summary,
+          yamlContent: flow.yaml_content,
+          ...GRAPH,
+          collectorDistribution: flow.collector_distribution,
+          collectorVersion: flow.collector_version,
+          sourceFlowSlug: flow.slug,
+        });
+        expect({ slug: flow.slug, status: response.statusCode }).toEqual({ slug: flow.slug, status: 201 });
+        const row = await versionOf(response.json<{ configuration: ConfigurationBody }>().configuration.id);
+        expect({ slug: flow.slug, yaml: row.yaml_content, version: row.collector_version }).toEqual({
+          slug: flow.slug,
+          yaml: flow.yaml_content,
+          version: flow.collector_version,
+        });
+      }
     });
 
     it.each([

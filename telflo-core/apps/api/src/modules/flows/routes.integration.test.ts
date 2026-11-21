@@ -9,7 +9,7 @@ import {
   addMembership,
   createUserWithOrganization,
   insertSeededFlows,
-  loadFlowsMigration,
+  loadSeededFlows,
   openTestDatabases,
   truncateAll,
   type TestDatabases,
@@ -337,7 +337,7 @@ describe("the flows endpoints", () => {
     it("lists the seeded flows once insertSeededFlows puts them back, a hidden one left out, and nothing when there are none", async () => {
       expect((await call("GET", "/api/v1/flow-showcase")).json()).toEqual({ flows: [] });
       await insertSeededFlows(databases.ownerDb);
-      const { seededFlows } = await loadFlowsMigration();
+      const seededFlows = await loadSeededFlows();
       await databases.ownerDb
         .updateTable("flows")
         .set({ published: false })
@@ -456,7 +456,7 @@ describe("the flows endpoints", () => {
 
     it("lists the seeded flows once insertSeededFlows puts them back, a hidden one left out, each with its YAML", async () => {
       await insertSeededFlows(databases.ownerDb);
-      const { seededFlows } = await loadFlowsMigration();
+      const seededFlows = await loadSeededFlows();
       await databases.ownerDb.updateTable("flows").set({ published: false }).where("slug", "=", "otel-to-clickstack").execute();
       const response = await call("GET", "/api/v1/published-flows");
       const slugs = response.json().flows.map((flow: { slug: string }) => flow.slug);

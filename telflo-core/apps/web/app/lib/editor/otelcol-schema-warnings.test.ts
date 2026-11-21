@@ -10,7 +10,7 @@ import { checkedVersion, seededFlows, type CatalogueOffer } from "~/test/seeded-
 /*
  * Every palette default, spelled for each offered pin, every corpus text and
  * every seeded flow on the version a copy of it gets (the flows' fixture,
- * which the db suite checks against the migration's seededFlows; its pin while
+ * which the db suite checks against the migrations' seededFlows; its pin while
  * offered, else the distribution's default), run through monaco-yaml's own
  * worker with that version's committed schema: what the YAML tab marks. A text
  * the collector accepts must get no schema warning; the texts that aren't
@@ -214,7 +214,7 @@ describe("the expected-warnings table", () => {
   });
 
   it("covers every seeded flow once, on the version a copy of it gets, and lists none of them", () => {
-    expect(SEEDED_FLOWS).toHaveLength(13);
+    expect(SEEDED_FLOWS).toHaveLength(16);
     const catalogued = (CATALOGUE_VERSIONS[DISTRIBUTION] ?? []).map((entry) => entry.version);
     for (const flow of SEEDED_FLOWS) {
       // A pin is the catalog's, offered or deprecated (it never deletes one); the checked version is offered.

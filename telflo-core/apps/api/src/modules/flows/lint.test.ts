@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { FlowLintFinding, FlowLintResponse } from "@telflo/contracts";
 import { FlowLintResponseSchema } from "@telflo/contracts";
-import { loadFlowsMigration } from "@telflo/db/testing";
+import { loadSeededFlows } from "@telflo/db/testing";
 import { lintFlowConfig, pythonRegExp, pythonStrip } from "./lint.js";
 
 /*
@@ -820,7 +820,7 @@ describe("pythonRegExp and pythonStrip (Python's semantics, checked against Pyth
   });
 });
 
-/** A seeded flow's health check on 0.0.0.0:13133, the local-endpoint warning eight of them carry. */
+/** A seeded flow's health check on 0.0.0.0:13133, the local-endpoint warning ten of them carry. */
 const HEALTH_CHECK_ANY: FlowLintFinding = {
   severity: "warn",
   code: "local-endpoint",
@@ -837,8 +837,11 @@ const privileged = (component: string, access: string): FlowLintFinding => ({
 });
 
 /**
- * Each seeded flow's answer (five blocked). Advisory: a blocked seeded flow
- * is published all the same.
+ * Each seeded flow's answer (six blocked). Advisory: a blocked seeded flow
+ * is published all the same. ship-otel-data-to-greptimedb is blocked for
+ * its exporters' `${env:GREPTIMEDB_ENDPOINT}/v1/otlp`: the rule takes only
+ * a whole `${env:…}` for a destination, and the path appended to it makes
+ * the value a literal one.
  */
 const SEEDED_ANSWERS: Record<string, FlowLintResponse> = {
   "log-volume-cost-control": {
@@ -961,11 +964,51 @@ const SEEDED_ANSWERS: Record<string, FlowLintResponse> = {
     findings: [HEALTH_CHECK_ANY],
     destinations: [HEALTH_CHECK_ANY_DESTINATION],
   },
+  "monitor-supabase": {
+    blocked: false,
+    findings: [HEALTH_CHECK_ANY],
+    destinations: [HEALTH_CHECK_ANY_DESTINATION],
+  },
+  "ship-otel-data-to-greptimedb": {
+    blocked: true,
+    findings: [
+      {
+        severity: "block",
+        code: "literal-endpoint",
+        message: `'endpoint' is the hardcoded destination '\${env:GREPTIMEDB_ENDPOINT}/v1/otlp'. ${ENV_ONLY_DESTINATION}`,
+        path: "exporters.otlphttp/greptimedb_logs.endpoint",
+      },
+      {
+        severity: "block",
+        code: "literal-endpoint",
+        message: `'endpoint' is the hardcoded destination '\${env:GREPTIMEDB_ENDPOINT}/v1/otlp'. ${ENV_ONLY_DESTINATION}`,
+        path: "exporters.otlphttp/greptimedb_traces.endpoint",
+      },
+      {
+        severity: "block",
+        code: "literal-endpoint",
+        message: `'endpoint' is the hardcoded destination '\${env:GREPTIMEDB_ENDPOINT}/v1/otlp'. ${ENV_ONLY_DESTINATION}`,
+        path: "exporters.otlphttp/greptimedb_metrics.endpoint",
+      },
+      HEALTH_CHECK_ANY,
+    ],
+    destinations: [
+      "exporters.otlphttp/greptimedb_logs.endpoint → ${env:GREPTIMEDB_ENDPOINT}/v1/otlp",
+      "exporters.otlphttp/greptimedb_traces.endpoint → ${env:GREPTIMEDB_ENDPOINT}/v1/otlp",
+      "exporters.otlphttp/greptimedb_metrics.endpoint → ${env:GREPTIMEDB_ENDPOINT}/v1/otlp",
+      HEALTH_CHECK_ANY_DESTINATION,
+    ],
+  },
+  "otel-to-serenedb": {
+    blocked: false,
+    findings: [],
+    destinations: [],
+  },
 };
 
-describe("lintFlowConfig: the 13 seeded flows", () => {
-  it("answers each exactly; five are blocked", async () => {
-    const { seededFlows } = await loadFlowsMigration();
+describe("lintFlowConfig: the 16 seeded flows", () => {
+  it("answers each exactly; six are blocked", async () => {
+    const seededFlows = await loadSeededFlows();
     expect(seededFlows.map((flow) => flow.slug).sort()).toEqual(Object.keys(SEEDED_ANSWERS).sort());
     for (const flow of seededFlows) {
       expect({ slug: flow.slug, ...lint(flow.yaml_content) }).toEqual({
@@ -984,6 +1027,7 @@ describe("lintFlowConfig: the 13 seeded flows", () => {
       "log-volume-cost-control",
       "otel-to-clickstack",
       "pii-redaction-gateway",
+      "ship-otel-data-to-greptimedb",
     ]);
   });
 });
