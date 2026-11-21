@@ -109,7 +109,6 @@ telflo_registry_loopback() {
 }
 
 # The two namespaces, and nothing else: the public one and a release's stage.
-TELFLO_NAMESPACES="telflo telflo-staging"
 telflo_namespace_path() {
   case "$1" in
     telflo) echo telflo/telflo ;;

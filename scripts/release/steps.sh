@@ -726,7 +726,7 @@ if len(layers) == 1 and re.fullmatch(r"sha256:[0-9a-f]{64}", str(layers[0].get("
 PY
 }
 # The five images of a stage's record (its names but the chart's two).
-record_images() { printf '%s\n' $TELFLO_DIGESTS_NAMES | grep -v '^charts/'; }
+record_images() { tr ' ' '\n' <<<"$TELFLO_DIGESTS_NAMES" | grep -v '^charts/'; }
 digests() {
   local oci="" version="" chart="" file="" registry=ghcr.io
   while [ $# -gt 0 ]; do
@@ -968,7 +968,7 @@ abandon_stage() {
   telflo_version_ok "$version" || refuse "abandon-stage needs --version <x.y.z>"
   command -v gh >/dev/null 2>&1 || fail "gh is not on PATH (the owner's GitHub CLI, its token with read:packages and delete:packages)"
   local tag="v$version" names name status rows kind id digest extra problems=0 state deletes="" encoded
-  names="$(printf '%s\n' $TELFLO_DIGESTS_NAMES | grep -vxF charts/telflo.tgz)"
+  names="$(tr ' ' '\n' <<<"$TELFLO_DIGESTS_NAMES" | grep -vxF charts/telflo.tgz)"
   # 1. Nothing of the version public: no public package version tagged <v>, no published Release.
   for name in $names; do
     status=0
@@ -1018,7 +1018,7 @@ abandon_stage() {
   while read -r name id digest kind; do
     [ -n "$name" ] || continue
     if [ "$kind" = version ]; then extra="tagged $version"; else extra="the referrers' fallback tag beside it"; fi
-    echo "$PROGRAM: to delete: ghcr.io/telflo/telflo-staging/$name version $id ($digest, $extra)" >&2
+    echo "$PROGRAM: to delete: ghcr.io/$(telflo_namespace_path telflo-staging)/$name version $id ($digest, $extra)" >&2
   done <<<"$deletes"
   [ "${state%% *}" != draft ] || echo "$PROGRAM: to delete: the draft Release $tag (its tag stays: deleting it is yours, docs/releasing.md)" >&2
   if $dry_run; then
@@ -1031,7 +1031,7 @@ abandon_stage() {
     encoded="${encoded//\//%2F}"
     owner_api -X DELETE "orgs/telflo/packages/container/$encoded/versions/$id" >/dev/null 2>"$tmp/owner-api.err" \
       || fail "deleting telflo-staging/$name version $id failed (gh's token needs delete:packages)"
-    note "deleted ghcr.io/telflo/telflo-staging/$name version $id ($digest)"
+    note "deleted ghcr.io/$(telflo_namespace_path telflo-staging)/$name version $id ($digest)"
   done <<<"$deletes"
   if [ "${state%% *}" = draft ]; then
     env -u GH_HOST -u GH_REPO gh release delete "$tag" --repo telflo/telflo --yes >/dev/null 2>"$tmp/release.err" </dev/null \

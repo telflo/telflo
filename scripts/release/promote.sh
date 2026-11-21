@@ -100,7 +100,7 @@ PY
 
 # The artifacts: a name of the file's (an image, or charts/telflo), each with
 # its line's digest.
-names="$(printf '%s\n' $TELFLO_DIGESTS_NAMES | grep -vxF charts/telflo.tgz)"
+names="$(tr ' ' '\n' <<<"$TELFLO_DIGESTS_NAMES" | grep -vxF charts/telflo.tgz)"
 package="$(telflo_digests_get "$digests" charts/telflo.tgz)"
 
 # 1. The stage: the version's tag and the line's digest, for every artifact.
