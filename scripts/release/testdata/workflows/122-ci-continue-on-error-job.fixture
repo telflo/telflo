@@ -1,0 +1,13 @@
+# Breaks one rule: a job that may fail without failing the run.
+file: ci.yml
+rule: ci-continue-on-error
+<<<
+  unit-coverage:
+    needs: unit
+
+===
+  unit-coverage:
+    needs: unit
+    continue-on-error: true
+
+>>>

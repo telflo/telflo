@@ -1,0 +1,15 @@
+# Breaks one rule: a job that may mint an OIDC token.
+file: ci.yml
+rule: ci-job-permissions
+<<<
+    timeout-minutes: 60
+    permissions:
+      contents: read
+
+===
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      id-token: write
+
+>>>

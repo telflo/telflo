@@ -1,0 +1,9 @@
+# Breaks one rule: a step's output (a later step's input).
+file: ci.yml
+rule: ci-github-env
+<<<
+      - run: go vet ./...
+===
+      - run: echo "skip=true" >> "$GITHUB_OUTPUT"
+      - run: go vet ./...
+>>>

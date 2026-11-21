@@ -1,0 +1,11 @@
+# Breaks one rule: a job that calls a reusable workflow.
+file: ci.yml
+rule: ci-uses-allowed
+<<<
+    timeout-minutes: 10
+
+===
+    timeout-minutes: 10
+    uses: telflo/telflo/.github/workflows/lint.yml@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+>>>

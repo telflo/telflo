@@ -1,0 +1,8 @@
+# Breaks one rule: main's runs canceling each other.
+file: ci.yml
+rule: ci-concurrency
+<<<
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+===
+  cancel-in-progress: true
+>>>

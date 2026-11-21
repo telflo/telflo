@@ -1,0 +1,13 @@
+# Breaks one rule: a workflow_dispatch trigger.
+file: ci.yml
+rule: ci-trigger
+<<<
+  push:
+    branches: [main]
+
+===
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+>>>

@@ -26,7 +26,7 @@ run() { out="$("$shell" "$check_sh" "$@" 2>&1)"; rc=$?; }
 has() { printf '%s\n' "$out" | grep -qF -- "$1"; }
 
 run
-check "the real release.yml and collector.yml pass (exit 0)" "[ $rc -eq 0 ] && has 'check-workflows: OK'"
+check "the real release.yml, collector.yml and ci.yml pass (exit 0)" "[ $rc -eq 0 ] && has 'check-workflows: OK'"
 run --bogus
 check "an unknown argument: usage (exit 2)" "[ $rc -eq 2 ]"
 mkdir -p "$tmp/no-yaml"
@@ -74,12 +74,12 @@ PY
   run --dir "$copy" --root "$root"
   check "$name: the check fails (exit 1) naming the rule $rule in $file" "[ $rc -eq 1 ] && has 'check-workflows: $file: $rule: '"
 done
-check "the fixtures are there (at least one per rule)" "[ $count -ge 76 ]"
+check "the fixtures are there (at least one per rule)" "[ $count -ge 139 ]"
 # Every rule check-workflows.mjs lists in its header has a fixture that breaks it.
 rules="$(sed -n 's#^//   \([a-z][a-z-]*\)  .*#\1#p' "$root/scripts/release/check-workflows.mjs" | sort -u)"
 covered="$(sed -n 's/^rule: //p' "$fixtures"/*.fixture | sort -u)"
 uncovered="$(printf '%s\n' "$rules" | grep -vxF -f <(printf '%s\n' "$covered") || true)"
-check "every rule in check-workflows.mjs's header has a fixture (uncovered: ${uncovered:-none})" "[ -z \"\$uncovered\" ] && [ \$(printf '%s\n' \"\$rules\" | grep -c '') -ge 40 ]"
+check "every rule in check-workflows.mjs's header has a fixture (uncovered: ${uncovered:-none})" "[ -z \"\$uncovered\" ] && [ \$(printf '%s\n' \"\$rules\" | grep -c '') -ge 65 ]"
 
 echo
 if [ "$failures" -eq 0 ]; then echo "ALL PASS"; else echo "$failures FAILURE(S)"; exit 1; fi

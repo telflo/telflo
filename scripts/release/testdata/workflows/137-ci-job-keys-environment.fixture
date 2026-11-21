@@ -1,0 +1,13 @@
+# Breaks one rule: a job in an environment (its secrets and protection rules).
+file: ci.yml
+rule: ci-job-keys
+<<<
+  unit-coverage:
+    needs: unit
+
+===
+  unit-coverage:
+    needs: unit
+    environment: release
+
+>>>

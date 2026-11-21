@@ -1,0 +1,8 @@
+# Breaks one rule: the opamp-server cloned at a tag other than PIN's.
+file: ci.yml
+rule: ci-opamp-clone
+<<<
+git clone --branch v0.3.0 https://github.com/telflo/opamp-server.git
+===
+git clone --branch v0.2.0 https://github.com/telflo/opamp-server.git
+>>>

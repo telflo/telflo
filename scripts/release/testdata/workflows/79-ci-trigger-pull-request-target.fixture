@@ -1,0 +1,12 @@
+# Breaks one rule: pull_request_target in place of pull_request (a fork's code with a write token).
+file: ci.yml
+rule: ci-trigger
+<<<
+  pull_request:
+  push:
+
+===
+  pull_request_target:
+  push:
+
+>>>

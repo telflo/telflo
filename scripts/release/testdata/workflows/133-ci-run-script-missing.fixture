@@ -1,0 +1,16 @@
+# Breaks one rule: a run: naming a script that isn't there.
+file: ci.yml
+rule: ci-run-script
+<<<
+      - name: License guard
+        run: ./scripts/check-licenses.sh
+      - name: License guard self-test
+        run: ./scripts/check-licenses.test.sh
+      # -json
+===
+      - name: License guard
+        run: ./scripts/check-license.sh
+      - name: License guard self-test
+        run: ./scripts/check-licenses.test.sh
+      # -json
+>>>

@@ -1,0 +1,11 @@
+# Breaks one rule: the ci job reading the repository (it checks nothing out).
+file: ci.yml
+rule: ci-job-permissions
+<<<
+    timeout-minutes: 5
+    permissions: {}
+===
+    timeout-minutes: 5
+    permissions:
+      contents: read
+>>>

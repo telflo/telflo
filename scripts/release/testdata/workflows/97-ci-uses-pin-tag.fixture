@@ -1,0 +1,8 @@
+# Breaks one rule: an action by its tag, not its commit.
+file: ci.yml
+rule: ci-uses-pin
+<<<
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+===
+      - uses: actions/setup-go@v7 # v7.0.0
+>>>

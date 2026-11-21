@@ -1,0 +1,15 @@
+# Breaks one rule: a job that may write to pull requests.
+file: ci.yml
+rule: ci-job-permissions
+<<<
+    timeout-minutes: 10
+    permissions:
+      contents: read
+
+===
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write
+
+>>>

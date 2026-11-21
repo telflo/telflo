@@ -1,0 +1,8 @@
+# Breaks one rule: a pull request's title expanded into a run: (script injection).
+file: ci.yml
+rule: ci-expression-in-run
+<<<
+        run: ./scripts/smoke-test-stack.sh
+===
+        run: echo "${{ github.event.pull_request.title }}" && ./scripts/smoke-test-stack.sh
+>>>

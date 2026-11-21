@@ -1,0 +1,11 @@
+# Breaks one rule: a gate that may fail without failing its job.
+file: ci.yml
+rule: ci-continue-on-error
+<<<
+      - name: Binary tests
+
+===
+      - name: Binary tests
+        continue-on-error: true
+
+>>>

@@ -1,0 +1,8 @@
+# Breaks one rule: a run: naming a script outside the repository.
+file: ci.yml
+rule: ci-run-script
+<<<
+      - run: bash scripts/release/check-secrets.sh
+===
+      - run: bash ../opamp-server/scripts/setup.sh
+>>>

@@ -1,0 +1,13 @@
+# Breaks one rule: a gate that runs only on main.
+file: ci.yml
+rule: ci-if
+<<<
+  e2e:
+    runs-on: ubuntu-24.04
+
+===
+  e2e:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-24.04
+
+>>>

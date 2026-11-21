@@ -1,16 +1,18 @@
 #!/usr/bin/env node
-// check-workflows.mjs: the release workflows' static check. It reads
-// .github/workflows/release.yml and collector.yml with the `yaml` package
-// telflo-core already holds, and their raw text, and holds every rule below;
-// each failure is printed as `check-workflows: <file>: <rule>: <why>`.
+// check-workflows.mjs: the workflows' static check. It reads
+// .github/workflows/release.yml, collector.yml and ci.yml with the `yaml`
+// package telflo-core already holds, and their raw text, and holds every rule
+// below; each failure is printed as `check-workflows: <file>: <rule>: <why>`.
 //
 //   node scripts/release/check-workflows.mjs [--dir <workflows folder>] [--root <repository>]
 //
-// The rules (their ids):
+// The rules every file holds (their ids):
 //   workflow-files       the folder holds exactly ci.yml, collector.yml and release.yml
 //   yaml                 each file parses with no error, duplicate key, anchor or alias; every
 //                        job and step is a block mapping (no flow-style `{ … }` step)
 //   workflow-keys        the top level holds only name, on, permissions, concurrency and jobs
+//
+// release.yml's and collector.yml's rules (they hold the token and publish):
 //   matrix               each job's strategy exactly its spec's: release.yml's
 //                        build `matrix: { image: [api, web, otelcol-validator, otelcol-testing,
 //                        ottl-evaluator] }`; collector.yml's build, test and publish `matrix:
@@ -78,9 +80,10 @@
 //   concurrency          one workflow-level group (release / collector), cancel-in-progress
 //                        false; no job-level concurrency
 //   uses-allowed         only the actions of the allow-list below (Actions' "Allow select
-//                        actions" lists exactly these), no local or docker:// action, no
-//                        reusable workflow: every parsed step's uses: (structurally), and
-//                        every raw `uses:` line of the text
+//                        actions" lists exactly these) but ci.yml's own (setup-go,
+//                        setup-python), no local or docker:// action, no reusable workflow:
+//                        every parsed step's uses: (structurally), and every raw `uses:`
+//                        line of the text
 //   uses-pin             each `uses:` pinned by the allow-list's full 40-hex commit SHA
 //   uses-version-comment each `uses:` value carries the comment `# <its version>` (on the
 //                        parsed node, and on the raw line)
@@ -131,12 +134,62 @@
 //   free-disk            each image-handling job's second step (after checkout) is
 //                        steps.sh free-disk with at least its need (build 14, smokes 13,
 //                        kind 18, publish 13; collector build 14, test 8, publish 8)
+//
+// ci.yml's rules: lighter, since it holds no credential and publishes nothing, but closing
+// the ways a CI workflow is attacked (a pull request's code reaching a token or a write) or
+// quietly weakened (a gate skipped, unpinned or no longer required):
+//   ci-trigger           on: exactly `pull_request` (no filter) and `push: branches: [main]`;
+//                        pull_request_target, workflow_run, schedule and workflow_dispatch
+//                        nowhere in the text
+//   ci-permissions-top   the top-level permissions is {}
+//   ci-job-permissions   each job's permissions exactly { contents: read }, the ci job's {}
+//   ci-secrets           no secrets. or secrets[ anywhere (not even GITHUB_TOKEN), no
+//                        GITHUB_TOKEN and no github.token
+//   ci-login             no docker/login-action, no run: that logs in or sets a credential
+//                        (login, credential), no service's credentials:
+//   ci-uses-allowed      only the allow-list's actions, no local or docker:// action, no
+//                        reusable workflow (parsed, and every raw `uses:` line)
+//   ci-uses-pin          each `uses:` pinned by the allow-list's full 40-hex commit SHA
+//   ci-uses-version-comment  each `uses:` carries `# <its version>` (parsed node and raw line)
+//   ci-persist-credentials  every checkout has persist-credentials: false
+//   ci-checkout-keys     no checkout takes repository, ref, token, path, submodules, ssh-key
+//                        (nor the other ssh- keys or github-server-url): the pull request's
+//                        own commit, from this repository, with no credential
+//   ci-runs-on           every job on ubuntu-24.04
+//   ci-timeout           every job has timeout-minutes, 1-360
+//   ci-jobs              exactly secrets, static, unit, unit-coverage, e2e, ottl-evaluator,
+//                        otelcol-validator, otelcol-testing, stack and ci
+//   ci-job-keys          a job holds only needs, if, runs-on, timeout-minutes, permissions,
+//                        strategy, services, env, defaults (run.working-directory only) and
+//                        steps: never container, environment, outputs, uses …
+//   ci-step-keys         a step holds only name, uses, with, env, run, working-directory and if
+//   ci-needs             the ci job needs every other job (the one required check)
+//   ci-if                the ci job's if: is exactly always() (a failed or skipped job fails
+//                        it, never skips it); no other job has an if:, and no status function
+//                        appears at job level but there
+//   ci-step-if           a step's if: is only failure() or always(), and only on an
+//                        upload-artifact step or a `docker compose logs`/`down` run (a report
+//                        or the teardown, never a gate); no status function elsewhere in a step
+//   ci-expression-in-run  no `${{` inside a run: (values come through env:)
+//   ci-github-env        GITHUB_ENV, GITHUB_PATH and GITHUB_OUTPUT nowhere
+//   ci-continue-on-error  continue-on-error nowhere
+//   ci-concurrency       the group `ci-${{ github.event.pull_request.number || github.sha }}`,
+//                        cancel-in-progress `${{ github.event_name == 'pull_request' }}` (a
+//                        pull request's runs cancel, main's never); no job-level concurrency
+//   ci-services          each service holds only image, env, ports and options; its image is
+//                        pinned by digest, the digest that of scripts/release/tools.lock's
+//                        image row for that repository (its tag, if any, that row's or a
+//                        prefix of it)
+//   ci-opamp-clone       the static job clones the opamp-server at vendor/opamp-server/PIN's
+//                        tag, from the root; no run: clones anything else
+//   ci-run-script        each `bash <script>` or `./<script>` a run: starts names a file of the
+//                        repository, from the step's working directory
 // Exit 0 every rule holds; 1 a rule fails; 2 usage or no `yaml` package.
 
 import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join, posix, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -163,7 +216,8 @@ try {
   process.exit(2);
 }
 
-// The allow-list: each action, its commit and its version.
+// The allow-list: each action, its commit and its version (Actions' "Allow select actions"
+// lists exactly these nine).
 const ACTIONS = {
   "actions/checkout": ["3d3c42e5aac5ba805825da76410c181273ba90b1", "v7.0.1"],
   "actions/setup-node": ["949feb2413d6458794dcd2491c4babbbce0c15c1", "v7.1.0"],
@@ -172,7 +226,12 @@ const ACTIONS = {
   "docker/setup-qemu-action": ["99012661954931238ded8c8b007157a8430204e1", "v4.4.0"],
   "actions/upload-artifact": ["cf430e030ddbb5b0abf93d22962f4752f3646cd9", "v7.0.2"],
   "actions/download-artifact": ["9000827ccba6bdab643e8b6fd33ac0654aef8333", "v8.0.2"],
+  "actions/setup-go": ["b7ad1dad31e06c5925ef5d2fc7ad053ef454303e", "v7.0.0"],
+  "actions/setup-python": ["6d4fd22b20465ccc0f7354476588e8df7c9ca0e0", "v7.1.0"],
 };
+// The actions only ci.yml uses: release.yml and collector.yml refuse them (uses-allowed).
+const CI_ONLY_ACTIONS = ["actions/setup-go", "actions/setup-python"];
+const releaseAction = (name) => name in ACTIONS && !CI_ONLY_ACTIONS.includes(name);
 const HELM_VERSION = "v4.2.1";
 const BINFMT =
   "tonistiigi/binfmt:qemu-v10.2.3-68@sha256:400a4873b838d1b89194d982c45e5fb3cda4593fbfd7e08a02e76b03b21166f0";
@@ -569,17 +628,19 @@ function checkRun(file, job, index, step) {
   return null;
 }
 
-for (const [file, spec] of Object.entries(SPECS)) {
+// load: one workflow's text, document and value, or null (each failure a yaml or
+// workflow-files problem); the top level's keys are checked here (workflow-keys).
+function load(file) {
   const path = join(dir, file);
   if (!existsSync(path)) {
     problem(file, "workflow-files", "missing");
-    continue;
+    return null;
   }
   const text = readFileSync(path, "utf8");
   const doc = YAML.parseDocument(text, { uniqueKeys: true, merge: false, prettyErrors: false });
   if (doc.errors.length || doc.warnings.length) {
     problem(file, "yaml", [...doc.errors, ...doc.warnings].map((e) => e.message.split("\n")[0]).join("; "));
-    continue;
+    return null;
   }
   let anchored = false;
   YAML.visit(doc, {
@@ -594,8 +655,27 @@ for (const [file, spec] of Object.entries(SPECS)) {
   const wf = doc.toJS();
   if (!isMap(wf)) {
     problem(file, "yaml", "not a mapping");
-    continue;
+    return null;
   }
+  for (const k of Object.keys(wf)) {
+    if (!WORKFLOW_KEYS.includes(k)) problem(file, "workflow-keys", `${k}: the top level holds only ${WORKFLOW_KEYS.join(", ")}`);
+  }
+  const jobs = isMap(wf.jobs) ? wf.jobs : {};
+  for (const name of Object.keys(jobs)) {
+    const jobNode = doc.getIn(["jobs", name], true);
+    if (jobNode && jobNode.flow) problem(file, "yaml", `jobs.${name}: a block mapping (no flow style)`);
+    const stepNodes = doc.getIn(["jobs", name, "steps"], true);
+    (stepNodes && stepNodes.items ? stepNodes.items : []).forEach((stepNode, index) => {
+      if (stepNode && stepNode.flow) problem(file, "yaml", `jobs.${name}.steps[${index}]: a block mapping (no flow-style { … } step)`);
+    });
+  }
+  return { text, doc, wf };
+}
+
+for (const [file, spec] of Object.entries(SPECS)) {
+  const loaded = load(file);
+  if (!loaded) continue;
+  const { text, doc, wf } = loaded;
 
   // Text rules.
   if (text.includes("pull_request_target")) problem(file, "pull-request-target", "pull_request_target appears");
@@ -630,8 +710,8 @@ for (const [file, spec] of Object.entries(SPECS)) {
   for (const m of usesLines) {
     const [name, ref] = m[1].split("@");
     const comment = m[2].trim();
-    if (!(name in ACTIONS)) {
-      problem(file, "uses-allowed", `${m[1]} isn't on the allow-list`);
+    if (!releaseAction(name)) {
+      problem(file, "uses-allowed", `${m[1]} isn't on the allow-list${name in ACTIONS ? " (ci.yml's only)" : ""}`);
       continue;
     }
     const [sha, version] = ACTIONS[name];
@@ -667,9 +747,6 @@ for (const [file, spec] of Object.entries(SPECS)) {
     problem(file, "concurrency", `concurrency: { group: ${spec.group}, cancel-in-progress: false } (got ${JSON.stringify(wf.concurrency)})`);
   }
   if (wf.env !== undefined) problem(file, "telflo-crane", "no workflow-level env: (each job's own)");
-  for (const k of Object.keys(wf)) {
-    if (!WORKFLOW_KEYS.includes(k)) problem(file, "workflow-keys", `${k}: the top level holds only ${WORKFLOW_KEYS.join(", ")}`);
-  }
   checkEnv(file, "(workflow)", wf.env, "workflow");
 
   const jobs = isMap(wf.jobs) ? wf.jobs : {};
@@ -681,8 +758,6 @@ for (const [file, spec] of Object.entries(SPECS)) {
     const js = spec.jobs[name];
     if (!js || !isMap(job)) continue;
     if ("uses" in job) problem(file, "uses-allowed", `jobs.${name}: no reusable workflow`);
-    const jobNode = doc.getIn(["jobs", name], true);
-    if (jobNode && jobNode.flow) problem(file, "yaml", `jobs.${name}: a block mapping (no flow style)`);
     for (const k of Object.keys(job)) {
       if (!JOB_KEYS.includes(k)) problem(file, "job-keys", `jobs.${name}.${k}: a job holds only ${JOB_KEYS.join(", ")}`);
     }
@@ -786,7 +861,6 @@ for (const [file, spec] of Object.entries(SPECS)) {
       if (!isMap(step)) return;
       const where = `jobs.${name}.steps[${index}]`;
       const stepNode = stepNodes && stepNodes.items ? stepNodes.items[index] : undefined;
-      if (stepNode && stepNode.flow) problem(file, "yaml", `${where}: a block mapping (no flow-style { … } step)`);
       for (const k of Object.keys(step)) {
         if (k !== "if" && !STEP_KEYS.includes(k)) problem(file, "step-keys", `${where}.${k}: a step holds only ${STEP_KEYS.join(", ")}`);
       }
@@ -801,8 +875,8 @@ for (const [file, spec] of Object.entries(SPECS)) {
         const [action, ref] = step.uses.split("@");
         if (step.uses.startsWith("./") || step.uses.startsWith("docker://")) problem(file, "uses-allowed", `${where}: ${step.uses}`);
         // The parsed value, structurally: allowed, pinned, and its node's comment the version.
-        if (!(action in ACTIONS)) {
-          problem(file, "uses-allowed", `${where}: ${step.uses} isn't on the allow-list`);
+        if (!releaseAction(action)) {
+          problem(file, "uses-allowed", `${where}: ${step.uses} isn't on the allow-list${action in ACTIONS ? " (ci.yml's only)" : ""}`);
           return;
         }
         const [sha, version] = ACTIONS[action];
@@ -905,9 +979,255 @@ for (const [file, spec] of Object.entries(SPECS)) {
   }
 }
 
+// ci.yml: the CI on every pull request and every push to main. It holds no credential and
+// publishes nothing, so it may use services, defaults, multi-line run: blocks, matrices, a
+// report's or the teardown's if: and job-level env:; what it may not do is reach a token, write
+// anything, run unpinned code, or let a gate be skipped or stop being required.
+const CI = {
+  trigger: { pull_request: null, push: { branches: ["main"] } },
+  concurrency: {
+    group: "ci-${{ github.event.pull_request.number || github.sha }}",
+    "cancel-in-progress": "${{ github.event_name == 'pull_request' }}",
+  },
+  jobs: ["secrets", "static", "unit", "unit-coverage", "e2e", "ottl-evaluator", "otelcol-validator", "otelcol-testing", "stack", "ci"],
+  // The one required check: it needs every other job, and runs whatever they ended.
+  final: "ci",
+  finalIf: "always()",
+};
+const CI_JOB_KEYS = ["needs", "if", "runs-on", "timeout-minutes", "permissions", "strategy", "services", "env", "defaults", "steps"];
+const CI_STEP_KEYS = ["name", "uses", "with", "env", "run", "working-directory", "if"];
+const CI_SERVICE_KEYS = ["image", "env", "ports", "options"];
+const CI_CHECKOUT_DENIED = [
+  "repository", "ref", "token", "path", "submodules", "ssh-key", "ssh-known-hosts", "ssh-strict", "ssh-user",
+  "github-server-url",
+];
+const CI_STEP_IF = ["failure()", "always()"];
+// The steps an if: may sit on: a report's upload, the stack's logs, its teardown.
+const CI_IF_STEP = (step) =>
+  (typeof step.uses === "string" && step.uses.split("@")[0] === "actions/upload-artifact") ||
+  (typeof step.run === "string" && /^docker compose (logs|down)\b/.test(step.run.trim()) && !step.run.trim().includes("\n"));
+// A command a run: starts (at a line's start or after ; & | ( or then/do/else): `bash <script>`
+// or `./<script>`.
+const CI_COMMAND = /(?:^|[;&|(]|\b(?:then|do|else|exec)\s)\s*(?:bash\s+(?!-)(["']?)([^\s;&|)"']+)\1|\.\/([^\s;&|)"']+))/g;
+const OPAMP_CLONE = /^git clone --branch v(\S+) https:\/\/github\.com\/telflo\/opamp-server\.git \.\.\/opamp-server$/;
+const hasStatusFunction = (v) => new RegExp(STATUS_FUNCTION.source).test(typeof v === "string" ? v : JSON.stringify(v) || "");
+
+// tools.lock's image rows: repository -> [{ key, tag, digest }].
+const lockImages = new Map();
+{
+  const lockPath = join(root, "scripts", "release", "tools.lock");
+  const lock = existsSync(lockPath) ? readFileSync(lockPath, "utf8") : "";
+  for (const m of lock.matchAll(/^image\s+(\S+)\s+(\S+)\s+(\S+)\s+(sha256:[0-9a-f]{64})\s/gm)) {
+    if (!lockImages.has(m[2])) lockImages.set(m[2], []);
+    lockImages.get(m[2]).push({ key: m[1], tag: m[3], digest: m[4] });
+  }
+}
+
+function checkCi(file) {
+  const loaded = load(file);
+  if (!loaded) return;
+  const { text, doc, wf } = loaded;
+
+  // Text rules.
+  for (const m of text.matchAll(/\b(pull_request_target|workflow_run|schedule|workflow_dispatch)\b/g)) {
+    problem(file, "ci-trigger", `${m[1]} appears (a pull request's run never holds more than a read of the repository)`);
+  }
+  if (/(?<![.\w-])secrets\s*[.[]/.test(text)) problem(file, "ci-secrets", "secrets. appears: ci.yml holds no secret, not even GITHUB_TOKEN");
+  if (/GITHUB_TOKEN/.test(text)) problem(file, "ci-secrets", "GITHUB_TOKEN appears: ci.yml holds no token");
+  if (/\bgithub\s*\.\s*token\b/.test(text)) problem(file, "ci-secrets", "github.token appears: ci.yml holds no token");
+  for (const m of text.matchAll(/\b(GITHUB_ENV|GITHUB_PATH|GITHUB_OUTPUT)\b/g)) {
+    problem(file, "ci-github-env", `${m[1]} appears (a step must not set a later one's environment, path or inputs)`);
+  }
+  if (/continue-on-error/.test(text)) problem(file, "ci-continue-on-error", "continue-on-error appears (a failing gate fails its job)");
+  const usesLines = [...text.matchAll(/^\s*(?:-\s+)?uses:\s*(\S+)(.*)$/gm)];
+  for (const m of usesLines) {
+    const [name, ref] = m[1].split("@");
+    const comment = m[2].trim();
+    if (!(name in ACTIONS)) {
+      problem(file, "ci-uses-allowed", `${m[1]} isn't on the allow-list`);
+      continue;
+    }
+    const [sha, version] = ACTIONS[name];
+    if (ref !== sha) problem(file, "ci-uses-pin", `${name}@${ref || ""}: pin it by its full commit SHA ${sha} (${version})`);
+    if (comment !== `# ${version}`) problem(file, "ci-uses-version-comment", `${name}: the line must end with "# ${version}" (got "${comment}")`);
+  }
+
+  // The top level.
+  const on = wf.on;
+  const pr = isMap(on) ? on.pull_request : undefined;
+  const prPlain = pr === null || (isMap(pr) && Object.keys(pr).length === 0);
+  if (!isMap(on) || !same(Object.keys(on).sort(), ["pull_request", "push"]) || !prPlain || !same(on.push, CI.trigger.push)) {
+    problem(file, "ci-trigger", `on: exactly pull_request (no filter) and push: branches: [main] (got ${JSON.stringify(on)})`);
+  }
+  if (!isMap(wf.permissions) || Object.keys(wf.permissions).length !== 0) {
+    problem(file, "ci-permissions-top", `the top-level permissions must be {} (got ${JSON.stringify(wf.permissions)})`);
+  }
+  if (!same(wf.concurrency, CI.concurrency)) {
+    problem(file, "ci-concurrency", `concurrency: ${JSON.stringify(CI.concurrency)}: a pull request's newer run cancels its older one, main's never (got ${JSON.stringify(wf.concurrency)})`);
+  }
+
+  const jobs = isMap(wf.jobs) ? wf.jobs : {};
+  if (!same(Object.keys(jobs).sort(), [...CI.jobs].sort())) {
+    problem(file, "ci-jobs", `the jobs are ${CI.jobs.join(", ")} (got ${Object.keys(jobs).join(", ")})`);
+  }
+  let parsedUses = 0;
+  let opampClones = 0;
+  for (const [name, job] of Object.entries(jobs)) {
+    if (!isMap(job)) {
+      problem(file, "ci-job-keys", `jobs.${name}: a mapping`);
+      continue;
+    }
+    const final = name === CI.final;
+    if ("uses" in job) problem(file, "ci-uses-allowed", `jobs.${name}: no reusable workflow`);
+    for (const k of Object.keys(job)) {
+      if (!CI_JOB_KEYS.includes(k)) problem(file, "ci-job-keys", `jobs.${name}.${k}: a job holds only ${CI_JOB_KEYS.join(", ")}`);
+    }
+    if ("concurrency" in job) problem(file, "ci-concurrency", `jobs.${name}: no job-level concurrency`);
+    const wd = isMap(job.defaults) && isMap(job.defaults.run) ? job.defaults.run["working-directory"] : undefined;
+    if (job.defaults !== undefined && (!isMap(job.defaults) || !same(Object.keys(job.defaults), ["run"]) || !isMap(job.defaults.run) || !same(Object.keys(job.defaults.run), ["working-directory"]) || typeof wd !== "string")) {
+      problem(file, "ci-job-keys", `jobs.${name}.defaults: only run.working-directory (never a shell) (got ${JSON.stringify(job.defaults)})`);
+    }
+    const wantPermissions = final ? {} : READ;
+    if (!same(job.permissions, wantPermissions)) {
+      problem(file, "ci-job-permissions", `jobs.${name}: permissions must be ${JSON.stringify(wantPermissions)} (got ${JSON.stringify(job.permissions)})`);
+    }
+    if (job["runs-on"] !== RUNNER) problem(file, "ci-runs-on", `jobs.${name}: runs-on ${RUNNER} (got ${JSON.stringify(job["runs-on"])})`);
+    const timeout = job["timeout-minutes"];
+    if (!Number.isInteger(timeout) || timeout < 1 || timeout > 360) problem(file, "ci-timeout", `jobs.${name}: timeout-minutes 1-360`);
+    // The one required check, and the only job-level if: or status function.
+    if (final) {
+      const needs = job.needs === undefined ? [] : [].concat(job.needs);
+      const want = CI.jobs.filter((j) => j !== CI.final);
+      if (!same([...needs].sort(), [...want].sort())) {
+        problem(file, "ci-needs", `jobs.${name}: needs every other job, ${want.join(", ")} (got ${needs.join(", ") || "nothing"}): it is the one required check`);
+      }
+      if (job.if !== CI.finalIf) problem(file, "ci-if", `jobs.${name}: if: ${CI.finalIf} (got ${JSON.stringify(job.if)}): a failed or skipped job must fail it, never skip it`);
+    } else if ("if" in job) {
+      problem(file, "ci-if", `jobs.${name}: no if: (only the ci job has one; a gate always runs)`);
+    }
+    {
+      const { steps: _steps, if: _if, ...rest } = job;
+      if (hasStatusFunction(rest) || (!final && hasStatusFunction(job.if))) {
+        problem(file, "ci-if", `jobs.${name}: a status function at job level (only the ci job's if: ${CI.finalIf})`);
+      }
+    }
+    // services: pinned by digest, the digest tools.lock's; no registry credentials.
+    if (job.services !== undefined && !isMap(job.services)) problem(file, "ci-services", `jobs.${name}.services: a mapping`);
+    for (const [sname, service] of Object.entries(isMap(job.services) ? job.services : {})) {
+      const where = `jobs.${name}.services.${sname}`;
+      if (!isMap(service)) {
+        problem(file, "ci-services", `${where}: a mapping with an image`);
+        continue;
+      }
+      for (const k of Object.keys(service)) {
+        if (k === "credentials") problem(file, "ci-login", `${where}.credentials: no registry login (the images are public, pulled by digest)`);
+        else if (!CI_SERVICE_KEYS.includes(k)) problem(file, "ci-services", `${where}.${k}: a service holds only ${CI_SERVICE_KEYS.join(", ")}`);
+      }
+      const m = String(service.image || "").match(/^([a-z0-9][a-z0-9._\/-]*?)(?::([A-Za-z0-9._-]+))?@(sha256:[0-9a-f]{64})$/);
+      if (!m) {
+        problem(file, "ci-services", `${where}: image ${JSON.stringify(service.image)}: pin it by digest (<repository>[:<tag>]@sha256:<digest>)`);
+        continue;
+      }
+      const rows = lockImages.get(m[1]) || [];
+      if (rows.length !== 1) {
+        problem(file, "ci-services", `${where}: ${m[1]}: scripts/release/tools.lock has ${rows.length} image rows for it (one, whose digest the service uses)`);
+        continue;
+      }
+      if (m[3] !== rows[0].digest) problem(file, "ci-services", `${where}: ${m[1]}@${m[3]}: tools.lock's ${rows[0].key} row is ${rows[0].digest}`);
+      if (m[2] !== undefined && m[2] !== rows[0].tag && !rows[0].tag.startsWith(`${m[2]}.`)) {
+        problem(file, "ci-services", `${where}: the tag ${m[2]} isn't tools.lock's ${rows[0].tag} (nor a prefix of it)`);
+      }
+    }
+
+    const steps = Array.isArray(job.steps) ? job.steps : [];
+    const stepNodes = doc.getIn(["jobs", name, "steps"], true);
+    steps.forEach((step, index) => {
+      const where = `jobs.${name}.steps[${index}]`;
+      if (!isMap(step)) {
+        problem(file, "ci-step-keys", `${where}: a mapping`);
+        return;
+      }
+      for (const k of Object.keys(step)) {
+        if (!CI_STEP_KEYS.includes(k)) problem(file, "ci-step-keys", `${where}.${k}: a step holds only ${CI_STEP_KEYS.join(", ")}`);
+      }
+      if ("if" in step && (!CI_STEP_IF.includes(step.if) || !CI_IF_STEP(step))) {
+        problem(file, "ci-step-if", `${where}: if: ${JSON.stringify(step.if)}: only failure() or always(), only on a report's upload or the stack's logs or teardown (a gate always runs)`);
+      }
+      {
+        const { if: _if, run: _run, ...rest } = step;
+        if (hasStatusFunction(rest)) problem(file, "ci-step-if", `${where}: a status function outside the step's if:`);
+      }
+      if ("uses" in step && typeof step.uses !== "string") problem(file, "ci-uses-allowed", `${where}: uses: is one action reference`);
+      if (typeof step.uses === "string") {
+        parsedUses += 1;
+        const [action, ref] = step.uses.split("@");
+        if (step.uses.startsWith("./") || step.uses.startsWith("docker://")) problem(file, "ci-uses-allowed", `${where}: ${step.uses}`);
+        if (action === "docker/login-action") problem(file, "ci-login", `${where}: no login: ci.yml holds no credential`);
+        if (!(action in ACTIONS)) {
+          problem(file, "ci-uses-allowed", `${where}: ${step.uses} isn't on the allow-list`);
+          return;
+        }
+        const [sha, version] = ACTIONS[action];
+        if (ref !== sha || step.uses.split("@").length !== 2) problem(file, "ci-uses-pin", `${where}: ${step.uses}: pin it by its full commit SHA ${sha} (${version})`);
+        const stepNode = stepNodes && stepNodes.items ? stepNodes.items[index] : undefined;
+        const usesNode = stepNode && typeof stepNode.get === "function" ? stepNode.get("uses", true) : undefined;
+        const nodeComment = usesNode && typeof usesNode.comment === "string" ? usesNode.comment.trim() : "";
+        if (nodeComment !== version) problem(file, "ci-uses-version-comment", `${where}: ${action}: its uses: carries the comment "# ${version}" (got "${nodeComment}")`);
+        if (step.with !== undefined && !isMap(step.with)) problem(file, "ci-checkout-keys", `${where}.with: a mapping`);
+        const w = isMap(step.with) ? step.with : {};
+        if (action === "actions/checkout") {
+          if (w["persist-credentials"] !== false) problem(file, "ci-persist-credentials", `${where}: persist-credentials: false (no token left in .git/config)`);
+          for (const k of CI_CHECKOUT_DENIED) {
+            if (k in w) problem(file, "ci-checkout-keys", `${where}.with.${k}: the checkout is this run's own commit, from this repository, with no credential`);
+          }
+        }
+        return;
+      }
+      if (!("run" in step)) {
+        problem(file, "ci-step-keys", `${where}: a step is a uses: or a run:`);
+        return;
+      }
+      if (typeof step.run !== "string") {
+        problem(file, "ci-step-keys", `${where}: run isn't a string`);
+        return;
+      }
+      const run = step.run;
+      if (run.includes("${{")) problem(file, "ci-expression-in-run", `${where}: \${{ }} inside run: (pass it through env:)`);
+      if (/\blogin\b|credential/i.test(run)) problem(file, "ci-login", `${where}: no run: logs in or sets a credential (ci.yml holds none)`);
+      const stepWd = step["working-directory"] !== undefined ? step["working-directory"] : wd;
+      for (const raw of run.split("\n")) {
+        const line = raw.trim();
+        if (/\bgit\s+clone\b/.test(line) || /opamp-server\.git/.test(line)) {
+          const clone = line.match(OPAMP_CLONE);
+          if (!clone || name !== "static" || (stepWd !== undefined && stepWd !== ".")) {
+            problem(file, "ci-opamp-clone", `${where}: the one clone is the static job's opamp-server, from the root: ${line}`);
+          } else {
+            opampClones += 1;
+            if (clone[1] !== pinVersion) problem(file, "ci-opamp-clone", `${where}: the clone is v${clone[1]}, vendor/opamp-server/PIN's is v${pinVersion || "?"}`);
+          }
+        }
+        for (const m of line.matchAll(CI_COMMAND)) {
+          const script = m[2] !== undefined ? m[2] : m[3];
+          const path = posix.normalize(posix.join(stepWd || ".", script));
+          if (path.startsWith("../") || posix.isAbsolute(path) || !files.has(path)) {
+            problem(file, "ci-run-script", `${where}: ${script} (from ${stepWd || "the root"}) isn't a file of the repository`);
+          }
+        }
+      }
+    });
+  }
+  if (isMap(jobs.static) && opampClones !== 1) {
+    problem(file, "ci-opamp-clone", `jobs.static: clones the opamp-server once, at vendor/opamp-server/PIN's tag v${pinVersion || "?"} (got ${opampClones})`);
+  }
+  if (parsedUses !== usesLines.length) {
+    problem(file, "ci-uses-version-comment", `${usesLines.length} uses: lines but ${parsedUses} steps with uses: (write each as "uses: <action>@<sha> # <version>" on its own line)`);
+  }
+}
+checkCi("ci.yml");
+
 if (problems.length) {
   for (const p of problems) console.log(p);
   console.log(`check-workflows: ${problems.length} problem(s)`);
   process.exit(1);
 }
-console.log(`check-workflows: OK: ${Object.keys(SPECS).join(" and ")} hold every rule`);
+console.log(`check-workflows: OK: ${Object.keys(SPECS).join(", ")} and ci.yml hold every rule`);

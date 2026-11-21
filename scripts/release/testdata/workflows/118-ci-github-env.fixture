@@ -1,0 +1,9 @@
+# Breaks one rule: a step setting a later one's environment.
+file: ci.yml
+rule: ci-github-env
+<<<
+      - run: npx playwright install --with-deps "$BROWSER"
+===
+      - run: echo "NODE_OPTIONS=--require ./preload.js" >> "$GITHUB_ENV"
+      - run: npx playwright install --with-deps "$BROWSER"
+>>>

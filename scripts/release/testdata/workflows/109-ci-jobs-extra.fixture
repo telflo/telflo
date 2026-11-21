@@ -1,0 +1,16 @@
+# Breaks one rule: a job beside the expected ones.
+file: ci.yml
+rule: ci-jobs
+<<<
+  # The one required check: it passes only
+===
+  lint:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - run: echo lint
+
+  # The one required check: it passes only
+>>>
