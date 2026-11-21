@@ -14,7 +14,8 @@ Thanks for helping. Bug reports, fixes, docs and features are all welcome.
 
 ## Working on it
 
-You need Node.js 22 or later and Docker.
+You need Node.js 22 and Docker. CI runs the tests on Node 22; the web's
+unit tests fail under Node 24 (jsdom's `AbortSignal` against Node's `fetch`).
 [Running locally](docs/development.md#running-locally) shows how to start
 the services, the API and the web app from a checkout, and the rest of
 [docs/development.md](docs/development.md) covers the tests and the
