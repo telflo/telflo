@@ -75,7 +75,7 @@
 # more keeps Docker's disk, which a developer's own stack shares, from
 # filling); an image the smokes run by tag that isn't local fails (never
 # pulled or re-tagged here: postgres:18, axllent/mailpit:v1.31,
-# nginx:1.27-alpine at the chart's digest, ghcr.io/telflo/opamp-server at the
+# nginx:1.30-alpine at the chart's digest, ghcr.io/telflo/opamp-server at the
 # PIN's).
 #
 # The rehearsal's own names and ports: projects, clusters and containers
@@ -773,8 +773,8 @@ pre_docker=""
 # The images the smokes run by tag: local already (never pulled or re-tagged here).
 missing=""
 for image in postgres:18 axllent/mailpit:v1.31; do docker image inspect "$image" >/dev/null 2>&1 || missing="$missing $image"; done
-docker image inspect --format '{{join .RepoDigests " "}}' nginx:1.27-alpine 2>/dev/null | tr ' ' '\n' | grep -qx "nginx@$nginx_digest" \
-  || missing="$missing nginx:1.27-alpine@$nginx_digest"
+docker image inspect --format '{{join .RepoDigests " "}}' nginx:1.30-alpine 2>/dev/null | tr ' ' '\n' | grep -qx "nginx@$nginx_digest" \
+  || missing="$missing nginx:1.30-alpine@$nginx_digest"
 docker image inspect --format '{{join .RepoDigests " "}}' "ghcr.io/telflo/opamp-server:$opamp_version" 2>/dev/null | tr ' ' '\n' | grep -qx "ghcr.io/telflo/opamp-server@$opamp_digest" \
   || missing="$missing ghcr.io/telflo/opamp-server:$opamp_version@$opamp_digest"
 [ -z "$missing" ] || { log "$PROGRAM: FAIL: the smokes run these images by tag and they aren't local:$missing (pull each by that digest and tag it so; the rehearsal never re-tags)"; exit 1; }

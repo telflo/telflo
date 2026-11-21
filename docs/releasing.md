@@ -420,7 +420,7 @@ step's output, already redacted, is in `<work>/logs/`, and all of it in
   in the catalog); inside the kind node, the chart's Postgres by digest.
 
 It never pulls or re-tags an image the smokes run by tag (`postgres:18`,
-`axllent/mailpit:v1.31`, `nginx:1.27-alpine` at the chart's digest,
+`axllent/mailpit:v1.31`, `nginx:1.30-alpine` at the chart's digest,
 `ghcr.io/telflo/opamp-server` at the PIN's): it stops before the first
 step if one isn't there.
 

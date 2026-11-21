@@ -169,7 +169,7 @@ reused_differently() {
 run_case "a work folder's stack isn't reused with other images" reused_differently
 
 unknown_port_repo=$(fixture unknown-port '  stack-test-extra:
-    image: nginx:1.27-alpine
+    image: nginx:1.30-alpine
     ports:
       - "12345:80"')
 unknown_port() {
@@ -178,7 +178,7 @@ unknown_port() {
 }
 run_case "an unknown published port fails the copy, named" unknown_port
 container_name_repo=$(fixture container-name '  stack-test-extra:
-    image: nginx:1.27-alpine
+    image: nginx:1.30-alpine
     container_name: fixed-name')
 container_name() {
   stack container-name up --project stack-test-x --images dev-tag:x --site oss --tree "$container_name_repo"

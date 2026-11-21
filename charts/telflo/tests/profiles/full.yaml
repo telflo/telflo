@@ -73,7 +73,7 @@ web:
     key: phc_example
     host: https://analytics.example.com
 gateway:
-  image: {registry: registry.example.com/mirror, repository: nginx, tag: 1.27-alpine, digest: "", pullPolicy: IfNotPresent}
+  image: {registry: registry.example.com/mirror, repository: nginx, tag: 1.30-alpine, digest: "", pullPolicy: IfNotPresent}
   replicas: 2
   resources: {requests: {cpu: 50m, memory: 64Mi}}
   nodeSelector: {example.com/pool: edge}

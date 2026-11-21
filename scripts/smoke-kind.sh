@@ -25,7 +25,7 @@
 # openssl and python3; kind from scripts/release/tools.sh (`tools.sh path
 # kind`; never one on PATH) and, in the local engine, its node image at
 # tools.lock's digest (`scripts/release/tools.sh pull kind-node`); on the
-# local Docker engine, the images it loads (nginx:1.27-alpine at the chart's
+# local Docker engine, the images it loads (nginx:1.30-alpine at the chart's
 # digest, axllent/mailpit:v1.31, ghcr.io/telflo/opamp-server at
 # vendor/opamp-server/PIN's version and digest, and
 # ghcr.io/telflo/telflo/collector:<the catalog's default version>) and,
@@ -183,7 +183,7 @@ MIN_DOCKER_FREE_KB=$((105 * 1024 * 1024 / 10))
 NODE_BASE="node:24-bookworm-slim@sha256:01d566e8d94d8c619591d78652babfccd3c6992a3dffa9ed5ab39e11cf6c70e9"
 DISTROLESS_BASE="gcr.io/distroless/static-debian12:nonroot@sha256:afa5c872c891853ca7fcf1f12c3edb23f7eeef36189728842dd51042ff57f7ab"
 LOCAL_BASES="python:3.12-slim@sha256:05cda9777409a9c3ffddd94a4c476b79f0769a0b4857f0c7ed9226b6800b0d6f golang:1.26-alpine@sha256:3082400e369fa24d5fc60bca20edab3f6d604e0c5a690ec66b295eff4dd87ade"
-NGINX_IMAGE="nginx:1.27-alpine"
+NGINX_IMAGE="nginx:1.30-alpine"
 MAILPIT_IMAGE="axllent/mailpit:v1.31"
 COLLECTOR_REPOSITORY="ghcr.io/telflo/telflo/collector"
 RELEASE_REGISTRY="ghcr.io/telflo/telflo"

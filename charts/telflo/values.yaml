@@ -207,12 +207,12 @@ web:
 # The gateway (nginx, Deployment telflo-gateway): the one origin browsers
 # reach, routing to the web app and the API with docker/gateway/default.conf.
 gateway:
-  # nginx:1.27-alpine (1.27.5), pinned by its index digest.
+  # nginx:1.30-alpine (1.30.7), pinned by its index digest.
   image:
     registry: docker.io/library
     repository: nginx
-    tag: 1.27-alpine
-    digest: sha256:65645c7bb6a0661892a8b03b89d0743208a18dd2f3f17a54ef4b76fb8e2f2a10
+    tag: 1.30-alpine
+    digest: sha256:caf4e1e032a20f9c3c5e28fc7f25ffd768ad8677b4975c54193075997b3a97e3
     pullPolicy: ""
   replicas: 1
   resources:
