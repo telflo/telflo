@@ -112,10 +112,10 @@ run_case "another project name fails" broken "a top-level line 'name: telflo'" d
 run_case "a build: fails" broken "has a build:" deploy/compose/compose.yaml \
   in_service api 'if ($0 == "  api:") { print; print "    build: ."; next }'
 run_case "a Telflo image at another version fails" broken "web's image is 'ghcr.io/telflo/telflo/web:9.9.9'" deploy/compose/compose.yaml \
-  sed 's#ghcr.io/telflo/telflo/web:[0-9.]*#ghcr.io/telflo/telflo/web:9.9.9#'
+  sed 's#ghcr.io/telflo/telflo}/web:[0-9.]*"#ghcr.io/telflo/telflo}/web:9.9.9"#'
 digest="sha256:$(printf '%064d' 0)"
 run_case "a Telflo image by digest fails" broken "otelcol-validator's image is" deploy/compose/compose.yaml \
-  sed "s#\\(ghcr.io/telflo/telflo/otelcol-validator:[0-9.]*\\)\$#\\1@$digest#"
+  sed "s#\\(ghcr.io/telflo/telflo}/otelcol-validator:[0-9.]*\\)\"\$#\\1@$digest\"#"
 run_case "Postgres off the chart's digest fails" broken "db's image is 'postgres:18@$digest'" deploy/compose/compose.yaml \
   in_service db "sub(/@sha256:[0-9a-f]+/, \"@$digest\")"
 run_case "nginx without its digest fails" broken "gateway's image is 'nginx:1.30-alpine'" deploy/compose/compose.yaml \

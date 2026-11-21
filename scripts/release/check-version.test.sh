@@ -10,10 +10,12 @@
 #         appVersion different (the failure names both places and both
 #         values);
 #   the Compose install (deploy/compose/compose.yaml, written per case
-#   beside the chart): each Telflo image line's tag is a place (quoted or
+#   beside the chart): each Telflo image line's tag, read through
+#   ${TELFLO_IMAGE_REGISTRY:-ghcr.io/telflo/telflo}/, is a place (quoted or
 #   not; comments and other images ignored); one image at another version,
-#   an image without a tag, no Telflo image line, and no compose.yaml fail,
-#   naming the place;
+#   an image without a tag, an image naming ghcr.io/telflo/telflo/ without
+#   the variable, no Telflo image line, and no compose.yaml fail, naming the
+#   place;
 #   the README's Quick start (README.md, written per case): its download
 #   address and archive name between the markers are places (one outside
 #   them ignored); either at another version, a placeholder for the
@@ -83,15 +85,17 @@ kube() {
 # docs_at <version>: both documents at <version> everywhere.
 docs_at() { readme "$1" "$1" && kube "$1" "$1"; }
 # compose <api tag> <web tag>: the copy's deploy/compose/compose.yaml, shaped
-# like the real one: two Telflo image lines (the second quoted), another
-# image by digest, a commented-out Telflo image that must be ignored.
+# like the real one: two Telflo image lines through TELFLO_IMAGE_REGISTRY
+# (the first unquoted, the second quoted as the real one is), another image
+# by digest, a commented-out Telflo image that must be ignored.
+# shellcheck disable=SC2016 # Compose's ${...}, written as text
 compose() {
   {
     printf 'name: telflo\nservices:\n'
-    printf '  # image: ghcr.io/telflo/telflo/api:9.9.9 (a comment)\n'
+    printf '  # image: ${TELFLO_IMAGE_REGISTRY:-ghcr.io/telflo/telflo}/api:9.9.9 (a comment)\n'
     printf '  db:\n    image: postgres:18@sha256:%064d\n' 0
-    printf '  api:\n    image: ghcr.io/telflo/telflo/api:%s\n' "$1"
-    printf '  web:\n    image: "ghcr.io/telflo/telflo/web:%s"\n' "$2"
+    printf '  api:\n    image: ${TELFLO_IMAGE_REGISTRY:-ghcr.io/telflo/telflo}/api:%s\n' "$1"
+    printf '  web:\n    image: "${TELFLO_IMAGE_REGISTRY:-ghcr.io/telflo/telflo}/web:%s"\n' "$2"
   } >"$c/deploy/compose/compose.yaml"
 }
 # chart <version line> <appVersion line> [more lines]: the copy's Chart.yaml,
@@ -166,16 +170,25 @@ compose_bad() {
     said "deploy/compose/compose.yaml:7's api image is '0.1.0-rc.1', not a release version"
 }
 run_case "a Compose image's tag that isn't a release version fails" compose_bad
+# shellcheck disable=SC2016 # Compose's ${...}, written as text
 compose_untagged() {
   fresh && chart "version: 0.1.0" "appVersion: \"0.1.0\"" && compose 0.1.0 0.1.0 &&
-    printf '  telflo-extra:\n    image: ghcr.io/telflo/telflo/ottl-evaluator\n' >>"$c/deploy/compose/compose.yaml" &&
+    printf '  telflo-extra:\n    image: ${TELFLO_IMAGE_REGISTRY:-ghcr.io/telflo/telflo}/ottl-evaluator\n' >>"$c/deploy/compose/compose.yaml" &&
     check && rc_is 1 && said "deploy/compose/compose.yaml:11's ottl-evaluator image is '', not a release version"
 }
 run_case "a Compose image without a tag fails" compose_untagged
+compose_literal() {
+  fresh && chart "version: 0.1.0" "appVersion: \"0.1.0\"" && compose 0.1.0 0.1.0 && docs_at 0.1.0 &&
+    printf '  telflo-extra:\n    image: ghcr.io/telflo/telflo/ottl-evaluator:0.1.0\n' >>"$c/deploy/compose/compose.yaml" &&
+    check && rc_is 1 &&
+    said "deploy/compose/compose.yaml:11's ottl-evaluator image names ghcr.io/telflo/telflo/ottl-evaluator directly: write it \${TELFLO_IMAGE_REGISTRY:-ghcr.io/telflo/telflo}/ottl-evaluator:<version>" &&
+    said "check-version: FAIL (1 problem(s) in 8 place(s))"
+}
+run_case "a Telflo image naming ghcr.io/telflo/telflo/ without TELFLO_IMAGE_REGISTRY fails, naming its line (at the right version too)" compose_literal
 compose_none() {
   fresh && chart "version: 0.1.0" "appVersion: \"0.1.0\"" &&
     printf 'name: telflo\nservices:\n  db:\n    image: postgres:18\n' >"$c/deploy/compose/compose.yaml" &&
-    check && rc_is 1 && said "deploy/compose/compose.yaml's Telflo images: no image line names"
+    check && rc_is 1 && said "deploy/compose/compose.yaml's Telflo images: no image line names \${TELFLO_IMAGE_REGISTRY:-ghcr.io/telflo/telflo}/<name>:<version>"
 }
 run_case "a compose.yaml naming no Telflo image fails" compose_none
 compose_missing() {
