@@ -226,6 +226,10 @@ jobs:
       # e2e/support/analytics.ts uses the full Chromium channel.
       - run: npx playwright install --with-deps "$BROWSER"
       - run: npm run test:e2e -- --project="$BROWSER" --shard="$SHARD/2"
+      # The specs that must run with nothing else running
+      # (playwright.config.ts's *-exclusive projects), after the rest; a part
+      # may hold none of them.
+      - run: npm run test:e2e -- --project="$BROWSER-exclusive" --no-deps --shard="$SHARD/2" --pass-with-no-tests
       - name: Playwright report
         if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -425,6 +429,21 @@ jobs:
       # on the compose network, where the development default
       # (host.docker.internal) doesn't resolve on Linux.
       OPAMP_SERVER_URL: http://opamp-server:51234/opamp/api/v1
+      # The smoke in its saas mode, with the SaaS's site values (as
+      # scripts/gates/smoke-env.sh sets them): its oss mode runs only on a
+      # throwaway stack (scripts/gates/stack.sh), which the release's
+      # stack-smoke job runs in both modes.
+      TELFLO_SMOKE_SITE: saas
+      TELFLO_REGISTRATION: open
+      TELFLO_PLAYGROUND: "true"
+      TELFLO_ANONYMOUS_VALIDATE: "true"
+      TELFLO_PUBLIC_FLOWS: "true"
+      TELFLO_TERMS_VERSION: "2026-01-01"
+      TELFLO_TERMS_URL: /home/terms-of-service
+      TELFLO_PRIVACY_URL: /home/privacy-policy
+      TELFLO_SALES_INQUIRY: "true"
+      TELFLO_SALES_INQUIRY_TO: sales@example.com
+      TELFLO_EMAIL_NOTIFICATIONS: "true"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
