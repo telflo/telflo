@@ -17,7 +17,7 @@ telflo-core/.env.example:generic-api-key:324
 services/otelcol-testing/tests/conftest.py:generic-api-key:32
 services/otelcol-validator/tests/conftest.py:generic-api-key:17
 services/otelcol-validator/tests/fixtures/collector-outputs.json:generic-api-key:122
-services/otelcol-validator/tests/test_binary_handoffs.py:generic-api-key:81
+services/otelcol-validator/tests/test_binary_handoffs.py:generic-api-key:90
 services/otelcol-validator/tests/test_security_fixes.py:generic-api-key:54
 telflo-core/apps/api/src/modules/flows/lint.integration.test.ts:generic-api-key:36
 telflo-core/apps/api/src/modules/flows/lint.test.ts:generic-api-key:117
