@@ -1,0 +1,11 @@
+# Breaks one rule: finalize.yml's checkout without the full history (the tag's ancestry).
+file: finalize.yml
+rule: checkout-ref
+<<<
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+===
+          ref: ${{ github.sha }}
+
+>>>

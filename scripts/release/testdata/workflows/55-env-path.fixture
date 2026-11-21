@@ -2,10 +2,10 @@
 file: release.yml
 rule: env-names
 <<<
-      - name: The pull-back, by digest
+      - name: The pull-back from the stage, by digest
         env:
 ===
-      - name: The pull-back, by digest
+      - name: The pull-back from the stage, by digest
         env:
           PATH: /tmp/bin:/usr/bin:/bin
 >>>

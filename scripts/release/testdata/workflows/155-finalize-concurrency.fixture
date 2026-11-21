@@ -1,0 +1,10 @@
+# Breaks one rule: finalize.yml in a group of its own (a stage and a finalize at once).
+file: finalize.yml
+rule: concurrency
+<<<
+  group: release
+
+===
+  group: finalize
+
+>>>

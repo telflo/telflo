@@ -2,9 +2,9 @@
 file: release.yml
 rule: jobs
 <<<
-        run: bash scripts/release/steps.sh github-release --tag "$TAG" --commit "$COMMIT" --oci "$RUNNER_TEMP/oci" --release "$RUNNER_TEMP/release"
+        run: bash scripts/release/steps.sh github-release --draft --tag "$TAG" --commit "$COMMIT" --oci "$RUNNER_TEMP/oci" --release "$RUNNER_TEMP/release"
 ===
-        run: bash scripts/release/steps.sh github-release --tag "$TAG" --commit "$COMMIT" --oci "$RUNNER_TEMP/oci" --release "$RUNNER_TEMP/release"
+        run: bash scripts/release/steps.sh github-release --draft --tag "$TAG" --commit "$COMMIT" --oci "$RUNNER_TEMP/oci" --release "$RUNNER_TEMP/release"
 
   extra:
     needs: version

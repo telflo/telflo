@@ -1,0 +1,11 @@
+# Breaks one rule: collector.yml's publish input given options it never had.
+file: collector.yml
+rule: dispatch-inputs
+<<<
+        type: boolean
+        default: false
+===
+        type: boolean
+        default: false
+        options: [true]
+>>>
