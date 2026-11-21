@@ -12,6 +12,8 @@ every offered version but:
   recorded, not worked around; Datadog's `headers` stays refused;
 - netflow's `queue_size: 0` and spanmetrics' bare-number buckets, accepted
   (and run); failover's duplicate level is test_binary_connectors.py's F4;
+- basicauth's empty `htpasswd`, accepted: the extension isn't created at
+  start ("no credential source provided"), which its form warns of;
 - the controls, accepted, each beside the case it guards.
 No redaction case needs the service: `validate` itself refuses each
 malformed regex. A case the collector starts accepting (or refusing) fails
@@ -58,6 +60,13 @@ def receiver(name: str, body: str, signal: str = "logs") -> str:
     return (
         f"receivers:\n  {name}:\n{body}exporters:\n  debug:\nservice:\n  pipelines:\n    {signal}:\n"
         f"      receivers: [{name}]\n      exporters: [debug]\n"
+    )
+
+
+def extension(name: str, body: str) -> str:
+    return (
+        f"{R}exporters:\n  debug:\nextensions:\n  {name}:\n{body}service:\n  extensions: [{name}]\n"
+        "  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [debug]\n"
     )
 
 
@@ -367,6 +376,25 @@ CASES: dict[str, tuple[str, Answer]] = {
         failover("    priority_levels:\n      - [traces/a]\n      - []\n", TRACES_A),
         refused(error("Error registering consumer", None)),
     ),
+    "basicauth with both client_auth and htpasswd": (
+        extension("basicauth", "    client_auth:\n      username: otel\n    htpasswd:\n      inline: a:b\n"),
+        refused(error("only one of `htpasswd` or `client_auth` can be specified", "extensions::basicauth")),
+    ),
+    "basicauth with neither (an explicit null is neither)": (
+        extension("basicauth", "    client_auth:\n"),
+        refused(error("no credential source provided", "extensions::basicauth")),
+    ),
+    "control: basicauth's client_auth from files": (
+        extension(
+            "basicauth",
+            "    client_auth:\n      username_file: /etc/secrets/username\n      password_file: /etc/secrets/password\n",
+        ),
+        accepted(),
+    ),
+    "basicauth's empty htpasswd": (
+        extension("basicauth", "    htpasswd: {}\n"),
+        accepted(),
+    ),
     # ---- keys already in a text
     "prometheus' report_extra_scrape_metrics": (
         receiver(
@@ -603,13 +631,6 @@ async def test_the_collector_answers_a_handoff_case(version: str, name: str) -> 
 # ---- what `validate` passes but a start refuses --------------------------------
 
 IN_CLUSTER = ("k8s_in_cluster", "Runs inside a Kubernetes cluster")
-
-
-def extension(name: str, body: str) -> str:
-    return (
-        f"{R}exporters:\n  debug:\nextensions:\n  {name}:\n{body}service:\n  extensions: [{name}]\n"
-        "  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [debug]\n"
-    )
 
 
 # name -> (text, the service's requirements as (category, title, componentPath))
