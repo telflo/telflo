@@ -11,13 +11,14 @@ import {
   writeSeededFlowsFixture,
   type SeededFlowsFixture,
 } from "./seeded-flows-fixture.js";
-import { loadFlowsMigration } from "./testing.js";
+import { loadSeededFlows } from "./testing.js";
 
 /*
  * The seeded flows' fixture the validator's binary tests and the web's
  * schema tests read: the committed file is what seeded-flows-fixture.ts
- * makes of migration 1700000000026's `seededFlows` today. This test reads
- * it and never writes it (but for a temporary directory's copy).
+ * makes of the seeding migrations' `seededFlows` (1700000000026's and
+ * 1700000000045's) today. This test reads it and never writes it (but for
+ * a temporary directory's copy).
  */
 
 function committedFixture(): string {
@@ -25,21 +26,21 @@ function committedFixture(): string {
 }
 
 describe("the seeded flows' fixture", () => {
-  it("is what the script writes from the migration's seededFlows today", async () => {
-    const { seededFlows } = await loadFlowsMigration();
+  it("is what the script writes from the migrations' seededFlows today", async () => {
+    const seededFlows = await loadSeededFlows();
     // Not toBe: a stale fixture's message names the script, not a 55 KB diff.
     expect(
       committedFixture() === serializedSeededFlowsFixture(seededFlows),
-      `${SEEDED_FLOWS_FIXTURE} is stale: migration 1700000000026's seededFlows changed. Run \`${SEEDED_FLOWS_SCRIPT}\` and commit the file.`,
+      `${SEEDED_FLOWS_FIXTURE} is stale: a seeding migration's seededFlows changed. Run \`${SEEDED_FLOWS_SCRIPT}\` and commit the file.`,
     ).toBe(true);
   });
 
   it("holds every seeded flow once, in the seed's order, with its pin and its YAML byte for byte", async () => {
-    const { seededFlows } = await loadFlowsMigration();
+    const seededFlows = await loadSeededFlows();
     const fixture = JSON.parse(committedFixture()) as SeededFlowsFixture;
     expect(fixture.script).toBe(SEEDED_FLOWS_SCRIPT);
     expect(fixture.flows.map((flow) => flow.slug)).toEqual(seededFlows.map((flow) => flow.slug));
-    expect(new Set(fixture.flows.map((flow) => flow.slug)).size).toBe(13);
+    expect(new Set(fixture.flows.map((flow) => flow.slug)).size).toBe(16);
     for (const [index, flow] of fixture.flows.entries()) {
       const seeded = seededFlows[index]!;
       expect(flow, flow.slug).toEqual({
@@ -66,7 +67,7 @@ describe("the seeded flows' fixture", () => {
   });
 
   it("writes the serialized fixture to the path it is given", async () => {
-    const { seededFlows } = await loadFlowsMigration();
+    const seededFlows = await loadSeededFlows();
     const directory = mkdtempSync(join(tmpdir(), "seeded-flows-fixture-"));
     try {
       const path = join(directory, "seeded-flows.json");

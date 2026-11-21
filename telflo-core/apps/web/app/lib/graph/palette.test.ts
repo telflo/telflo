@@ -4,13 +4,13 @@ import { describe, expect, it } from "vitest";
 import { componentPalette, findPaletteEntry, paletteDefaultConfig } from "./palette.js";
 
 describe("the palette", () => {
-  it("has 57 entries: 18 receivers, 16 processors, 11 exporters, 8 extensions, 4 connectors", () => {
-    expect(componentPalette).toHaveLength(57);
+  it("has 58 entries: 18 receivers, 16 processors, 11 exporters, 9 extensions, 4 connectors", () => {
+    expect(componentPalette).toHaveLength(58);
     const count = (type: string) => componentPalette.filter((entry) => entry.type === type).length;
     expect([count("receiver"), count("processor"), count("exporter"), count("extension"), count("connector")]).toEqual([
-      18, 16, 11, 8, 4,
+      18, 16, 11, 9, 4,
     ]);
-    expect(new Set(componentPalette.map((entry) => entry.id)).size).toBe(57);
+    expect(new Set(componentPalette.map((entry) => entry.id)).size).toBe(58);
   });
 
   it("keeps its order, labels, icons and help", () => {

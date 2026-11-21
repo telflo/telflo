@@ -908,6 +908,21 @@ const entries: PaletteComponent[] = [
       ],
     },
   },
+  {
+    id: "basicauth-extension",
+    type: "extension",
+    subType: "basicauth",
+    label: "Basic Auth",
+    icon: "LockKeyhole",
+    helpText:
+      "HTTP Basic authenticator. In client mode (`client_auth`) an exporter attaches a username and password to every request; in server mode (`htpasswd`) a receiver checks each request against htpasswd entries. One mode per instance — reference it via `auth.authenticator: basicauth`.",
+    defaultConfig: {
+      client_auth: {
+        username: "${env:BASIC_AUTH_USERNAME}",
+        password: "${env:BASIC_AUTH_PASSWORD}",
+      },
+    },
+  },
   // Connectors
   {
     id: "spanmetrics-connector",

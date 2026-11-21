@@ -103,6 +103,7 @@ export const PALETTE_SIGNALS: Readonly<Record<string, PipelineSignalType>> = {
   "memory-limiter-extension": "traces",
   "bearertokenauth-extension": "traces",
   "oidc-extension": "traces",
+  "basicauth-extension": "traces",
 };
 
 /** One text of the fixture: what a drop of `paletteId` writes on each of `versions`, wired. */

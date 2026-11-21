@@ -2,15 +2,15 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 /*
- * The 13 seeded flows as the schema tests read them:
+ * The seeded flows as the schema tests read them:
  * `services/otelcol-validator/tests/fixtures/seeded-flows.json`, each
- * flow's slug, pin and YAML, which the db workspace writes from migration
- * 1700000000026's `seededFlows` and whose staleness its suite checks
- * (packages/db/src/seeded-flows-fixture.ts).
+ * flow's slug, pin and YAML, which the db workspace writes from the
+ * `seededFlows` of migrations 1700000000026 and 1700000000045 and whose
+ * staleness its suite checks (packages/db/src/seeded-flows-fixture.ts).
  *
- * The fixture, not the constant: the web doesn't depend on @telflo/db, and
- * the constant is reached only by a dynamic import of the migration module
- * through @telflo/db/testing; the fixture is the checked copy the
+ * The fixture, not the constants: the web doesn't depend on @telflo/db, and
+ * the constants are reached only by a dynamic import of the migration
+ * modules through @telflo/db/testing; the fixture is the checked copy the
  * validator's binary tests read too, so the collector and the schema check
  * one text.
  */

@@ -52,7 +52,7 @@ describe("ComponentPalette", () => {
   it("renders every palette entry with no flag gating", () => {
     const { container } = render(<ComponentPalette />);
     expect(container.querySelectorAll('[draggable="true"]')).toHaveLength(componentPalette.length);
-    expect(componentPalette).toHaveLength(57);
+    expect(componentPalette).toHaveLength(58);
   });
 
   it("lists the Datadog receiver and exporter", () => {
@@ -75,7 +75,7 @@ describe("ComponentPalette", () => {
       ["Receivers", "18"],
       ["Processors", "16"],
       ["Exporters", "11"],
-      ["Extensions", "8"],
+      ["Extensions", "9"],
       ["Connectors", "4"],
     ]);
     const receivers = container.querySelector("h3")!.parentElement!.nextElementSibling!;

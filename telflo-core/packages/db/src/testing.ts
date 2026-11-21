@@ -31,9 +31,16 @@ import type {
 import { createDb, createPool } from "./pool.js";
 import { APPLICATION_ROLE } from "./application-role.js";
 import { testDatabaseUrl, testMigrationDatabaseUrl } from "./test-database.js";
+import {
+  loadSeededFlowsMigrations,
+  migrationUrl,
+  type SeededFlow,
+  type SeededFlowsMigration,
+} from "./seeded-flows-migrations.js";
 
 /** The mark of a test's own catalog fixture row: test-database.ts' TEST_CATALOGUE_FIXTURE_NOTE. */
 export { TEST_CATALOGUE_FIXTURE_NOTE } from "./test-database.js";
+export type { SeededFlow, SeededFlowsMigration } from "./seeded-flows-migrations.js";
 
 /**
  * Test helpers. Exported only from the `@telflo/db/testing` subpath, never
@@ -155,10 +162,11 @@ export const singletonTables = ["otelcol_testing_state", "ottl_evaluator_state",
  * references run the other way: configurations, configuration_versions and
  * flows reference the catalog's), so the cascade never reaches them.
  *
- * It empties `flows` too, the seeded flows (migration 1700000000026)
- * included: a test that needs them calls `insertSeededFlows` afterwards. So
- * too `test_regex` and its 35 seeded entries (migration 1700000000031):
- * `insertSeededTestRegexes` puts them back. And it marks the tester and the
+ * It empties `flows` too, the seeded flows (migrations 1700000000026 and
+ * 1700000000045) included: a test that needs them calls
+ * `insertSeededFlows` afterwards. So too `test_regex` and its 35 seeded
+ * entries (migration 1700000000031): `insertSeededTestRegexes` puts them
+ * back. And it marks the tester and the
  * evaluator up and lets everyone create an organization again
  * (`singletonTables`), so a test that changed one leaves nothing behind.
  * That last is the TESTS' baseline, not the migration's default: a freshly
@@ -222,58 +230,43 @@ async function withTestLockTimeout<T>(
   }
 }
 
-/**
- * A seeded flow as migration 1700000000026 holds it: its row, pinned, in the
- * flows table's column names.
- */
-export interface SeededFlow {
-  readonly slug: string;
-  readonly name: string;
-  readonly summary: string;
-  readonly description: string;
-  readonly source: "telflo" | "community";
-  readonly author_name: string | null;
-  readonly author_url: string | null;
-  readonly signals: readonly string[];
-  readonly tags: readonly string[];
-  readonly yaml_content: string;
-  readonly collector_distribution: string;
-  readonly collector_version: string;
-  readonly source_url: string | null;
-  readonly published: boolean;
-  readonly sort_order: number;
-}
-
 /** What migration 1700000000026 exports beside up and down. */
-export interface FlowsMigration {
-  /** The 13 seeded flows, frozen, in their sort order. */
+export interface FlowsMigration extends SeededFlowsMigration {
+  /** Its 13 seeded flows, frozen, in their sort order. */
   readonly seededFlows: readonly SeededFlow[];
   /** The insert of `flows`, on conflict (slug) do nothing, dollar-quoted; refuses a text holding its quoting tag. */
   flowsInsert(flows: readonly SeededFlow[]): string;
-  /** The seeded flows' insert, as the migration runs it. */
+  /** Its seeded flows' insert, as the migration runs it. */
   seededFlowsInsert(): string;
 }
 
 /**
  * Migration 1700000000026's module, by a dynamic import of a computed URL:
  * a static import would bring a file outside `src` (and with no types) into
- * the typecheck. The seeded flows' one copy is the migration's, which reads
- * no file; this hands it to tests and their fixtures.
+ * the typecheck. Its tests read it; every other test reads every seeded
+ * flow (`loadSeededFlows`), the later migrations' too.
  */
 export async function loadFlowsMigration(): Promise<FlowsMigration> {
-  const url = new URL("../migrations/1700000000026_flows.js", import.meta.url).href;
-  return (await import(url)) as FlowsMigration;
+  return (await import(migrationUrl("1700000000026_flows.js"))) as FlowsMigration;
 }
 
 /**
- * Inserts the seeded flows into `db` exactly as migration 1700000000026
- * does (on conflict (slug) do nothing), as the owner: `truncateAll` empties
- * them, and a test or the browser tests' global setup that needs them
- * calls this afterwards.
+ * Every seeded flow, in the gallery's order: those of each migration that
+ * seeds flows (seeded-flows-migrations.ts), which read no file. Their one
+ * copy is the migrations'; this hands it to tests and their fixtures.
+ */
+export { loadSeededFlows } from "./seeded-flows-migrations.js";
+
+/**
+ * Inserts the seeded flows into `db` exactly as the migrations that seed
+ * them do (each on conflict (slug) do nothing), in their order, as the
+ * owner: `truncateAll` empties them, and a test or the browser tests'
+ * global setup that needs them calls this afterwards.
  */
 export async function insertSeededFlows(db: Kysely<Database>): Promise<void> {
-  const migration = await loadFlowsMigration();
-  await sql.raw(migration.seededFlowsInsert()).execute(db);
+  for (const migration of await loadSeededFlowsMigrations()) {
+    await sql.raw(migration.seededFlowsInsert()).execute(db);
+  }
 }
 
 /**

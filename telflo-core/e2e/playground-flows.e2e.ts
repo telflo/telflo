@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { expect, type Locator, type Page } from "@playwright/test";
 // The SaaS pair: open registration, the Terms, the playground and the anonymous reads.
 import { test } from "./support/saas.js";
-import { loadFlowsMigration } from "@telflo/db/testing";
+import { loadSeededFlows } from "@telflo/db/testing";
 import {
   deleteTestFlows,
   E2E_FLOW_SLUG_PREFIX,
@@ -20,16 +20,17 @@ import { waitForHydration } from "./support/session.js";
 // Every request stays within the playground's request allowlist, the open
 // reads read from the browser.
 //
-// The seeded flows are global setup's (migration 1700000000026's rows),
-// read here from the migration's constant and never written; a flow's YAML
-// is Telflo's published catalog, fine to compare. The one hidden flow is
-// this spec's own `e2e-` flow, deleted when its test ends (the flows table
-// is global: other specs' flows may be listed too, so nothing counts cards).
+// The seeded flows are global setup's (migrations 1700000000026's and
+// 1700000000045's rows), read here from the migrations' constants and never
+// written; a flow's YAML is Telflo's published catalog, fine to compare. The
+// one hidden flow is this spec's own `e2e-` flow, deleted when its test ends
+// (the flows table is global: other specs' flows may be listed too, so
+// nothing counts cards).
 
 const SLUG = "log-volume-cost-control";
 
 async function seededFlows() {
-  return (await loadFlowsMigration()).seededFlows;
+  return loadSeededFlows();
 }
 
 async function openPlayground(page: Page, path: string): Promise<void> {

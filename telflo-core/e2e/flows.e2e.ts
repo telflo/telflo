@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { expect, test as base, type BrowserContext, type Locator, type Page } from "@playwright/test";
 import { CSRF_HEADER_NAME, CSRF_HEADER_VALUE } from "@telflo/contracts";
-import { loadFlowsMigration } from "@telflo/db/testing";
+import { loadSeededFlows } from "@telflo/db/testing";
 import {
   deleteTestFlows,
   E2E_FLOW_SLUG_PREFIX,
@@ -29,9 +29,9 @@ import { createVariableThroughApi, uniqueVariableName } from "./support/variable
 // hidden flow's page is a 404 for a non-admin; and a product admin whose
 // flag is cleared mid-visit.
 //
-// The seeded flows are global setup's (migration 1700000000026's rows, put
-// back after the truncation), read here from the migration's constant and
-// never written. A test that writes flows gives each an `e2e-` slug, asserts
+// The seeded flows are global setup's (migrations 1700000000026's and
+// 1700000000045's rows, put back after the truncation), read here from the
+// migrations' constants and never written. A test that writes flows gives each an `e2e-` slug, asserts
 // only on its own, never on a count, and deletes them as the tables' owner
 // when it ends, however it ends: the flows table is global, so every
 // parallel test sees what another wrote.
@@ -81,9 +81,9 @@ const test = base.extend<{ secondContext: BrowserContext; testFlows: string[] }>
   },
 });
 
-/** The seeded flows, as the migration holds them. */
+/** The seeded flows, as their migrations hold them. */
 async function seededFlows() {
-  return (await loadFlowsMigration()).seededFlows;
+  return loadSeededFlows();
 }
 
 async function seededFlow(slug: string) {

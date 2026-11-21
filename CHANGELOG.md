@@ -24,6 +24,14 @@ release's images, Helm chart and Compose install are on its
 - [`CONTRIBUTING.md`](CONTRIBUTING.md): how to propose a change, run the
   checks and license your contribution.
 - The README's "About this project" says how the code was written.
+- A form for the Basic Auth extension (`basicauth`) in the visual editor,
+  and a palette entry for it. It edits client mode (`client_auth`) or
+  server mode (`htpasswd`), one per instance, and warns about missing
+  credentials and settings the collector would refuse.
+- Three more flows in the seeded library: Monitor Supabase, Ship OTel data
+  to GreptimeDB and Ship OTel data to SereneDB, each on otelcol-contrib
+  0.159.0. A migration adds them to an installed database; a flow an admin
+  already made with one of their slugs stays as it is.
 
 ### Changed
 

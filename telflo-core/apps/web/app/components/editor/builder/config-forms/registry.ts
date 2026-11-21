@@ -4,6 +4,7 @@ import { AttributesProcessorForm } from "./AttributesProcessorForm.js";
 import { AWSS3ExporterForm } from "./AWSS3ExporterForm.js";
 import { AWSS3ReceiverForm } from "./AWSS3ReceiverForm.js";
 import { BatchProcessorForm } from "./BatchProcessorForm.js";
+import { BasicAuthExtensionForm } from "./BasicAuthExtensionForm.js";
 import { BearerTokenAuthExtensionForm } from "./BearerTokenAuthExtensionForm.js";
 import { ClickhouseExporterForm } from "./ClickhouseExporterForm.js";
 import { CumulativeToDeltaProcessorForm } from "./CumulativeToDeltaProcessorForm.js";
@@ -136,6 +137,7 @@ const FORMS: Readonly<Record<ComponentType, Readonly<Record<string, ConfigForm>>
     spanmetrics: SpanmetricsConnectorForm,
   },
   extension: {
+    basicauth: BasicAuthExtensionForm,
     bearertokenauth: BearerTokenAuthExtensionForm,
     file_storage: FileStorageExtensionForm,
     health_check: HealthCheckForm,

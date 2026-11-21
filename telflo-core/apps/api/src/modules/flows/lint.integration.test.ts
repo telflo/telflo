@@ -5,7 +5,7 @@ import { CSRF_HEADER_NAME, CSRF_HEADER_VALUE, FLOW_YAML_MAXIMUM_LENGTH } from "@
 import {
   addMembership,
   createUserWithOrganization,
-  loadFlowsMigration,
+  loadSeededFlows,
   openTestDatabases,
   truncateAll,
   type TestDatabases,
@@ -211,7 +211,7 @@ describe("POST /api/v1/flows/lint", () => {
     });
 
     it("lints a seeded flow: dual-ship-migration-bridge is blocked by its literal Datadog site", async () => {
-      const { seededFlows } = await loadFlowsMigration();
+      const seededFlows = await loadSeededFlows();
       const flow = seededFlows.find((seeded) => seeded.slug === "dual-ship-migration-bridge");
       if (!flow) throw new Error("the seed has no dual-ship-migration-bridge");
       const response = await lint(await signedIn("productAdmin"), { yaml: flow.yaml_content });
