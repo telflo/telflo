@@ -1572,7 +1572,7 @@ writes no request's URL or path ("Kubernetes", below).
   the quick-deploy paths' locations (`^/api/…` to the API, that `404`, a
   web path holding `tqd_` to the web app) log only `crit`.
   `scripts/check-gateway-logs.sh` runs the committed file in the real
-  `nginx:1.27-alpine`, upstreams up and down, the web stand-in counting
+  `nginx:1.30-alpine`, upstreams up and down, the web stand-in counting
   its requests and nginx's own `404`s checked for their content type
   (`docs/conventions/testing.md`).
 - **Analytics** (`apps/web/app/lib/analytics.ts`): any URL or path that

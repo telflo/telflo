@@ -14,7 +14,7 @@
 #       a GitHub-hosted Linux runner only: the third-party images the gates
 #       and smokes need, each pulled by its pinned digest and tagged as the
 #       repository's files name them: nginx (charts/telflo/values.yaml's
-#       gateway digest) as nginx:1.27-alpine, the opamp-server
+#       gateway digest) as nginx:1.30-alpine, the opamp-server
 #       (vendor/opamp-server/PIN) as ghcr.io/telflo/opamp-server:<version>,
 #       tools.lock's postgres as postgres:18 and mailpit as
 #       axllent/mailpit:v1.31, and tools.lock's registry (load-images.sh's);
@@ -213,7 +213,7 @@ pull_images() {
   DOCKER_CONFIG="$tmp/docker" docker tag "$("${BASH:-bash}" "$TOOLS" ref postgres)" postgres:18 || fail "tagging postgres failed"
   DOCKER_CONFIG="$tmp/docker" docker tag "$("${BASH:-bash}" "$TOOLS" ref mailpit)" axllent/mailpit:v1.31 || fail "tagging mailpit failed"
   nginx_digest="$(awk '/^gateway:/{g=1} g && /digest:/{print $2; exit}' "$ROOT/charts/telflo/values.yaml")"
-  pull_tag nginx "$nginx_digest" nginx:1.27-alpine
+  pull_tag nginx "$nginx_digest" nginx:1.30-alpine
   opamp_version="$(sed -n 's/^version=//p' "$ROOT/vendor/opamp-server/PIN")"
   opamp_digest="$(sed -n 's/^digest=//p' "$ROOT/vendor/opamp-server/PIN")"
   telflo_version_ok "$opamp_version" || fail "vendor/opamp-server/PIN's version isn't x.y.z"

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Checks that the gateway's logs never hold a quick-deploy link's secret, nor
 # an API token, nor a library link (sections 3 and 4). Runs the real image,
-# nginx:1.27-alpine (never pulled: it must already be on the machine), with the
+# nginx:1.30-alpine (never pulled: it must already be on the machine), with the
 # real docker/gateway/default.conf, unchanged, its upstreams' names resolving
 # to the container's own loopback (--add-host), where two stand-in servers
 # answer for the API and the web app. Its include of
@@ -164,7 +164,7 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
-IMAGE=nginx:1.27-alpine
+IMAGE=nginx:1.30-alpine
 CONTAINER=${CHECK_GATEWAY_LOGS_CONTAINER:-telflo-check-gateway-logs}
 PORT=${CHECK_GATEWAY_LOGS_PORT:-50089}
 CONFIG=docker/gateway/default.conf

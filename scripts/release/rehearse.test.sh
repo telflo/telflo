@@ -308,7 +308,7 @@ reset() { # the stand-ins' state: a developer's own things, the pins local, AC, 
   printf '%s\n' telflo-platform-db-1 telflo-dev-api-1 buildx_buildkit_telflo-multi0 owner-telflo-rehearse-copy >"$sd/containers"
   printf '%s\n' telflo-platform_db buildx_buildkit_telflo-multi0_state >"$sd/volumes"
   printf '%s\n' telflo-platform_default bridge >"$sd/networks"
-  printf '%s\n' "postgres:18 postgres@sha256:1" "axllent/mailpit:v1.31 axllent/mailpit@sha256:2" "nginx:1.27-alpine nginx@$nginx_digest" \
+  printf '%s\n' "postgres:18 postgres@sha256:1" "axllent/mailpit:v1.31 axllent/mailpit@sha256:2" "nginx:1.30-alpine nginx@$nginx_digest" \
     "ghcr.io/telflo/opamp-server:$pin ghcr.io/telflo/opamp-server@$pin_digest" "telflo-smoke-collector:owner-tag x" \
     "ghcr.io/telflo/telflo/collector:0.161.0 kept-from-before" >"$sd/images"
   echo $((40 * 1024 * 1024)) >"$sd/disk-kb"

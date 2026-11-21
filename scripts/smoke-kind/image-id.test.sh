@@ -66,7 +66,7 @@ ids() { # <image> <store>: rc of smoke_kind_image_ids
 }
 
 check "the names as the node's containerd gives them" \
-  "[ \"\$(smoke_kind_normalized nginx:1.27-alpine)\" = docker.io/library/nginx:1.27-alpine ] && [ \"\$(smoke_kind_normalized axllent/mailpit:v1.31)\" = docker.io/axllent/mailpit:v1.31 ] && [ \"\$(smoke_kind_normalized $api)\" = $api ] && [ \"\$(smoke_kind_normalized localhost/x:1)\" = localhost/x:1 ]"
+  "[ \"\$(smoke_kind_normalized nginx:1.30-alpine)\" = docker.io/library/nginx:1.30-alpine ] && [ \"\$(smoke_kind_normalized axllent/mailpit:v1.31)\" = docker.io/axllent/mailpit:v1.31 ] && [ \"\$(smoke_kind_normalized $api)\" = $api ] && [ \"\$(smoke_kind_normalized localhost/x:1)\" = localhost/x:1 ]"
 
 export SD_STORE=classic
 check "telflo_engine_store: classic" "[ \"\$(telflo_engine_store)\" = classic ]"
@@ -95,10 +95,10 @@ export SD_NODE_TARGET=$other
 check "containerd store: the node's record targets another manifest: refused" "! ids $api containerd && [ \"\$SK_NODE_ID\" = $other ]"
 export SD_NODE_TARGET=$manifest SD_NODE_TAGS=ghcr.io/telflo/telflo/web:0.1.0
 check "containerd store: the node doesn't know the image by its name: refused" "! ids $api containerd && [ -z \"\$SK_NODE_ID\" ]"
-export SD_NODE_TAGS=docker.io/library/nginx:1.27-alpine SD_NODE_NAME=docker.io/library/nginx:1.27-alpine SD_HOST_ID=$manifest
-check "containerd store: a bare name (nginx:1.27-alpine) found under docker.io/library/: loaded" "ids nginx:1.27-alpine containerd"
+export SD_NODE_TAGS=docker.io/library/nginx:1.30-alpine SD_NODE_NAME=docker.io/library/nginx:1.30-alpine SD_HOST_ID=$manifest
+check "containerd store: a bare name (nginx:1.30-alpine) found under docker.io/library/: loaded" "ids nginx:1.30-alpine containerd"
 export SD_HOST_ID=""
-check "no host id (the image isn't local): refused, either store" "! ids nginx:1.27-alpine containerd && ! ids nginx:1.27-alpine classic"
+check "no host id (the image isn't local): refused, either store" "! ids nginx:1.30-alpine containerd && ! ids nginx:1.30-alpine classic"
 check "smoke-kind.sh sources image-id.sh and oci.sh and compares through smoke_kind_image_ids with the engine's store" \
   "grep -q '^\\. \"\$REPO/scripts/smoke-kind/image-id.sh\"' '$root/scripts/smoke-kind.sh' && grep -q '^ENGINE_STORE=\$(telflo_engine_store)' '$root/scripts/smoke-kind.sh' && grep -q 'smoke_kind_image_ids \"\$image\" \"\$NODE\" \"\$ENGINE_STORE\"' '$root/scripts/smoke-kind.sh'"
 

@@ -442,7 +442,7 @@ pipeline").
 ## The gateway's logs
 
 `scripts/check-gateway-logs.sh` checks that the gateway's logs never hold a
-quick-deploy link's secret. It runs the real `nginx:1.27-alpine` image
+quick-deploy link's secret. It runs the real `nginx:1.30-alpine` image
 (`--pull never`: it must already be on the machine, as the gateway's base;
 the script fails saying so otherwise) with the committed
 `docker/gateway/default.conf`, unchanged, its upstreams' names pointed at

@@ -514,7 +514,7 @@ must already be in the local Docker engine (a missing one is refused,
 never pulled):
 - kind's node image at `scripts/release/tools.lock`'s digest
   (`scripts/release/tools.sh pull kind-node`);
-- `nginx:1.27-alpine` at the digest `values.yaml` pins for the gateway,
+- `nginx:1.30-alpine` at the digest `values.yaml` pins for the gateway,
   and `axllent/mailpit:v1.31`;
 - `ghcr.io/telflo/opamp-server` at `vendor/opamp-server/PIN`'s version
   and digest;

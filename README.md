@@ -156,7 +156,7 @@ the opamp-server's agent endpoint. Everything else is internal.
 
 | Component | What it does | Image |
 |---|---|---|
-| Gateway | nginx: the one origin browsers reach, sending `/api/` to the API and every page to the web app | `nginx:1.27-alpine`, pinned by digest |
+| Gateway | nginx: the one origin browsers reach, sending `/api/` to the API and every page to the web app | `nginx:1.30-alpine`, pinned by digest |
 | Web app | the pages, served by their own Node server | `ghcr.io/telflo/telflo/web` |
 | API | the API for interfacing with Telflo's standard functionality | `ghcr.io/telflo/telflo/api` |
 | PostgreSQL | two databases, `telflo_platform` and `telflo_opamp_server`, each with its own roles; neither side's roles can open the other's | `postgres:18`, pinned by digest |

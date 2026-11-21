@@ -103,11 +103,11 @@ gw_container() { # the image's own entrypoint and command; no credential
 }
 each_profile "gateway: nginx's own entrypoint, no environment, one container" gw_container
 gw_image() {
-  eq "$L" "$GW_C.image" '"docker.io/library/nginx:1.27-alpine@sha256:65645c7bb6a0661892a8b03b89d0743208a18dd2f3f17a54ef4b76fb8e2f2a10"' &&
+  eq "$L" "$GW_C.image" '"docker.io/library/nginx:1.30-alpine@sha256:caf4e1e032a20f9c3c5e28fc7f25ffd768ad8677b4975c54193075997b3a97e3"' &&
     eq "$L" "$GW_C.imagePullPolicy" '"IfNotPresent"' &&
-    eq "$(listing full)" "$GW_C.image" '"registry.example.com/mirror/nginx:1.27-alpine"'
+    eq "$(listing full)" "$GW_C.image" '"registry.example.com/mirror/nginx:1.30-alpine"'
 }
-run_case "gateway: nginx:1.27-alpine pinned by digest by default; gateway.image (full)" gw_image
+run_case "gateway: nginx:1.30-alpine pinned by digest by default; gateway.image (full)" gw_image
 
 # --- the Service ---------------------------------------------------------------------
 gw_service_default() {

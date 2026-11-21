@@ -118,8 +118,8 @@ run_case "a Telflo image by digest fails" broken "otelcol-validator's image is" 
   sed "s#\\(ghcr.io/telflo/telflo/otelcol-validator:[0-9.]*\\)\$#\\1@$digest#"
 run_case "Postgres off the chart's digest fails" broken "db's image is 'postgres:18@$digest'" deploy/compose/compose.yaml \
   in_service db "sub(/@sha256:[0-9a-f]+/, \"@$digest\")"
-run_case "nginx without its digest fails" broken "gateway's image is 'nginx:1.27-alpine'" deploy/compose/compose.yaml \
-  sed 's#^\(    image: nginx:1.27-alpine\)@sha256:[0-9a-f]*$#\1#'
+run_case "nginx without its digest fails" broken "gateway's image is 'nginx:1.30-alpine'" deploy/compose/compose.yaml \
+  sed 's#^\(    image: nginx:1.30-alpine\)@sha256:[0-9a-f]*$#\1#'
 run_case "the chart's Postgres digest moved fails the install's" broken "db-bootstrap's image is" charts/telflo/values.yaml \
   sed "s#^    digest: sha256:9f4fd4aa[0-9a-f]*\$#    digest: $digest#"
 run_case "the opamp-server off the PIN fails" broken "opamp-server's image is" deploy/compose/compose.yaml \
