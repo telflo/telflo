@@ -701,6 +701,19 @@
       "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: localhost:4317\nexporters:\n  debug: {}\nextensions:\n  oidc:\n    providers:\n      - issuer_url: ${env:OIDC_ISSUER_URL}\n        audience: ${env:OIDC_AUDIENCE}\nservice:\n  extensions: [oidc]\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [debug]\n"
     },
     {
+      "paletteId": "basicauth-extension",
+      "kind": "extension",
+      "type": "basicauth",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: localhost:4317\nexporters:\n  debug: {}\nextensions:\n  basicauth:\n    client_auth:\n      username: ${env:BASIC_AUTH_USERNAME}\n      password: ${env:BASIC_AUTH_PASSWORD}\nservice:\n  extensions: [basicauth]\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [debug]\n"
+    },
+    {
       "paletteId": "spanmetrics-connector",
       "kind": "connector",
       "type": "span_metrics",

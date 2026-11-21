@@ -49,6 +49,7 @@ const DOCS_URLS: Record<string, string> = {
   "extension/opamp": `${CONTRIB}/extension/opampextension`,
   "extension/bearertokenauth": `${CONTRIB}/extension/bearertokenauthextension`,
   "extension/oidc": `${CONTRIB}/extension/oidcauthextension`,
+  "extension/basicauth": `${CONTRIB}/extension/basicauthextension`,
   "extension/memory_limiter": `${CORE}/extension/memorylimiterextension`,
   "processor/metricstransform": `${CONTRIB}/processor/metricstransformprocessor`,
 

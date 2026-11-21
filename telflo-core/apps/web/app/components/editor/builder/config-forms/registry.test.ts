@@ -4,6 +4,7 @@ import { AttributesProcessorForm } from "./AttributesProcessorForm.js";
 import { AWSS3ExporterForm } from "./AWSS3ExporterForm.js";
 import { AWSS3ReceiverForm } from "./AWSS3ReceiverForm.js";
 import { BatchProcessorForm } from "./BatchProcessorForm.js";
+import { BasicAuthExtensionForm } from "./BasicAuthExtensionForm.js";
 import { BearerTokenAuthExtensionForm } from "./BearerTokenAuthExtensionForm.js";
 import { ClickhouseExporterForm } from "./ClickhouseExporterForm.js";
 import { CumulativeToDeltaProcessorForm } from "./CumulativeToDeltaProcessorForm.js";
@@ -117,6 +118,7 @@ const FORMS: readonly (readonly [ComponentType, string, ConfigForm])[] = [
   ["connector", "routing", RoutingConnectorForm],
   ["connector", "failover", FailoverConnectorForm],
   ["connector", "spanmetrics", SpanmetricsConnectorForm],
+  ["extension", "basicauth", BasicAuthExtensionForm],
   ["extension", "bearertokenauth", BearerTokenAuthExtensionForm],
   ["extension", "file_storage", FileStorageExtensionForm],
   ["extension", "health_check", HealthCheckForm],

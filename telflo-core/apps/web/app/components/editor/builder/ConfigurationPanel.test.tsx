@@ -852,6 +852,7 @@ describe("the layout with a form", () => {
     ["extensions.health_check", "Endpoint"],
     ["extensions.pprof", "Endpoint"],
     ["extensions.zpages", "Endpoint"],
+    ["extensions.basicauth", "Username"],
   ])("gives %s its form", (key, field) => {
     const text = [
       "processors:",
@@ -865,8 +866,9 @@ describe("the layout with a form", () => {
       "  health_check: {}",
       "  pprof: {}",
       "  zpages: {}",
+      "  basicauth: {}",
       "service:",
-      "  extensions: [health_check, pprof, zpages]",
+      "  extensions: [health_check, pprof, zpages, basicauth]",
       "  pipelines:",
       "    traces:",
       "      processors: [memory_limiter, batch]",

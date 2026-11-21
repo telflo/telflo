@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { parse as parseYaml } from "yaml";
 
+import { BasicAuthExtensionForm, removedModeMessage } from "./BasicAuthExtensionForm.js";
 import { BearerTokenAuthExtensionForm } from "./BearerTokenAuthExtensionForm.js";
 import { FileStorageExtensionForm } from "./FileStorageExtensionForm.js";
 import { FormProvider, UNSHOWABLE_VALUE_MESSAGE, useComponentForm } from "./form-context.js";
@@ -17,14 +18,15 @@ import { CANT_EDIT_ON_CANVAS_MESSAGE, selectUndoDescription, useEditorStore } fr
 import { builderStore, componentNamed, openText } from "~/test/builder-store.js";
 
 /*
- * The extension forms: file_storage, OpAMP, bearertokenauth and OIDC, their
- * forms over key paths. Each field is driven as a person would (typing,
- * clicking, picking) and writes only its key: the text changes in that key's
- * lines only, on a text with comments, an anchor and a merge, `0750`, and
- * CRLF line endings. OpAMP's transport switch renames the block in place,
- * keeping `tls`, headers, auth and comments, and removes `polling_interval`
- * only going to ws. The OpAMP (4) and auth extension (8) cases close the
- * file.
+ * The extension forms: file_storage, OpAMP, bearertokenauth, OIDC and
+ * basicauth, their forms over key paths. Each field is driven as a person
+ * would (typing, clicking, picking) and writes only its key: the text changes
+ * in that key's lines only, on a text with comments, an anchor and a merge,
+ * `0750`, and CRLF line endings. OpAMP's transport switch renames the block
+ * in place, keeping `tls`, headers, auth and comments, and removes
+ * `polling_interval` only going to ws. basicauth's mode switch removes the
+ * other mode's block and writes `{}` for the chosen one when it is missing.
+ * The OpAMP (4) and auth extension (11) cases close the file.
  */
 
 const EXTENSIONS = [
@@ -97,6 +99,14 @@ const EXTENSIONS = [
   "  oidc/legacy:",
   "    issuer_url: ${env:OIDC_ISSUER_URL} # deprecated",
   "    audience: ${env:OIDC_AUDIENCE}",
+  "  basicauth/client:",
+  "    client_auth: # the client",
+  "      username: ${env:BASIC_AUTH_USERNAME} # who",
+  "      password: ${env:BASIC_AUTH_PASSWORD}",
+  "  basicauth/server:",
+  "    htpasswd:",
+  "      file: /etc/otelcol/.htpasswd # the file",
+  "      inline: alice:plain-secret",
   "service:",
   "  extensions: [file_storage, opamp, bearertokenauth, oidc]",
   "  pipelines:",
@@ -172,11 +182,14 @@ const BEARER = "extensions.bearertokenauth";
 const BARE = "extensions.bearertokenauth/bare";
 const OIDC = "extensions.oidc";
 const LEGACY = "extensions.oidc/legacy";
+const BASIC_CLIENT = "extensions.basicauth/client";
+const BASIC_SERVER = "extensions.basicauth/server";
 
 const fileStorage = <FileStorageExtensionForm />;
 const opamp = <OpAMPExtensionForm />;
 const bearer = <BearerTokenAuthExtensionForm />;
 const oidc = <OIDCAuthExtensionForm />;
+const basic = <BasicAuthExtensionForm />;
 
 // ── Every field writes only its key ──
 
@@ -675,6 +688,85 @@ const CASES: FieldCase[] = [
     to: "",
     check: (v) => expect(v.providers).toHaveLength(1),
   },
+  // basicauth
+  {
+    name: "basicauth Username",
+    key: BASIC_CLIENT,
+    form: basic,
+    edit: (user) => retypeInto(user, byId("basicauth-username"), "${env:GATEWAY_USER}"),
+    from: "      username: ${env:BASIC_AUTH_USERNAME} # who\n",
+    to: "      username: ${env:GATEWAY_USER} # who\n",
+    check: (v) => expect(at(v, "client_auth", "username")).toBe("${env:GATEWAY_USER}"),
+  },
+  {
+    name: "basicauth Username cleared removes the key",
+    key: BASIC_CLIENT,
+    form: basic,
+    edit: (user) => retypeInto(user, byId("basicauth-username"), ""),
+    from: "      username: ${env:BASIC_AUTH_USERNAME} # who\n",
+    to: "",
+    check: (v) => expect(v.client_auth).toEqual({ password: "${env:BASIC_AUTH_PASSWORD}" }),
+  },
+  {
+    name: "basicauth Password",
+    key: BASIC_CLIENT,
+    form: basic,
+    edit: (user) => retypeInto(user, byId("basicauth-password"), "${env:GATEWAY_PASSWORD}"),
+    from: "      password: ${env:BASIC_AUTH_PASSWORD}\n",
+    to: "      password: ${env:GATEWAY_PASSWORD}\n",
+    check: (v) => expect(at(v, "client_auth", "password")).toBe("${env:GATEWAY_PASSWORD}"),
+  },
+  {
+    name: "basicauth Username File, added to the block",
+    key: BASIC_CLIENT,
+    form: basic,
+    edit: async (user) => {
+      await openSection(user, "Credentials from Files");
+      await retypeInto(user, byId("basicauth-username-file"), "/etc/secrets/username");
+    },
+    from: "      password: ${env:BASIC_AUTH_PASSWORD}\n",
+    to: "      password: ${env:BASIC_AUTH_PASSWORD}\n      username_file: /etc/secrets/username\n",
+    check: (v) => expect(at(v, "client_auth", "username_file")).toBe("/etc/secrets/username"),
+  },
+  {
+    name: "basicauth Password File, added to the block",
+    key: BASIC_CLIENT,
+    form: basic,
+    edit: async (user) => {
+      await openSection(user, "Credentials from Files");
+      await retypeInto(user, byId("basicauth-password-file"), "/etc/secrets/password");
+    },
+    from: "      password: ${env:BASIC_AUTH_PASSWORD}\n",
+    to: "      password: ${env:BASIC_AUTH_PASSWORD}\n      password_file: /etc/secrets/password\n",
+    check: (v) => expect(at(v, "client_auth", "password_file")).toBe("/etc/secrets/password"),
+  },
+  {
+    name: "basicauth htpasswd File",
+    key: BASIC_SERVER,
+    form: basic,
+    edit: (user) => retypeInto(user, byId("basicauth-htpasswd-file"), "/etc/htpasswd"),
+    from: "      file: /etc/otelcol/.htpasswd # the file\n",
+    to: "      file: /etc/htpasswd # the file\n",
+    check: (v) => expect(at(v, "htpasswd", "file")).toBe("/etc/htpasswd"),
+  },
+  {
+    name: "basicauth htpasswd File cleared removes the key",
+    key: BASIC_SERVER,
+    form: basic,
+    edit: (user) => retypeInto(user, byId("basicauth-htpasswd-file"), ""),
+    from: "      file: /etc/otelcol/.htpasswd # the file\n",
+    to: "",
+    check: (v) => expect(v.htpasswd).toEqual({ inline: "alice:plain-secret" }),
+  },
+  {
+    name: "basicauth Inline Entries",
+    key: BASIC_SERVER,
+    form: basic,
+    edit: (user) => retypeInto(user, byId("basicauth-htpasswd-inline"), "bob:other-secret"),
+    from: "      inline: alice:plain-secret\n",
+    to: "      inline: bob:other-secret\n",
+    check: (v) => expect(at(v, "htpasswd", "inline")).toBe("bob:other-secret"),
+  },
 ];
 
 describe("every field of each form writes only its key", () => {
@@ -727,6 +819,8 @@ describe("every field of each form writes only its key", () => {
       [BARE, <BearerTokenAuthExtensionForm key="bb" />],
       [OIDC, <OIDCAuthExtensionForm key="i" />],
       [LEGACY, <OIDCAuthExtensionForm key="l" />],
+      [BASIC_CLIENT, <BasicAuthExtensionForm key="c" />],
+      [BASIC_SERVER, <BasicAuthExtensionForm key="s" />],
     ] as const) {
       cleanup();
       useEditorStore.setState(initialState, true);
@@ -820,6 +914,93 @@ describe("OpAMP's transport switch moves the block's keys across", () => {
   });
 });
 
+describe("basicauth's mode keeps one block", () => {
+  const mode = () => screen.getByRole("combobox", { name: "Mode" });
+  const infoToasts = () => vi.mocked(toast.info).mock.calls.map(([message]) => message);
+
+  beforeEach(() => {
+    vi.spyOn(toast, "info").mockImplementation(() => "");
+  });
+
+  it("client -> server removes client_auth by its lines and writes an empty htpasswd, in one change, with a toast", async () => {
+    const user = renderForm(BASIC_CLIENT, basic);
+    expect(mode()).toHaveTextContent("Client (client_auth)");
+
+    await pick(user, mode(), "Server (htpasswd)");
+
+    expect(text()).toBe(
+      EXTENSIONS.replace(
+        "    client_auth: # the client\n      username: ${env:BASIC_AUTH_USERNAME} # who\n      password: ${env:BASIC_AUTH_PASSWORD}\n",
+        "    htpasswd: {}\n",
+      ),
+    );
+    expect(entries()).toBe(1);
+    expect(infoToasts()).toEqual([removedModeMessage("client_auth")]);
+    expect(mode()).toHaveTextContent("Server (htpasswd)");
+    expect(byId("basicauth-username")).toBeNull();
+    expect(byId("basicauth-htpasswd-file")).toHaveValue("");
+    expect(screen.getByText(/the extension isn't created and the collector doesn't start/)).toBeInTheDocument();
+
+    act(() => void builderStore().undo());
+    expect(text()).toBe(EXTENSIONS);
+  });
+
+  it("server -> client removes htpasswd and writes an empty client_auth; the fields then write under it", async () => {
+    const user = renderForm(BASIC_SERVER, basic);
+    expect(mode()).toHaveTextContent("Server (htpasswd)");
+
+    await pick(user, mode(), "Client (client_auth)");
+
+    expect(valueOf(text(), BASIC_SERVER)).toEqual({ client_auth: {} });
+    expect(infoToasts()).toEqual([removedModeMessage("htpasswd")]);
+    expect(screen.getByText(/Set both a username and a password/)).toBeInTheDocument();
+
+    await retypeInto(user, byId("basicauth-username"), "otel");
+    expect(valueOf(text(), BASIC_SERVER)).toEqual({ client_auth: { username: "otel" } });
+  });
+
+  it("a text holding both blocks shows the fail alert and an empty select; either choice keeps only its block", async () => {
+    const both = EXTENSIONS.replace("  basicauth/server:\n", "  basicauth/both:\n    htpasswd: {inline: 'a:b'}\n    client_auth: {username: otel}\n  basicauth/server:\n");
+    for (const [option, kept] of [
+      ["Server (htpasswd)", { htpasswd: { inline: "a:b" } }],
+      ["Client (client_auth)", { client_auth: { username: "otel" } }],
+    ] as const) {
+      cleanup();
+      useEditorStore.setState(initialState, true);
+      vi.mocked(toast.info).mockClear();
+      const user = renderForm("extensions.basicauth/both", basic, both);
+      expect(screen.getByText(/Both client_auth and htpasswd are set/)).toBeInTheDocument();
+      expect(mode()).toHaveTextContent("Choose one mode to keep");
+      // Both blocks' fields show, so nothing is hidden before the choice.
+      expect(byId("basicauth-username")).toHaveValue("otel");
+      expect(byId("basicauth-htpasswd-inline")).toHaveValue("a:b");
+
+      await pick(user, mode(), option);
+
+      expect(valueOf(text(), "extensions.basicauth/both")).toEqual(kept);
+      expect(entries()).toBe(1);
+      expect(infoToasts()).toHaveLength(1);
+      expect(screen.queryByText(/Both client_auth and htpasswd are set/)).toBeNull();
+    }
+  });
+
+  it("neither block (an explicit null is neither) shows the warning and Client; typing writes client_auth", async () => {
+    for (const body of ["  basicauth/none: {}\n", "  basicauth/none:\n    client_auth:\n    htpasswd: ~\n"]) {
+      cleanup();
+      useEditorStore.setState(initialState, true);
+      const none = EXTENSIONS.replace("  basicauth/server:\n", `${body}  basicauth/server:\n`);
+      const user = renderForm("extensions.basicauth/none", basic, none);
+      expect(screen.getByText(/fails collector validation without one/)).toBeInTheDocument();
+      expect(mode()).toHaveTextContent("Client (client_auth)");
+      expect(byId("basicauth-htpasswd-file")).toBeNull();
+
+      await retypeInto(user, byId("basicauth-password"), "${env:P}");
+      expect(valueOf(text(), "extensions.basicauth/none")).toMatchObject({ client_auth: { password: "${env:P}" } });
+      expect(screen.queryByText(/fails collector validation without one/)).toBeNull();
+    }
+  });
+});
+
 describe("what the forms show", () => {
   it("file_storage: Create Directory shows off when unset (the collector's default); the defaults as placeholders and hints", async () => {
     const unset = "extensions:\n  file_storage: {}\nservice:\n  extensions: [file_storage]\n";
@@ -910,6 +1091,54 @@ describe("what the forms show", () => {
     await user.click(screen.getAllByRole("button", { name: "Remove provider" })[0]!);
     expect(byId("oidc-0-issuer")).toHaveValue("https://other.example.com");
   });
+
+  it("basicauth: the client's values, the files section closed with no note of a version, no warning", () => {
+    renderForm(BASIC_CLIENT, basic);
+    expect(byId("basicauth-username")).toHaveValue("${env:BASIC_AUTH_USERNAME}");
+    expect(byId("basicauth-password")).toHaveValue("${env:BASIC_AUTH_PASSWORD}");
+    expect(screen.getByRole("button", { name: "Credentials from Files" })).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByText(/Set both a username and a password/)).toBeNull();
+    expect(screen.queryByText(/v0\.\d+/)).toBeNull();
+  });
+
+  it("basicauth: a missing password, and a value beside its file, warn; a file opens the files section", () => {
+    renderForm(
+      BASIC_CLIENT,
+      basic,
+      EXTENSIONS.replace("      password: ${env:BASIC_AUTH_PASSWORD}\n", "      username_file: /etc/secrets/username\n"),
+    );
+    expect(screen.getByText(/Set both a username and a password \(or their files\)/)).toBeInTheDocument();
+    expect(screen.getByText("Both a value and a file are set for the username — the collector uses the file and ignores the value.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Credentials from Files" })).toHaveAttribute("aria-expanded", "true");
+    expect(byId("basicauth-username-file")).toHaveValue("/etc/secrets/username");
+
+    cleanup();
+    useEditorStore.setState(initialState, true);
+    renderForm(
+      BASIC_CLIENT,
+      basic,
+      EXTENSIONS.replace(
+        "      password: ${env:BASIC_AUTH_PASSWORD}\n",
+        "      password: ${env:BASIC_AUTH_PASSWORD}\n      username_file: /u\n      password_file: /p\n",
+      ),
+    );
+    expect(screen.queryByText(/Set both a username and a password/)).toBeNull();
+    expect(screen.getByText(/set for the username and password — the collector uses the file/)).toBeInTheDocument();
+  });
+
+  it("basicauth: the server's values (a block scalar as its lines); an htpasswd with neither source warns", () => {
+    const multi = EXTENSIONS.replace("      inline: alice:plain-secret\n", "      inline: |\n        alice:plain-secret\n        bob:$2y$05$hash\n");
+    renderForm(BASIC_SERVER, basic, multi);
+    expect(byId("basicauth-htpasswd-file")).toHaveValue("/etc/otelcol/.htpasswd");
+    expect(byId("basicauth-htpasswd-inline")).toHaveValue("alice:plain-secret\nbob:$2y$05$hash\n");
+    expect(screen.queryByText(/the collector doesn't start/)).toBeNull();
+
+    cleanup();
+    useEditorStore.setState(initialState, true);
+    renderForm("extensions.basicauth", basic, "extensions:\n  basicauth:\n    htpasswd:\n      file: ''\n");
+    expect(screen.getByText(/Add an htpasswd file or inline entries/)).toBeInTheDocument();
+    expect(screen.queryByText(/fails collector validation without one/)).toBeNull();
+  });
 });
 
 describe("values the forms can't show", () => {
@@ -939,6 +1168,18 @@ describe("values the forms can't show", () => {
     renderForm("extensions.oidc/list", oidc, odd);
     expect(screen.getByText(UNSHOWABLE_VALUE_MESSAGE)).toBeInTheDocument();
     expect(text()).toBe(odd);
+  });
+
+  it("basicauth: a block that isn't a mapping shows the hint; the mode still switches", async () => {
+    const odd = EXTENSIONS.replace("  basicauth/server:\n", "  basicauth/odd:\n    client_auth: [otel]\n  basicauth/server:\n");
+    vi.spyOn(toast, "info").mockImplementation(() => "");
+    const user = renderForm("extensions.basicauth/odd", basic, odd);
+    expect(screen.getByText(UNSHOWABLE_VALUE_MESSAGE)).toBeInTheDocument();
+    expect(byId("basicauth-username")).toBeNull();
+    expect(text()).toBe(odd);
+
+    await pick(user, screen.getByRole("combobox", { name: "Mode" }), "Server (htpasswd)");
+    expect(valueOf(text(), "extensions.basicauth/odd")).toEqual({ htpasswd: {} });
   });
 });
 
@@ -1055,6 +1296,20 @@ describe("auth extension form cases", () => {
     expect(screen.getByText(/audience is required unless the check/)).toBeInTheDocument();
   });
 
+  it("basicauth: renders the default env-referenced client credentials", () => {
+    renderForm("extensions.basicauth", basic, paletteText("basicauth-extension"));
+    expect(screen.getByRole("combobox", { name: "Mode" })).toHaveTextContent("Client (client_auth)");
+    expect(byId("basicauth-username")).toHaveValue("${env:BASIC_AUTH_USERNAME}");
+    expect(byId("basicauth-password")).toHaveValue("${env:BASIC_AUTH_PASSWORD}");
+    expect(byId("basicauth-htpasswd-inline")).toBeNull();
+  });
+
+  it("basicauth: shows the htpasswd fields when only htpasswd is set", () => {
+    renderForm("extensions.basicauth", basic, "extensions:\n  basicauth:\n    htpasswd:\n      file: /etc/otelcol/.htpasswd\n");
+    expect(byId("basicauth-htpasswd-file")).toHaveValue("/etc/otelcol/.htpasswd");
+    expect(byId("basicauth-username")).toBeNull();
+  });
+
   it("carries both auth extensions through writing and reading", () => {
     const written = paletteText("bearertokenauth-extension", "oidc-extension");
     expect(written).toContain("bearertokenauth:");
@@ -1064,6 +1319,19 @@ describe("auth extension form cases", () => {
     openText(written);
     expect(componentNamed(BEARER).data.config).toMatchObject({ tokens: ["${env:OTLP_AUTH_TOKEN}"] });
     expect((componentNamed(OIDC).data.config as { providers: Map[] }).providers[0]!.issuer_url).toBe("${env:OIDC_ISSUER_URL}");
+  });
+
+  it("carries the basicauth default through writing and reading, with its form", () => {
+    const written = paletteText("basicauth-extension");
+    expect(written).toContain("  basicauth:\n    client_auth:\n      username: ${env:BASIC_AUTH_USERNAME}\n      password: ${env:BASIC_AUTH_PASSWORD}\n");
+
+    useEditorStore.setState(initialState, true);
+    openText(written);
+    const node = componentNamed("extensions.basicauth");
+    expect(node.data.config).toEqual({
+      client_auth: { username: "${env:BASIC_AUTH_USERNAME}", password: "${env:BASIC_AUTH_PASSWORD}" },
+    });
+    expect(formFor("extension", "basicauth")).toBe(BasicAuthExtensionForm);
   });
 
   it("reads ClickStack's shipped auth shapes (named instances, the legacy oidc form, an empty scheme), and editing keeps them", async () => {
@@ -1111,7 +1379,7 @@ describe("auth extension form cases", () => {
 });
 
 describe("privacy", () => {
-  it("puts no config value in any attribute: sections and cards open, the transport menu open, bearer tokens listed", async () => {
+  it("puts no config value in any attribute: sections and cards open, the transport and mode menus open, bearer tokens listed", async () => {
     const MARK = "zq-mark";
     const marked = [
       "extensions:",
@@ -1151,6 +1419,15 @@ describe("privacy", () => {
       `        groups_claim: ${MARK}-groups`,
       `        issuer_ca_path: /${MARK}-ca`,
       `        public_keys_file: /${MARK}-jwks`,
+      "  basicauth:",
+      "    client_auth:",
+      `      username: ${MARK}-user`,
+      `      password: ${MARK}-password`,
+      `      username_file: /${MARK}-user-file`,
+      `      password_file: /${MARK}-password-file`,
+      "    htpasswd:",
+      `      file: /${MARK}-htpasswd`,
+      `      inline: ${MARK}-alice:${MARK}-secret`,
       "",
     ].join("\n");
 
@@ -1172,6 +1449,7 @@ describe("privacy", () => {
       [FILE_STORAGE, <FileStorageExtensionForm key="f" />],
       [OPAMP, <OpAMPExtensionForm key="o" />],
       [BEARER, <BearerTokenAuthExtensionForm key="b" />],
+      ["extensions.basicauth", <BasicAuthExtensionForm key="a" />],
       [OIDC, <OIDCAuthExtensionForm key="i" />],
     ] as const) {
       cleanup();
@@ -1200,6 +1478,15 @@ describe("privacy", () => {
     expect(screen.getAllByRole("option")).toHaveLength(2);
     scan("opamp (menu)");
     await user.keyboard("{Escape}");
+
+    // The mode menu open, over both blocks.
+    cleanup();
+    useEditorStore.setState(initialState, true);
+    const basicUser = renderForm("extensions.basicauth", basic, marked);
+    await basicUser.click(screen.getByRole("combobox", { name: "Mode" }));
+    expect(screen.getAllByRole("option")).toHaveLength(2);
+    scan("basicauth (menu)");
+    await basicUser.keyboard("{Escape}");
 
     // An OIDC card open.
     cleanup();
