@@ -111,6 +111,11 @@ jobs:
       TELFLO_VERIFICATION_TOKEN_TTL_HOURS: "24"
       # CI only: the tests need a secret of 32 bytes or more.
       TELFLO_ACCESS_TOKEN_SECRET: ci-only-access-token-secret-not-for-production
+      # The S3 file store's tests: docker-compose.yml's own object store and
+      # its committed development keys (telflo-core/.env.example's values).
+      TELFLO_TEST_S3_ENDPOINT: http://127.0.0.1:51240
+      TELFLO_TEST_S3_ACCESS_KEY_ID: telflo-development-only-object-store-key
+      TELFLO_TEST_S3_SECRET_ACCESS_KEY: telflo-development-only-object-store-secret-not-for-production
       SHARD: ${{ matrix.shard }}
     defaults:
       run:
@@ -127,6 +132,17 @@ jobs:
           cache: npm
           cache-dependency-path: telflo-core/package-lock.json
       - run: npm ci
+      # The S3 test server: docker-compose.yml's object store, its pinned image
+      # and settings, on 127.0.0.1:51240 (no service container: it needs its
+      # command line).
+      - name: The S3 test server
+        working-directory: .
+        run: docker compose --profile s3 up -d --wait object-store
+      # libraryFileCurlCommand's tests run its command in sh, bash and zsh.
+      - name: zsh
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q --no-install-recommends zsh
       - run: npm run db:migrate
       - run: npx vitest run --coverage --maxWorkers=1 --minWorkers=1 --shard="$SHARD/4" --reporter=default --reporter=blob
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
