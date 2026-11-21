@@ -1710,11 +1710,21 @@ the chart's package, the Compose archive, `create-secrets.sh` and
 (`scripts/release/load-images.sh`), the stack smoke in `oss` mode only,
 the archive smoke and the kind smoke with `--images` and `--chart`, each
 through `scripts/release/steps.sh`, its output through
-`scripts/gates/redact.sh`; and only after all of them, the publish
-(`--push-oci`, `--push-package`, `scripts/release/pull-back.sh`, the
-GitHub Release with `scripts/release/release-notes.sh`'s notes).
+`scripts/gates/redact.sh`; and only after all of them, the stage
+(`--push-oci` and `--push-package` with `--namespace telflo-staging`,
+`scripts/release/pull-back.sh` of the stage, `steps.sh digests` writing
+`digests.txt`, the draft GitHub Release with
+`scripts/release/release-notes.sh`'s notes). **What
+`.github/workflows/finalize.yml` runs**, by hand once the end-to-end tests
+have passed on the stage: the draft and its tag checked (`steps.sh
+finalize-check`), the stage copied to the public namespace by digest and
+each copy checked by digest (`scripts/release/promote.sh`), the public
+tags pulled back against `digests.txt` (`pull-back.sh --digests`), the
+collector check, and the draft published (`steps.sh finalize-publish`).
+It builds and tests nothing itself: the end-to-end tests are the owner's,
+against the stage (`docs/releasing.md`, "Installing a staged release").
 
-**What it doesn't run**: the unit suites and coverage, the browser tests,
+**What the release workflow doesn't run**: the unit suites and coverage, the browser tests,
 the Go tests, the validator's and the tester's test images and the stack
 smoke's `saas` mode. CI runs the suites, the browser tests, the Go tests
 and the two test images ("CI gates" above: on the release's pull request,
@@ -1722,7 +1732,8 @@ and again on `main`), and the local full suite runs them all once before
 the PR that makes a release commit is merged, and that PR records them.
 
 `scripts/release/check-workflows.sh` (a static gate, with its self-test)
-holds `release.yml` and `collector.yml` to their rules: the triggers,
+holds `release.yml`, `finalize.yml` and `collector.yml` to their rules:
+the triggers (and the dispatch inputs: finalize's one `version`),
 `permissions: {}` and each job's own, every action pinned by its full
 commit SHA with its version as a comment (each parsed step's, not only
 the text's lines), no `${{ … }}` inside a `run:`,
@@ -1734,8 +1745,12 @@ exact lines, no step `if:`, each job's `needs` and outputs exactly its
 own, each action's `with:` keys, each job's keys and every `env:` name
 from allow-lists, and `load-images.sh` named `--platform linux/amd64`; and
 each matrix and each job's own `env:` pinned exactly, with the collector
-chart job's one allow-listed `!cancelled()` the only status function
-(`docs/conventions/security.md`, "The release pipeline"). It holds
+chart job's one allow-listed `!cancelled()` the only status function;
+the publish job staging only (`--namespace telflo-staging`, a draft
+Release with `digests.txt`), and `finalize.yml` copying only, its `run:`
+steps its required ones and their tool setup, nothing that builds,
+packages or pushes an archive (`docs/conventions/security.md`, "The
+release pipeline"). It holds
 `ci.yml` to its own, lighter set: only `pull_request` and pushes to
 `main`; `permissions: {}`, each job `contents: read` (the `ci` job's
 none); no secret, token or login; every action on the allow-list and
@@ -1760,9 +1775,12 @@ tag, the collector path (its images and chart pushed to the local
 registry, then `verify-collector-artifacts.sh` against it), the static
 gates, the five builds, the packages, the loads (the machine's own
 platform: `linux/arm64` on an Apple-silicon Mac, natively, where the
-workflow loads `linux/amd64`), the three smokes, then `--push-oci`,
-`--push-package` and `pull-back.sh` against the local registry, and the
-notes. `--no-attest` is only for a builder too old to attest, and the run
+workflow loads `linux/amd64`), the three smokes, then the stage
+(`--push-oci`, `--push-package` and `pull-back.sh` with `--namespace
+telflo-staging` against the local registry, `digests.txt`) and the
+notes, and then the finalize's copy (`promote.sh` from that
+`digests.txt`) and `pull-back.sh --digests` of the local registry's public
+namespace. `--no-attest` is only for a builder too old to attest, and the run
 records it. It fetches its private tools and pulls `tools.lock`'s images
 itself, refuses the development stack's projects and ports, and a battery,
 checks the kube context and kubeconfig before and after, and ends with a
