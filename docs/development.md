@@ -53,7 +53,7 @@ The design's highlights, which a contribution keeps:
 
 ## Running locally
 
-Requires Node.js ≥22 and Docker.
+Requires Node.js 22 (the tests run on 22, as CI runs them) and Docker.
 
 ```bash
 git clone <this repo> && cd telflo/telflo-core   # all npm commands run from here

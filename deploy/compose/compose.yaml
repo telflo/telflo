@@ -27,10 +27,14 @@
 # 127.0.0.1 only. The opamp-server's management API, the database and the
 # internal services are never published.
 #
-# The Telflo images are named by tag, the release's version; Postgres,
-# nginx and Mailpit by digest (the chart's pins). Migrations run on every
-# start: an upgrade is the new release's folder with this one's .env and
-# secrets/, then `docker compose pull` and `docker compose up -d`.
+# The Telflo images are named by tag, the release's version, under
+# TELFLO_IMAGE_REGISTRY: ghcr.io/telflo/telflo when it is unset or empty,
+# or a mirror's path holding the same <name>:<version> (docs/compose.md).
+# Postgres, nginx, Mailpit and the opamp-server are named by digest (the
+# chart's pins), from their own registries whatever it says. Migrations
+# run on every start: an upgrade is the new release's folder with this
+# one's .env and secrets/, then `docker compose pull` and `docker compose
+# up -d`.
 
 # A fixed project name, so the volumes keep their names when a new release
 # is unpacked into another folder (the development stack is telflo-dev).
@@ -158,7 +162,7 @@ services:
   # One-shot, on every start: the platform's migrations as its owner, then
   # the API's login role. A no-op when the schema is current.
   migrate:
-    image: ghcr.io/telflo/telflo/api:0.2.1
+    image: "${TELFLO_IMAGE_REGISTRY:-ghcr.io/telflo/telflo}/api:0.2.2"
     working_dir: /app/packages/db
     command: ["node", "dist/migrate.js"]
     environment:
@@ -211,7 +215,7 @@ services:
   # own validate. The API is its only caller. It reads its secret from its
   # environment.
   otelcol-validator:
-    image: ghcr.io/telflo/telflo/otelcol-validator:0.2.1
+    image: "${TELFLO_IMAGE_REGISTRY:-ghcr.io/telflo/telflo}/otelcol-validator:0.2.2"
     environment:
       OTELCOL_VALIDATOR_SECRET: "${TELFLO_OTELCOL_VALIDATOR_SECRET:?run ./setup.sh first}"
     healthcheck:
@@ -225,7 +229,7 @@ services:
   # its own network with no way out, a read-only root, no capabilities, its
   # secret only from a file. The API is its only caller.
   otelcol-testing:
-    image: ghcr.io/telflo/telflo/otelcol-testing:0.2.1
+    image: "${TELFLO_IMAGE_REGISTRY:-ghcr.io/telflo/telflo}/otelcol-testing:0.2.2"
     read_only: true
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
@@ -248,7 +252,7 @@ services:
   # tester, on its own network (not the tester's), memory and threads
   # bounded, its secret only from a file. The API is its only caller.
   ottl-evaluator:
-    image: ghcr.io/telflo/telflo/ottl-evaluator:0.2.1
+    image: "${TELFLO_IMAGE_REGISTRY:-ghcr.io/telflo/telflo}/ottl-evaluator:0.2.2"
     command: ["serve"]
     read_only: true
     cap_drop: [ALL]
@@ -271,7 +275,7 @@ services:
   # The API. telflo-admin, its operator's commands, runs in this container:
   # `docker compose exec -T api telflo-admin bootstrap ...`.
   api:
-    image: ghcr.io/telflo/telflo/api:0.2.1
+    image: "${TELFLO_IMAGE_REGISTRY:-ghcr.io/telflo/telflo}/api:0.2.2"
     environment: *telflo-api-environment
     volumes:
       - file-store:/var/lib/telflo/file-store
@@ -297,7 +301,7 @@ services:
     restart: unless-stopped
 
   web:
-    image: ghcr.io/telflo/telflo/web:0.2.1
+    image: "${TELFLO_IMAGE_REGISTRY:-ghcr.io/telflo/telflo}/web:0.2.2"
     # telflo-web is the gateway's upstream name, as telflo-api is the API's.
     networks:
       default: { aliases: [telflo-web] }

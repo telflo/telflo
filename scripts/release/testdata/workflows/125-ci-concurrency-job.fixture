@@ -1,0 +1,13 @@
+# Breaks one rule: a job-level concurrency.
+file: ci.yml
+rule: ci-concurrency
+<<<
+  stack:
+    runs-on: ubuntu-24.04
+
+===
+  stack:
+    concurrency: stack
+    runs-on: ubuntu-24.04
+
+>>>

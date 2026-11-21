@@ -6,15 +6,24 @@
 #     gateway/default.conf and gateway/extra-routes.conf (docker/gateway/),
 #     opamp-server/bootstrap.sql (vendor/opamp-server/) and
 #     postgres/telflo-bootstrap.sql (charts/telflo/files/);
-#   - compose.yaml, as text: the top-level `name: telflo`, no build:, and
-#     Mailpit's port line on 127.0.0.1 literally;
+#   - compose.yaml, as text: the top-level `name: telflo`, no build:,
+#     Mailpit's port line on 127.0.0.1 literally, and each image line naming
+#     a Telflo image exactly as
+#     ${TELFLO_IMAGE_REGISTRY:-ghcr.io/telflo/telflo}/<name>:<version>
+#     (scripts/release/version.sh's TELFLO_COMPOSE_IMAGE_PREFIX): never
+#     ghcr.io/telflo/telflo/ without the variable, TELFLO_IMAGE_REGISTRY
+#     with no other default and in no other form, no other variable in any
+#     image line, and nothing after <name>:<version>;
 #   - compose.yaml, as Compose reads it (`docker compose config`, client side
 #     only: no daemon, no registry, an empty temporary DOCKER_CONFIG, no
 #     caller's environment) in a temporary copy whose .env and secrets/
 #     setup.sh made: every service runs a known image and builds nothing
 #     (each Telflo image ghcr.io/telflo/telflo/<name>:<version>, the version
-#     check-version.sh's, by tag; Postgres and nginx at the chart's digests,
-#     read from charts/telflo/values.yaml; the opamp-server at the PIN's;
+#     check-version.sh's, by tag, with TELFLO_IMAGE_REGISTRY unset and with
+#     it empty, and <its value>/<name>:<version> with it set to a mirror's
+#     path, every other image the same in all three; Postgres and nginx at
+#     the chart's digests, read from charts/telflo/values.yaml; the
+#     opamp-server at the PIN's;
 #     Mailpit by digest, under the profile mailpit only, and no other
 #     profile); only the gateway's and the agent endpoint's ports are
 #     published, on TELFLO_BIND_ADDRESS (setup.sh's --bind), and Mailpit's on
@@ -71,6 +80,9 @@ BIND=192.0.2.10
 HTTP_PORT=18080
 AGENT_PORT=18081
 MAILPIT_PORT=18082
+# TELFLO_IMAGE_REGISTRY for the reading with it set: a mirror's path, a port
+# and two levels deep.
+MIRROR=registry.example.com:5000/mirror/telflo
 
 problems=0
 problem() { echo "check-compose-install: $*" >&2; problems=$((problems + 1)); }
@@ -128,6 +140,36 @@ case "$mailpit_ports" in
   '      - "127.0.0.1:'*) ;;
   *) problem "mailpit's port line in deploy/compose/compose.yaml must begin with \"127.0.0.1: (its inbox on this machine only)" ;;
 esac
+# Each image line (comments skipped, one pair of quotes dropped):
+# "<line>|<what's wrong>|<value>" for one naming a Telflo image other than
+# exactly through the prefix, or reading any other variable.
+bad_images="$(awk -v prefix="$TELFLO_COMPOSE_IMAGE_PREFIX" -v literal="$TELFLO_COMPOSE_IMAGE_DEFAULT/" '
+  /^[[:space:]]*#/ { next }
+  /^[[:space:]]+image:[[:space:]]/ {
+    value = $0
+    sub(/^[[:space:]]+image:[[:space:]]+/, "", value); sub(/[[:space:]]+#.*$/, "", value); sub(/[[:space:]]+$/, "", value)
+    if (value ~ /^".*"$/ || value ~ /^\047.*\047$/) value = substr(value, 2, length(value) - 2)
+    if (index(value, prefix) == 1) {
+      if (substr(value, length(prefix) + 1) !~ /^[a-z0-9][a-z0-9-]*:[A-Za-z0-9_.-]+$/) print NR "|after|" value
+    } else if (index(value, "TELFLO_IMAGE_REGISTRY") > 0) {
+      print NR "|registry|" value
+    } else if (index(value, "$") > 0) {
+      print NR "|variable|" value
+    } else if (index(value, literal) == 1) {
+      print NR "|literal|" value
+    }
+  }' "$COMPOSE")"
+if [ -n "$bad_images" ]; then
+  while IFS='|' read -r line_number wrong value; do
+    where="deploy/compose/compose.yaml:$line_number's image '$value'"
+    case "$wrong" in
+      after) problem "$where: a Telflo image is ${TELFLO_COMPOSE_IMAGE_PREFIX}<name>:<version> and nothing more (no digest, no other variable)" ;;
+      registry) problem "$where: TELFLO_IMAGE_REGISTRY is read only as ${TELFLO_COMPOSE_IMAGE_PREFIX}<name>:<version> (its default the public registry, $TELFLO_COMPOSE_IMAGE_DEFAULT; set empty, the default too)" ;;
+      variable) problem "$where reads a variable other than TELFLO_IMAGE_REGISTRY: only a Telflo image takes one, as ${TELFLO_COMPOSE_IMAGE_PREFIX}<name>:<version>" ;;
+      literal) problem "$where names $TELFLO_COMPOSE_IMAGE_DEFAULT/ directly: write ${TELFLO_COMPOSE_IMAGE_PREFIX}<name>:<version>, so TELFLO_IMAGE_REGISTRY picks its registry" ;;
+    esac
+  done <<<"$bad_images"
+fi
 
 # ---- what the images must be -------------------------------------------------------------
 version=""
@@ -175,11 +217,14 @@ json.dump({"cliPluginsExtraDirs": [plugins]} if os.path.isdir(plugins) else {}, 
   "${DOCKER_CONFIG:-${HOME:-/nonexistent}/.docker}/cli-plugins" "$work/docker/config.json" ||
   fatal "couldn't make a temporary Docker config"
 # compose <dir> [args...]: docker compose config --format json in <dir>, its
-# project's own folder, with nothing of the caller's environment.
+# project's own folder, with nothing of the caller's environment but
+# $registry_setting, when it isn't empty (TELFLO_IMAGE_REGISTRY=<value>, the
+# value empty or not).
+registry_setting=""
 compose_config() {
   local dir="$1"
   shift
-  (cd "$dir" && env -i PATH="$PATH" HOME="${HOME:-/nonexistent}" DOCKER_CONFIG="$work/docker" \
+  (cd "$dir" && env -i PATH="$PATH" HOME="${HOME:-/nonexistent}" DOCKER_CONFIG="$work/docker" ${registry_setting:+"$registry_setting"} \
     docker compose --project-directory "$dir" "$@" config --format json)
 }
 # install_copy <name> <setup args...>: a copy of deploy/compose in
@@ -196,13 +241,28 @@ install_copy() {
   fi
 }
 
-# check_install <form> <mailpit: yes|no>: the copy <form>'s Compose reading.
+# check_install <form> <mailpit: yes|no> [<TELFLO_IMAGE_REGISTRY>]: the copy
+# <form>'s Compose reading, every rule, with TELFLO_IMAGE_REGISTRY unset; or,
+# given a value (empty or not), its images only, with TELFLO_IMAGE_REGISTRY
+# set to it: the Telflo images under the value (the public registry when it
+# is empty), every other image as unset.
 check_install() {
-  local form="$1" mailpit="$2" json_status=0 found
+  local form="$1" mailpit="$2" json_status=0 found label="$1 form" registry="$TELFLO_COMPOSE_IMAGE_DEFAULT" scope=all
+  local registry_setting=""
+  if [ "$#" -ge 3 ]; then
+    registry_setting="TELFLO_IMAGE_REGISTRY=$3"
+    scope=images
+    if [ -n "$3" ]; then
+      registry="$3"
+      label="$form form, TELFLO_IMAGE_REGISTRY=$3"
+    else
+      label="$form form, TELFLO_IMAGE_REGISTRY empty"
+    fi
+  fi
   found="$(compose_config "$work/$form" -f "$work/$form/compose.yaml" 2>"$work/$form.err" |
     python3 -I -c '
 import json, os, re, sys
-(form, mailpit, version, postgres, nginx, opamp, bind, http_port, agent_port, mailpit_port, project) = sys.argv[1:12]
+(form, mailpit, version, postgres, nginx, opamp, bind, http_port, agent_port, mailpit_port, project, registry, scope) = sys.argv[1:14]
 try:
     config = json.load(sys.stdin)
     services = config["services"]
@@ -215,7 +275,7 @@ if config.get("name") != "telflo":
 telflo = {"migrate": "api", "api": "api", "web": "web",
           "otelcol-validator": "otelcol-validator", "otelcol-testing": "otelcol-testing",
           "ottl-evaluator": "ottl-evaluator"}
-want = {name: "ghcr.io/telflo/telflo/" + image + ":" + version for name, image in telflo.items()}
+want = {name: registry + "/" + image + ":" + version for name, image in telflo.items()}
 want.update({"db": postgres, "db-bootstrap": postgres, "gateway": nginx,
              "opamp-migrate": opamp, "opamp-server": opamp})
 mailpit_re = re.compile(r"^axllent/mailpit:v[0-9][0-9.]*@sha256:[0-9a-f]{64}$")
@@ -223,17 +283,19 @@ for name in sorted(set(want) - set(services)):
     out.append(name + " is missing")
 for name, service in sorted(services.items()):
     image = service.get("image")
-    if "build" in service:
-        out.append(name + " has a build")
     if name == "mailpit":
         if not isinstance(image, str) or not mailpit_re.match(image):
             out.append("mailpit'"'"'s image is " + repr(image) + ", not axllent/mailpit:<version>@sha256:<digest>")
-        if service.get("profiles") != ["mailpit"]:
-            out.append("mailpit'"'"'s profiles are " + repr(service.get("profiles")) + ", not exactly [mailpit]")
     elif name not in want:
         out.append("an unknown service " + name + " (image " + repr(image) + ")")
     elif image != want[name]:
         out.append(name + "'"'"'s image is " + repr(image) + ", not " + want[name])
+    if scope == "images":
+        continue
+    if "build" in service:
+        out.append(name + " has a build")
+    if name == "mailpit" and service.get("profiles") != ["mailpit"]:
+        out.append("mailpit'"'"'s profiles are " + repr(service.get("profiles")) + ", not exactly [mailpit]")
     if name != "mailpit" and service.get("profiles"):
         out.append(name + " has profiles " + repr(service.get("profiles")) + " (only Mailpit has one)")
     if isinstance(image, str) and image.startswith("axllent/mailpit") and name != "mailpit":
@@ -259,6 +321,10 @@ for name, service in sorted(services.items()):
         out.append(name + "'"'"'s published port goes to " + repr(port.get("target")) + ", not " + str(target))
     if published is not None and str(port.get("published")) != published:
         out.append(name + "'"'"'s port is published as " + repr(port.get("published")) + ", not setup.sh'"'"'s port")
+if scope == "images":
+    for line in out:
+        print(line)
+    sys.exit(0)
 # The lockdown: the three secrets stay files, mounted from the project'"'"'s
 # secrets/ folder; the tester and the evaluator alone on their internal
 # networks, read-only, without capabilities or privilege gained through
@@ -313,15 +379,15 @@ if mailpit == "no" and "mailpit" in services:
 for line in out:
     print(line)
 ' "$form" "$mailpit" "$version" "$postgres_image" "$nginx_image" "$opamp_image" "$BIND" "$HTTP_PORT" "$AGENT_PORT" \
-    "$MAILPIT_PORT" "$work/$form")" ||
+    "$MAILPIT_PORT" "$work/$form" "$registry" "$scope")" ||
     json_status=$?
   if [ "$json_status" != 0 ]; then
-    problem "python3 couldn't read docker compose config's JSON ($form form)"
+    problem "python3 couldn't read docker compose config's JSON ($label)"
     return
   fi
   if [ -n "$found" ]; then
     while IFS= read -r line; do
-      problem "as Compose reads deploy/compose/compose.yaml with setup.sh's .env ($form form): $line"
+      problem "as Compose reads deploy/compose/compose.yaml with setup.sh's .env ($label): $line"
     done <<<"$found"
   fi
 }
@@ -331,6 +397,8 @@ password_file="$work/relay-password"
 install_copy mailpit --public-url http://localhost:$HTTP_PORT --agent-url http://localhost:$AGENT_PORT \
   --http-port "$HTTP_PORT" --agent-port "$AGENT_PORT" --bind "$BIND" --mailpit --mailpit-port "$MAILPIT_PORT"
 check_install mailpit yes
+check_install mailpit yes ""
+check_install mailpit yes "$MIRROR"
 install_copy relay --public-url https://telflo.example.com --agent-url https://opamp.example.com \
   --http-port "$HTTP_PORT" --agent-port "$AGENT_PORT" --bind "$BIND" \
   --smtp-host smtp.example.com --smtp-port 587 --mail-from telflo@example.com \
@@ -421,4 +489,4 @@ if [ "$problems" -ne 0 ]; then
   echo "check-compose-install: FAIL ($problems problem(s))" >&2
   exit 1
 fi
-echo "check-compose-install: OK: the four copies equal their sources; compose.yaml (name telflo, no build, the Telflo images at $version by tag, Postgres, nginx and the opamp-server at their pins, Mailpit by digest under its profile, the two ports on TELFLO_BIND_ADDRESS and Mailpit's on 127.0.0.1 at --mailpit-port's) as text and as Compose reads it with setup.sh's .env in both mail forms; setup.sh's list holds the ${dev_count:-?} development secrets' sha256"
+echo "check-compose-install: OK: the four copies equal their sources; compose.yaml (name telflo, no build, the Telflo images at $version by tag under \${TELFLO_IMAGE_REGISTRY:-$TELFLO_COMPOSE_IMAGE_DEFAULT} (unset, empty and a mirror's), Postgres, nginx and the opamp-server at their pins, Mailpit by digest under its profile, the two ports on TELFLO_BIND_ADDRESS and Mailpit's on 127.0.0.1 at --mailpit-port's) as text and as Compose reads it with setup.sh's .env in both mail forms; setup.sh's list holds the ${dev_count:-?} development secrets' sha256"

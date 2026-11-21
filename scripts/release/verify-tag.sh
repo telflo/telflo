@@ -34,14 +34,20 @@
 #   6. the tag's commit is on main: `git merge-base --is-ancestor <commit>
 #      refs/remotes/origin/main` (only admins tag; a release is a commit on
 #      main);
-#   7. nothing of the version is published: none of the five images
-#      <registry>/telflo/telflo/<api|web|otelcol-validator|otelcol-testing|
-#      ottl-evaluator>:<version> nor the chart
-#      <registry>/telflo/telflo/charts/telflo:<version> exists, each asked
-#      with `crane digest`: a digest means published (refused: that version
-#      is spent, a fix is the next patch); the registry's MANIFEST_UNKNOWN
-#      or NAME_UNKNOWN means absent; any other answer can't tell (refused
-#      too). Every one is asked, then every problem named.
+#   7. nothing of the version is published or staged: none of the five
+#      images <registry>/<namespace>/<api|web|otelcol-validator|
+#      otelcol-testing|ottl-evaluator>:<version> nor the chart
+#      <registry>/<namespace>/charts/telflo:<version> exists, in either of
+#      oci.sh's two namespaces (telflo_namespace_path): telflo/telflo, the
+#      public one, and telflo/telflo-staging, a release's stage. Each is
+#      asked with `crane digest`: a digest in the public one means published
+#      (refused: that version is spent, a fix is the next patch); a digest
+#      in the stage means a stage of the version is open (refused: it is
+#      finalized, or abandoned first with `scripts/release/steps.sh
+#      abandon-stage`, so a stale stage is never promoted by mistake); the
+#      registry's MANIFEST_UNKNOWN or NAME_UNKNOWN means absent; any other
+#      answer can't tell (refused too). Every one is asked, then every
+#      problem named.
 # Then it prints `tag=<tag>`, `version=<version>` and `commit=<sha>`, one a
 # line, and appends the same lines to $GITHUB_OUTPUT when that is set (the
 # job's outputs).
@@ -169,22 +175,29 @@ git_ merge-base --is-ancestor "$commit" "$MAIN_REF" || fail "$tag's commit $comm
 telflo_crane_find "$ROOT" || fail "no crane: scripts/release/tools.sh fetch crane"
 telflo_docker_config || exit 1
 problems=0
-ask() { # <ref>
+ask() { # public|staged <ref>
   local status=0
-  telflo_remote_digest "$1" || status=$?
-  case "$status" in
-    3) note "$1: not published" ;;
-    0) echo "verify-tag: $1 is published already ($TELFLO_REMOTE_DIGEST): version $version is spent, a fix is the next patch version" >&2
+  telflo_remote_digest "$2" || status=$?
+  case "$1:$status" in
+    public:3) note "$2: not published" ;;
+    staged:3) note "$2: not staged" ;;
+    public:0) echo "verify-tag: $2 is published already ($TELFLO_REMOTE_DIGEST): version $version is spent, a fix is the next patch version" >&2
        problems=$((problems + 1)) ;;
-    *) echo "verify-tag: can't tell whether $1 is published: $TELFLO_REMOTE_ANSWER" >&2
+    staged:0) echo "verify-tag: $2 is staged already ($TELFLO_REMOTE_DIGEST): finalize that stage, or abandon it first (scripts/release/steps.sh abandon-stage --version $version)" >&2
+       problems=$((problems + 1)) ;;
+    *) echo "verify-tag: can't tell whether $2 exists: $TELFLO_REMOTE_ANSWER" >&2
        problems=$((problems + 1)) ;;
   esac
 }
-for image in $IMAGES; do ask "$registry/telflo/telflo/$image:$version"; done
-ask "$registry/telflo/telflo/charts/telflo:$version"
-[ "$problems" -eq 0 ] || fail "$problems of the version's images and chart are published, or can't be told: nothing builds"
+public="$registry/$(telflo_namespace_path telflo)"
+staged="$registry/$(telflo_namespace_path telflo-staging)"
+for image in $IMAGES; do ask public "$public/$image:$version"; done
+ask public "$public/charts/telflo:$version"
+for image in $IMAGES; do ask staged "$staged/$image:$version"; done
+ask staged "$staged/charts/telflo:$version"
+[ "$problems" -eq 0 ] || fail "$problems of the version's images and chart are published or staged, or can't be told: nothing builds"
 
 out="$(printf 'tag=%s\nversion=%s\ncommit=%s\n' "$tag" "$version" "$commit")"
 printf '%s\n' "$out"
 if [ -n "${GITHUB_OUTPUT:-}" ]; then printf '%s\n' "$out" >>"$GITHUB_OUTPUT"; fi
-note "$tag passed: annotated, $CHART_YAML's version, on main, nothing of $version published on $registry"
+note "$tag passed: annotated, $CHART_YAML's version, on main, nothing of $version published or staged on $registry"

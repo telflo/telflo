@@ -3,9 +3,10 @@
 # registry: charts/supervisor-collector (the default) or charts/telflo, the
 # package made once and that same file pushed.
 #
-#   scripts/publish-chart.sh --dry-run [--registry <r>]   check everything, print the push, push nothing
+#   scripts/publish-chart.sh --dry-run [--registry <r>] [--namespace <n>]
+#                                                          check everything, print the push, push nothing
 #   scripts/publish-chart.sh --package <dir>               every check but the registry's, then the package into <dir>
-#   scripts/publish-chart.sh --push-package <tgz> [--registry <r>]
+#   scripts/publish-chart.sh --push-package <tgz> [--registry <r>] [--namespace <n>]
 #                                                          push that package (a maintainer's, or the release's publish job)
 #   each with --chart <name>: supervisor-collector (the default) or telflo
 #
@@ -14,24 +15,33 @@
 # the file's chart name and version from its own Chart.yaml (one top-level
 # folder, named after the chart), which must be --chart's and HEAD's
 # Chart.yaml's (and, for telflo, its appVersion the version); asks the
-# registry for <registry>/telflo/telflo/charts/<name>:<version> (`crane
-# manifest`): absent, `helm push <tgz> oci://<registry>/telflo/telflo/charts`
-# (`--plain-http` for a loopback registry), then the registry asked again,
-# its chart layer's digest equal to the file's sha256; present with that
+# registry for <registry>/<namespace's path>/charts/<name>:<version> (`crane
+# manifest`): absent, `helm push <tgz>
+# oci://<registry>/<namespace's path>/charts` (`--plain-http` for a loopback
+# registry), then the registry asked again, its chart layer's digest equal
+# to the file's sha256; present with that
 # digest, skipped with a line (a re-run); present with another, or an answer
 # that isn't "absent", refused, nothing pushed (`helm push` overwrites a
 # version silently: this check is the only guard). It prints
-# `oci://<registry>/telflo/telflo/charts/<name>:<version> sha256:<hex>`.
+# `oci://<registry>/<namespace's path>/charts/<name>:<version> sha256:<hex>`.
 # --registry is ghcr.io (the default) or a loopback 127.0.0.1:<port> or
-# localhost:<port>; the repository is always telflo/telflo/charts. There is
-# no --push (it packaged and pushed in one step): it is refused, naming
-# --package and --push-package.
+# localhost:<port>. --namespace is telflo (the default: telflo/telflo, the
+# public one) or, for --chart telflo only, telflo-staging
+# (telflo/telflo-staging, a release's stage, which the finalize workflow
+# copies to the public one by digest); the supervisor-collector chart is
+# published to the public namespace alone. scripts/release/oci.sh's
+# telflo_namespace_path maps the name, so the repository is always
+# telflo/telflo/charts or telflo/telflo-staging/charts. There is no --push (it
+# packaged and pushed in one step): it is refused, naming --package and
+# --push-package.
 #
 # Without --chart, the checks are supervisor-collector's.
 #
 # Refused before anything runs (exit 2): no mode or more than one; --push; an
-# unknown argument or chart, or --chart given twice; --registry with
-# --package, or a registry that isn't ghcr.io or a loopback one; a --package
+# unknown argument or chart, or --chart given twice; --registry or
+# --namespace with --package, a registry that isn't ghcr.io or a loopback
+# one, a namespace that isn't telflo or telflo-staging, or telflo-staging for
+# the supervisor-collector chart; a --package
 # folder that isn't a directory, or a --push-package file that isn't one;
 # Chart.yaml's name not matching [a-z0-9-] or its version not x.y.z. For supervisor-collector: Chart.yaml's
 # name not the last segment of the contracts' DEFAULT_HELM_CHART_REFERENCE,
@@ -42,10 +52,11 @@
 # fixed, oci://ghcr.io/telflo/telflo/charts/telflo (no contracts constant).
 # Either chart: a reference that isn't `oci://` lowercase letters, digits and
 # `._:/-`, whose last segment isn't the chart's name, or that is under
-# the older registry path oci://ghcr.io/telflo/charts/. With --registry, or
-# --push-package, the reference is oci://<registry>/telflo/telflo/charts/
-# <name>. TELFLO_HELM_CHART_REFERENCE (the platform's own setting) is refused
-# in every mode: nothing here reads or writes a reference the caller names.
+# the older registry path oci://ghcr.io/telflo/charts/. With --registry,
+# --namespace or --push-package, the reference is
+# oci://<registry>/<namespace's path>/charts/<name>.
+# TELFLO_HELM_CHART_REFERENCE (the platform's own setting) is refused in every
+# mode: nothing here reads or writes a reference the caller names.
 #
 # Refused next (exit 1, --dry-run too: what is published is exactly
 # what is committed): a tree that isn't a git checkout, or uncommitted changes
@@ -125,8 +136,9 @@ PLATFORM_REFERENCE="oci://ghcr.io/telflo/telflo/charts/telflo"
 PIN_PATH=vendor/opamp-server/PIN
 SUBCHART_PATH=charts/telflo/charts/opamp-server
 SUBCHART_REPOSITORY=oci://ghcr.io/telflo/charts
-# Where --registry and --push-package publish: <registry>/telflo/telflo/charts.
-CHARTS_PATH="telflo/telflo/charts"
+# Where --registry, --namespace and --push-package publish:
+# <registry>/<the namespace's path>/charts (CHARTS_PATH, set once the
+# namespace is read).
 CHART_LAYER_TYPE="application/vnd.cncf.helm.chart.content.v1.tar+gzip"
 
 # The release helpers: the registry and crane.
@@ -135,11 +147,12 @@ CHART_LAYER_TYPE="application/vnd.cncf.helm.chart.content.v1.tar+gzip"
 
 usage() {
   cat >&2 <<'EOF'
-usage: scripts/publish-chart.sh --dry-run [--registry <r>]          check everything, print the push, push nothing
-       scripts/publish-chart.sh --package <dir>                      every check but the registry's, then the package into <dir>
-       scripts/publish-chart.sh --push-package <tgz> [--registry <r>]  push that package
+usage: scripts/publish-chart.sh --dry-run [--registry <r>] [--namespace <n>]          check everything, print the push, push nothing
+       scripts/publish-chart.sh --package <dir>                                      every check but the registry's, then the package into <dir>
+       scripts/publish-chart.sh --push-package <tgz> [--registry <r>] [--namespace <n>]  push that package
        each with --chart <name>: supervisor-collector (the default) or telflo
        registry: ghcr.io (the default), 127.0.0.1:<port> or localhost:<port>
+       namespace: telflo (the default, the public one) or, for --chart telflo, telflo-staging (a release's stage)
 EOF
 }
 fail() { echo "publish-chart: $1" >&2; exit 1; }
@@ -332,6 +345,8 @@ package_dir=""
 package_file=""
 registry=""
 chart=""
+namespace=telflo
+namespace_given=false
 set_mode() { # <--mode>
   [ -z "$mode" ] || refuse_usage "one mode: --dry-run, --package or --push-package (got --$mode and $1)"
   mode="${1#--}"
@@ -352,6 +367,9 @@ while [ $# -gt 0 ]; do
     --registry)
       [ $# -ge 2 ] || refuse_usage "--registry needs a value"
       registry="$2"; shift 2 ;;
+    --namespace)
+      [ $# -ge 2 ] || refuse_usage "--namespace needs a value"
+      namespace="$2"; namespace_given=true; shift 2 ;;
     --chart)
       [ -z "$chart" ] || refuse_usage "--chart given more than once"
       [ $# -ge 2 ] || refuse_usage "--chart needs a chart's name"
@@ -364,9 +382,17 @@ while [ $# -gt 0 ]; do
   esac
 done
 [ -n "$mode" ] || refuse_usage "--dry-run, --package or --push-package is required"
-[ -z "${TELFLO_HELM_CHART_REFERENCE:-}" ] \
-  || refuse "TELFLO_HELM_CHART_REFERENCE is refused: the charts' references are fixed (oci://ghcr.io/$CHARTS_PATH/<name>, or a loopback registry's through --registry); unset it"
 chart="${chart:-supervisor-collector}"
+namespace_path="$(telflo_namespace_path "$namespace")" \
+  || refuse_usage "--namespace must be telflo (the public one) or telflo-staging (a release's stage) (got '$namespace')"
+if $namespace_given; then
+  [ "$mode" != package ] || refuse_usage "--namespace goes with --dry-run and --push-package only (--package reads no registry)"
+  [ "$chart" = telflo ] || [ "$namespace" = telflo ] \
+    || refuse_usage "--namespace $namespace goes with --chart telflo only: the supervisor-collector chart is published to the public namespace alone"
+fi
+CHARTS_PATH="$namespace_path/charts"
+[ -z "${TELFLO_HELM_CHART_REFERENCE:-}" ] \
+  || refuse "TELFLO_HELM_CHART_REFERENCE is refused: the charts' references are fixed (oci://ghcr.io/telflo/telflo/charts/<name>, or a loopback registry's through --registry); unset it"
 registry_given=false
 if [ -n "$registry" ]; then
   registry_given=true
@@ -443,8 +469,9 @@ else
   bump_hint="bump Chart.yaml's version and appVersion together"
 fi
 
-# --registry and --push-package: the reference is fixed under the registry.
-if $registry_given || [ "$mode" = push-package ]; then
+# --registry, --namespace and --push-package: the reference is fixed under
+# the registry and the namespace.
+if $registry_given || $namespace_given || [ "$mode" = push-package ]; then
   reference="oci://$registry/$CHARTS_PATH/$chart_name"
 fi
 [[ "$reference" =~ $REFERENCE_RE ]] \

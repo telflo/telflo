@@ -1,0 +1,11 @@
+# Breaks one rule: another repository cloned and run.
+file: ci.yml
+rule: ci-opamp-clone
+<<<
+      - name: Build and start the full stack
+
+===
+      - run: git clone https://github.com/someone/tools.git ../tools
+      - name: Build and start the full stack
+
+>>>

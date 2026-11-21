@@ -1,0 +1,9 @@
+# Breaks one rule: a gate switched off with if: false.
+file: ci.yml
+rule: ci-step-if
+<<<
+      - run: bash scripts/gates/static.sh --work "$RUNNER_TEMP/static"
+===
+      - if: false
+        run: bash scripts/gates/static.sh --work "$RUNNER_TEMP/static"
+>>>

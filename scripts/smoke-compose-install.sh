@@ -22,7 +22,9 @@
 # Compose), COMPOSE_PROJECT_NAME as --project (default smoke-compose-install;
 # never a project that isn't a throwaway), every other TELFLO_*,
 # OPAMP_*, AWS_* and COMPOSE_* variable of the caller's unset, so .env alone
-# decides the rest. The commands run under umask 022, a person's usual one.
+# decides the rest (TELFLO_IMAGE_REGISTRY among them: setup.sh never writes
+# it, so Compose names the Telflo images by its default, the public
+# registry). The commands run under umask 022, a person's usual one.
 # `docker compose ps` is run again until every service is up, as the README
 # says. Each command's output goes to a 0600 file of the work folder
 # (outputs/, or secrets/ for the bootstrap's, which prints the set-password
@@ -56,8 +58,10 @@
 #
 # What it needs: Docker with Compose, curl, jq, tar, gzip, openssl, and
 # shasum or sha256sum. Every image compose.yaml names (the five Telflo
-# images ghcr.io/telflo/telflo/<name>:<version>, Postgres, nginx, Mailpit
-# and the opamp-server at their pins) and the collector image
+# images ghcr.io/telflo/telflo/<name>:<version>, which compose.yaml writes
+# ${TELFLO_IMAGE_REGISTRY:-ghcr.io/telflo/telflo}/<name>:<version>,
+# scripts/release/version.sh's form; Postgres, nginx, Mailpit and the
+# opamp-server at their pins) and the collector image
 # ghcr.io/telflo/telflo/collector:<the catalog's default version> must
 # already be in the local engine: it never pulls one, it refuses.
 #
@@ -66,9 +70,12 @@
 # networks already); the ports (a developer's own stack's and dev servers',
 # in use, or the same twice); the work folder (relative, not empty, a path with
 # characters a URL or a group's mount can't hold, inside this tree); the
-# archive's name or version; README.md's Quick start (markers, a text to
-# replace not there exactly once, no bootstrap or `docker compose down`
-# command, another version than the archive's); a missing image.
+# archive's name or version; the archive's compose.yaml (an image line
+# reading a variable other than as that form, a Telflo image missing or at
+# another version); README.md's Quick start (markers, a text to replace not
+# there exactly once, no bootstrap or `docker compose down` command, another
+# version than the archive's, a command naming TELFLO_IMAGE_REGISTRY); a
+# missing image.
 #
 # Every docker call runs with DOCKER_CONFIG the work folder's (holding
 # {"auths":{"telflo-smoke.invalid":{}}}, no login) and refusing
@@ -194,7 +201,18 @@ VERSION=${VERSION%.tar.gz}
   refuse "--archive must be named telflo-compose-<version>.tar.gz with a release version (x.y.z)"
 COMPOSE_TEXT=$(tar -xzOf "$ARCHIVE_ARG" "telflo-compose-$VERSION/compose.yaml" 2>/dev/null) ||
   refuse "$ARCHIVE_NAME holds no telflo-compose-$VERSION/compose.yaml"
-IMAGES=$(printf '%s\n' "$COMPOSE_TEXT" | awk '/^[[:space:]]+image:[[:space:]]*[^[:space:]]+[[:space:]]*$/ { print $2 }' | LC_ALL=C sort -u)
+# Each image as Compose names it with TELFLO_IMAGE_REGISTRY unset: one pair
+# of quotes dropped, the variable's form read as its default.
+IMAGES=$(printf '%s\n' "$COMPOSE_TEXT" | awk -v prefix="$TELFLO_COMPOSE_IMAGE_PREFIX" -v registry="$TELFLO_COMPOSE_IMAGE_DEFAULT/" '
+  /^[[:space:]]+image:[[:space:]]*[^[:space:]]+[[:space:]]*$/ {
+    value = $2
+    if (value ~ /^".*"$/ || value ~ /^\047.*\047$/) value = substr(value, 2, length(value) - 2)
+    if (index(value, prefix) == 1) value = registry substr(value, length(prefix) + 1)
+    print value
+  }' | LC_ALL=C sort -u)
+case "$IMAGES" in
+  *'$'*) refuse "the archive's compose.yaml names an image through a variable other than as ${TELFLO_COMPOSE_IMAGE_PREFIX}<name>:<version>: which image Compose runs can't be told" ;;
+esac
 for name in $PLATFORM_IMAGES; do
   printf '%s\n' "$IMAGES" | grep -qxF "$RELEASE_REGISTRY/$name:$VERSION" ||
     refuse "the archive's compose.yaml doesn't name $RELEASE_REGISTRY/$name:$VERSION"
@@ -240,6 +258,9 @@ readme_version=${readme_version%%[!0-9.]*}
 for text in "$EXAMPLE_EMAIL" "$EXAMPLE_ORGANIZATION" "$EXAMPLE_PUBLIC_URL" "$EXAMPLE_AGENT_URL"; do
   [ "$(count_of "$text" "$ALL_COMMANDS")" = 1 ] || refuse "the Quick start's commands don't hold $text exactly once"
 done
+case "$ALL_COMMANDS" in
+  *TELFLO_IMAGE_REGISTRY*) refuse "the Quick start's commands name TELFLO_IMAGE_REGISTRY: the Quick start installs the release's images from the public registry, the ones this smoke finds local" ;;
+esac
 
 # The commands, substituted, into arrays (index from 1): the text, its README line.
 CMD_COUNT=0

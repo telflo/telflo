@@ -1,0 +1,9 @@
+# Breaks one rule: a job with no timeout-minutes.
+file: ci.yml
+rule: ci-timeout
+<<<
+    timeout-minutes: 60
+
+===
+
+>>>

@@ -4,8 +4,8 @@ rule: required-steps
 <<<
           TAG: ${{ needs.version.outputs.tag }}
           COMMIT: ${{ needs.version.outputs.commit }}
-        run: bash scripts/release/steps.sh github-release --tag "$TAG" --commit "$COMMIT" --oci "$RUNNER_TEMP/oci" --release "$RUNNER_TEMP/release"
+        run: bash scripts/release/steps.sh github-release --draft --tag "$TAG" --commit "$COMMIT" --oci "$RUNNER_TEMP/oci" --release "$RUNNER_TEMP/release"
 ===
           TAG: ${{ needs.version.outputs.tag }}
-        run: bash scripts/release/steps.sh github-release --tag "$TAG" --oci "$RUNNER_TEMP/oci" --release "$RUNNER_TEMP/release"
+        run: bash scripts/release/steps.sh github-release --draft --tag "$TAG" --oci "$RUNNER_TEMP/oci" --release "$RUNNER_TEMP/release"
 >>>

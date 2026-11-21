@@ -1,0 +1,11 @@
+# Breaks one rule: finalize.yml's version input a choice, not a string.
+file: finalize.yml
+rule: dispatch-inputs
+<<<
+        type: string
+        required: true
+===
+        type: choice
+        options: [0.2.2]
+        required: true
+>>>

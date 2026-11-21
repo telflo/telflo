@@ -1,0 +1,13 @@
+# Breaks one rule: a paths filter: a pull request outside it never runs the required check.
+file: ci.yml
+rule: ci-trigger
+<<<
+  pull_request:
+  push:
+
+===
+  pull_request:
+    paths: ["telflo-core/**"]
+  push:
+
+>>>

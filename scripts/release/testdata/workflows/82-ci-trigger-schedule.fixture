@@ -1,0 +1,14 @@
+# Breaks one rule: a schedule trigger.
+file: ci.yml
+rule: ci-trigger
+<<<
+  push:
+    branches: [main]
+
+===
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 3 * * *"
+
+>>>

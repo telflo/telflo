@@ -1,0 +1,10 @@
+# Breaks one rule: push on more branches than main.
+file: ci.yml
+rule: ci-trigger
+<<<
+    branches: [main]
+
+===
+    branches: [main, "release/**"]
+
+>>>

@@ -1,0 +1,4 @@
+# Breaks one rule: finalize.yml taken out of the folder.
+file: finalize.yml
+rule: workflow-files
+remove: finalize.yml

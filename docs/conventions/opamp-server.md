@@ -417,9 +417,9 @@ of the local testing above):
 
    The PR's diff shows the PIN's and both compose files' lines and the
    vendored chart's files (the three contract files are marked `-diff`).
-   The local gates run before it, as for every PR (GitHub Actions runs
-   only the release and collector workflows, `docs/releasing.md`), and
-   a maintainer merges it. A pin change ships to users in the platform's
+   The local gates run before it, and its `ci` check
+   (`.github/workflows/ci.yml`) passes, as for every PR; a maintainer
+   merges it. A pin change ships to users in the platform's
    next release.
 
 ## Changing both at once

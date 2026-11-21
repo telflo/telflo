@@ -1,0 +1,17 @@
+# Breaks one rule: a job renamed.
+file: ci.yml
+rule: ci-jobs
+<<<
+  stack:
+    runs-on: ubuntu-24.04
+
+===
+  compose:
+    runs-on: ubuntu-24.04
+
+>>>
+<<<
+otelcol-testing, stack]
+===
+otelcol-testing, compose]
+>>>

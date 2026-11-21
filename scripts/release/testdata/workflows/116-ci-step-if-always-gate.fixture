@@ -1,0 +1,11 @@
+# Breaks one rule: always() on a gate (it is only a report's or the teardown's).
+file: ci.yml
+rule: ci-step-if
+<<<
+      - name: Smoke-test through the gateway
+
+===
+      - name: Smoke-test through the gateway
+        if: always()
+
+>>>

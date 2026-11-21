@@ -1,0 +1,12 @@
+# Breaks one rule: a top-level permissions other than {}.
+file: ci.yml
+rule: ci-permissions-top
+<<<
+permissions: {}
+
+# A pull request's newer push
+===
+permissions: read-all
+
+# A pull request's newer push
+>>>

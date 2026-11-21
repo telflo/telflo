@@ -1,0 +1,12 @@
+# Breaks one rule: a job on a self-hosted runner (a fork's code on a maintainer's machine).
+file: ci.yml
+rule: ci-runs-on
+<<<
+  static:
+    runs-on: ubuntu-24.04
+
+===
+  static:
+    runs-on: [self-hosted, linux]
+
+>>>

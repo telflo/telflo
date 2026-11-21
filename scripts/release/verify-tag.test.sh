@@ -1,22 +1,29 @@
 #!/bin/bash
-# Tests for scripts/release/verify-tag.sh, offline: a throwaway git
-# repository (a bare origin, a clone of it holding the script, version.sh,
-# oci.sh and a charts/telflo/Chart.yaml) and a stand-in crane first on PATH
-# that answers `crane digest` from a list of refs present (a digest), denied
-# (DENIED) or absent (MANIFEST_UNKNOWN). Refusing credential-helper stand-ins
-# come first on PATH: none may be called.
+# Tests for scripts/release/verify-tag.sh, offline but for the cases against a
+# throwaway registry:2 on 127.0.0.1 (tools.lock's image, local by digest;
+# test-registry.sh; SKIP lines when docker, crane or that image is missing): a
+# throwaway git repository (a bare origin, a clone of it holding the script,
+# version.sh, oci.sh and a charts/telflo/Chart.yaml) and a stand-in crane
+# first on PATH that answers `crane digest` from a list of refs present (a
+# digest), denied (DENIED) or absent (MANIFEST_UNKNOWN). Refusing
+# credential-helper stand-ins come first on PATH: none may be called.
 # Run:  bash scripts/release/verify-tag.test.sh   (bash 3.2 compatible)
 set -u
 TMPDIR="$(cd -- "${TMPDIR:-/tmp}" && pwd)" || exit 1; export TMPDIR
 unset CI GITHUB_OUTPUT
 root="$(cd "$(dirname "$0")/../.." && pwd)"
 shell="${BASH:-bash}"
+# shellcheck source=scripts/release/test-registry.sh
+. "$root/scripts/release/test-registry.sh"
 
 failures=0
+skips=0
 check() { if eval "$2"; then echo "ok   - $1"; else echo "FAIL - $1"; failures=$((failures + 1)); fi; }
+skip() { echo "SKIP - $1 ($2)"; skips=$((skips + 1)); }
 
 tmp="$(mktemp -d "${TMPDIR:-/tmp}/verify-tag-test.XXXXXX")" || exit 1
-trap 'rm -rf "$tmp"' EXIT
+cleanup() { tr_registry_stop; rm -rf "$tmp"; }
+trap cleanup EXIT
 bin="$tmp/bin"; logs="$tmp/logs"
 mkdir -p "$bin" "$logs" "$tmp/stub"
 printf '%s\n' '{"auths":{"telflo-test.invalid":{}}}' >"$tmp/stub/config.json"
@@ -149,12 +156,18 @@ check "a good annotated tag on main, nothing published: exit 0" "[ $rc -eq 0 ] &
 check "it prints, and writes to GITHUB_OUTPUT, the tag, the version and the commit" \
   "has 'version=0.3.0' && has 'commit=$c3' && [ \"\$(cat '$out_file')\" = \"\$(printf 'tag=v0.3.0\nversion=0.3.0\ncommit=$c3')\" ]"
 # shellcheck disable=SC2034 # read by check's eval
-expected_asks="$(for i in api web otelcol-validator otelcol-testing ottl-evaluator; do echo "digest ghcr.io/telflo/telflo/$i:0.3.0"; done; echo "digest ghcr.io/telflo/telflo/charts/telflo:0.3.0")"
-check "the five images and the chart asked on ghcr.io/telflo/telflo, nothing else" "[ \"\$(cat '$STANDIN_LOG')\" = \"\$expected_asks\" ]"
+expected_asks="$(for ns in telflo telflo-staging; do
+  for i in api web otelcol-validator otelcol-testing ottl-evaluator; do echo "digest ghcr.io/telflo/$ns/$i:0.3.0"; done
+  echo "digest ghcr.io/telflo/$ns/charts/telflo:0.3.0"
+done)"
+check "the five images and the chart asked on ghcr.io/telflo/telflo (public), then on ghcr.io/telflo/telflo-staging (a stage), nothing else" "[ \"\$(cat '$STANDIN_LOG')\" = \"\$expected_asks\" ]"
 run v0.3.0 --expect "$(g -C "$repo" rev-parse refs/tags/v0.3.0)"
 check "--expect the tag object's sha: exit 0" "[ $rc -eq 0 ]"
 run v0.3.0 --registry 127.0.0.1:5999
-check "--registry 127.0.0.1:<port>: asked there, exit 0" "[ $rc -eq 0 ] && grep -qx 'digest 127.0.0.1:5999/telflo/telflo/api:0.3.0' '$STANDIN_LOG' && ! grep -q ghcr.io '$STANDIN_LOG'"
+check "--registry 127.0.0.1:<port>: both namespaces asked there, exit 0" \
+  "[ $rc -eq 0 ] && grep -qx 'digest 127.0.0.1:5999/telflo/telflo/api:0.3.0' '$STANDIN_LOG' && grep -qx 'digest 127.0.0.1:5999/telflo/telflo-staging/api:0.3.0' '$STANDIN_LOG' && ! grep -q ghcr.io '$STANDIN_LOG'"
+run v0.3.0 --namespace telflo-staging
+check "no --namespace: both namespaces are always asked (usage, exit 2)" "[ $rc -eq 2 ] && has 'unknown option'"
 
 echo "ghcr.io/telflo/telflo/otelcol-testing:0.3.0" >"$STANDIN_DIR/present"
 run v0.3.0
@@ -164,11 +177,23 @@ echo "ghcr.io/telflo/telflo/charts/telflo:0.3.0" >"$STANDIN_DIR/present"
 run v0.3.0
 check "the chart published already: refused naming it (exit 1)" \
   "[ $rc -eq 1 ] && has 'ghcr.io/telflo/telflo/charts/telflo:0.3.0 is published already'"
+echo "ghcr.io/telflo/telflo-staging/api:0.3.0" >"$STANDIN_DIR/present"
+run v0.3.0
+check "one image staged already (a stage of the version open): refused naming it, abandon-stage named (exit 1)" \
+  "[ $rc -eq 1 ] && has 'ghcr.io/telflo/telflo-staging/api:0.3.0 is staged already' && has 'abandon it first (scripts/release/steps.sh abandon-stage --version 0.3.0)' && has 'published or staged' && ! has 'is published already'"
+printf '%s\n' ghcr.io/telflo/telflo-staging/charts/telflo:0.3.0 ghcr.io/telflo/telflo/charts/telflo:0.3.0 >"$STANDIN_DIR/present"
+run v0.3.0
+check "the chart both staged and published: each named (exit 1), every ref still asked" \
+  "[ $rc -eq 1 ] && has 'ghcr.io/telflo/telflo-staging/charts/telflo:0.3.0 is staged already' && has 'ghcr.io/telflo/telflo/charts/telflo:0.3.0 is published already' && has '2 of the version' && [ \$(grep -c '^digest ' '$STANDIN_LOG') -eq 12 ]"
 : >"$STANDIN_DIR/present"
 echo "ghcr.io/telflo/telflo/web:0.3.0" >"$STANDIN_DIR/denied"
 run v0.3.0
 check "a registry that can't tell (DENIED): refused (exit 1), every ref still asked" \
-  "[ $rc -eq 1 ] && has \"can't tell whether ghcr.io/telflo/telflo/web:0.3.0 is published\" && [ \$(grep -c '^digest ' '$STANDIN_LOG') -eq 6 ]"
+  "[ $rc -eq 1 ] && has \"can't tell whether ghcr.io/telflo/telflo/web:0.3.0 exists\" && [ \$(grep -c '^digest ' '$STANDIN_LOG') -eq 12 ]"
+echo "ghcr.io/telflo/telflo-staging/ottl-evaluator:0.3.0" >"$STANDIN_DIR/denied"
+run v0.3.0
+check "a stage that can't be told (DENIED: a private package read without its login): refused (exit 1)" \
+  "[ $rc -eq 1 ] && has \"can't tell whether ghcr.io/telflo/telflo-staging/ottl-evaluator:0.3.0 exists\""
 : >"$STANDIN_DIR/denied"
 
 # --- 3. in a workflow: the tag lightweight in the checkout, asked of GitHub's API -----------
@@ -243,7 +268,7 @@ check "CI: the API asked for the ref, then the tag object, at github.com, with t
    && [ \$(gh_calls) -eq 2 ] && [ \"\$(sort -u '$GH_LOG.env')\" = token-present ]"
 check "CI: the token is in neither gh's argv nor the output (canary, boolean)" \
   "! grep -qF -- '$token' '$GH_LOG' && ! has '$token'"
-check "CI: then the registry asked as on any run (the checked crane of .tools/)" "[ \$(grep -c '^digest ' '$STANDIN_LOG') -eq 6 ]"
+check "CI: then the registry asked as on any run (the checked crane of .tools/)" "[ \$(grep -c '^digest ' '$STANDIN_LOG') -eq 12 ]"
 check "CI: the token unset before crane ran (no GH_TOKEN or GITHUB_TOKEN in its environment)" "[ ! -e '$STANDIN_LOG.env' ]"
 run_ci -- v0.3.0 --expect "$tag_sha"
 check "CI: --expect the API's tag object sha: exit 0" "[ $rc -eq 0 ]"
@@ -297,7 +322,44 @@ for ci in "" false 0; do
 done
 check "CI: no run printed the token (canary, boolean)" "! grep -rqF -- '$token' '$logs'"
 
+# --- 7, against a throwaway registry: the real crane, both namespaces --------------------------
+real_docker="$(command -v docker 2>/dev/null || true)"
+TR_DOCKER="${real_docker:-docker}"
+TR_DOCKER_CONFIG="$tmp/stub"
+real_crane="$("$shell" "$root/scripts/release/tools.sh" path crane 2>/dev/null || true)"
+reg_ok=false
+if [ -n "$real_crane" ] && tr_tools "$root"; then
+  if tr_registry_start "$tmp/registry"; then reg_ok=true; else TR_SKIP="the throwaway registry didn't start"; fi
+fi
+if $reg_ok; then
+  REG="$TR_REGISTRY"
+  rrun() { # <args...>: the real crane, the registry's login
+    out="$(env TELFLO_CRANE="$real_crane" DOCKER_CONFIG="$TR_CONFIG" "$shell" "$script" "$@" 2>&1)"; rc=$?
+  }
+  rrun v0.3.0 --registry "$REG" --expect "$c3"
+  check "a registry holding nothing of the version (real crane): exit 0" "[ $rc -eq 0 ] && has 'nothing of 0.3.0 published or staged on $REG'"
+  tr_fixture "$tmp/staged.oci.tar" 0.3.0 "$c3" STAGED >/dev/null
+  tr_put "$tmp/staged.oci.tar" "$REG/telflo/telflo-staging/web:0.3.0" "$real_crane" "$TR_CONFIG"
+  rrun v0.3.0 --registry "$REG"
+  check "a stage of the version in the registry (real crane): refused, staged already (exit 1)" \
+    "[ $rc -eq 1 ] && has '$REG/telflo/telflo-staging/web:0.3.0 is staged already' && has 'abandon-stage --version 0.3.0'"
+  tr_put "$tmp/staged.oci.tar" "$REG/telflo/telflo/web:0.3.0" "$real_crane" "$TR_CONFIG"
+  rrun v0.3.0 --registry "$REG"
+  check "the version public too (real crane): refused, spent (exit 1)" \
+    "[ $rc -eq 1 ] && has '$REG/telflo/telflo/web:0.3.0 is published already' && has 'version 0.3.0 is spent'"
+  if [ "$TR_AUTH" = 1 ]; then
+    out="$(env TELFLO_CRANE="$real_crane" DOCKER_CONFIG="$tmp/stub" "$shell" "$script" v0.3.0 --registry "$REG" 2>&1)"; rc=$?
+    check "no login (UNAUTHORIZED, as a private stage answers an anonymous read): can't tell, refused (exit 1)" \
+      "[ $rc -eq 1 ] && has \"can't tell whether $REG/telflo/telflo-staging/api:0.3.0 exists\" && has 'UNAUTHORIZED'"
+  else
+    skip "the login case" "no htpasswd: the throwaway registry has no login"
+  fi
+else
+  skip "verify-tag against a throwaway registry" "${TR_SKIP:-no crane (scripts/release/tools.sh fetch crane)}"
+fi
+tr_registry_stop
+
 check "no credential helper was called" "[ ! -s '$logs/helper.log' ]"
 
 echo
-if [ "$failures" -eq 0 ]; then echo "ALL PASS"; else echo "$failures FAILURE(S)"; exit 1; fi
+if [ "$failures" -eq 0 ]; then if [ "$skips" -gt 0 ]; then echo "ALL PASS ($skips skipped)"; else echo "ALL PASS"; fi; else echo "$failures FAILURE(S)"; exit 1; fi

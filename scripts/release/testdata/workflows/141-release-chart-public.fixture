@@ -1,0 +1,8 @@
+# Breaks one rule: the publish job pushing the chart to the public namespace, not the stage.
+file: release.yml
+rule: required-steps
+<<<
+--push-package "$RUNNER_TEMP/release/telflo-$VERSION.tgz" --namespace telflo-staging
+===
+--push-package "$RUNNER_TEMP/release/telflo-$VERSION.tgz"
+>>>

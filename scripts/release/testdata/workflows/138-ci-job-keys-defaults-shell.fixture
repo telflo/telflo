@@ -1,0 +1,21 @@
+# Breaks one rule: a job's default shell.
+file: ci.yml
+rule: ci-job-keys
+<<<
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: telflo-core
+
+===
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: telflo-core
+        shell: sh
+
+>>>

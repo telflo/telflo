@@ -25,6 +25,7 @@ func TestRunRefusesAnUnknownCommandLine(t *testing.T) {
 }
 
 func TestRunServeRefusesWithoutASecret(t *testing.T) {
+	dumpableAgainAfter(t)
 	var out bytes.Buffer
 	if code := run(context.Background(), []string{"serve"}, noEnv, nil, strings.NewReader(""), &out); code != 1 || !strings.Contains(out.String(), "OTTL_EVALUATOR_SECRET_FILE is not set") {
 		t.Fatalf("exit %d, %s", code, out.String())

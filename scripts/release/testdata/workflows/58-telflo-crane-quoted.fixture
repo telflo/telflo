@@ -2,10 +2,10 @@
 file: release.yml
 rule: telflo-crane
 <<<
-      - name: The images (the archives' bytes, digests kept)
+      - name: The images, to the stage (the archives' bytes, digests kept)
         env:
 ===
-      - name: The images (the archives' bytes, digests kept)
+      - name: The images, to the stage (the archives' bytes, digests kept)
         env:
           "TELFLO_CRANE": /tmp/crane
 >>>

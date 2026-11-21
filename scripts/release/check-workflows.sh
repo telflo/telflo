@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# check-workflows.sh: the release workflows' static check, offline, from the
+# check-workflows.sh: the workflows' static check, offline, from the
 # repository's root with no argument (static.sh runs every
 # scripts/release/check-*.sh): node runs check-workflows.mjs,
-# which reads .github/workflows/release.yml and collector.yml with
+# which reads .github/workflows/release.yml, collector.yml and ci.yml with
 # telflo-core's `yaml` package (npm ci in telflo-core first). Its rules are
 # listed at the top of check-workflows.mjs. Arguments pass through (--dir,
 # --root: check-workflows.test.sh's fixtures). Exit 0 every rule holds; 1 a

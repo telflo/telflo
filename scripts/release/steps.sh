@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # steps.sh: the release workflows' steps that are more than one call of
-# another script, so every `run:` of .github/workflows/release.yml and
-# collector.yml stays one call of a committed script;
-# scripts/release/rehearse.sh runs the same steps locally.
+# another script, so every `run:` of .github/workflows/release.yml,
+# finalize.yml and collector.yml stays one call of a committed script;
+# scripts/release/rehearse.sh runs the same steps locally, and abandon-stage
+# is the owner's, on their own machine.
 #
 #   steps.sh free-disk <GB>
 #       on a GitHub-hosted Linux runner, removes the runner's unused
@@ -89,16 +90,61 @@
 #       GHCR_USER, the token GHCR_TOKEN through standard input (never argv),
 #       into HELM_REGISTRY_CONFIG (set, and under RUNNER_TEMP), then that
 #       file checked (an "auths" object, no credential store or helper)
-#   steps.sh github-release --tag <tag> --commit <sha> --oci <dir> --release <dir>
+#   steps.sh digests --oci <dir> --version <v> --chart <tgz> --out <file> [--registry <r>]
+#       the stage's record, digests.txt, after the stage's pushes: each
+#       image's index digest (<dir>/<name>.digest), then the chart's OCI
+#       manifest digest as <registry>/telflo/telflo-staging/charts/telflo:<v>
+#       answers it (`crane digest`; that manifest's one chart layer must be
+#       the package's sha256) and the package's sha256, one
+#       `<name> sha256:<hex>` line each, in oci.sh's fixed order (the five
+#       images sorted, then charts/telflo and charts/telflo.tgz); <file> must
+#       not exist (never overwritten). The finalize workflow copies exactly
+#       these digests to the public namespace (promote.sh)
+#   steps.sh github-release [--draft] --tag <tag> --commit <sha> --oci <dir> --release <dir>
 #       a GitHub Actions runner only (GITHUB_REPOSITORY telflo/telflo): the
-#       release notes (release-notes.sh); then GitHub's API asked again
+#       release notes (release-notes.sh, naming the public references the
+#       Release will have); then GitHub's API asked again
 #       (scripts/release/github-tag.sh, verify-tag.sh's) that refs/tags/<tag>
 #       is an annotated tag whose object is <sha>, the version job's commit
 #       (the tag wasn't moved during the run); then `gh release create <tag>
-#       --verify-tag`, a normal release (never a draft, never a
-#       prerelease), with <release>'s telflo-compose-<v>.tar.gz,
-#       create-secrets.sh and SHA256SUMS, each checked against SHA256SUMS
-#       first; a Release that exists already is refused. gh reads GH_TOKEN.
+#       --verify-tag`, never a prerelease, with <release>'s
+#       telflo-compose-<v>.tar.gz, create-secrets.sh and SHA256SUMS, each
+#       checked against SHA256SUMS first. With --draft (the release
+#       workflow's: a stage, which the finalize workflow publishes) it is a
+#       draft, and holds <release>/digests.txt too, which must be a stage's
+#       record whose lines are <oci>'s digest files and the chart package's
+#       sha256; without, a published release. A Release that exists already
+#       is refused. gh reads GH_TOKEN.
+#   steps.sh finalize-check --version <v> --out <dir>
+#       a GitHub Actions runner only (GITHUB_REPOSITORY telflo/telflo), from
+#       a full-history checkout: refs/tags/v<v> is there, its commit on main
+#       (refs/remotes/origin/main) with charts/telflo/Chart.yaml's version and
+#       appVersion <v>; GitHub's API answers it as the annotated tag of that
+#       commit (github-tag.sh); the GitHub Release v<v> is a draft holding
+#       digests.txt, which is downloaded into <dir>/digests.txt (never
+#       overwritten) and must be a stage's record. Prints its path. gh reads
+#       GH_TOKEN
+#   steps.sh finalize-publish --version <v> --digests <file>
+#       a GitHub Actions runner only, after the promote: the tag checked as
+#       finalize-check checks it; the GitHub Release v<v> still a draft whose
+#       digests.txt is <file>'s bytes (the record that was promoted); then
+#       `gh release edit v<v> --draft=false --latest=<true|false>`: true
+#       unless the Release marked latest names a higher version (a patch of
+#       an older line keeps the newest line latest); then it must answer as
+#       published. gh reads GH_TOKEN
+#   steps.sh abandon-stage --version <v> [--dry-run]
+#       the owner's, on their own machine with their gh login (never in a
+#       GitHub Actions job): a stage that won't be finalized, removed so the
+#       version can be tagged again. Refused (exit 1), nothing deleted, when
+#       anything of <v> is public: a version of ghcr.io/telflo/telflo/<name>
+#       or charts/telflo tagged <v>, or a published GitHub Release v<v>. Then
+#       it deletes, in the organization's packages, each
+#       telflo-staging/<name> and telflo-staging/charts/telflo version tagged
+#       <v> (refused if that version holds another tag), with any version
+#       tagged sha256-<its digest's hex> (crane's referrers fallback beside
+#       it), and the draft Release v<v> (never its tag: deleting the tag is
+#       the owner's next step, docs/releasing.md). --dry-run lists them and
+#       deletes nothing. gh's token needs read:packages and delete:packages
 #
 # Exit 0 done; 1 failed; 2 usage or refused. Registries: ghcr.io (the
 # default) or a loopback 127.0.0.1:<port> or localhost:<port>. crane is
@@ -604,14 +650,15 @@ helm_login() {
 
 # ---- github-release ------------------------------------------------------------------------
 github_release() {
-  local tag="" commit="" oci="" release=""
+  local tag="" commit="" oci="" release="" draft=false
   while [ $# -gt 0 ]; do
     case "$1" in
+      --draft) draft=true; shift ;;
       --tag) [ $# -ge 2 ] || refuse "--tag needs a value"; tag="$2"; shift 2 ;;
       --commit) [ $# -ge 2 ] || refuse "--commit needs a value"; commit="$2"; shift 2 ;;
       --oci) [ $# -ge 2 ] || refuse "--oci needs a folder"; oci="$2"; shift 2 ;;
       --release) [ $# -ge 2 ] || refuse "--release needs a folder"; release="$2"; shift 2 ;;
-      *) refuse "github-release takes --tag <tag> --commit <sha> --oci <dir> --release <dir>" ;;
+      *) refuse "github-release takes [--draft] --tag <tag> --commit <sha> --oci <dir> --release <dir>" ;;
     esac
   done
   on_actions || refuse "github-release runs in a GitHub Actions job only (a rehearsal never makes a GitHub Release)"
@@ -631,6 +678,19 @@ github_release() {
     want="$(awk -v n="$name" '$2 == n { print $1 }' "$release/SHA256SUMS")"
     [ -n "$want" ] && [ "$want" = "$(sha256_of "$release/$name")" ] || fail "$name doesn't match SHA256SUMS"
   done
+  local flags=() files=("$release/$archive" "$release/create-secrets.sh" "$release/SHA256SUMS") image
+  if $draft; then
+    # The stage's record: the digests the finalize workflow promotes, the ones this run tested.
+    telflo_digests_ok "$release/digests.txt" || fail "$release/digests.txt is missing or isn't a stage's record (steps.sh digests writes it)"
+    for image in $(record_images); do
+      [ "$(telflo_digests_get "$release/digests.txt" "$image")" = "$(cat "$oci/$image.digest" 2>/dev/null)" ] \
+        || fail "digests.txt's $image isn't $oci/$image.digest: it isn't this run's stage"
+    done
+    [ "$(telflo_digests_get "$release/digests.txt" charts/telflo.tgz)" = "sha256:$(sha256_of "$chart")" ] \
+      || fail "digests.txt's charts/telflo.tgz isn't $chart's sha256: it isn't this run's stage"
+    flags=(--draft)
+    files+=("$release/digests.txt")
+  fi
   "${BASH:-bash}" "$ROOT/scripts/release/release-notes.sh" --oci "$oci" --chart "$chart" --version "$version" >"$tmp/notes.md" \
     || fail "release-notes.sh failed"
   # The tag, asked of GitHub again: still the annotated tag of the commit the run checked and built.
@@ -640,10 +700,345 @@ github_release() {
   if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
     fail "the GitHub Release $tag exists already (a draft left by a failed upload?): it is never made twice; delete it, then re-run"
   fi
-  gh release create "$tag" --repo "$GITHUB_REPOSITORY" --verify-tag --title "Telflo $version" --notes-file "$tmp/notes.md" \
-    "$release/$archive" "$release/create-secrets.sh" "$release/SHA256SUMS" >/dev/null \
+  gh release create "$tag" --repo "$GITHUB_REPOSITORY" --verify-tag ${flags[@]+"${flags[@]}"} --title "Telflo $version" --notes-file "$tmp/notes.md" \
+    "${files[@]}" >/dev/null \
     || fail "gh release create $tag failed"
-  note "the GitHub Release $tag: $archive, create-secrets.sh, SHA256SUMS"
+  if $draft; then
+    note "the draft GitHub Release $tag: $archive, create-secrets.sh, SHA256SUMS, digests.txt (the finalize workflow publishes it)"
+  else
+    note "the GitHub Release $tag: $archive, create-secrets.sh, SHA256SUMS"
+  fi
+}
+
+# ---- digests -------------------------------------------------------------------------------
+CHART_LAYER_TYPE="application/vnd.cncf.helm.chart.content.v1.tar+gzip"
+CHART_CONFIG_TYPE="application/vnd.cncf.helm.config.v1+json"
+# chart_layer_of <manifest file>: a Helm chart's one content layer digest, or nothing.
+chart_layer_of() {
+  python3 -I - "$1" "$CHART_CONFIG_TYPE" "$CHART_LAYER_TYPE" 2>/dev/null <<'PY' || true
+import json, re, sys
+manifest = json.load(open(sys.argv[1], encoding="utf-8"))
+if (manifest.get("config") or {}).get("mediaType") != sys.argv[2]:
+    sys.exit(0)
+layers = [l for l in manifest.get("layers") or [] if isinstance(l, dict) and l.get("mediaType") == sys.argv[3]]
+if len(layers) == 1 and re.fullmatch(r"sha256:[0-9a-f]{64}", str(layers[0].get("digest"))):
+    print(layers[0]["digest"])
+PY
+}
+# The five images of a stage's record (its names but the chart's two).
+record_images() { tr ' ' '\n' <<<"$TELFLO_DIGESTS_NAMES" | grep -v '^charts/'; }
+digests() {
+  local oci="" version="" chart="" file="" registry=ghcr.io
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --oci) [ $# -ge 2 ] || refuse "--oci needs a folder"; oci="$2"; shift 2 ;;
+      --version) [ $# -ge 2 ] || refuse "--version needs a value"; version="$2"; shift 2 ;;
+      --chart) [ $# -ge 2 ] || refuse "--chart needs a package"; chart="$2"; shift 2 ;;
+      --out) [ $# -ge 2 ] || refuse "--out needs a file"; file="$2"; shift 2 ;;
+      --registry) [ $# -ge 2 ] || refuse "--registry needs a value"; registry_arg "$2"; shift 2 ;;
+      *) refuse "digests takes --oci <dir> --version <v> --chart <tgz> --out <file> [--registry <r>]" ;;
+    esac
+  done
+  [ -n "$oci" ] && [ -d "$oci" ] || refuse "--oci must be an existing folder (the images' digest files)"
+  telflo_version_ok "$version" || refuse "digests needs --version <x.y.z>"
+  [ -n "$chart" ] && [ -f "$chart" ] || refuse "--chart must be the chart's package (telflo-<v>.tgz)"
+  [ -n "$file" ] && [ -d "$(dirname -- "$file")" ] || refuse "--out must be a file in an existing folder"
+  [ ! -e "$file" ] || fail "$file exists already: never overwritten"
+  local name f lines="" ref status want layer package
+  for name in $(record_images); do
+    f="$oci/$name.digest"
+    [ -f "$f" ] && [ "$(grep -c '' "$f")" -eq 1 ] && [[ "$(cat "$f")" =~ $TELFLO_OCI_DIGEST_RE ]] \
+      || fail "$f is missing or isn't one line sha256:<64 hex>"
+    lines="$lines$name $(cat "$f")"$'\n'
+  done
+  package="sha256:$(sha256_of "$chart")"
+  telflo_crane_find "$ROOT" || fail "no crane: scripts/release/tools.sh fetch crane"
+  telflo_docker_config || exit 1
+  ref="$registry/$(telflo_namespace_path telflo-staging)/charts/telflo"
+  status=0
+  telflo_remote_digest "$ref:$version" || status=$?
+  case "$status" in
+    0) want="$TELFLO_REMOTE_DIGEST" ;;
+    3) fail "$ref:$version is missing: the chart isn't staged" ;;
+    *) fail "can't tell whether $ref:$version is staged: $TELFLO_REMOTE_ANSWER" ;;
+  esac
+  status=0
+  telflo_remote_manifest "$ref@$want" "$tmp/chart.json" || status=$?
+  [ "$status" -eq 0 ] || fail "$ref@$want can't be read: $TELFLO_REMOTE_ANSWER"
+  layer="$(chart_layer_of "$tmp/chart.json")"
+  [ "$layer" = "$package" ] || fail "$ref:$version's chart layer is ${layer:-none}, not $chart's sha256 $package"
+  lines="${lines}charts/telflo $want"$'\n'"charts/telflo.tgz $package"$'\n'
+  printf '%s' "$lines" >"$tmp/digests.txt"
+  telflo_digests_ok "$tmp/digests.txt" || fail "the record came out malformed"
+  cp "$tmp/digests.txt" "$file.partial" && mv "$file.partial" "$file" || fail "can't write $file"
+  note "the stage's record: $file (the five images, then $ref:$version $want and its package $package)"
+  printf '%s\n' "$file"
+}
+
+# ---- finalize-check, finalize-publish -------------------------------------------------------
+finalize_env() { # <step>
+  on_actions || refuse "$1 runs in a GitHub Actions job only (the finalize workflow)"
+  [ "${GITHUB_REPOSITORY:-}" = telflo/telflo ] || refuse "$1 finalizes telflo/telflo's Releases only"
+  [ -n "${GH_TOKEN:-}" ] || refuse "GH_TOKEN must be set (the job's GITHUB_TOKEN)"
+  command -v gh >/dev/null 2>&1 || fail "gh is not on PATH"
+}
+# finalize_tag <tag> <version>: sets commit to the checkout's tag's commit, once it is on main,
+# its charts/telflo/Chart.yaml is the version's, and GitHub holds the tag as the annotated tag of
+# that commit.
+finalize_tag() {
+  [ "$(git -C "$ROOT" rev-parse --is-shallow-repository 2>/dev/null)" = false ] \
+    || fail "the checkout is shallow: finalize needs the full history (fetch-depth: 0)"
+  commit="$(git -C "$ROOT" rev-parse -q --verify "refs/tags/$1^{commit}" 2>/dev/null)" \
+    || fail "the checkout has no tag $1: a stage is finalized from its release tag"
+  [[ "$commit" =~ ^[0-9a-f]{40}$ ]] || fail "$1's commit isn't in the checkout"
+  git -C "$ROOT" rev-parse -q --verify refs/remotes/origin/main >/dev/null || fail "the checkout has no refs/remotes/origin/main"
+  git -C "$ROOT" merge-base --is-ancestor "$commit" refs/remotes/origin/main || fail "$1's commit $commit isn't on main"
+  git -C "$ROOT" show "$commit:charts/telflo/Chart.yaml" >"$tmp/Chart.yaml" 2>/dev/null || fail "$1's commit has no charts/telflo/Chart.yaml"
+  [ "$(telflo_chart_field "$tmp/Chart.yaml" version || true)" = "$2" ] && [ "$(telflo_chart_field "$tmp/Chart.yaml" appVersion || true)" = "$2" ] \
+    || fail "charts/telflo/Chart.yaml at $1 isn't version $2"
+  telflo_github_tag_object "$GITHUB_REPOSITORY" "$1" "$commit" "the checkout's" "$tmp" \
+    || fail "$TELFLO_GITHUB_PROBLEM: nothing finalized"
+  note "$1 is the annotated tag $TELFLO_GITHUB_TAG_OBJECT of $commit, on main"
+}
+# release_state <repository> <tag>: prints absent, draft or published (then ` digests` when the
+# Release holds digests.txt), or error or shape.
+release_state() {
+  if ! env -u GH_HOST -u GH_REPO gh release view "$2" --repo "$1" --json tagName,isDraft,assets >"$tmp/release.json" 2>"$tmp/release.err" </dev/null; then
+    if grep -q 'release not found' "$tmp/release.err"; then echo absent; else echo error; fi
+    return 0
+  fi
+  python3 -I - "$tmp/release.json" "$2" 2>/dev/null <<'PY' || echo shape
+import json, sys
+try:
+    reply = json.load(open(sys.argv[1], encoding="utf-8"))
+except Exception:
+    print("shape"); sys.exit(0)
+if not isinstance(reply, dict) or reply.get("tagName") != sys.argv[2] or not isinstance(reply.get("isDraft"), bool):
+    print("shape"); sys.exit(0)
+names = [a.get("name") for a in reply.get("assets") or [] if isinstance(a, dict)]
+print(("draft" if reply["isDraft"] else "published") + (" digests" if "digests.txt" in names else ""))
+PY
+}
+# draft_digests <tag> <dir>: the draft's digests.txt downloaded into <dir> (new), and checked.
+draft_digests() {
+  env -u GH_HOST -u GH_REPO gh release download "$1" --repo "$GITHUB_REPOSITORY" --pattern digests.txt --dir "$2" >/dev/null 2>"$tmp/download.err" </dev/null \
+    || fail "the draft Release $1's digests.txt couldn't be downloaded"
+  [ -f "$2/digests.txt" ] && [ ! -L "$2/digests.txt" ] || fail "the draft Release $1 gave no digests.txt"
+  telflo_digests_ok "$2/digests.txt" || fail "the draft Release $1's digests.txt isn't a stage's record: nothing finalized"
+}
+finalize_check() {
+  local version="" out=""
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --version) [ $# -ge 2 ] || refuse "--version needs a value"; version="$2"; shift 2 ;;
+      --out) [ $# -ge 2 ] || refuse "--out needs a folder"; out_dir_arg "$2"; shift 2 ;;
+      *) refuse "finalize-check takes --version <x.y.z> --out <dir>" ;;
+    esac
+  done
+  telflo_version_ok "$version" || refuse "finalize-check needs --version <x.y.z>"
+  [ -n "$out" ] || refuse "finalize-check needs --out <dir>"
+  finalize_env finalize-check
+  local tag="v$version" commit state
+  [ ! -e "$out/digests.txt" ] || fail "$out/digests.txt exists already: never overwritten"
+  finalize_tag "$tag" "$version"
+  state="$(release_state "$GITHUB_REPOSITORY" "$tag")"
+  case "$state" in
+    "draft digests") ;;
+    draft) fail "the draft Release $tag holds no digests.txt: it isn't a stage (abandon it, then tag again)" ;;
+    published*) fail "the Release $tag is published already: nothing to finalize" ;;
+    absent) fail "there is no draft Release $tag: no stage of $version to finalize (the release workflow makes it)" ;;
+    *) fail "GitHub didn't answer for the Release $tag ($state): nothing finalized" ;;
+  esac
+  draft_digests "$tag" "$tmp/download"
+  cp "$tmp/download/digests.txt" "$out/digests.txt.partial" && mv "$out/digests.txt.partial" "$out/digests.txt" \
+    || fail "can't write $out/digests.txt"
+  note "the draft Release $tag and its stage's record: $out/digests.txt"
+  printf '%s\n' "$out/digests.txt"
+}
+# version_newer <a> <b>: exit 0 when <a> is a higher x.y.z version than <b>.
+version_newer() {
+  local a b i
+  IFS=. read -r -a a <<<"$1"
+  IFS=. read -r -a b <<<"$2"
+  for i in 0 1 2; do
+    if [ "${a[$i]}" -gt "${b[$i]}" ]; then return 0; fi
+    if [ "${a[$i]}" -lt "${b[$i]}" ]; then return 1; fi
+  done
+  return 1
+}
+finalize_publish() {
+  local version="" digests=""
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --version) [ $# -ge 2 ] || refuse "--version needs a value"; version="$2"; shift 2 ;;
+      --digests) [ $# -ge 2 ] || refuse "--digests needs a file"; digests="$2"; shift 2 ;;
+      *) refuse "finalize-publish takes --version <x.y.z> --digests <file>" ;;
+    esac
+  done
+  telflo_version_ok "$version" || refuse "finalize-publish needs --version <x.y.z>"
+  [ -n "$digests" ] && [ -f "$digests" ] || refuse "--digests must be the promoted digests.txt"
+  finalize_env finalize-publish
+  local tag="v$version" commit state latest=true latest_tag
+  finalize_tag "$tag" "$version"
+  state="$(release_state "$GITHUB_REPOSITORY" "$tag")"
+  [ "$state" = "draft digests" ] || fail "the Release $tag is no longer a draft holding digests.txt ($state): nothing published"
+  draft_digests "$tag" "$tmp/again"
+  cmp -s "$tmp/again/digests.txt" "$digests" || fail "the draft Release $tag's digests.txt isn't the record that was promoted: nothing published"
+  # Latest, unless the Release marked latest names a higher version (a patch of an older line).
+  if telflo_github_get "$tmp" "repos/$GITHUB_REPOSITORY/releases/latest" "$tmp/latest.json"; then
+    latest_tag="$(python3 -I -c 'import json, sys; print(json.load(open(sys.argv[1], encoding="utf-8")).get("tag_name", ""))' "$tmp/latest.json" 2>/dev/null || true)"
+    if [[ "$latest_tag" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] && version_newer "${latest_tag#v}" "$version"; then
+      latest=false
+      note "the latest Release is $latest_tag, a higher version: $tag is published with --latest=false"
+    fi
+  elif grep -q 'HTTP 404' "$tmp/gh.err" 2>/dev/null; then
+    note "no Release is marked latest yet"
+  else
+    fail "GitHub's API didn't answer for the latest Release: nothing published"
+  fi
+  env -u GH_HOST -u GH_REPO gh release edit "$tag" --repo "$GITHUB_REPOSITORY" --draft=false --latest="$latest" >/dev/null </dev/null \
+    || fail "gh release edit $tag --draft=false failed"
+  state="$(release_state "$GITHUB_REPOSITORY" "$tag")"
+  [ "$state" = "published digests" ] || fail "after the edit, the Release $tag answers '$state', not published"
+  note "the GitHub Release $tag is published (latest: $latest)"
+}
+
+# ---- abandon-stage -------------------------------------------------------------------------
+# The owner's gh, with their own login (gh's own configuration), at github.com.
+owner_api() { env -u GH_HOST -u GH_REPO -u GH_DEBUG gh api --hostname github.com -H "Accept: application/vnd.github+json" "$@" </dev/null; }
+# package_of <namespace> <name>: the organization telflo's container package that holds
+# <name> in that namespace (telflo/telflo-staging/api is telflo's telflo-staging/api).
+package_of() { local path; path="$(telflo_namespace_path "$1")" || return 1; printf '%s/%s\n' "${path#telflo/}" "$2"; }
+# package_versions <package> <out>: the organization's container package's versions (every
+# page) into <out>; returns 0, 3 when there is no such package (404), 1 otherwise.
+package_versions() {
+  local encoded="${1//\//%2F}"
+  if owner_api --paginate "orgs/telflo/packages/container/$encoded/versions?per_page=100" >"$2" 2>"$tmp/owner-api.err"; then return 0; fi
+  if grep -q 'HTTP 404' "$tmp/owner-api.err"; then return 3; fi
+  return 1
+}
+# tagged_versions <file> <version>: `version <id> <digest> <its other tags, or ->` for each
+# version tagged <version>, then `fallback <id> <digest> <its tags>` for each version tagged
+# sha256-<that digest's hex>; `shape` when the reply isn't a list of versions.
+tagged_versions() {
+  python3 -I - "$1" "$2" 2>/dev/null <<'PY' || echo shape
+import json, re, sys
+text = open(sys.argv[1], encoding="utf-8").read()
+version = sys.argv[2]
+decoder, at, items = json.JSONDecoder(), 0, []
+try:
+    while True:
+        while at < len(text) and text[at].isspace():
+            at += 1
+        if at >= len(text):
+            break
+        value, at = decoder.raw_decode(text, at)
+        if not isinstance(value, list):
+            raise ValueError
+        items.extend(value)
+except ValueError:
+    print("shape"); sys.exit(0)
+rows = []
+for item in items:
+    tags = (((item.get("metadata") or {}).get("container") or {}).get("tags")) if isinstance(item, dict) else None
+    if not isinstance(item, dict) or type(item.get("id")) is not int or not re.fullmatch(r"sha256:[0-9a-f]{64}", str(item.get("name"))) \
+            or not isinstance(tags, list) or not all(isinstance(t, str) and re.fullmatch(r"[A-Za-z0-9_.-]{1,128}", t) for t in tags):
+        print("shape"); sys.exit(0)
+    rows.append((item["id"], item["name"], tags))
+for vid, digest, tags in rows:
+    if version not in tags:
+        continue
+    print("version %d %s %s" % (vid, digest, ",".join(t for t in tags if t != version) or "-"))
+    fallback = "sha256-" + digest[7:]
+    for other, other_digest, other_tags in rows:
+        if fallback in other_tags:
+            print("fallback %d %s %s" % (other, other_digest, ",".join(t for t in other_tags if t != fallback) or "-"))
+PY
+}
+abandon_stage() {
+  local version="" dry_run=false
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --version) [ $# -ge 2 ] || refuse "--version needs a value"; version="$2"; shift 2 ;;
+      --dry-run) dry_run=true; shift ;;
+      *) refuse "abandon-stage takes --version <x.y.z> [--dry-run]" ;;
+    esac
+  done
+  ! on_actions || refuse "abandon-stage is the owner's, run on their own machine with gh: a workflow never abandons a stage"
+  telflo_version_ok "$version" || refuse "abandon-stage needs --version <x.y.z>"
+  command -v gh >/dev/null 2>&1 || fail "gh is not on PATH (the owner's GitHub CLI, its token with read:packages and delete:packages)"
+  local tag="v$version" names name status rows kind id digest extra problems=0 state deletes="" encoded
+  names="$(tr ' ' '\n' <<<"$TELFLO_DIGESTS_NAMES" | grep -vxF charts/telflo.tgz)"
+  # 1. Nothing of the version public: no public package version tagged <v>, no published Release.
+  for name in $names; do
+    status=0
+    package_versions "$(package_of telflo "$name")" "$tmp/public.json" || status=$?
+    case "$status" in
+      0) rows="$(tagged_versions "$tmp/public.json" "$version")"
+         [ "$rows" != shape ] || fail "GitHub's answer for the package telflo/$name isn't a list of versions: nothing deleted"
+         if printf '%s\n' "$rows" | grep -q '^version '; then
+           echo "$PROGRAM: ghcr.io/telflo/telflo/$name:$version is public: version $version is spent, never abandoned (a fix is the next patch version)" >&2
+           problems=$((problems + 1))
+         fi ;;
+      3) ;;
+      *) fail "GitHub's API didn't answer for the package telflo/$name (gh's token needs read:packages): nothing deleted" ;;
+    esac
+  done
+  state="$(release_state telflo/telflo "$tag")"
+  case "$state" in
+    absent) note "there is no Release $tag" ;;
+    draft*) note "the Release $tag is a draft: it goes with the stage" ;;
+    published*) echo "$PROGRAM: the Release $tag is published: version $version is spent, never abandoned" >&2
+       problems=$((problems + 1)) ;;
+    *) fail "GitHub didn't answer for the Release $tag ($state): nothing deleted" ;;
+  esac
+  [ "$problems" -eq 0 ] || fail "$problems public part(s) of $version: nothing deleted"
+  # 2. The stage: each staged package's version tagged <v>, and its fallback tags' versions.
+  for name in $names; do
+    status=0
+    package_versions "$(package_of telflo-staging "$name")" "$tmp/staged.json" || status=$?
+    case "$status" in
+      0) ;;
+      3) note "there is no package telflo-staging/$name"; continue ;;
+      *) fail "GitHub's API didn't answer for the package telflo-staging/$name (gh's token needs read:packages): nothing deleted" ;;
+    esac
+    rows="$(tagged_versions "$tmp/staged.json" "$version")"
+    [ "$rows" != shape ] || fail "GitHub's answer for the package telflo-staging/$name isn't a list of versions: nothing deleted"
+    [ -n "$rows" ] || { note "telflo-staging/$name holds no version tagged $version"; continue; }
+    while read -r kind id digest extra; do
+      [ "$extra" = - ] \
+        || fail "telflo-staging/$name's version $id ($digest) also holds the tag(s) $extra: deleting it would remove them; nothing deleted"
+      deletes="$deletes$name $id $digest $kind"$'\n'
+    done <<<"$rows"
+  done
+  if [ -z "$deletes" ] && [ "${state%% *}" != draft ]; then
+    note "nothing of $version is staged, and there is no draft Release $tag: nothing to abandon"
+    return 0
+  fi
+  while read -r name id digest kind; do
+    [ -n "$name" ] || continue
+    if [ "$kind" = version ]; then extra="tagged $version"; else extra="the referrers' fallback tag beside it"; fi
+    echo "$PROGRAM: to delete: ghcr.io/$(telflo_namespace_path telflo-staging)/$name version $id ($digest, $extra)" >&2
+  done <<<"$deletes"
+  [ "${state%% *}" != draft ] || echo "$PROGRAM: to delete: the draft Release $tag (its tag stays: deleting it is yours, docs/releasing.md)" >&2
+  if $dry_run; then
+    note "dry run: nothing deleted"
+    return 0
+  fi
+  while read -r name id digest kind; do
+    [ -n "$name" ] || continue
+    encoded="$(package_of telflo-staging "$name")"
+    encoded="${encoded//\//%2F}"
+    owner_api -X DELETE "orgs/telflo/packages/container/$encoded/versions/$id" >/dev/null 2>"$tmp/owner-api.err" \
+      || fail "deleting telflo-staging/$name version $id failed (gh's token needs delete:packages)"
+    note "deleted ghcr.io/$(telflo_namespace_path telflo-staging)/$name version $id ($digest)"
+  done <<<"$deletes"
+  if [ "${state%% *}" = draft ]; then
+    env -u GH_HOST -u GH_REPO gh release delete "$tag" --repo telflo/telflo --yes >/dev/null 2>"$tmp/release.err" </dev/null \
+      || fail "deleting the draft Release $tag failed"
+    note "deleted the draft Release $tag"
+  fi
+  note "the stage of $version is abandoned; now delete the tag (git push origin :refs/tags/$tag, then git tag -d $tag), and tag again once the fix is on main"
 }
 
 action="${1:-}"
@@ -663,6 +1058,10 @@ case "$action" in
   kind-smoke) kind_smoke "$@" ;;
   helm-login) helm_login "$@" ;;
   github-release) github_release "$@" ;;
+  digests) digests "$@" ;;
+  finalize-check) finalize_check "$@" ;;
+  finalize-publish) finalize_publish "$@" ;;
+  abandon-stage) abandon_stage "$@" ;;
   -h | --help) usage ;;
   *) usage ;;
 esac

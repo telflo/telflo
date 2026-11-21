@@ -1,0 +1,11 @@
+# Breaks one rule: a run: that logs in to a registry.
+file: ci.yml
+rule: ci-login
+<<<
+      - name: Build and start the full stack
+
+===
+      - run: echo "$DOCKERHUB_PASSWORD" | docker login --username telflo --password-stdin
+      - name: Build and start the full stack
+
+>>>

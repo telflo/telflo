@@ -1,0 +1,11 @@
+# Breaks one rule: finalize.yml's job without TELFLO_CRANE: "" (another crane than tools.sh's).
+file: finalize.yml
+rule: job-env
+<<<
+    env:
+      # crane is tools.sh's checked one only.
+      TELFLO_CRANE: ""
+
+===
+
+>>>

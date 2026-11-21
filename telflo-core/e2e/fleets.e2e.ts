@@ -110,11 +110,23 @@ async function openCreateDialog(page: Page, opener: Locator, type: FleetType): P
   return page.getByRole("dialog", { name: type === "server" ? "New server fleet" : "New Kubernetes Supervisor Fleet" });
 }
 
-/** The tokens step of a create: both bearers shown, only in `ph-no-capture`. */
+/**
+ * The tokens step of a create: both bearers masked at first (neither's
+ * whole text anywhere in the dialog), then, after each box's Show, both
+ * shown whole, only in `ph-no-capture`.
+ */
 async function expectTokensShown(page: Page, bearers: string[]): Promise<Locator> {
   const created = page.getByRole("dialog", { name: "Fleet created" });
   await expect(created).toBeVisible();
   await expect(created).toContainText("Copy them now: this dialog won't show them again.");
+  for (const bearer of bearers) await expect(created).not.toContainText(bearer);
+  const shows = created.getByRole("button", { name: /^Show / });
+  await expect(shows).toHaveCount(bearers.length);
+  // A clicked Show becomes Hide, so the next one is always the first left.
+  for (let left = bearers.length; left > 0; left--) {
+    await shows.first().click();
+    await expect(shows).toHaveCount(left - 1);
+  }
   for (const bearer of bearers) await expect(created.locator(".ph-no-capture", { hasText: bearer })).toBeVisible();
   await expectBearersOnlyInNoCapture(page, bearers);
   return created;

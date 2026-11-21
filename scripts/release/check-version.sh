@@ -8,9 +8,13 @@
 #
 # The places, in order:
 #   - charts/telflo/Chart.yaml's version and appVersion;
-#   - deploy/compose/compose.yaml: each Telflo image's tag
-#     (ghcr.io/telflo/telflo/<name>:<version>, one place per image line;
-#     none at all is a problem);
+#   - deploy/compose/compose.yaml: each Telflo image's tag, read through
+#     the registry's default form
+#     (${TELFLO_IMAGE_REGISTRY:-ghcr.io/telflo/telflo}/<name>:<version>,
+#     scripts/release/version.sh's TELFLO_COMPOSE_IMAGE_PREFIX; one place per
+#     image line; none at all is a problem, and so is an image line naming
+#     ghcr.io/telflo/telflo/<name> without the variable, whose registry
+#     TELFLO_IMAGE_REGISTRY can't change);
 #   - README.md's Quick start (between its markers,
 #     scripts/release/quick-start.sh): each release download address
 #     (releases/download/v<version>) and each archive name
@@ -77,10 +81,12 @@ done
 
 # ---- deploy/compose/compose.yaml: each Telflo image line's tag.
 COMPOSE_YAML=deploy/compose/compose.yaml
-# compose_images: "<line>|<name>|<tag>" for each image line naming
-# ghcr.io/telflo/telflo/ (comments skipped; quotes and a digest dropped).
+# compose_images: "<line>|<form>|<name>|<tag>" for each image line naming
+# a Telflo image (comments skipped; quotes and a digest dropped): <form> is
+# "variable" for one through TELFLO_COMPOSE_IMAGE_PREFIX, "literal" for one
+# naming TELFLO_COMPOSE_IMAGE_DEFAULT/ itself.
 compose_images() {
-  awk '
+  awk -v prefix="$TELFLO_COMPOSE_IMAGE_PREFIX" -v literal="$TELFLO_COMPOSE_IMAGE_DEFAULT/" '
     /^[[:space:]]*#/ { next }
     /^[[:space:]]+image:[[:space:]]/ {
       value = $0
@@ -88,22 +94,26 @@ compose_images() {
       sub(/[[:space:]]+#.*$/, "", value)
       sub(/[[:space:]]+$/, "", value)
       gsub(/["\047]/, "", value)
-      prefix = "ghcr.io/telflo/telflo/"
-      if (index(value, prefix) != 1) next
-      rest = substr(value, length(prefix) + 1)
+      if (index(value, prefix) == 1) { form = "variable"; rest = substr(value, length(prefix) + 1) }
+      else if (index(value, literal) == 1) { form = "literal"; rest = substr(value, length(literal) + 1) }
+      else next
       sub(/@.*$/, "", rest)
       colon = index(rest, ":")
-      if (colon == 0) { print NR "|" rest "|"; next }
-      print NR "|" substr(rest, 1, colon - 1) "|" substr(rest, colon + 1)
+      if (colon == 0) { print NR "|" form "|" rest "|"; next }
+      print NR "|" form "|" substr(rest, 1, colon - 1) "|" substr(rest, colon + 1)
     }' "$REPO_DIR/$COMPOSE_YAML"
 }
 if [ -f "$REPO_DIR/$COMPOSE_YAML" ]; then
   images="$(compose_images)"
   if [ -z "$images" ]; then
-    missing "$COMPOSE_YAML's Telflo images" "no image line names ghcr.io/telflo/telflo/<name>:<version>"
+    missing "$COMPOSE_YAML's Telflo images" "no image line names ${TELFLO_COMPOSE_IMAGE_PREFIX}<name>:<version>"
   else
-    while IFS='|' read -r line_number image tag; do
-      place "$COMPOSE_YAML:$line_number's $image image" "$tag"
+    while IFS='|' read -r line_number form image tag; do
+      if [ "$form" = literal ]; then
+        problem "$COMPOSE_YAML:$line_number's $image image names $TELFLO_COMPOSE_IMAGE_DEFAULT/$image directly: write it ${TELFLO_COMPOSE_IMAGE_PREFIX}$image:<version>, so TELFLO_IMAGE_REGISTRY picks its registry"
+      else
+        place "$COMPOSE_YAML:$line_number's $image image" "$tag"
+      fi
     done <<<"$images"
   fi
 else

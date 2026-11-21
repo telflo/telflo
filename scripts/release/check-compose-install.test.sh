@@ -5,7 +5,14 @@
 # and the development secrets' files), each rule broken once fails it, naming
 # the rule:
 #   the four copies (each changed, one missing); compose.yaml's name, a
-#   build:, a Telflo image at another version or by digest, Postgres and
+#   build:, a Telflo image at another version or by digest; the registry's
+#   form: a Telflo image naming ghcr.io/telflo/telflo/ without
+#   TELFLO_IMAGE_REGISTRY, TELFLO_IMAGE_REGISTRY with another default, with
+#   `-` for `:-` (empty, it names /<name>:<version>), with no default, on
+#   Postgres's image, another variable name, a variable after
+#   <name>:, a variable in nginx's image (each as text, and as Compose reads
+#   it unset, empty or set to a mirror), and the real file's Telflo images
+#   followed to the mirror, every other image not; Postgres and
 #   nginx off the chart's digests (and the chart's digest moved), the
 #   opamp-server off the PIN, an unknown service, Mailpit without its digest
 #   or its profile, another service with a profile, Mailpit's port on the
@@ -112,10 +119,11 @@ run_case "another project name fails" broken "a top-level line 'name: telflo'" d
 run_case "a build: fails" broken "has a build:" deploy/compose/compose.yaml \
   in_service api 'if ($0 == "  api:") { print; print "    build: ."; next }'
 run_case "a Telflo image at another version fails" broken "web's image is 'ghcr.io/telflo/telflo/web:9.9.9'" deploy/compose/compose.yaml \
-  sed 's#ghcr.io/telflo/telflo/web:[0-9.]*#ghcr.io/telflo/telflo/web:9.9.9#'
+  sed 's#ghcr.io/telflo/telflo}/web:[0-9.]*"#ghcr.io/telflo/telflo}/web:9.9.9"#'
 digest="sha256:$(printf '%064d' 0)"
 run_case "a Telflo image by digest fails" broken "otelcol-validator's image is" deploy/compose/compose.yaml \
-  sed "s#\\(ghcr.io/telflo/telflo/otelcol-validator:[0-9.]*\\)\$#\\1@$digest#"
+  sed "s#\\(ghcr.io/telflo/telflo}/otelcol-validator:[0-9.]*\\)\"\$#\\1@$digest\"#"
+
 run_case "Postgres off the chart's digest fails" broken "db's image is 'postgres:18@$digest'" deploy/compose/compose.yaml \
   in_service db "sub(/@sha256:[0-9a-f]+/, \"@$digest\")"
 run_case "nginx without its digest fails" broken "gateway's image is 'nginx:1.30-alpine'" deploy/compose/compose.yaml \
@@ -166,6 +174,62 @@ not_executable() { fresh && chmod 644 "$c/deploy/compose/setup.sh" && check && r
 run_case "setup.sh not executable fails" not_executable
 run_case "COMPOSE_PROFILES not starting Mailpit fails" broken "mailpit isn't started by .env's COMPOSE_PROFILES" deploy/compose/setup.sh \
   sed 's/^  add_line "COMPOSE_PROFILES=mailpit"$/  add_line "COMPOSE_PROFILES="/'
+
+echo "# the Telflo images' registry"
+MIRROR=registry.example.com:5000/mirror/telflo
+# The release version the real compose.yaml's Telflo images are at.
+VERSION="$(awk '$1 == "version:" { print $2; exit }' "$REPO_DIR/charts/telflo/Chart.yaml")"
+# image_line <service> <new image text>: an awk program for in_service,
+# that service's image line replaced.
+image_line() { printf 'if ($0 ~ /^    image: /) { print "    image: %s"; next }' "$1"; }
+# registry_broken <service> <new image text> <text rule's words> <Compose's words>:
+# the copy with that service's image line replaced fails as text and as
+# Compose reads it.
+registry_broken() {
+  fresh && edit deploy/compose/compose.yaml in_service "$1" "$(image_line "$2")" &&
+    check && rc_is 1 && said "$3" && said "$4"
+}
+run_case "a Telflo image naming ghcr.io/telflo/telflo/ without TELFLO_IMAGE_REGISTRY fails (as text, and set to a mirror)" \
+  registry_broken web "ghcr.io/telflo/telflo/web:$VERSION" \
+  "image 'ghcr.io/telflo/telflo/web:$VERSION' names ghcr.io/telflo/telflo/ directly" \
+  "(mailpit form, TELFLO_IMAGE_REGISTRY=$MIRROR): web's image is 'ghcr.io/telflo/telflo/web:$VERSION', not $MIRROR/web:$VERSION"
+run_case "TELFLO_IMAGE_REGISTRY with another default fails" \
+  registry_broken api "\${TELFLO_IMAGE_REGISTRY:-ghcr.io/example/telflo}/api:$VERSION" \
+  "TELFLO_IMAGE_REGISTRY is read only as \${TELFLO_IMAGE_REGISTRY:-ghcr.io/telflo/telflo}/<name>:<version>" \
+  "(mailpit form): api's image is 'ghcr.io/example/telflo/api:$VERSION', not ghcr.io/telflo/telflo/api:$VERSION"
+run_case "TELFLO_IMAGE_REGISTRY with - for :- fails: set empty it names /<name>:<version>" \
+  registry_broken api "\${TELFLO_IMAGE_REGISTRY-ghcr.io/telflo/telflo}/api:$VERSION" \
+  "TELFLO_IMAGE_REGISTRY is read only as" \
+  "(mailpit form, TELFLO_IMAGE_REGISTRY empty): api's image is '/api:$VERSION', not ghcr.io/telflo/telflo/api:$VERSION"
+run_case "TELFLO_IMAGE_REGISTRY without a default fails" \
+  registry_broken ottl-evaluator "\${TELFLO_IMAGE_REGISTRY}/ottl-evaluator:$VERSION" \
+  "TELFLO_IMAGE_REGISTRY is read only as" \
+  "(mailpit form): ottl-evaluator's image is '/ottl-evaluator:$VERSION', not ghcr.io/telflo/telflo/ottl-evaluator:$VERSION"
+postgres_ref="$(sed -n 's/^    image: \(postgres:.*\)$/\1/p' "$REPO_DIR/deploy/compose/compose.yaml" | head -n 1)"
+run_case "TELFLO_IMAGE_REGISTRY on Postgres's image fails: it moves the Telflo images only" \
+  registry_broken db "\${TELFLO_IMAGE_REGISTRY:-docker.io/library}/$postgres_ref" \
+  "TELFLO_IMAGE_REGISTRY is read only as" \
+  "(mailpit form, TELFLO_IMAGE_REGISTRY=$MIRROR): db's image is '$MIRROR/$postgres_ref', not $postgres_ref"
+run_case "another variable name for the registry fails" \
+  registry_broken web "\${TELFLO_REGISTRY:-ghcr.io/telflo/telflo}/web:$VERSION" \
+  "reads a variable other than TELFLO_IMAGE_REGISTRY" \
+  "(mailpit form, TELFLO_IMAGE_REGISTRY=$MIRROR): web's image is 'ghcr.io/telflo/telflo/web:$VERSION', not $MIRROR/web:$VERSION"
+run_case "a variable after <name>: fails" \
+  broken "a Telflo image is \${TELFLO_IMAGE_REGISTRY:-ghcr.io/telflo/telflo}/<name>:<version> and nothing more" deploy/compose/compose.yaml \
+  in_service web "$(image_line "\${TELFLO_IMAGE_REGISTRY:-ghcr.io/telflo/telflo}/web:\${TELFLO_VERSION:-$VERSION}")"
+# shellcheck disable=SC2016 # Compose's ${...}, written as text
+run_case "a variable in nginx's image fails" \
+  broken "reads a variable other than TELFLO_IMAGE_REGISTRY" deploy/compose/compose.yaml \
+  sed 's#^\(    image: nginx:\)1.30-alpine@#\1${TELFLO_NGINX_TAG:-1.30-alpine}@#'
+# mirrored: the real compose.yaml passes its three readings: with
+# TELFLO_IMAGE_REGISTRY empty, every image as with it unset; set to the
+# mirror, each Telflo image <mirror>/<name>:<version> and every other image
+# as with it unset (no problem under either reading's label).
+mirrored() {
+  fresh && check && rc_is 0 && ! said "TELFLO_IMAGE_REGISTRY empty)" && ! said "TELFLO_IMAGE_REGISTRY=$MIRROR)" &&
+    said "(unset, empty and a mirror's)"
+}
+run_case "the real compose.yaml: the Telflo images follow TELFLO_IMAGE_REGISTRY, unset, empty or a mirror, and nothing else does" mirrored
 
 echo "# the lockdown"
 run_case "the opamp-server without its secret mount fails" broken "opamp-server does not mount the secret opamp_encryption_key" deploy/compose/compose.yaml \
