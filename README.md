@@ -227,20 +227,20 @@ checksums file beside it.
 mkdir telflo-quick-start && cd telflo-quick-start
 
 # Save the release's download address, which the next command uses.
-release=https://github.com/telflo/telflo/releases/download/v0.2.0
+release=https://github.com/telflo/telflo/releases/download/v0.2.1
 
 # Download the Compose install's archive and the release's checksums.
-curl -fsSL -O "$release/telflo-compose-0.2.0.tar.gz" -O "$release/SHA256SUMS"
+curl -fsSL -O "$release/telflo-compose-0.2.1.tar.gz" -O "$release/SHA256SUMS"
 ```
 
 **2. Check it and unpack it.**
 
 ```sh
 # Check the archive against the checksums: it prints the archive's name and OK.
-grep 'telflo-compose-0.2.0.tar.gz$' SHA256SUMS | if command -v sha256sum >/dev/null; then sha256sum -c -; else shasum -a 256 -c -; fi
+grep 'telflo-compose-0.2.1.tar.gz$' SHA256SUMS | if command -v sha256sum >/dev/null; then sha256sum -c -; else shasum -a 256 -c -; fi
 
 # Unpack it, and go into the folder it makes.
-tar -xzf telflo-compose-0.2.0.tar.gz && cd telflo-compose-0.2.0
+tar -xzf telflo-compose-0.2.1.tar.gz && cd telflo-compose-0.2.1
 ```
 
 **3. Set it up.** `setup.sh` writes the install's settings into a `.env`

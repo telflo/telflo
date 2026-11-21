@@ -7,6 +7,32 @@ release's images, Helm chart and Compose install are on its
 
 ## Unreleased
 
+## 0.2.1 - 2026-11-20
+
+### Security
+
+- The development stack's `docker-compose.yml` publishes Postgres, Mailpit
+  and the gateway on `127.0.0.1` only. Before, they listened on every
+  interface, and Postgres used its committed development password. The
+  release's Compose install (`deploy/compose/`) never published the
+  database.
+
+### Added
+
+- [`SECURITY.md`](SECURITY.md): how to report a vulnerability privately,
+  through the repository's Security tab, and how to run Telflo safely.
+- [`CONTRIBUTING.md`](CONTRIBUTING.md): how to propose a change, run the
+  checks and license your contribution.
+- The README's "About this project" says how the code was written.
+
+### Changed
+
+- The README says what Telflo includes, that it has no collector limit,
+  and that the AI assistant and MCP server offered at telflo.com aren't
+  part of it.
+- Comments, docs and script messages no longer cite private planning
+  documents. The code is unchanged.
+
 ## 0.2.0
 
 The first public release of Telflo.
