@@ -530,6 +530,17 @@ Collectors poll the `--agent-url` you gave `setup.sh` (the opamp-server's
   and published
 - [CHANGELOG.md](CHANGELOG.md): what each release changed
 
+## About this project
+
+The code for telflo.com was originally created by a combination of hand-coded
+software and AI (Claude) assisted development. When we decided to open source
+the platform, we used Claude to help port the closed-source software to a new
+architecture backed by PostgreSQL. This repo is the result of that port.
+Currently telflo.com still runs on the original codebase, because we wanted to
+prioritize making this solution available over swapping telflo.com. That
+effort is ongoing and will take place in the near future. We hope you enjoy
+using this solution, and we look forward to your feedback!
+
 ## Contributing
 
 Bugs and questions go to the repository's
