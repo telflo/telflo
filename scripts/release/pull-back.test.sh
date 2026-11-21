@@ -91,6 +91,28 @@ run "$tmp/stub" --oci "$oci" --version "$V" --no-chart --image redis
 check "an unknown image refused (exit 2)" "[ $rc -eq 2 ] && has \"unknown image 'redis'\""
 run "$tmp/stub" --oci "$oci" --version "$V" --no-chart
 check "a missing digest file refused (exit 1) before any registry read" "[ $rc -eq 1 ] && has 'api.digest is missing' && [ ! -s '$logs/crane-calls.log' ]"
+for bad in telflo/telflo telflo-platform "" platform; do
+  run "$tmp/stub" --oci "$oci" --version "$V" --no-chart --namespace "$bad"
+  check "--namespace '$bad' refused (exit 2): only telflo or telflo-staging" "[ $rc -eq 2 ] && has '--namespace must be telflo (the public one) or telflo-staging'"
+done
+run "$tmp/stub" --oci "$oci" --version "$V" --no-chart --image collector --namespace telflo-staging
+check "the collector image with --namespace telflo-staging refused (exit 2): it is public only" "[ $rc -eq 2 ] && has 'the collector image is published to the public namespace alone'"
+D1=sha256:1111111111111111111111111111111111111111111111111111111111111111
+printf 'api %s\notelcol-testing %s\notelcol-validator %s\nottl-evaluator %s\nweb %s\ncharts/telflo %s\ncharts/telflo.tgz %s\n' "$D1" "$D1" "$D1" "$D1" "$D1" "$D1" "$D1" >"$tmp/d1.txt"
+run "$tmp/stub" --digests "$tmp/d1.txt" --oci "$oci" --version "$V"
+check "--digests with --oci refused (exit 2)" "[ $rc -eq 2 ] && has '--oci or --digests, not both'"
+run "$tmp/stub" --digests "$tmp/d1.txt" --version "$V" --chart "$tmp/chart.tgz"
+check "--digests with --chart refused (exit 2): the file names the chart" "[ $rc -eq 2 ] && has '--digests names the chart itself'"
+run "$tmp/stub" --digests "$tmp/d1.txt" --version "$V" --no-chart
+check "--digests with --no-chart refused (exit 2)" "[ $rc -eq 2 ] && has '--digests names the chart itself'"
+run "$tmp/stub" --digests "$tmp/d1.txt" --version "$V" --image api
+check "--digests with --image refused (exit 2)" "[ $rc -eq 2 ] && has 'no --image'"
+run "$tmp/stub" --digests "$tmp/none.txt" --version "$V"
+check "a --digests file that doesn't exist refused (exit 2)" "[ $rc -eq 2 ] && has '--digests <file> must be an existing file'"
+sed '1{h;d;};2{G;}' "$tmp/d1.txt" >"$tmp/d-bad.txt"
+run "$tmp/stub" --digests "$tmp/d-bad.txt" --version "$V"
+check "a --digests file that isn't a stage's digests.txt (its lines reordered) refused (exit 1) before any registry read" \
+  "[ $rc -eq 1 ] && has \"isn't a stage's digests.txt\" && [ ! -s '$logs/crane-calls.log' ]"
 
 # --- 2. the pull-back against a throwaway registry ------------------------------------------
 push_ok=false
@@ -134,7 +156,7 @@ if $push_ok; then
   put "$tmp/other-web.oci.tar" "$REG/telflo/telflo/web:$V"
   run "$TR_CONFIG" --oci "$oci" --version "$V" --chart "$package" --registry "$REG"
   check "pull-back.sh fails when one image's digest differs, naming it (exit 1)" \
-    "[ $rc -eq 1 ] && has \"DIFFERENT: $REG/telflo/telflo/web:$V is sha256:\" && has \"not the archive's \$(cat '$oci/web.digest')\" && ! has 'pulled back: everything'"
+    "[ $rc -eq 1 ] && has \"DIFFERENT: $REG/telflo/telflo/web:$V is sha256:\" && has \"not the tested \$(cat '$oci/web.digest')\" && ! has 'pulled back: everything'"
   put "$oci/web.oci.tar" "$REG/telflo/telflo/web:$V"
   # The chart's bytes differ (another package of the same version).
   mkdir -p "$tmp/chart2"; cp -R "$tmp/chart/telflo" "$tmp/chart2/"; printf '# other\n' >>"$tmp/chart2/telflo/templates/cm.yaml"
@@ -142,6 +164,36 @@ if $push_ok; then
   run "$TR_CONFIG" --oci "$oci" --version "$V" --chart "$tmp/chart2/telflo-$V.tgz" --registry "$REG"
   check "pull-back.sh fails when the chart's sha256 differs from the package's (exit 1)" \
     "[ $rc -eq 1 ] && has \"DIFFERENT: oci://$REG/telflo/telflo/charts/telflo $V's sha256 is\""
+  # A release's stage: the same archives and chart under telflo/telflo-staging, then a stage's
+  # digests.txt for --digests (the finalize workflow's pull-back, which has no archives).
+  for i in $IMAGES; do put "$oci/$i.oci.tar" "$REG/telflo/telflo-staging/$i:$V"; done
+  HELM_REGISTRY_CONFIG="$TR_CONFIG/config.json" helm push --plain-http "$package" "oci://$REG/telflo/telflo-staging/charts" >/dev/null 2>&1
+  run "$TR_CONFIG" --oci "$oci" --version "$V" --chart "$package" --registry "$REG" --namespace telflo-staging
+  check "--namespace telflo-staging: the stage pulled back from <registry>/telflo/telflo-staging (exit 0)" \
+    "[ $rc -eq 0 ] && has 'pulled back: everything is what was tested' && has '$REG/telflo/telflo-staging/api:$V is' && has 'oci://$REG/telflo/telflo-staging/charts/telflo $V is the package' && ! has '$REG/telflo/telflo/api'"
+  chart_digest="$(DOCKER_CONFIG="$TR_CONFIG" "$real_crane" digest "$REG/telflo/telflo-staging/charts/telflo:$V")"
+  package_sum="sha256:$(shasum -a 256 "$package" | cut -c1-64)"
+  record() { # <chart digest> <package sha256>
+    printf 'api %s\notelcol-testing %s\notelcol-validator %s\nottl-evaluator %s\nweb %s\ncharts/telflo %s\ncharts/telflo.tgz %s\n' \
+      "$(cat "$oci/api.digest")" "$(cat "$oci/otelcol-testing.digest")" "$(cat "$oci/otelcol-validator.digest")" \
+      "$(cat "$oci/ottl-evaluator.digest")" "$(cat "$oci/web.digest")" "$1" "$2"
+  }
+  record "$chart_digest" "$package_sum" >"$tmp/digests.txt"
+  run "$TR_CONFIG" --digests "$tmp/digests.txt" --version "$V" --registry "$REG" --namespace telflo-staging
+  check "--digests: the five images and the chart checked from a stage's digests.txt alone, no archive (exit 0)" \
+    "[ $rc -eq 0 ] && has 'pulled back: everything is what was tested' && [ \$(printf '%s\n' \"\$out\" | grep -c ', attested; the amd64 image pulled)') -eq 5 ] && has \"is the package (sha256 \${package_sum#sha256:})\""
+  DOCKER_CONFIG="$TR_CONFIG" "$real_crane" copy "$REG/telflo/telflo-staging/charts/telflo@$chart_digest" "$REG/telflo/telflo/charts/telflo:$V" >/dev/null 2>&1
+  run "$TR_CONFIG" --digests "$tmp/digests.txt" --version "$V" --registry "$REG" --namespace telflo
+  check "--digests --namespace telflo: the public tags checked against the stage's record (exit 0)" \
+    "[ $rc -eq 0 ] && has '$REG/telflo/telflo/api:$V is' && has 'oci://$REG/telflo/telflo/charts/telflo $V is the package'"
+  record "$(cat "$oci/api.digest")" "$package_sum" >"$tmp/digests-chart.txt"
+  run "$TR_CONFIG" --digests "$tmp/digests-chart.txt" --version "$V" --registry "$REG" --namespace telflo-staging
+  check "--digests: a chart tag that isn't the record's charts/telflo line fails, named (exit 1)" \
+    "[ $rc -eq 1 ] && has \"DIFFERENT: $REG/telflo/telflo-staging/charts/telflo:$V is $chart_digest, not the stage's\""
+  record "$chart_digest" "sha256:$(printf '%064d' 7)" >"$tmp/digests-package.txt"
+  run "$TR_CONFIG" --digests "$tmp/digests-package.txt" --version "$V" --registry "$REG" --namespace telflo-staging
+  check "--digests: a pulled chart whose sha256 isn't the record's package line fails (exit 1)" \
+    "[ $rc -eq 1 ] && has \"DIFFERENT: oci://$REG/telflo/telflo-staging/charts/telflo $V's sha256 is \${package_sum#sha256:}, not the package's $(printf '%064d' 7)\""
   # Images without attestations: refused unless --no-attest.
   tr_fixture "$tmp/noattest.oci.tar" "$V" "$revision" NA no-attest >"$tmp/noattest.digest"
   mkdir -p "$tmp/oci-na"; for i in $IMAGES; do cp "$oci/$i.digest" "$tmp/oci-na/"; done; cp "$tmp/noattest.digest" "$tmp/oci-na/ottl-evaluator.digest"
