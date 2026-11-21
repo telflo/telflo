@@ -238,9 +238,9 @@ package's own `npm test -w <package>` was consistently green.
 
 A flaky root suite is worse than no gate: it trains everyone to re-run until
 green, which is exactly the habit that lets a real regression through. Since
-root `npm test` is what CI runs (via `test:coverage`), the workspace runs
-single-worker so the whole run is as serialized as each package already
-claims to be.
+the root suite is what CI runs (`test:coverage`'s command, in four
+parts), the workspace runs single-worker so the whole run is as
+serialized as each package already claims to be.
 
 **Scaling path:** if a single-worker workspace run becomes too slow as more
 integration suites are added, do not raise the worker count back up — that
@@ -1498,8 +1498,10 @@ throwaway git checkouts with a Stripe-shaped key made at run time and
 checked with boolean `grep -q` only: a tracked or untracked key fails and
 is never printed, a git-ignored file isn't scanned, a listed finding
 passes, a moved or stale entry fails, and neither a `.gitleaks.toml` in the
-tree nor `GITLEAKS_CONFIG` can allow a finding. Both are static gates, and
-the release workflow's first job runs the check before anything builds.
+tree nor `GITLEAKS_CONFIG` can allow a finding. Both are static gates; CI's
+`secrets` job runs the check alone on every pull request and push to
+`main`, and the release workflow's first job runs it before anything
+builds.
 
 ## CI gates
 
@@ -1517,12 +1519,12 @@ A change is not complete until all of these pass:
   request's path; "The gateway's logs" above)
 - `telflow` grep clean
 - The collector image's, the chart's and the publish scripts' tests (run
-  locally, and by the release workflow's `static` job): `bash
+  locally, and by CI's and the release workflow's `static` jobs): `bash
   docker/collector-image/entrypoint_test.sh`, `bash
   docker/collector-image/build-collector-image_test.sh`, `bash
   charts/supervisor-collector/tests/render-tests.sh` and `bash
   scripts/publish-chart.test.sh`
-- The opamp-server's drift check and its test (run by hand): `bash
+- The opamp-server's drift check and its test (static gates): `bash
   scripts/check-opamp-server-pin.sh` (the PIN, the vendored files and
   compose's two services, as text and as `docker compose config` reads
   them with `-f` and through its own discovery in the root, agree with the
@@ -1545,13 +1547,14 @@ A change is not complete until all of these pass:
   from `@telflo/`, installs alone and offline into a prefix of its own,
   and its `telflo -V` and `--help` run; `--keep <dir>` keeps the install
   for the smoke; `docs/conventions/cli.md`)
-- The platform chart's and its scripts' tests (run by hand): `bash
+- The platform chart's and its scripts' tests (static gates): `bash
   charts/telflo/tests/render-tests.sh`, `bash
   scripts/check-chart-cloud-neutral.sh`, `bash
   scripts/check-chart-cloud-neutral.test.sh`, `bash
   scripts/create-secrets.test.sh` and `bash
   scripts/publish-platform-images.test.sh` ("The platform chart" above)
-- The analytics-key and development-dependency checks (run by hand): `bash
+- The analytics-key and development-dependency checks (static gates, but
+  the run in the built images, the full suite's): `bash
   scripts/check-no-analytics-key.sh` and `bash
   scripts/check-no-analytics-key.test.sh` ("The analytics-key check"
   above), and `bash scripts/check-no-dev-dependencies.test.sh` with the
@@ -1560,6 +1563,41 @@ A change is not complete until all of these pass:
 - License guard clean: every production dependency carries a license on
   the redistribution allowed list
 - Typecheck and lint clean
+
+**What CI runs.** `.github/workflows/ci.yml` runs on every pull request, a
+fork's included (a first-time contributor's run waits for a maintainer's
+approval), and on every push to `main`, its jobs in parallel:
+- `secrets`: the secret scan alone (`scripts/release/check-secrets.sh`),
+  so a leak fails within a minute;
+- `static`: the static gates, exactly as the release workflow's `static`
+  job runs them (`scripts/gates/static.sh`, below);
+- `unit`: the unit and integration suites in four parts, each against its
+  own Postgres and Mailpit; `unit-coverage` joins the four parts' reports
+  and checks the coverage thresholds on the whole (a part alone skips
+  them);
+- `e2e`: the browser tests, each browser in two parts: Chromium on a pull
+  request; Chromium, Firefox and WebKit on `main`;
+- `ottl-evaluator`: the evaluator's Go checks and tests
+  (`docs/conventions/go.md`);
+- `otelcol-validator` and `otelcol-testing`: each service's tests, license
+  check and its self-test, then its test image with every offered
+  collector and the real-collector tests in it (the tester's kwok tests
+  too);
+- `stack`: the development stack built and started from an empty
+  database (`OTELCOL_VERSIONS=default`), the stack smoke through its
+  gateway, and the tester's and the evaluator's container checks.
+
+The `ci` job passes only when every other job passed (a failed, canceled
+or skipped one fails it), and it is the one check `main`'s branch
+protection requires, so a job added or split needs no settings change. A
+pull request's newer push cancels its older run; `main`'s runs never
+cancel each other. A pull request's run tests Chromium only, so Firefox
+and WebKit are the author's to run before it merges (`npm run test:e2e`),
+and `main`'s run tests all three after. CI holds no secret and logs in
+nowhere; `scripts/release/check-workflows.sh` holds `ci.yml` to its own
+rules ("The release workflow's tests" below). The full suite's other
+parts (the three smokes on throwaway stacks, the images' builds, the image
+part, the rehearsal) stay local.
 
 **The full suite's static gates**, in this order: the naming check and its
 test, the license check and its test, `wait-for-http`'s test, the
@@ -1678,28 +1716,42 @@ GitHub Release with `scripts/release/release-notes.sh`'s notes).
 
 **What it doesn't run**: the unit suites and coverage, the browser tests,
 the Go tests, the validator's and the tester's test images and the stack
-smoke's `saas` mode. They are the local full suite's, run once before the
-PR that makes a release commit is merged, and that PR records them.
+smoke's `saas` mode. CI runs the suites, the browser tests, the Go tests
+and the two test images ("CI gates" above: on the release's pull request,
+and again on `main`), and the local full suite runs them all once before
+the PR that makes a release commit is merged, and that PR records them.
 
 `scripts/release/check-workflows.sh` (a static gate, with its self-test)
-holds both workflow files to their rules: the triggers, `permissions: {}`
-and each job's own, every action pinned by its full commit SHA with its
-version as a comment (each parsed step's, not only the text's lines), no
-`${{ … }}` inside a `run:`, `persist-credentials: false`, `publish`
-needing every test job and tied to the `release` environment, a timeout on
-every job, the concurrency group, no `--no-attest`, every script a `run:`
+holds `release.yml` and `collector.yml` to their rules: the triggers,
+`permissions: {}` and each job's own, every action pinned by its full
+commit SHA with its version as a comment (each parsed step's, not only
+the text's lines), no `${{ … }}` inside a `run:`,
+`persist-credentials: false`, `publish` needing every test job and tied
+to the `release` environment, a timeout on every job, the concurrency
+group, no `--no-attest`, every script a `run:`
 names existing, and each job's safety steps present in order by their
 exact lines, no step `if:`, each job's `needs` and outputs exactly its
 own, each action's `with:` keys, each job's keys and every `env:` name
 from allow-lists, and `load-images.sh` named `--platform linux/amd64`; and
 each matrix and each job's own `env:` pinned exactly, with the collector
 chart job's one allow-listed `!cancelled()` the only status function
-(`docs/conventions/security.md`, "The release pipeline"). Its self-test
-has a fixture breaking each rule, known bypass forms among them.
+(`docs/conventions/security.md`, "The release pipeline"). It holds
+`ci.yml` to its own, lighter set: only `pull_request` and pushes to
+`main`; `permissions: {}`, each job `contents: read` (the `ci` job's
+none); no secret, token or login; every action on the allow-list and
+pinned; every checkout without its credential or another ref, repository
+or path; exactly its jobs, each with a timeout on `ubuntu-24.04`, with
+`ci` needing every other and `if: always()`; no job `if:`, no step `if:`
+but on the reports' uploads and the stack's logs and teardown, no
+`continue-on-error`, no `GITHUB_ENV`, `GITHUB_PATH` or `GITHUB_OUTPUT`;
+the concurrency group; every service's image at `tools.lock`'s digest; the
+opamp-server's clone at the PIN's tag; and every script a `run:` starts
+existing. Its self-test has a fixture breaking each rule, known bypass
+forms among them.
 
-**The rehearsal.** The workflows run nowhere before a tag, so their steps
-are rehearsed on a laptop first: `scripts/release/rehearse.sh --version
-<v> --work <dir> [--no-attest]` runs the release's scripts in the
+**The rehearsal.** The release workflows run nowhere before a tag, so
+their steps are rehearsed on a laptop first: `scripts/release/rehearse.sh
+--version <v> --work <dir> [--no-attest]` runs the release's scripts in the
 workflow's order on the local Docker engine with the private tools, with a
 throwaway `registry:2` on 127.0.0.1 standing in for GHCR (the push scripts
 take `--registry` for a loopback address only, so it never names GHCR as a

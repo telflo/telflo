@@ -2191,6 +2191,27 @@ static gate) holds the workflow files themselves.
   version, so a version found bad is deleted from GHCR, with the
   `sha256-<digest>` tags crane leaves beside its images (the OCI
   referrers' fallback tags that point at the attestations).
+- **CI holds nothing to take.** `.github/workflows/ci.yml` runs a pull
+  request's own code, a fork's included (a first-time contributor's run
+  waits for a maintainer's approval), and every push to `main`, so it
+  holds nothing a changed test could take or use: it runs on
+  `pull_request` only (never `pull_request_target`, `workflow_run` or a
+  schedule, which run with the base repository's token and secrets);
+  every job's permissions are `contents: read`, the `ci` job's none; no
+  secret, not even `GITHUB_TOKEN`, is named anywhere, and nothing logs in;
+  every checkout is the run's own commit with `persist-credentials:
+  false`; no step writes `GITHUB_ENV`, `GITHUB_PATH` or `GITHUB_OUTPUT`,
+  and no `${{ … }}` is inside a `run:`. Its actions are on the same
+  allow-list, pinned alike (`actions/setup-go` and `actions/setup-python`
+  are its own: the release workflows refuse them), and its services'
+  images are pinned by `scripts/release/tools.lock`'s digests. Its `ci`
+  job, the one check `main` requires, needs every other job with `if:
+  always()`, so a failed, canceled or skipped job fails it; no other job
+  carries an `if:`, no gate a step `if:` (only the reports' uploads and
+  the stack's logs and teardown) and nothing `continue-on-error`.
+  `check-workflows.sh` holds it to these rules, lighter than the
+  release's (it may use services, defaults, matrices and multi-line
+  `run:` blocks).
 
 ## Organization variables: configuration text, never secrets
 
@@ -4243,10 +4264,11 @@ values stay empty.
 
 ### The secret scan
 
-`scripts/release/check-secrets.sh`, a static gate and the release
-workflow's first check, runs gitleaks (pinned and sha256-checked in
-`scripts/release/tools.lock`) with its default rules over every file git
-would commit, printing fingerprints only (`--redact`). `.gitleaksignore`
+`scripts/release/check-secrets.sh`, a static gate, CI's `secrets` job
+and the release workflow's first check, runs gitleaks (pinned and
+sha256-checked in `scripts/release/tools.lock`) with its default rules
+over every file git would commit, printing fingerprints only
+(`--redact`). `.gitleaksignore`
 lists the findings reviewed as test fixtures or development-only values,
 and nothing else: a finding it doesn't list fails, and so does a listed one
 gitleaks no longer finds. A real credential found is removed and rotated,

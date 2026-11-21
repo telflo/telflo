@@ -116,50 +116,37 @@ order. Each `gh api` line runs with that admin's own GitHub CLI login.
    by the workflow's own token and linked to this repository; no access
    grant is needed. Each is public (Package settings › Change
    visibility), so an install needs no registry login.
-4. **Turn GitHub Actions on**, in this order, so the old
-   `ci.yml` never runs:
-   1. Disable `ci.yml` first:
-
-      ```sh
-      gh api -X PUT repos/telflo/telflo/actions/workflows/ci.yml/disable
-      ```
-
-      If GitHub refuses while Actions is off, do step 2 and then this one
-      at once, with no push and no pull request in between. GitHub may
-      answer `403 "Unable to disable a workflow that is not active"` even
-      so; the check in step 5 below decides: `ci.yml` showing
-      `disabled_manually` means it is done. That it never ran:
-
-      ```sh
-      gh run list -R telflo/telflo --workflow ci.yml
-      ```
-
-      (an empty list).
-   2. Turn Actions on, for the selected actions only, each pinned by its
+4. **Turn GitHub Actions on**, in this order, so the first run already
+   has its allow-list. All three workflows stay enabled: `ci.yml` runs on
+   every pull request and every push to `main`, `release.yml` on a `v*`
+   tag, `collector.yml` when started by hand.
+   1. Turn Actions on, for the selected actions only, each pinned by its
       full commit SHA:
 
       ```sh
       gh api -X PUT repos/telflo/telflo/actions/permissions -F enabled=true -f allowed_actions=selected -F sha_pinning_required=true
       ```
 
-   3. The allow-list: exactly the actions the two workflows name, each as
+   2. The allow-list: exactly the actions the three workflows name, each as
       `owner/repo@<sha>`. This lists them:
 
       ```sh
-      grep -ho 'uses: *[^ ]*' .github/workflows/release.yml .github/workflows/collector.yml | sed 's/uses: *//' | sort -u
+      grep -ho 'uses: *[^ ]*' .github/workflows/ci.yml .github/workflows/release.yml .github/workflows/collector.yml | sed 's/uses: *//' | sort -u
       ```
 
       Then set them, with neither GitHub's own nor verified creators'
       actions allowed beyond it. The command repeats `-f
       'patterns_allowed[]=…'` once for each line of that list; for the
-      workflows as they are (seven actions), it is:
+      workflows as they are (nine actions), it is:
 
       ```sh
       gh api -X PUT repos/telflo/telflo/actions/permissions/selected-actions \
         -F github_owned_allowed=false -F verified_allowed=false \
         -f 'patterns_allowed[]=actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1' \
         -f 'patterns_allowed[]=actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333' \
+        -f 'patterns_allowed[]=actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e' \
         -f 'patterns_allowed[]=actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1' \
+        -f 'patterns_allowed[]=actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0' \
         -f 'patterns_allowed[]=actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9' \
         -f 'patterns_allowed[]=azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310' \
         -f 'patterns_allowed[]=docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6' \
@@ -174,7 +161,7 @@ order. Each `gh api` line runs with that admin's own GitHub CLI login.
       gh api repos/telflo/telflo/actions/permissions/selected-actions
       ```
 
-   4. The default token read-only, and Actions never creating or approving
+   3. The default token read-only, and Actions never creating or approving
       pull requests:
 
       ```sh
@@ -187,11 +174,17 @@ order. Each `gh api` line runs with that admin's own GitHub CLI login.
       gh api repos/telflo/telflo/actions/permissions/workflow
       ```
 
-   5. Check: `ci.yml` shows `disabled_manually`, the two new workflows
-      `active`:
+   4. Check: the three workflows `active`:
 
       ```sh
       gh api repos/telflo/telflo/actions/workflows --jq '.workflows[] | [.path, .state] | @tsv'
+      ```
+
+      A workflow showing `disabled_manually` is enabled with its file's
+      name, for `ci.yml`:
+
+      ```sh
+      gh api -X PUT repos/telflo/telflo/actions/workflows/ci.yml/enable
       ```
 
    A workflow file changed later needs its allow-list changed with it
@@ -230,10 +223,11 @@ order. Each `gh api` line runs with that admin's own GitHub CLI login.
    `scripts/release/tools.sh fetch crane`) in `charts/telflo/values.yaml`'s
    `postgres.image.digest` (and the comment above it), both `postgres`
    lines of `deploy/compose/compose.yaml`, `scripts/release/tools.lock`'s
-   `postgres` row (its version too),
-   `charts/telflo/tests/profiles/full.yaml`, the digest's prefix in
-   `scripts/release/check-compose-install.test.sh`, the README's "tested
-   with" row. Find the old digest's other copies with
+   `postgres` row (its version too), both `postgres` services of
+   `.github/workflows/ci.yml` (`check-workflows.sh` holds them to the
+   lock's digest), `charts/telflo/tests/profiles/full.yaml`, the
+   digest's prefix in `scripts/release/check-compose-install.test.sh`, the
+   README's "tested with" row. Find the old digest's other copies with
    `git grep <old digest>`. The vendored opamp-server chart's own pin is
    never edited: its Postgres is off in this chart, and the pin changes
    with an opamp-server release. The render tests (against `tools.lock`)
@@ -458,8 +452,8 @@ step if one isn't there.
    smokes) and the rehearsal ([Rehearse a release on your
    machine](#rehearse-a-release-on-your-machine): the release's scripts in
    the workflow's order against a throwaway local registry), with the
-   results in the PR. GitHub Actions runs nothing on a pull request. A
-   maintainer merges it.
+   results in the PR, and its `ci` check (`.github/workflows/ci.yml`)
+   green. A maintainer merges it.
 2. **The tag**, annotated, on `main` as merged:
 
    ```sh
