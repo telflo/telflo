@@ -43,3 +43,6 @@ npm-debug.log*
 .tools/
 # The Compose install's generated secrets (deploy/compose/setup.sh)
 deploy/compose/secrets/
+
+# Local planning notes, never committed
+docs/plans/
