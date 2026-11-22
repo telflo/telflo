@@ -85,6 +85,15 @@ site:
   # TELFLO_EMAIL_NOTIFICATIONS: Settings › Notifications (its nav item and
   # page; off, the page is a 404).
   emailNotifications: false
+  # TELFLO_USER_FEEDBACK: the sidebar's Contact us and Product admin › User
+  # Feedback (off, no button or nav item, the page and the feedback API 404).
+  userFeedback: false
+  # TELFLO_LEARNING: the sidebar's Learning (/library) and Product admin ›
+  # Library (off, no nav items, the pages and the library API 404).
+  learning: false
+  # TELFLO_USER_ADMIN: Product admin › Users (off, no nav item, the page and
+  # its API 404).
+  userAdmin: false
   # TELFLO_DOCS_URL: where the docs links go; empty hides them. An https URL
   # or a path starting with /.
   docsUrl: "https://docs.telflo.com/"

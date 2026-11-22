@@ -335,6 +335,7 @@ plus the inquiries): `TELFLO_REGISTRATION=open`, `TELFLO_PLAYGROUND=true`,
 `TELFLO_TERMS_VERSION=2026-01-01` with `TELFLO_TERMS_URL` and
 `TELFLO_PRIVACY_URL` set (`/home/terms-of-service` and
 `/home/privacy-policy`), `TELFLO_EMAIL_NOTIFICATIONS=true`,
+`TELFLO_USER_FEEDBACK=true`, `TELFLO_LEARNING=true`, `TELFLO_USER_ADMIN=true`,
 `TELFLO_SALES_INQUIRY=true` and `TELFLO_SALES_INQUIRY_TO` set to an
 address, exported in the shell that runs both `docker compose up` and the
 smoke, which reads `TELFLO_SALES_INQUIRY_TO` too and fails when it is

@@ -180,6 +180,9 @@ use.
 | [`TELFLO_SALES_INQUIRY`](#telflo_sales_inquiry-and-telflo_sales_inquiry_to) | API, web | `.env` | `site.salesInquiry` | `false` |
 | [`TELFLO_SALES_INQUIRY_TO`](#telflo_sales_inquiry-and-telflo_sales_inquiry_to) | API | `.env` (add) | `api.salesInquiryTo` | none |
 | [`TELFLO_EMAIL_NOTIFICATIONS`](#telflo_email_notifications) | API, web | `.env` | `site.emailNotifications` | `false` |
+| [`TELFLO_USER_FEEDBACK`](#telflo_user_feedback) | API, web | `.env` | `site.userFeedback` | `false` |
+| [`TELFLO_LEARNING`](#telflo_learning) | API, web | `.env` | `site.learning` | `false` |
+| [`TELFLO_USER_ADMIN`](#telflo_user_admin) | API, web | `.env` | `site.userAdmin` | `false` |
 | [`TELFLO_DOCS_URL`](#telflo_docs_url) | API, web | `.env` | `site.docsUrl` | `https://docs.telflo.com/` |
 | [`TELFLO_TERMS_VERSION`](#telflo_terms_version) | API, web | `.env` | `site.terms.version` | `""` |
 | [`TELFLO_TERMS_URL`, `TELFLO_PRIVACY_URL`](#telflo_terms_url-and-telflo_privacy_url) | API, web | `.env` | `site.terms.termsUrl`, `site.terms.privacyUrl` | `""` |
@@ -272,6 +275,32 @@ Settings › Notifications, the two email switches (product updates, tips):
 `false` by default. Off, the Settings nav has no Notifications item and
 `/settings/notifications` is the app's 404; a person's choices stay
 stored either way.
+
+### `TELFLO_USER_FEEDBACK`
+
+The sidebar's Contact us, the form a signed-in person sends feedback
+with, and Product admin › User Feedback, where product admins answer it:
+`false` by default. Off, neither shows, `/product-admin/user-feedback` is
+the app's 404, and `POST /api/v1/feedback` and every
+`/api/v1/product-admin/feedback` route answer 404 `not_found`. The
+feedback's table is there either way, empty while it's off.
+
+### `TELFLO_LEARNING`
+
+The sidebar's Learning (`/library`), the files a person downloads, and
+Product admin › Library, where product admins manage them: `false` by
+default. Off, neither shows, `/library` and `/product-admin/library` are
+the app's 404, and every `/api/v1/library-files` route and the files'
+links (`/api/v1/library-links/…`) answer 404 `not_found`. The library's
+table is there either way, empty while it's off.
+
+### `TELFLO_USER_ADMIN`
+
+Product admin › Users, every account with its delete: `false` by
+default. Off, the nav has no Users item, `/product-admin/users` is the
+app's 404, and `/api/v1/product-admin/users` and its delete answer 404
+`not_found`. An organization's admin still removes members on its
+Permissions page.
 
 ### `TELFLO_DOCS_URL`
 

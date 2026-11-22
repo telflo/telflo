@@ -243,7 +243,7 @@ limits, sign-in's among them.
 ## The site
 
 `site` holds what an install offers beyond the signed-in product. The chart
-renders all eleven of its variables on the API's and the web app's pods, so
+renders all fourteen of its variables on the API's and the web app's pods, so
 the two always agree;
 [docs/configuration.md's "The site"](../../docs/configuration.md#the-site)
 describes each. Its defaults are the open source's:
@@ -256,6 +256,9 @@ site:
   publicFlows: false          # the flow showcase and published flows without sign-in
   salesInquiry: false         # POST /api/v1/sales-inquiries (needs api.salesInquiryTo)
   emailNotifications: false   # Settings › Notifications (off: no nav item, the page a 404)
+  userFeedback: false         # Contact us, Product admin › User Feedback and their API
+  learning: false             # Learning (/library), Product admin › Library and their API
+  userAdmin: false            # Product admin › Users and its API
   docsUrl: "https://docs.telflo.com/"   # "" hides the docs links
   terms:
     version: ""               # "" asks for no Terms anywhere
@@ -264,8 +267,9 @@ site:
     cookiePolicyUrl: ""       # the consent banner's link
 ```
 
-So a fresh install takes no sign-ups, shows no playground, Terms or
-Settings › Notifications, and answers 404 to the routes switched off. Its
+So a fresh install takes no sign-ups, shows no playground, Terms,
+Settings › Notifications, Contact us, Learning or Product admin's User
+Feedback, Library and Users, and answers 404 to the routes switched off. Its
 first account, and first product admin, comes from `telflo-admin
 bootstrap` (Install, step 5).
 

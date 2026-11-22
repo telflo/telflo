@@ -1,6 +1,7 @@
 # A hosted install's site values: open registration, the playground and the
 # anonymous reads on, the Terms asked with their URLs, the sales inquiries on
-# with their address, Settings › Notifications on; mail over implicit TLS with
+# with their address, Settings › Notifications, the user feedback, Learning
+# and Product admin › Users on; mail over implicit TLS with
 # a login and a private CA; and the website's / and /home/ through
 # gateway.extraRoutes (tests/expected/extra-routes.conf).
 publicUrl: https://telflo.example.com
@@ -11,6 +12,9 @@ site:
   publicFlows: true
   salesInquiry: true
   emailNotifications: true
+  userFeedback: true
+  learning: true
+  userAdmin: true
   docsUrl: "https://docs.example.com/telflo/"
   terms:
     version: "2026-01-01"

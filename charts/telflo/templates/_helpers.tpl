@@ -217,7 +217,7 @@ envLiteral the quoted value.
 {{- end }}
 
 {{/*
-The site's variables, the same eleven on the API and the web app, from
+The site's variables, the same fourteen on the API and the web app, from
 site.* (every one rendered, so both pods always agree, an empty value
 included). Each value is literal (envLiteral). The guards refuse a value of
 another type (a null one included); even so, nothing here renders Go's
@@ -239,6 +239,12 @@ the caller: nindent 12 under a container's env.
   value: {{ include "telflo.siteBool" $site.salesInquiry }}
 - name: TELFLO_EMAIL_NOTIFICATIONS
   value: {{ include "telflo.siteBool" $site.emailNotifications }}
+- name: TELFLO_USER_FEEDBACK
+  value: {{ include "telflo.siteBool" $site.userFeedback }}
+- name: TELFLO_LEARNING
+  value: {{ include "telflo.siteBool" $site.learning }}
+- name: TELFLO_USER_ADMIN
+  value: {{ include "telflo.siteBool" $site.userAdmin }}
 - name: TELFLO_DOCS_URL
   value: {{ include "telflo.siteString" $site.docsUrl }}
 - name: TELFLO_TERMS_VERSION
@@ -406,7 +412,7 @@ map here, its values then refused one by one.
 {{- fail "site.terms must be a map of version, termsUrl, privacyUrl and cookiePolicyUrl" }}
 {{- end }}
 {{- $terms := default dict $site.terms }}
-{{- range $key := list "playground" "anonymousValidate" "publicFlows" "salesInquiry" "emailNotifications" }}
+{{- range $key := list "playground" "anonymousValidate" "publicFlows" "salesInquiry" "emailNotifications" "userFeedback" "learning" "userAdmin" }}
 {{- if not (kindIs "bool" (index $site $key)) }}
 {{- fail (printf "site.%s must be true or false, not null or another type" $key) }}
 {{- end }}

@@ -463,6 +463,9 @@ jobs:
       TELFLO_SALES_INQUIRY: "true"
       TELFLO_SALES_INQUIRY_TO: sales@example.com
       TELFLO_EMAIL_NOTIFICATIONS: "true"
+      TELFLO_USER_FEEDBACK: "true"
+      TELFLO_LEARNING: "true"
+      TELFLO_USER_ADMIN: "true"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

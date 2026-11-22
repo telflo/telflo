@@ -234,6 +234,15 @@
         "emailNotifications": {
           "type": "boolean"
         },
+        "userFeedback": {
+          "type": "boolean"
+        },
+        "learning": {
+          "type": "boolean"
+        },
+        "userAdmin": {
+          "type": "boolean"
+        },
         "docsUrl": {
           "type": "string",
           "maxLength": 2000,

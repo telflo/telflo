@@ -9,6 +9,9 @@ site:
   publicFlows: false
   salesInquiry: false
   emailNotifications: false
+  userFeedback: false
+  learning: false
+  userAdmin: false
   docsUrl: "https://docs.telflo.com/"
   terms:
     version: ""

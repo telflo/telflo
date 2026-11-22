@@ -46,7 +46,7 @@ web_env() {
     eq "$L" "$WEB_C.env[TELFLO_PUBLIC_WEB_URL].value" '"https://telflo.example.com"' &&
     eq "$(listing local-file-store)" "$WEB_C.env[TELFLO_PUBLIC_WEB_URL].value" '"http://localhost:8080"'
 }
-run_case "web env, default: exactly TELFLO_API_INTERNAL_URL (telflo-api:8080), TELFLO_PUBLIC_WEB_URL (publicUrl) and the site's eleven; no analytics" web_env
+run_case "web env, default: exactly TELFLO_API_INTERNAL_URL (telflo-api:8080), TELFLO_PUBLIC_WEB_URL (publicUrl) and the site's fourteen; no analytics" web_env
 web_env_full() {
   local F; F="$(listing full)"
   [ "$(api_words env_names "$F" "$WEB_C")" = "TELFLO_API_INTERNAL_URL TELFLO_PUBLIC_WEB_URL $SITE_ENV TELFLO_POSTHOG_KEY TELFLO_POSTHOG_HOST " ] &&

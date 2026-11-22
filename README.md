@@ -412,6 +412,7 @@ people use:
 | The playground, validating without signing in, the flows without signing in | off | [`TELFLO_PLAYGROUND`, `TELFLO_ANONYMOUS_VALIDATE`, `TELFLO_PUBLIC_FLOWS`](docs/configuration.md#the-site) |
 | Terms of Service to accept | none | [`TELFLO_TERMS_VERSION`](docs/configuration.md#telflo_terms_version) |
 | Settings › Notifications, the sales inquiry form | off | [`TELFLO_EMAIL_NOTIFICATIONS`, `TELFLO_SALES_INQUIRY`](docs/configuration.md#the-site) |
+| Contact us and the user feedback, Learning and the library, Product admin › Users | off | [`TELFLO_USER_FEEDBACK`, `TELFLO_LEARNING`, `TELFLO_USER_ADMIN`](docs/configuration.md#the-site) |
 | The Docs links | `https://docs.telflo.com/` | [`TELFLO_DOCS_URL`](docs/configuration.md#telflo_docs_url) |
 | Analytics | none: nothing is loaded | [`TELFLO_POSTHOG_KEY`](docs/configuration.md#analytics) |
 | Google sign-in | off | [`TELFLO_OIDC_GOOGLE_CLIENT_ID`](docs/configuration.md#google-sign-in) |

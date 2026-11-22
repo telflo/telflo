@@ -9,9 +9,9 @@
 # development secret, to refuse them in a real install; .env.example's line is
 # the development default; check-gateway-logs.sh passes a made-up user to curl.
 deploy/compose/setup.sh:generic-api-key:71
-docker-compose.yml:generic-api-key:204
+docker-compose.yml:generic-api-key:207
 scripts/check-gateway-logs.sh:curl-auth-user:534
-telflo-core/.env.example:generic-api-key:324
+telflo-core/.env.example:generic-api-key:330
 
 # Test fixtures: values made up for the tests, accepted by nothing but them.
 services/otelcol-testing/tests/conftest.py:generic-api-key:32
@@ -41,4 +41,4 @@ telflo-core/e2e/support/environment.ts:generic-api-key:192
 telflo-core/packages/contracts/src/quick-deploy.test.ts:generic-api-key:31
 telflo-core/packages/db/src/personal-api-tokens.integration.test.ts:generic-api-key:288
 telflo-core/packages/db/src/service-accounts.integration.test.ts:generic-api-key:359
-telflo-core/vitest.setup.ts:generic-api-key:213
+telflo-core/vitest.setup.ts:generic-api-key:217
