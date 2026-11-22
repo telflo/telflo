@@ -138,8 +138,9 @@ for (const devOnly of [
 // The site's switches: the tests run the SaaS's values, whatever a
 // developer's .env says, so the API and CLI tests that call the switched
 // routes (registration, Terms, the playground's anonymous reads, the
-// published flows) keep their behavior; a test of the open source's
-// defaults passes its own settings. The sales inquiries stay off (their
+// published flows, the feedback, the library, Product admin › Users) keep
+// their behavior; a test of the open source's defaults passes its own
+// settings. The sales inquiries stay off (their
 // tests switch them on with an address of their own), and the docs link is
 // the default. Mail goes to the test's own Mailpit in plain SMTP
 // (development and test environments set none).
@@ -150,6 +151,9 @@ Object.assign(process.env, {
   TELFLO_PUBLIC_FLOWS: "true",
   TELFLO_SALES_INQUIRY: "false",
   TELFLO_EMAIL_NOTIFICATIONS: "true",
+  TELFLO_USER_FEEDBACK: "true",
+  TELFLO_LEARNING: "true",
+  TELFLO_USER_ADMIN: "true",
   TELFLO_DOCS_URL: "https://docs.telflo.com/",
   // TEST_TERMS_VERSION (apps/api/src/testing/site.ts).
   TELFLO_TERMS_VERSION: "2026-01-01",

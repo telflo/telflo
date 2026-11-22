@@ -42,8 +42,9 @@ import { useDocsPage, useSite } from "~/lib/use-site.js";
 /*
  * The signed-in sidebar: telflo's logo files, an aria-label on the collapse
  * button, and nav items as links with aria-current. "Contact us" opens
- * ContactUsDialog; its `title` only when the rail is collapsed, a fixed
- * word, as Docs'. The organization's logo is an `<img alt="">` inside
+ * ContactUsDialog, only while the site's TELFLO_USER_FEEDBACK is on (off, the
+ * open source's default, neither renders); its `title` only when the rail is
+ * collapsed, a fixed word, as Docs'. The organization's logo is an `<img alt="">` inside
  * `ph-no-capture`, never named by the organization, and falls back to the
  * initial if it fails to load. Variables is at `/variables`. Switching
  * completes before going to `/app`, rather than after; see
@@ -109,11 +110,13 @@ function editorIsDirty(): boolean {
  * organization that may invite on this site: a personal workspace shows it
  * only while registration is open; `/org-admin` itself stays reachable by its
  * address, for invitations or members left from when the site was open.
+ * Learning only while the site's TELFLO_LEARNING is on.
  */
 function navItemsFor(
   organization: CurrentUserResponse["organization"],
   isProductAdmin: boolean,
   registration: RegistrationMode,
+  learning: boolean,
 ): NavItem[] {
   const navItems: NavItem[] = [
     { icon: Home, label: "Configurations", path: "/app" },
@@ -130,7 +133,7 @@ function navItemsFor(
     navItems.push({ icon: Shield, label: "Product Admin", path: "/product-admin" });
   }
   navItems.push({ icon: Settings, label: "Settings", path: "/settings" });
-  navItems.push({ icon: BookOpen, label: "Learning", path: "/library" });
+  if (learning) navItems.push({ icon: BookOpen, label: "Learning", path: "/library" });
   return navItems;
 }
 
@@ -234,7 +237,7 @@ export function Sidebar() {
           </div>
         )}
         {organization &&
-          navItemsFor(organization, current?.isProductAdmin === true, site.registration).map((item) => {
+          navItemsFor(organization, current?.isProductAdmin === true, site.registration, site.learning).map((item) => {
             const Icon = item.icon;
             const isActive = isActivePath(item.path);
 
@@ -275,19 +278,24 @@ export function Sidebar() {
             {!collapsed && <span className="min-w-0 truncate">Docs</span>}
           </a>
         )}
-        <button
-          ref={contactUsButton}
-          type="button"
-          onClick={() => setContactUsOpen(true)}
-          className={cn(railItemBase, railItemInactive, collapsed && "justify-center px-0")}
-          title={collapsed ? "Contact us" : undefined}
-        >
-          <MessageSquare className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-          {!collapsed && <span className="min-w-0 truncate">Contact us</span>}
-        </button>
+        {/* The feedback form: none when TELFLO_USER_FEEDBACK is off. */}
+        {site.userFeedback && (
+          <button
+            ref={contactUsButton}
+            type="button"
+            onClick={() => setContactUsOpen(true)}
+            className={cn(railItemBase, railItemInactive, collapsed && "justify-center px-0")}
+            title={collapsed ? "Contact us" : undefined}
+          >
+            <MessageSquare className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+            {!collapsed && <span className="min-w-0 truncate">Contact us</span>}
+          </button>
+        )}
       </div>
 
-      <ContactUsDialog open={contactUsOpen} onOpenChange={setContactUsOpen} returnFocusTo={contactUsButton} />
+      {site.userFeedback && (
+        <ContactUsDialog open={contactUsOpen} onOpenChange={setContactUsOpen} returnFocusTo={contactUsButton} />
+      )}
 
       {/* Footer: org switcher (logout lives inside its popover). Every
         * signed-in user has an organization, so it always renders. */}
