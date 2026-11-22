@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { CurrentUserResponse } from "@telflo/contracts";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { OPEN_SOURCE_SITE, type CurrentUserResponse, type SiteSettings } from "@telflo/contracts";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { Outlet, createRoutesStub, useLocation } from "react-router";
 import routes from "../routes.js";
@@ -8,6 +8,7 @@ import * as apiClient from "~/lib/api-client.js";
 import { ApiError } from "~/lib/api-client.js";
 import { fetchCurrentUser, fetchPendingFeedbackCount } from "~/lib/api-client.server.js";
 import { signedInMember } from "~/test/configurations.js";
+import { SAAS_SITE, underSite } from "~/test/site.js";
 
 vi.mock("~/lib/api-client.server.js", () => ({ fetchCurrentUser: vi.fn(), fetchPendingFeedbackCount: vi.fn() }));
 
@@ -51,9 +52,12 @@ function Landed() {
   return <p>landed on {useLocation().pathname}</p>;
 }
 
-/** The app's product-admin routes, the real loader answering from the mocked `/me`. */
-function renderGate(path: string) {
-  const Stub = createRoutesStub([
+/**
+ * The app's product-admin routes, the real loader answering from the mocked
+ * `/me`, under a root handing useSite() `site` (the SaaS's: every nav item).
+ */
+function renderGate(path: string, site: SiteSettings = SAAS_SITE) {
+  const Stub = createRoutesStub(underSite(site, [
     {
       path: "/product-admin",
       Component: ProductAdminRoute as unknown as React.ComponentType,
@@ -72,7 +76,7 @@ function renderGate(path: string) {
     },
     { path: "/app", Component: Landed },
     { path: "/login", Component: Landed },
-  ]);
+  ]));
   render(<Stub initialEntries={[path]} />);
 }
 
@@ -91,6 +95,16 @@ describe("product admin's routes", () => {
       ["product-admins", "routes/product-admin/product-admins.tsx"],
     ]);
   });
+});
+
+// The loaders read TELFLO_USER_FEEDBACK from the environment, as the server
+// does: on here (the SaaS's), off in the tests of the open source's default.
+beforeEach(() => {
+  vi.stubEnv("TELFLO_USER_FEEDBACK", "true");
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
 });
 
 describe("product admin's server gate", () => {
@@ -171,7 +185,24 @@ describe("product admin's server gate", () => {
 
     await expect(loader(loaderArgs("http://localhost/product-admin/flows"))).resolves.toEqual({
       status: "refresh_needed",
+      userFeedback: true,
     });
+    vi.stubEnv("TELFLO_USER_FEEDBACK", "");
+    await expect(loader(loaderArgs("http://localhost/product-admin/flows"))).resolves.toEqual({
+      status: "refresh_needed",
+      userFeedback: false,
+    });
+  });
+
+  it("reads no count with TELFLO_USER_FEEDBACK off, the open source's default: no badge", async () => {
+    vi.stubEnv("TELFLO_USER_FEEDBACK", "");
+    vi.mocked(fetchCurrentUser).mockResolvedValue({ status: "signed_in", currentUser: PRODUCT_ADMIN });
+
+    await expect(loader(loaderArgs("http://localhost/product-admin/flows"))).resolves.toEqual({
+      status: "product_admin",
+      pendingFeedback: null,
+    });
+    expect(fetchPendingFeedbackCount).not.toHaveBeenCalled();
   });
 
   it("lets an API failure reach the error boundary", async () => {
@@ -225,6 +256,38 @@ describe("product admin's server gate", () => {
       "Users",
       "Product admins",
     ]);
+  });
+
+  it("leaves out User Feedback, Library and Users on the open source's defaults (their switches off)", async () => {
+    vi.stubEnv("TELFLO_USER_FEEDBACK", "");
+    vi.mocked(fetchCurrentUser).mockResolvedValue({ status: "signed_in", currentUser: PRODUCT_ADMIN });
+    renderGate("/product-admin/flows", OPEN_SOURCE_SITE);
+
+    expect(await screen.findByText("the flows admin page")).toBeInTheDocument();
+    expect(screen.getAllByRole("button").map((button) => button.textContent)).toEqual([
+      "Test Templates",
+      "Test Regex",
+      "Flows",
+      "Product admins",
+    ]);
+    expect(fetchPendingFeedbackCount).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["User Feedback", { userFeedback: true }],
+    ["Library", { learning: true }],
+    ["Users", { userAdmin: true }],
+  ] as const)("shows %s with its switch alone on", async (label, switches) => {
+    vi.mocked(fetchCurrentUser).mockResolvedValue({ status: "signed_in", currentUser: PRODUCT_ADMIN });
+    renderGate("/product-admin/flows", { ...OPEN_SOURCE_SITE, ...switches });
+    await screen.findByText("the flows admin page");
+
+    const labels = screen.getAllByRole("button").map((button) => button.textContent?.replace(/\d+$/, ""));
+    expect(labels).toEqual(
+      ["User Feedback", "Test Templates", "Test Regex", "Library", "Flows", "Users", "Product admins"].filter(
+        (item) => !["User Feedback", "Library", "Users"].includes(item) || item === label,
+      ),
+    );
   });
 
   it("shows a pending count of 0, and hides the badge only when the count couldn't be read", async () => {
@@ -413,8 +476,18 @@ describe("product admin's client gate", () => {
     vi.spyOn(apiClient, "getPendingFeedbackCount").mockResolvedValue(0);
 
     await expect(
-      clientLoader(clientLoaderArgs("http://localhost/product-admin/flows", async () => ({ status: "refresh_needed" }))),
+      clientLoader(clientLoaderArgs("http://localhost/product-admin/flows", async () => ({ status: "refresh_needed", userFeedback: true }))),
     ).resolves.toEqual({ status: "product_admin", pendingFeedback: 0 });
+  });
+
+  it("after a refresh, reads no count while the server says TELFLO_USER_FEEDBACK is off", async () => {
+    vi.spyOn(apiClient, "getCurrentUser").mockResolvedValue(PRODUCT_ADMIN);
+    const getPendingFeedbackCount = vi.spyOn(apiClient, "getPendingFeedbackCount").mockResolvedValue(4);
+
+    await expect(
+      clientLoader(clientLoaderArgs("http://localhost/product-admin/flows", async () => ({ status: "refresh_needed", userFeedback: false }))),
+    ).resolves.toEqual({ status: "product_admin", pendingFeedback: null });
+    expect(getPendingFeedbackCount).not.toHaveBeenCalled();
   });
 
   it("after a refresh, answers a count it can't read as null, never the error boundary, and reads none for a non-admin", async () => {
@@ -424,13 +497,13 @@ describe("product admin's client gate", () => {
       .mockRejectedValue(new ApiError("network_error", "Could not reach the server."));
 
     await expect(
-      clientLoader(clientLoaderArgs("http://localhost/product-admin/flows", async () => ({ status: "refresh_needed" }))),
+      clientLoader(clientLoaderArgs("http://localhost/product-admin/flows", async () => ({ status: "refresh_needed", userFeedback: true }))),
     ).resolves.toEqual({ status: "product_admin", pendingFeedback: null });
 
     getPendingFeedbackCount.mockClear();
     vi.spyOn(apiClient, "getCurrentUser").mockResolvedValue(MEMBER);
     await redirectOf(
-      clientLoader(clientLoaderArgs("http://localhost/product-admin/flows", async () => ({ status: "refresh_needed" }))),
+      clientLoader(clientLoaderArgs("http://localhost/product-admin/flows", async () => ({ status: "refresh_needed", userFeedback: true }))),
     );
     expect(getPendingFeedbackCount).not.toHaveBeenCalled();
   });
@@ -440,7 +513,7 @@ describe("product admin's client gate", () => {
 
     expect(
       await redirectOf(
-        clientLoader(clientLoaderArgs("http://localhost/product-admin/flows", async () => ({ status: "refresh_needed" }))),
+        clientLoader(clientLoaderArgs("http://localhost/product-admin/flows", async () => ({ status: "refresh_needed", userFeedback: true }))),
       ),
     ).toEqual({ status: 302, location: "/app" });
   });
@@ -450,7 +523,7 @@ describe("product admin's client gate", () => {
 
     expect(
       await redirectOf(
-        clientLoader(clientLoaderArgs("http://localhost/product-admin", async () => ({ status: "refresh_needed" }))),
+        clientLoader(clientLoaderArgs("http://localhost/product-admin", async () => ({ status: "refresh_needed", userFeedback: true }))),
       ),
     ).toEqual({ status: 302, location: "/product-admin/flows" });
   });
@@ -461,7 +534,7 @@ describe("product admin's client gate", () => {
     expect(
       await redirectOf(
         clientLoader(
-          clientLoaderArgs("http://localhost/product-admin/flows?x=1", async () => ({ status: "refresh_needed" })),
+          clientLoaderArgs("http://localhost/product-admin/flows?x=1", async () => ({ status: "refresh_needed", userFeedback: true })),
         ),
       ),
     ).toEqual({ status: 302, location: "/login?redirectTo=%2Fproduct-admin%2Fflows%3Fx%3D1" });
@@ -472,7 +545,7 @@ describe("product admin's client gate", () => {
     vi.spyOn(apiClient, "getCurrentUser").mockRejectedValue(outage);
 
     await expect(
-      clientLoader(clientLoaderArgs("http://localhost/product-admin/flows", async () => ({ status: "refresh_needed" }))),
+      clientLoader(clientLoaderArgs("http://localhost/product-admin/flows", async () => ({ status: "refresh_needed", userFeedback: true }))),
     ).rejects.toBe(outage);
   });
 });

@@ -1,7 +1,7 @@
 import { expect, test as base, type BrowserContext, type Page } from "@playwright/test";
 import { grantProductAdmin, revokeProductAdmin, seedUser, type SeededUser } from "./support/database.js";
 import { open } from "./support/editor-page.js";
-import { E2E_WEB_URL } from "./support/environment.js";
+import { E2E_SAAS_WEB_URL } from "./support/environment.js";
 import {
   adminEmailsAbout,
   contactUsDialog,
@@ -47,13 +47,14 @@ const test = base.extend<{ admins: string[]; adminContext: BrowserContext }>({
     for (const email of made) await revokeProductAdmin(email);
   },
   adminContext: async ({ browser }, use) => {
-    const context = await browser.newContext({ baseURL: E2E_WEB_URL, viewport: { width: 1440, height: 1000 } });
+    const context = await browser.newContext({ baseURL: E2E_SAAS_WEB_URL, viewport: { width: 1440, height: 1000 } });
     await use(context);
     await context.close();
   },
 });
 
-test.use({ viewport: { width: 1440, height: 1000 } });
+// On the SaaS pair: TELFLO_USER_FEEDBACK is off on the default pair, the open source's default.
+test.use({ viewport: { width: 1440, height: 1000 }, baseURL: E2E_SAAS_WEB_URL });
 
 /** A product admin of the test's own, signed in on `page`, revoked when the test ends. */
 async function signedInProductAdmin(page: Page, admins: string[]): Promise<SeededUser> {
@@ -191,5 +192,5 @@ test("Contact us is in every signed-in person's rail, after Docs; a member who i
   await expect(contactUsDialog(page)).toBeHidden();
 
   await page.goto("/product-admin/user-feedback");
-  await expect(page).toHaveURL(`${E2E_WEB_URL}/app`);
+  await expect(page).toHaveURL(`${E2E_SAAS_WEB_URL}/app`);
 });

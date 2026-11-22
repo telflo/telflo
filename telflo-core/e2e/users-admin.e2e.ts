@@ -1,7 +1,7 @@
 import { expect, test as base, type Page } from "@playwright/test";
 import { addMember, findUsersByEmail, grantProductAdmin, revokeProductAdmin, seedUser, type SeededUser } from "./support/database.js";
 import { open } from "./support/editor-page.js";
-import { E2E_WEB_URL } from "./support/environment.js";
+import { E2E_SAAS_WEB_URL } from "./support/environment.js";
 import { maskedPlacesOf, recordToasts, toastsHolding, within } from "./support/privacy.js";
 import { signInThroughApi } from "./support/session.js";
 import { confirmField, deleteButton, deleteDialog, openUsers, searchBox, searchFor, userRow } from "./support/users-admin-page.js";
@@ -33,7 +33,8 @@ const test = base.extend<{ admins: string[] }>({
   },
 });
 
-test.use({ viewport: { width: 1440, height: 1000 } });
+// On the SaaS pair: TELFLO_USER_ADMIN is off on the default pair, the open source's default.
+test.use({ viewport: { width: 1440, height: 1000 }, baseURL: E2E_SAAS_WEB_URL });
 
 /** A product admin of their own, made by the README's SQL, recorded for the revoke, and signed in on `page`. */
 async function productAdmin(admins: string[], page: Page): Promise<SeededUser> {
@@ -55,7 +56,7 @@ test("finds people by their address and by their group's name, case aside, and s
   await expect(userRow(page, byAddress.email)).toHaveCount(1);
   await expect(userRow(page, inGroup.email)).toHaveCount(0);
   // The term never reaches the address bar.
-  expect(page.url()).toBe(`${E2E_WEB_URL}/product-admin/users`);
+  expect(page.url()).toBe(`${E2E_SAAS_WEB_URL}/product-admin/users`);
 
   await searchFor(page, group.organizationName);
   await expect(userRow(page, inGroup.email)).toHaveCount(1);
@@ -103,12 +104,12 @@ test("deletes a person after their email is typed: the toast, the row gone, and 
   await productAdmin(admins, page);
   const toasts = await recordToasts(page);
   const person = await seedUser({ password: PASSWORD });
-  const theirs = await browser.newContext({ baseURL: E2E_WEB_URL });
+  const theirs = await browser.newContext({ baseURL: E2E_SAAS_WEB_URL });
   try {
     const theirPage = await theirs.newPage();
     await signInThroughApi(theirPage, person);
     await open(theirPage, "/app");
-    await expect(theirPage).toHaveURL(`${E2E_WEB_URL}/app`);
+    await expect(theirPage).toHaveURL(`${E2E_SAAS_WEB_URL}/app`);
 
     await openUsers(page);
     await searchFor(page, person.email);

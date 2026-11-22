@@ -1,5 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { DEFAULT_USER_PREFERENCES, OPEN_SOURCE_SITE, type CurrentUserResponse, type OrganizationType } from "@telflo/contracts";
+import {
+  DEFAULT_USER_PREFERENCES,
+  OPEN_SOURCE_SITE,
+  type CurrentUserResponse,
+  type OrganizationType,
+  type SiteSettings,
+} from "@telflo/contracts";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createRoutesStub } from "react-router";
@@ -41,8 +47,16 @@ function withGroup(): CurrentUserResponse {
   };
 }
 
-function renderSidebar(path = "/app") {
-  const Stub = createRoutesStub([
+/** The open source's defaults with the user feedback on: the rail's Contact us. */
+const FEEDBACK_ON = { ...OPEN_SOURCE_SITE, userFeedback: true };
+
+/**
+ * The Sidebar at `path`, with the open source's defaults (no Contact us, no
+ * Learning) unless `site` is given: then under a root that hands it to
+ * useSite(), so the rail renders once its loader has run (`findBy…`).
+ */
+function renderSidebar(path = "/app", site?: SiteSettings) {
+  const routes = [
     { path: "/app", Component: Sidebar },
     { path: "/app/flows", Component: Sidebar },
     { path: "/product-admin/flows", Component: Sidebar },
@@ -52,7 +66,8 @@ function renderSidebar(path = "/app") {
     { path: "/variables/groups", Component: Sidebar },
     { path: "/variables/groups/:variableGroupId", Component: Sidebar },
     { path: "/login", Component: () => <p>landed on /login</p> },
-  ]);
+  ];
+  const Stub = createRoutesStub(site === undefined ? routes : underSite(site, routes));
   const { container } = render(<Stub initialEntries={[path]} />);
   return container;
 }
@@ -92,7 +107,7 @@ describe("Sidebar", () => {
     expect(screen.getByText("Configurations")).toBeInTheDocument();
   });
 
-  it("shows seven nav items for a group's admin, in its order, without Product Admin", async () => {
+  it("shows six nav items for a group's admin, in its order, without Product Admin", async () => {
     useUserStore.getState().setCurrent(currentUser("admin", "group"));
     renderSidebar();
     await screen.findByText("Workspace");
@@ -104,7 +119,6 @@ describe("Sidebar", () => {
       "Fleet",
       "Permissions",
       "Settings",
-      "Learning",
     ]);
     expect(screen.queryByText("Product Admin")).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Fleet" })).toHaveAttribute("href", "/fleet-management");
@@ -124,7 +138,6 @@ describe("Sidebar", () => {
       "Permissions",
       "Product Admin",
       "Settings",
-      "Learning",
     ]);
     expect(screen.getByRole("link", { name: "Product Admin" })).toHaveAttribute("href", "/product-admin");
   });
@@ -134,7 +147,7 @@ describe("Sidebar", () => {
     renderSidebar();
     await screen.findByText("Workspace");
 
-    expect(navLabels()).toEqual(["Configurations", "Flows", "Variables", "Fleet", "Product Admin", "Settings", "Learning"]);
+    expect(navLabels()).toEqual(["Configurations", "Flows", "Variables", "Fleet", "Product Admin", "Settings"]);
   });
 
   it("marks Product Admin as the current page on its pages", async () => {
@@ -159,7 +172,7 @@ describe("Sidebar", () => {
     renderSidebar();
     await screen.findByText("Workspace");
 
-    expect(navLabels()).toEqual(["Configurations", "Flows", "Variables", "Fleet", "Settings", "Learning"]);
+    expect(navLabels()).toEqual(["Configurations", "Flows", "Variables", "Fleet", "Settings"]);
   });
 
   // A personal workspace invites no one unless registration is open, so
@@ -169,7 +182,7 @@ describe("Sidebar", () => {
     render(<Stub initialEntries={["/app"]} />);
     await screen.findByText("Workspace");
 
-    expect(navLabels()).toEqual(["Configurations", "Flows", "Variables", "Fleet", "Settings", "Learning"]);
+    expect(navLabels()).toEqual(["Configurations", "Flows", "Variables", "Fleet", "Settings"]);
   });
 
   it("shows Permissions to a personal workspace's admin while registration is open", async () => {
@@ -187,6 +200,24 @@ describe("Sidebar", () => {
     await screen.findByText("Workspace");
 
     expect(screen.getByRole("link", { name: "Permissions" })).toHaveAttribute("href", "/org-admin");
+  });
+
+  it("shows Learning last, linking to /library, only with TELFLO_LEARNING on", async () => {
+    useUserStore.getState().setCurrent(currentUser("admin", "group"));
+    renderSidebar("/app", { ...OPEN_SOURCE_SITE, learning: true });
+    await screen.findByText("Workspace");
+
+    expect(navLabels()).toEqual(["Configurations", "Flows", "Variables", "Fleet", "Permissions", "Settings", "Learning"]);
+    expect(screen.getByRole("link", { name: "Learning" })).toHaveAttribute("href", "/library");
+  });
+
+  it("has neither Learning nor Contact us on the open source's defaults (TELFLO_LEARNING and TELFLO_USER_FEEDBACK off)", async () => {
+    renderSidebar("/app", OPEN_SOURCE_SITE);
+    await screen.findByText("Workspace");
+
+    expect(screen.queryByRole("link", { name: "Learning" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Contact us" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Docs" })).toBeInTheDocument();
   });
 
   it("marks Configurations as the current page only on an exact /app match", async () => {
@@ -225,10 +256,10 @@ describe("Sidebar", () => {
   });
 
   it("keeps the Docs link and puts Contact us after it, a title only when the rail is collapsed, as Docs'", async () => {
-    renderSidebar();
-    const docs = await screen.findByRole("link", { name: "Docs" });
+    renderSidebar("/app", FEEDBACK_ON);
+    const contactUs = await screen.findByRole("button", { name: "Contact us" });
+    const docs = screen.getByRole("link", { name: "Docs" });
     expect(docs).toHaveAttribute("href", "https://docs.telflo.com/docs");
-    const contactUs = screen.getByRole("button", { name: "Contact us" });
     expect(docs.compareDocumentPosition(contactUs) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(contactUs).not.toHaveAttribute("title");
 
@@ -253,7 +284,7 @@ describe("Sidebar", () => {
   it("opens Contact Us from the rail and sends the message, trimmed: the dialog closes on \"Thanks for your feedback!\"", async () => {
     const createFeedback = vi.spyOn(apiClient, "createFeedback").mockResolvedValue({ id: "00000000-0000-4000-8000-0000000000f1" });
     const success = vi.spyOn(toast, "success");
-    renderSidebar();
+    renderSidebar("/app", FEEDBACK_ON);
     const user = userEvent.setup();
 
     await user.click(await screen.findByRole("button", { name: "Contact us" }));
@@ -271,7 +302,7 @@ describe("Sidebar", () => {
   });
 
   it("gives the focus back to the rail's Contact us as the dialog closes, by Escape or Cancel", async () => {
-    renderSidebar();
+    renderSidebar("/app", FEEDBACK_ON);
     const user = userEvent.setup();
     const contactUs = await screen.findByRole("button", { name: "Contact us" });
 

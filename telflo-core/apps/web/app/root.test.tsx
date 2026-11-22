@@ -122,6 +122,9 @@ describe("root loader", () => {
       publicFlows: false,
       salesInquiry: false,
       emailNotifications: false,
+      userFeedback: false,
+      learning: false,
+      userAdmin: false,
       docsUrl: "https://docs.telflo.com/",
       terms: { version: "", termsUrl: "", privacyUrl: "", cookiePolicyUrl: "" },
     });
@@ -133,6 +136,9 @@ describe("root loader", () => {
     vi.stubEnv("TELFLO_ANONYMOUS_VALIDATE", "true");
     vi.stubEnv("TELFLO_PUBLIC_FLOWS", "true");
     vi.stubEnv("TELFLO_EMAIL_NOTIFICATIONS", "true");
+    vi.stubEnv("TELFLO_USER_FEEDBACK", "true");
+    vi.stubEnv("TELFLO_LEARNING", "true");
+    vi.stubEnv("TELFLO_USER_ADMIN", "true");
     vi.stubEnv("TELFLO_DOCS_URL", "");
     vi.stubEnv("TELFLO_TERMS_VERSION", "2026-01-01");
     vi.stubEnv("TELFLO_TERMS_URL", "/home/terms-of-service");
@@ -145,6 +151,9 @@ describe("root loader", () => {
       publicFlows: true,
       salesInquiry: false,
       emailNotifications: true,
+      userFeedback: true,
+      learning: true,
+      userAdmin: true,
       docsUrl: "",
       terms: {
         version: "2026-01-01",

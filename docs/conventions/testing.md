@@ -72,7 +72,9 @@ both places.
   and `TELFLO_COOKIE_POLICY_URL`, and **pins the site's settings to the
   SaaS's values**: registration `open`; the playground, anonymous validate
   and public flows on; Settings › Notifications on
-  (`TELFLO_EMAIL_NOTIFICATIONS`); the sales inquiries off; the Terms at
+  (`TELFLO_EMAIL_NOTIFICATIONS`); the user feedback, Learning and Product
+  admin › Users on (`TELFLO_USER_FEEDBACK`, `TELFLO_LEARNING`,
+  `TELFLO_USER_ADMIN`); the sales inquiries off; the Terms at
   `2026-01-01` with `/home/terms-of-service` and `/home/privacy-policy` (the
   API's tests import it as `TEST_TERMS_VERSION`,
   `apps/api/src/testing/site.ts`); and `TELFLO_SMTP_TLS=none` (Mailpit). So

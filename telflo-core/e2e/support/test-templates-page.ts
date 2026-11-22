@@ -32,11 +32,19 @@ export interface ProductAdminSession {
   request: APIRequestContext;
 }
 
-/** A fresh product admin signed in to an API session of its own; the caller disposes of `request`. */
-export async function productAdminSession(playwright: PlaywrightWorkerArgs["playwright"], password: string): Promise<ProductAdminSession> {
+/**
+ * A fresh product admin signed in to an API session of its own, through the
+ * pair at `baseURL` (the default pair's unless given); the caller disposes of
+ * `request`.
+ */
+export async function productAdminSession(
+  playwright: PlaywrightWorkerArgs["playwright"],
+  password: string,
+  baseURL: string = E2E_WEB_URL,
+): Promise<ProductAdminSession> {
   const admin = await seedUser({ password });
   await grantProductAdmin(admin.email);
-  const request = await playwright.request.newContext({ baseURL: E2E_WEB_URL });
+  const request = await playwright.request.newContext({ baseURL });
   const response = await request.post("/api/v1/auth/sessions", {
     data: { email: admin.email, password },
     headers: { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE },
@@ -82,12 +90,19 @@ export function templateDialog(page: Page, title: "New Test Template" | "Edit Te
 }
 
 /**
- * The admin nav's items as their text reads, in order: User Feedback with its
- * pending count (any integer, or none when it couldn't be read: other workers'
- * feedback moves it), then the other pages in their order, then Product
- * admins.
+ * The admin nav's items as their text reads, in order, on the open source's
+ * defaults (the default pair): User Feedback, Library and Users are switched
+ * off (TELFLO_USER_FEEDBACK, TELFLO_LEARNING, TELFLO_USER_ADMIN).
  */
-export const ADMIN_NAV_ITEMS: Array<string | RegExp> = [
+export const ADMIN_NAV_ITEMS: Array<string | RegExp> = ["Test Templates", "Test Regex", "Flows", "Product admins"];
+
+/**
+ * The admin nav's items on the SaaS's values (the SaaS pair): User Feedback
+ * with its pending count (any integer, or none when it couldn't be read:
+ * other workers' feedback moves it), then the other pages in their order,
+ * then Product admins.
+ */
+export const SAAS_ADMIN_NAV_ITEMS: Array<string | RegExp> = [
   /^User Feedback\s*\d*$/,
   "Test Templates",
   "Test Regex",

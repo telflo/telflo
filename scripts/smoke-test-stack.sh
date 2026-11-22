@@ -4651,10 +4651,30 @@ platform_form PATCH "$GATEWAY_URL/api/v1/organizations/$group_id" \
 gateway_refused_too_large ||
   fail "a $((3 * 1048576 + 1))-byte logo returned HTTP $status ($(reply_code)), not the gateway's 413"
 
-# The library: a product admin's file, as the regex library's product-admin
-# steps above, only on a throwaway stack, with its own grant and clear of the
-# flag.
-if throwaway_stack; then
+# switched_off <method> <url>: the route answers 404 not_found, as a path
+# nothing serves, its site switch off (http/not-found-when.ts: before the
+# session, the limits and the body). The CSRF header, so a write's 404 is
+# the switch's, not the guard's 403.
+switched_off() {
+  local response code
+  response=$(curl -s --max-time 30 -w '\n%{http_code}' -X "$1" "$2" -H 'X-Telflo-CSRF: 1' || true)
+  status=$(tail -n1 <<<"$response")
+  code=$(json_field '.error.code // empty' "$(sed '$d' <<<"$response")")
+  [ "$status" = "404" ] && [ "$code" = "not_found" ] ||
+    fail "$1 $2 returned HTTP $status ${code:-with no error code}, not 404 not_found"
+}
+
+# The library: off on the open-source defaults (TELFLO_LEARNING), its
+# routes 404. On the SaaS's values, a product admin's file, as the regex
+# library's product-admin steps above, only on a throwaway stack, with its
+# own grant and clear of the flag.
+if [ "$SMOKE_SITE" = "oss" ]; then
+  library_steps="found the library's routes off (TELFLO_LEARNING: 404 not_found)"
+  step "the library is off (TELFLO_LEARNING=false): GET /api/v1/library-files, POST /api/v1/library-files and GET /api/v1/library-links/:link answer 404 not_found"
+  switched_off GET "$GATEWAY_URL/api/v1/library-files"
+  switched_off POST "$GATEWAY_URL/api/v1/library-files"
+  switched_off GET "$GATEWAY_URL/api/v1/library-links/tll_smoke"
+elif throwaway_stack; then
   library_steps="had a product admin add a 10 MiB library file (11 MiB + 1 refused by the gateway), made its link and downloaded it through the gateway with no session (no tll_ in the logs), deleted it (its link then 404)"
   step "make the account a product admin by SQL on the stack's database: /api/v1/auth/me shows isProductAdmin true"
   product_admin true
@@ -4759,9 +4779,10 @@ fi
 # account, its flag set by SQL, drives the product-admin routes through the gateway (/api/v1/product-admin/,
 # every answer no-store): it grants the invitee (verified when they joined from the invitation) by email and
 # removes them, is refused its own removal as the stack's only product admin (the one real last-admin refusal
-# outside the integration suite: the browser tests' database holds other workers' admins), dismisses the
-# invitee's feedback, is refused the invitee's delete (a member of the group organization) and its own, and
-# deletes a third account it registers, verifies and finds by search. The replies hold other people's emails
+# outside the integration suite: the browser tests' database holds other workers' admins). On the SaaS's
+# values it then dismisses the invitee's feedback, is refused the invitee's delete (a member of the group
+# organization) and its own, and deletes a third account it registers, verifies and finds by search; on the
+# open-source defaults it finds the user feedback's and Users' routes off (404 not_found). The replies hold other people's emails
 # and a feedback's text: they stay in platform()'s 0600 files and are read by jq for ids and booleans only; the
 # step lines are fixed words (never the third account's address); a failure prints statuses, error codes and
 # counts. The logs are searched for the search's term by counts only. The EXIT trap clears the flags only: a run
@@ -4785,8 +4806,11 @@ admin_refused() {
     fail "$3 returned HTTP $status $(reply_code), not $1 $2 with Cache-Control: no-store"
 }
 if throwaway_stack; then
-  if [ "$SMOKE_SITE" = "saas" ]; then deleted_account_how="registered and verified"; else deleted_account_how="invited to the group organization and removed from it"; fi
-  admin_steps="had a product admin list the product admins (its account alone), grant the invitee by email (201, then 200) and remove them, be refused its own removal as the last one (409 last_product_admin), find and dismiss the invitee's feedback (the admins' email naming the sender without the text), be refused the invitee's delete (a member) and its own, and delete a third account ($deleted_account_how) found by search (its session, refresh and sign-in then refused, its deletion record and anonymous address in the database, no organization named with its address, no session holding its IP or user agent, its personal organization registered in the opamp-server before and gone after), with the search's term in no log"
+  if [ "$SMOKE_SITE" = "saas" ]; then
+    admin_steps="had a product admin list the product admins (its account alone), grant the invitee by email (201, then 200) and remove them, be refused its own removal as the last one (409 last_product_admin), find and dismiss the invitee's feedback (the admins' email naming the sender without the text), be refused the invitee's delete (a member) and its own, and delete a third account (registered and verified) found by search (its session, refresh and sign-in then refused, its deletion record and anonymous address in the database, no organization named with its address, no session holding its IP or user agent, its personal organization registered in the opamp-server before and gone after), with the search's term in no log"
+  else
+    admin_steps="had a product admin list the product admins (its account alone), grant the invitee by email (201, then 200) and remove them, be refused its own removal as the last one (409 last_product_admin), and found the user feedback and Users off (TELFLO_USER_FEEDBACK, TELFLO_USER_ADMIN: 404 not_found)"
+  fi
   PRODUCT_ADMIN_URL="$GATEWAY_URL/api/v1/product-admin"
 
   # The steps above take minutes; the access cookie lasts 15. The invitee's session hasn't been used since they
@@ -4838,186 +4862,158 @@ if throwaway_stack; then
   admin_refused 409 last_product_admin "removing the last product admin"
   expect_product_admin true
 
-  FEEDBACK_MARKER="smokefeedbackmarker$(date +%s)$$"
-  FEEDBACK_TEXT="Sent by the stack smoke test: $FEEDBACK_MARKER"
-  step "the invitee sends feedback: POST /api/v1/feedback answers 201 with its id"
-  admin_call "$INVITEE_JAR" POST "$GATEWAY_URL/api/v1/feedback" "$(jq -cn --arg text "$FEEDBACK_TEXT" '{text: $text}')"
-  admin_feedback_id=$(reply_json '.id // empty')
-  [ "$status" = "201" ] && [ -n "$admin_feedback_id" ] ||
-    fail "sending the invitee's feedback returned HTTP $status $(reply_code), not 201 with an id"
-
-  # Sent after the response, to every product admin: the account alone, once the invitee's flag is removed.
-  step "the product admins' email reached the account in Mailpit, naming the invitee and linking to the gateway's User Feedback page, without the feedback's text (counted)"
-  admin_query=$(jq -rn --arg query "to:\"$EMAIL\" subject:\"Telflo - New User Feedback Request\"" '$query | @uri')
-  message_id=""
-  for _ in $(seq 1 30); do
-    message_id=$(curl -s "$MAILPIT_URL/api/v1/search?query=$admin_query" | jq -r '.messages[0].ID // empty')
-    [ -n "$message_id" ] && break
-    sleep 1
-  done
-  [ -n "$message_id" ] || fail "no feedback email to the account arrived in Mailpit within 30s"
-  admin_mail="$work_dir/product-admin-email"
-  (umask 077 && curl -s "$MAILPIT_URL/api/v1/message/$message_id" | jq -r '.Text, .HTML' >"$admin_mail") ||
-    fail "reading the feedback email from Mailpit failed"
-  admin_marker_lines=$(grep -cF -e "$FEEDBACK_MARKER" -- "$admin_mail" || true)
-  [ "$admin_marker_lines" = "0" ] || fail "the product admins' email holds the feedback's text on ${admin_marker_lines:-unread} lines"
-  grep -qF -e "Requested by: $INVITEE_EMAIL" -- "$admin_mail" &&
-    grep -qF -e "Review Request: $GATEWAY_URL/product-admin/user-feedback" -- "$admin_mail" ||
-    fail "the product admins' email doesn't name the invitee and link to $GATEWAY_URL/product-admin/user-feedback"
-
-  step "list the pending feedback: GET /api/v1/product-admin/feedback answers 200, no-store, holding the invitee's item with its text and sender (its cursor followed until found)"
-  admin_url="$PRODUCT_ADMIN_URL/feedback"
-  admin_found=""
-  for _ in $(seq 1 20); do
-    admin_call "$JAR" GET "$admin_url"
-    [ "$status" = "200" ] && no_store || fail "listing the feedback returned HTTP $status $(reply_code), not 200 with no-store"
-    if admin_reply_is --arg id "$admin_feedback_id" --arg email "$INVITEE_EMAIL" --arg text "$FEEDBACK_TEXT" \
-      'any(.items[]; .id == $id and .email == $email and .text == $text and .authorDeleted == false)'; then
-      admin_found=yes
-      break
-    fi
-    admin_cursor=$(reply_json '.nextCursor // empty')
-    [ -n "$admin_cursor" ] || break
-    admin_url="$PRODUCT_ADMIN_URL/feedback?cursor=$(jq -rn --arg cursor "$admin_cursor" '$cursor | @uri')"
-  done
-  [ -n "$admin_found" ] || fail "the pending feedback doesn't hold the invitee's item with its text and sender"
-
-  step "dismiss it: POST /api/v1/product-admin/feedback/:id/dismiss answers 204, no-store, then again 404 feedback_not_found"
-  admin_call "$JAR" POST "$PRODUCT_ADMIN_URL/feedback/$admin_feedback_id/dismiss"
-  [ "$status" = "204" ] && no_store || fail "dismissing the feedback returned HTTP $status $(reply_code), not 204 with no-store"
-  admin_call "$JAR" POST "$PRODUCT_ADMIN_URL/feedback/$admin_feedback_id/dismiss"
-  admin_refused 404 feedback_not_found "dismissing the feedback again"
-
-  step "the invitee's delete is refused, a member of the group organization: DELETE /api/v1/product-admin/users/:userId answers 409 user_delete_blocked, its details { kind: member }"
-  admin_call "$JAR" DELETE "$PRODUCT_ADMIN_URL/users/$admin_invitee_id"
-  admin_refused 409 user_delete_blocked "deleting the invitee"
-  admin_reply_is '.error.details == {kind: "member"}' ||
-    fail "deleting the invitee was refused with the details $(reply_json -c '.error.details'), not { kind: member }"
-
-  step "the account's own delete is refused: DELETE /api/v1/product-admin/users/:userId answers 409 user_delete_self"
-  admin_call "$JAR" DELETE "$PRODUCT_ADMIN_URL/users/$user_id"
-  admin_refused 409 user_delete_self "deleting the account itself"
-
-  # A third account, made here to be deleted. Its address is never printed: the step lines say "the third
-  # account", and register_verified's name it so.
-  DELETED_ACCOUNT_LOCAL="stack-smoke-deleted-$(date +%s)-$$"
-  DELETED_ACCOUNT_EMAIL="$DELETED_ACCOUNT_LOCAL@example.com"
-  DELETED_ACCOUNT_JAR="$work_dir/deleted-account-cookies"
+  # The user feedback and Users: on in the SaaS's values; off on the open-source defaults, their routes 404.
   if [ "$SMOKE_SITE" = "saas" ]; then
-    step "register and verify a third account through the gateway (its address never printed)"
-    register_verified "$DELETED_ACCOUNT_EMAIL" "$PASSWORD" "the third account"
-  else
-    # Nobody registers on the open-source defaults: the third account joins the group organization (the
-    # session's active one, as since the second sign-in) by an invitation read from Mailpit, as the invitee did,
-    # and is removed from it before its delete (a member's delete is refused, as the invitee's above).
-    step "invite a third account to the group organization: POST /api/v1/organizations/:id/invitations answers 201 (its address never printed)"
-    admin_call "$JAR" POST "$GATEWAY_URL/api/v1/organizations/$group_id/invitations" \
-      "$(jq -cn --arg email "$DELETED_ACCOUNT_EMAIL" '{email: $email, role: "contributor"}')"
-    [ "$status" = "201" ] && admin_reply_is --arg email "$DELETED_ACCOUNT_EMAIL" '.invitation.email == $email' ||
-      fail "inviting the third account returned HTTP $status $(reply_code), not 201 naming its address"
+    FEEDBACK_MARKER="smokefeedbackmarker$(date +%s)$$"
+    FEEDBACK_TEXT="Sent by the stack smoke test: $FEEDBACK_MARKER"
+    step "the invitee sends feedback: POST /api/v1/feedback answers 201 with its id"
+    admin_call "$INVITEE_JAR" POST "$GATEWAY_URL/api/v1/feedback" "$(jq -cn --arg text "$FEEDBACK_TEXT" '{text: $text}')"
+    admin_feedback_id=$(reply_json '.id // empty')
+    [ "$status" = "201" ] && [ -n "$admin_feedback_id" ] ||
+      fail "sending the invitee's feedback returned HTTP $status $(reply_code), not 201 with an id"
 
-    step "the invitation email reached the third account in Mailpit; its token, from the accept link at the gateway's origin, makes the account: POST /api/v1/invitation-registrations answers 201, signed in, in the group organization"
-    admin_query=$(jq -rn --arg query "to:\"$DELETED_ACCOUNT_EMAIL\" subject:\"You've been invited to join\"" '$query | @uri')
+    # Sent after the response, to every product admin: the account alone, once the invitee's flag is removed.
+    step "the product admins' email reached the account in Mailpit, naming the invitee and linking to the gateway's User Feedback page, without the feedback's text (counted)"
+    admin_query=$(jq -rn --arg query "to:\"$EMAIL\" subject:\"Telflo - New User Feedback Request\"" '$query | @uri')
     message_id=""
     for _ in $(seq 1 30); do
       message_id=$(curl -s "$MAILPIT_URL/api/v1/search?query=$admin_query" | jq -r '.messages[0].ID // empty')
       [ -n "$message_id" ] && break
       sleep 1
     done
-    [ -n "$message_id" ] || fail "no invitation email to the third account arrived in Mailpit within 30s"
-    admin_link=$(curl -s "$MAILPIT_URL/api/v1/message/$message_id" | jq -r '.Text' |
-      grep -oE 'https?://[^[:space:]]+/accept-invitation#token=[A-Za-z0-9_-]+' | head -n1 || true)
-    [[ "$admin_link" == "$GATEWAY_URL/accept-invitation#token="* ]] ||
-      fail "the third account's invitation email holds no accept link at the gateway ($GATEWAY_URL) with #token="
-    admin_invitation_token="${admin_link##*token=}"
-    remember_secret "$admin_invitation_token"
-    status=$(curl -s --max-time 30 -o "$PLATFORM_REPLY_BODY" -D "$PLATFORM_REPLY_HEADERS" -w '%{http_code}' -c "$DELETED_ACCOUNT_JAR" \
-      -X POST "$GATEWAY_URL/api/v1/invitation-registrations" -H 'content-type: application/json' -H 'X-Telflo-CSRF: 1' \
-      --data-binary "$(invitation_registration_body "$admin_invitation_token")" || true)
-    [ "$status" = "201" ] && admin_reply_is --arg id "$group_id" '.organization.id == $id' ||
-      fail "the third account's invitation-registrations returned HTTP $status $(reply_code), not 201 in the group organization"
-    unset admin_link admin_invitation_token
-  fi
+    [ -n "$message_id" ] || fail "no feedback email to the account arrived in Mailpit within 30s"
+    admin_mail="$work_dir/product-admin-email"
+    (umask 077 && curl -s "$MAILPIT_URL/api/v1/message/$message_id" | jq -r '.Text, .HTML' >"$admin_mail") ||
+      fail "reading the feedback email from Mailpit failed"
+    admin_marker_lines=$(grep -cF -e "$FEEDBACK_MARKER" -- "$admin_mail" || true)
+    [ "$admin_marker_lines" = "0" ] || fail "the product admins' email holds the feedback's text on ${admin_marker_lines:-unread} lines"
+    grep -qF -e "Requested by: $INVITEE_EMAIL" -- "$admin_mail" &&
+      grep -qF -e "Review Request: $GATEWAY_URL/product-admin/user-feedback" -- "$admin_mail" ||
+      fail "the product admins' email doesn't name the invitee and link to $GATEWAY_URL/product-admin/user-feedback"
 
-  step "sign the third account in: POST /api/v1/auth/sessions answers 200, and /api/v1/auth/me names it"
-  admin_sign_in=$(jq -cn --arg email "$DELETED_ACCOUNT_EMAIL" --arg password "$PASSWORD" '{email: $email, password: $password}')
-  status=$(curl -s --max-time 30 -o /dev/null -w '%{http_code}' -c "$DELETED_ACCOUNT_JAR" -X POST "$GATEWAY_URL/api/v1/auth/sessions" \
-    -H 'content-type: application/json' -H 'X-Telflo-CSRF: 1' --data-binary "$admin_sign_in" || true)
-  [ "$status" = "200" ] || fail "signing the third account in returned HTTP $status"
-  admin_call "$DELETED_ACCOUNT_JAR" GET "$GATEWAY_URL/api/v1/auth/me"
-  deleted_account_id=$(reply_json '.user.id // empty')
-  # Its personal organization (the one a sign-in lands in, in saas; oss's lands in the group organization).
-  deleted_account_organization_id=$(reply_json '[.organizations[] | select(.type == "personal") | .id] | if length == 1 then .[0] else empty end')
-  [ "$status" = "200" ] && [ -n "$deleted_account_id" ] && [ -n "$deleted_account_organization_id" ] &&
-    admin_reply_is --arg email "$DELETED_ACCOUNT_EMAIL" '.user.email == $email' ||
-    fail "GET /api/v1/auth/me as the third account returned HTTP $status $(reply_code), not the third account"
+    step "list the pending feedback: GET /api/v1/product-admin/feedback answers 200, no-store, holding the invitee's item with its text and sender (its cursor followed until found)"
+    admin_url="$PRODUCT_ADMIN_URL/feedback"
+    admin_found=""
+    for _ in $(seq 1 20); do
+      admin_call "$JAR" GET "$admin_url"
+      [ "$status" = "200" ] && no_store || fail "listing the feedback returned HTTP $status $(reply_code), not 200 with no-store"
+      if admin_reply_is --arg id "$admin_feedback_id" --arg email "$INVITEE_EMAIL" --arg text "$FEEDBACK_TEXT" \
+        'any(.items[]; .id == $id and .email == $email and .text == $text and .authorDeleted == false)'; then
+        admin_found=yes
+        break
+      fi
+      admin_cursor=$(reply_json '.nextCursor // empty')
+      [ -n "$admin_cursor" ] || break
+      admin_url="$PRODUCT_ADMIN_URL/feedback?cursor=$(jq -rn --arg cursor "$admin_cursor" '$cursor | @uri')"
+    done
+    [ -n "$admin_found" ] || fail "the pending feedback doesn't hold the invitee's item with its text and sender"
 
-  if [ "$SMOKE_SITE" = "oss" ]; then
-    step "the group organization's admin removes the third account from it, so nothing blocks its delete: DELETE /api/v1/organizations/:id/members/:userId answers 204"
-    admin_call "$JAR" DELETE "$GATEWAY_URL/api/v1/organizations/$group_id/members/$deleted_account_id"
-    [ "$status" = "204" ] || fail "removing the third account from the group organization returned HTTP $status $(reply_code), not 204"
-  fi
+    step "dismiss it: POST /api/v1/product-admin/feedback/:id/dismiss answers 204, no-store, then again 404 feedback_not_found"
+    admin_call "$JAR" POST "$PRODUCT_ADMIN_URL/feedback/$admin_feedback_id/dismiss"
+    [ "$status" = "204" ] && no_store || fail "dismissing the feedback returned HTTP $status $(reply_code), not 204 with no-store"
+    admin_call "$JAR" POST "$PRODUCT_ADMIN_URL/feedback/$admin_feedback_id/dismiss"
+    admin_refused 404 feedback_not_found "dismissing the feedback again"
 
-  step "find the third account by its address: GET /api/v1/product-admin/users?q= answers 200, no-store, that one person, no block, no next page"
-  admin_call "$JAR" GET "$PRODUCT_ADMIN_URL/users?q=$(jq -rn --arg q "$DELETED_ACCOUNT_EMAIL" '$q | @uri')"
-  [ "$status" = "200" ] && no_store && admin_reply_is --arg id "$deleted_account_id" --arg email "$DELETED_ACCOUNT_EMAIL" \
-    '.nextCursor == null and (.items | length) == 1 and (.items[0] | .id == $id and .email == $email and .isProductAdmin == false and .block == null)' ||
-    fail "searching for the third account returned HTTP $status $(reply_code), $(reply_json '.items | length') items, not that one person with no block and no-store"
+    step "the invitee's delete is refused, a member of the group organization: DELETE /api/v1/product-admin/users/:userId answers 409 user_delete_blocked, its details { kind: member }"
+    admin_call "$JAR" DELETE "$PRODUCT_ADMIN_URL/users/$admin_invitee_id"
+    admin_refused 409 user_delete_blocked "deleting the invitee"
+    admin_reply_is '.error.details == {kind: "member"}' ||
+      fail "deleting the invitee was refused with the details $(reply_json -c '.error.details'), not { kind: member }"
 
-  # So the check that it's gone after the delete can't pass vacuously. stack_smoke's personal-organization mode
-  # also runs its own publication sequence first (as for the first account) and prints no name.
-  step "the platform registered the third account's personal organization in the opamp-server (under a personal organization's name)"
-  stack_smoke "$deleted_account_organization_id" ||
-    fail "the third account's personal organization $deleted_account_organization_id isn't registered in the opamp-server (above)"
+    step "the account's own delete is refused: DELETE /api/v1/product-admin/users/:userId answers 409 user_delete_self"
+    admin_call "$JAR" DELETE "$PRODUCT_ADMIN_URL/users/$user_id"
+    admin_refused 409 user_delete_self "deleting the account itself"
 
-  step "delete the third account: DELETE /api/v1/product-admin/users/:userId answers 204, no-store"
-  admin_call "$JAR" DELETE "$PRODUCT_ADMIN_URL/users/$deleted_account_id"
-  [ "$status" = "204" ] && no_store || fail "deleting the third account returned HTTP $status $(reply_code), not 204 with no-store"
+    # A third account, made here to be deleted. Its address is never printed: the step lines say "the third
+    # account", and register_verified's name it so.
+    DELETED_ACCOUNT_LOCAL="stack-smoke-deleted-$(date +%s)-$$"
+    DELETED_ACCOUNT_EMAIL="$DELETED_ACCOUNT_LOCAL@example.com"
+    DELETED_ACCOUNT_JAR="$work_dir/deleted-account-cookies"
+    step "register and verify a third account through the gateway (its address never printed)"
+    register_verified "$DELETED_ACCOUNT_EMAIL" "$PASSWORD" "the third account"
 
-  step "the third account's session ended: GET /api/v1/auth/me and POST /api/v1/auth/refresh with its cookies answer 401 unauthenticated"
-  admin_call "$DELETED_ACCOUNT_JAR" GET "$GATEWAY_URL/api/v1/auth/me"
-  [ "$status" = "401" ] && [ "$(reply_code)" = "unauthenticated" ] ||
-    fail "GET /api/v1/auth/me as the deleted third account returned HTTP $status $(reply_code), not 401 unauthenticated"
-  admin_call "$DELETED_ACCOUNT_JAR" POST "$GATEWAY_URL/api/v1/auth/refresh"
-  [ "$status" = "401" ] && [ "$(reply_code)" = "unauthenticated" ] ||
-    fail "refreshing the deleted third account's session returned HTTP $status $(reply_code), not 401 unauthenticated"
+    step "sign the third account in: POST /api/v1/auth/sessions answers 200, and /api/v1/auth/me names it"
+    admin_sign_in=$(jq -cn --arg email "$DELETED_ACCOUNT_EMAIL" --arg password "$PASSWORD" '{email: $email, password: $password}')
+    status=$(curl -s --max-time 30 -o /dev/null -w '%{http_code}' -c "$DELETED_ACCOUNT_JAR" -X POST "$GATEWAY_URL/api/v1/auth/sessions" \
+      -H 'content-type: application/json' -H 'X-Telflo-CSRF: 1' --data-binary "$admin_sign_in" || true)
+    [ "$status" = "200" ] || fail "signing the third account in returned HTTP $status"
+    admin_call "$DELETED_ACCOUNT_JAR" GET "$GATEWAY_URL/api/v1/auth/me"
+    deleted_account_id=$(reply_json '.user.id // empty')
+    # Its personal organization (the one a sign-in lands in).
+    deleted_account_organization_id=$(reply_json '[.organizations[] | select(.type == "personal") | .id] | if length == 1 then .[0] else empty end')
+    [ "$status" = "200" ] && [ -n "$deleted_account_id" ] && [ -n "$deleted_account_organization_id" ] &&
+      admin_reply_is --arg email "$DELETED_ACCOUNT_EMAIL" '.user.email == $email' ||
+      fail "GET /api/v1/auth/me as the third account returned HTTP $status $(reply_code), not the third account"
 
-  step "the third account's sign-in is refused: POST /api/v1/auth/sessions with its address and password answers 401 invalid_credentials"
-  admin_call "$DELETED_ACCOUNT_JAR" POST "$GATEWAY_URL/api/v1/auth/sessions" "$admin_sign_in"
-  [ "$status" = "401" ] && [ "$(reply_code)" = "invalid_credentials" ] ||
-    fail "signing the deleted third account in returned HTTP $status $(reply_code), not 401 invalid_credentials"
 
-  step "by SQL on the stack's database, the third account's deletion record (its original address, deleted by the account) and its anonymous address (no password, deleted_at set), its address freed, no organization named with it, no session of its holding an IP address or user agent: counts 1, 1, 0, 0 and 0"
-  admin_counts=$(stack_psql -v id="$deleted_account_id" -v email="$DELETED_ACCOUNT_EMAIL" -v admin="$user_id" <<'SQL'
-select count(*) from user_deletion_records
- where user_id = :'id'::uuid and original_email = lower(:'email') and deleted_by_user_id = :'admin'::uuid
-   and deleted_at is not null;
-select count(*) from users
- where id = :'id'::uuid and deleted_at is not null and password_hash is null and kind = 'human'
-   and email ~ '^deleted-[0-9a-f]{24}@deleted-accounts\.telflo\.invalid$';
-select count(*) from users where lower(email) = lower(:'email');
-select count(*) from organizations where strpos(lower(name), lower(:'email')) > 0;
-select count(*) from sessions
- where user_id = :'id'::uuid and (ip_address is not null or user_agent is not null);
+    step "find the third account by its address: GET /api/v1/product-admin/users?q= answers 200, no-store, that one person, no block, no next page"
+    admin_call "$JAR" GET "$PRODUCT_ADMIN_URL/users?q=$(jq -rn --arg q "$DELETED_ACCOUNT_EMAIL" '$q | @uri')"
+    [ "$status" = "200" ] && no_store && admin_reply_is --arg id "$deleted_account_id" --arg email "$DELETED_ACCOUNT_EMAIL" \
+      '.nextCursor == null and (.items | length) == 1 and (.items[0] | .id == $id and .email == $email and .isProductAdmin == false and .block == null)' ||
+      fail "searching for the third account returned HTTP $status $(reply_code), $(reply_json '.items | length') items, not that one person with no block and no-store"
+
+    # So the check that it's gone after the delete can't pass vacuously. stack_smoke's personal-organization mode
+    # also runs its own publication sequence first (as for the first account) and prints no name.
+    step "the platform registered the third account's personal organization in the opamp-server (under a personal organization's name)"
+    stack_smoke "$deleted_account_organization_id" ||
+      fail "the third account's personal organization $deleted_account_organization_id isn't registered in the opamp-server (above)"
+
+    step "delete the third account: DELETE /api/v1/product-admin/users/:userId answers 204, no-store"
+    admin_call "$JAR" DELETE "$PRODUCT_ADMIN_URL/users/$deleted_account_id"
+    [ "$status" = "204" ] && no_store || fail "deleting the third account returned HTTP $status $(reply_code), not 204 with no-store"
+
+    step "the third account's session ended: GET /api/v1/auth/me and POST /api/v1/auth/refresh with its cookies answer 401 unauthenticated"
+    admin_call "$DELETED_ACCOUNT_JAR" GET "$GATEWAY_URL/api/v1/auth/me"
+    [ "$status" = "401" ] && [ "$(reply_code)" = "unauthenticated" ] ||
+      fail "GET /api/v1/auth/me as the deleted third account returned HTTP $status $(reply_code), not 401 unauthenticated"
+    admin_call "$DELETED_ACCOUNT_JAR" POST "$GATEWAY_URL/api/v1/auth/refresh"
+    [ "$status" = "401" ] && [ "$(reply_code)" = "unauthenticated" ] ||
+      fail "refreshing the deleted third account's session returned HTTP $status $(reply_code), not 401 unauthenticated"
+
+    step "the third account's sign-in is refused: POST /api/v1/auth/sessions with its address and password answers 401 invalid_credentials"
+    admin_call "$DELETED_ACCOUNT_JAR" POST "$GATEWAY_URL/api/v1/auth/sessions" "$admin_sign_in"
+    [ "$status" = "401" ] && [ "$(reply_code)" = "invalid_credentials" ] ||
+      fail "signing the deleted third account in returned HTTP $status $(reply_code), not 401 invalid_credentials"
+
+    step "by SQL on the stack's database, the third account's deletion record (its original address, deleted by the account) and its anonymous address (no password, deleted_at set), its address freed, no organization named with it, no session of its holding an IP address or user agent: counts 1, 1, 0, 0 and 0"
+    admin_counts=$(stack_psql -v id="$deleted_account_id" -v email="$DELETED_ACCOUNT_EMAIL" -v admin="$user_id" <<'SQL'
+  select count(*) from user_deletion_records
+   where user_id = :'id'::uuid and original_email = lower(:'email') and deleted_by_user_id = :'admin'::uuid
+     and deleted_at is not null;
+  select count(*) from users
+   where id = :'id'::uuid and deleted_at is not null and password_hash is null and kind = 'human'
+     and email ~ '^deleted-[0-9a-f]{24}@deleted-accounts\.telflo\.invalid$';
+  select count(*) from users where lower(email) = lower(:'email');
+  select count(*) from organizations where strpos(lower(name), lower(:'email')) > 0;
+  select count(*) from sessions
+   where user_id = :'id'::uuid and (ip_address is not null or user_agent is not null);
 SQL
-  ) || fail "reading the third account's rows by SQL failed: $(sed "s/$DELETED_ACCOUNT_LOCAL/[the third account]/g" "$work_dir/stack-psql-stderr")"
-  [ "$(tr '\n' ' ' <<<"$admin_counts")" = "1 1 0 0 0 " ] ||
-    fail "the third account's deletion record, anonymous address, freed address, organizations named with it and sessions holding an IP or user agent counted $(tr '\n' ' ' <<<"$admin_counts"), not 1 1 0 0 0"
+    ) || fail "reading the third account's rows by SQL failed: $(sed "s/$DELETED_ACCOUNT_LOCAL/[the third account]/g" "$work_dir/stack-psql-stderr")"
+    [ "$(tr '\n' ' ' <<<"$admin_counts")" = "1 1 0 0 0 " ] ||
+      fail "the third account's deletion record, anonymous address, freed address, organizations named with it and sessions holding an IP or user agent counted $(tr '\n' ' ' <<<"$admin_counts"), not 1 1 0 0 0"
 
-  # stack_smoke's group-gone checks any organization by its id (its line calls it a group organization).
-  step "the platform removed the third account's personal organization from the opamp-server"
-  stack_smoke group-gone "$deleted_account_organization_id" ||
-    fail "the third account's personal organization $deleted_account_organization_id is still registered in the opamp-server (above)"
+    # stack_smoke's group-gone checks any organization by its id (its line calls it a group organization).
+    step "the platform removed the third account's personal organization from the opamp-server"
+    stack_smoke group-gone "$deleted_account_organization_id" ||
+      fail "the third account's personal organization $deleted_account_organization_id is still registered in the opamp-server (above)"
 
-  step "the API's and the gateway's logs hold no search term, and the gateway logged the search by its path alone: docker compose logs api gateway (counts only)"
-  admin_logs="$work_dir/product-admin-logs"
-  (umask 077 && docker compose logs --no-color api gateway >"$admin_logs" 2>&1) ||
-    fail "reading the API's and the gateway's logs failed"
-  qd_none "the API's and the gateway's logs" -F -e "$DELETED_ACCOUNT_LOCAL" -- "$admin_logs" ||
-    fail "the API's or the gateway's logs hold the Users search's term on $(grep -cF -e "$DELETED_ACCOUNT_LOCAL" -- "$admin_logs") lines"
-  admin_search_lines=$(grep -cF -e '"GET /api/v1/product-admin/users HTTP/' -- "$admin_logs" || true)
-  [[ "$admin_search_lines" =~ ^[1-9][0-9]*$ ]] ||
-    fail "the gateway's access log holds ${admin_search_lines:-no} lines \"GET /api/v1/product-admin/users HTTP/…\", not at least one for the search"
+    step "the API's and the gateway's logs hold no search term, and the gateway logged the search by its path alone: docker compose logs api gateway (counts only)"
+    admin_logs="$work_dir/product-admin-logs"
+    (umask 077 && docker compose logs --no-color api gateway >"$admin_logs" 2>&1) ||
+      fail "reading the API's and the gateway's logs failed"
+    qd_none "the API's and the gateway's logs" -F -e "$DELETED_ACCOUNT_LOCAL" -- "$admin_logs" ||
+      fail "the API's or the gateway's logs hold the Users search's term on $(grep -cF -e "$DELETED_ACCOUNT_LOCAL" -- "$admin_logs") lines"
+    admin_search_lines=$(grep -cF -e '"GET /api/v1/product-admin/users HTTP/' -- "$admin_logs" || true)
+    [[ "$admin_search_lines" =~ ^[1-9][0-9]*$ ]] ||
+      fail "the gateway's access log holds ${admin_search_lines:-no} lines \"GET /api/v1/product-admin/users HTTP/…\", not at least one for the search"
+  else
+    step "the user feedback is off (TELFLO_USER_FEEDBACK=false): POST /api/v1/feedback and GET /api/v1/product-admin/feedback answer 404 not_found"
+    switched_off POST "$GATEWAY_URL/api/v1/feedback"
+    switched_off GET "$PRODUCT_ADMIN_URL/feedback"
+    step "Users is off (TELFLO_USER_ADMIN=false): GET /api/v1/product-admin/users and DELETE /api/v1/product-admin/users/:userId answer 404 not_found"
+    switched_off GET "$PRODUCT_ADMIN_URL/users"
+    switched_off DELETE "$PRODUCT_ADMIN_URL/users/$admin_invitee_id"
+  fi
 
   step "clear the flag by SQL: /api/v1/auth/me shows isProductAdmin false"
   product_admin false

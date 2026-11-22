@@ -11,7 +11,7 @@ SAAS="$(listing saas)"
 oss_defaults_same() { profile_ok default && profile_ok oss-defaults && cmp -s "$tmp/p/default.yaml" "$tmp/p/oss-defaults.yaml"; }
 run_case "site: the oss-defaults profile (the site, the mail's new values and extraRoutes written out at their defaults) renders exactly as the default one" oss_defaults_same
 
-# site_values <listing> <container path> <the eleven values, one per variable in SITE_ENV's order>
+# site_values <listing> <container path> <the fourteen values, one per variable in SITE_ENV's order>
 site_values() {
   local l="$1" c="$2" name; shift 2
   for name in $SITE_ENV; do
@@ -22,7 +22,7 @@ site_values() {
 site_defaults() {
   local c
   for c in "$API_C" "$WEB_SITE_C"; do
-    site_values "$1" "$c" invite-only false false false false false "https://docs.telflo.com/" "" "" "" "" || return 1
+    site_values "$1" "$c" invite-only false false false false false false false false "https://docs.telflo.com/" "" "" "" "" || return 1
   done
 }
 for p in default oss-defaults; do
@@ -31,20 +31,20 @@ done
 site_saas() {
   local c
   for c in "$API_C" "$WEB_SITE_C"; do
-    site_values "$SAAS" "$c" open true true true true true "https://docs.example.com/telflo/" 2026-01-01 /home/terms-of-service \
+    site_values "$SAAS" "$c" open true true true true true true true true "https://docs.example.com/telflo/" 2026-01-01 /home/terms-of-service \
       /home/privacy-policy "https://telflo.example.com/home/cookie-policy" || return 1
   done
   eq "$SAAS" "$API_C.env[TELFLO_SALES_INQUIRY_TO].value" '"sales@telflo.example.com"'
 }
 run_case "site: the saas profile's values on both pods, and its sales address on the API" site_saas
-site_same_on_both() { # <listing>: the eleven, in order, with the same values on both pods
+site_same_on_both() { # <listing>: the fourteen, in order, with the same values on both pods
   local name
   for name in $SITE_ENV; do
     [ "$(value "$1" "$API_C.env[$name].value")" = "$(value "$1" "$WEB_SITE_C.env[$name].value")" ] || return 1
     [ -n "$(value "$1" "$API_C.env[$name].value")" ] || return 1
   done
 }
-each_profile "site: the API and the web app read the same eleven values" site_same_on_both
+each_profile "site: the API and the web app read the same fourteen values" site_same_on_both
 site_literal() { # a $(NAME) in a URL can't read another variable
   next_file
   render_flat "$f" "${D[@]}" --set-string 'site.docsUrl=/docs$(TELFLO_API_PASSWORD)' || return 1
@@ -107,7 +107,7 @@ M_SITE_BOOL() { printf '%s must be true or false, not null or another type' "$1"
 for key in registration docsUrl terms.version terms.termsUrl terms.privacyUrl terms.cookiePolicyUrl; do
   run_case "guard: a null site.$key refused" refused "$(M_SITE_STR "site.$key")" "" "${D[@]}" --set "site.$key=null"
 done
-for key in playground anonymousValidate publicFlows salesInquiry emailNotifications; do
+for key in playground anonymousValidate publicFlows salesInquiry emailNotifications userFeedback learning userAdmin; do
   run_case "guard: a null site.$key refused" refused "$(M_SITE_BOOL "site.$key")" "" "${D[@]}" --set "site.$key=null"
 done
 run_case "guard: a null site.terms refused" refused "$(M_SITE_STR site.terms.cookiePolicyUrl)" "" "${D[@]}" --set site.terms=null

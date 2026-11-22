@@ -16,6 +16,7 @@ import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
 import type { ServerDependencies } from "../../dependencies.js";
 import { clientIpForAudit } from "../../http/client-ip.js";
+import { notFoundWhen } from "../../http/not-found-when.js";
 import {
   createInFlightCap,
   createPublicDownloadErrorHandler,
@@ -164,6 +165,10 @@ async function holdUntilClosed(cap: InFlightCap, reply: FastifyReply): Promise<v
  *     false`. Nothing of the link is read after its check: only the file's
  *     id goes on, and only ids reach a log line.
  *
+ * Every route here, the public link's included, answers as a path nothing
+ * serves (404 not_found) while TELFLO_LEARNING is off, the open source's
+ * default: `learningOff`, first in each one's onRequest.
+ *
  * The upload is in its own encapsulated plugin, the only one here with
  * @fastify/multipart registered: its parser reads nothing, so the body is
  * read in the handler, after `authenticate` and `requireProductAdmin`.
@@ -199,6 +204,8 @@ export function registerLibraryFilesRoutes(
   /** The file a link named once checked, for its refusal's log line: ids only, never the link. */
   const linkedFiles = new WeakMap<FastifyRequest, PublicDownloadLogFields>();
   const typed = server.withTypeProvider<ZodTypeProvider>();
+  // The library's switch (TELFLO_LEARNING): first in every route's onRequest.
+  const learningOff = notFoundWhen(!settings.site.learning);
 
   void server.register(async (scope) => {
     // The upload alone parses multipart/form-data here. The parser only
@@ -216,6 +223,7 @@ export function registerLibraryFilesRoutes(
     scope.withTypeProvider<ZodTypeProvider>().post(
       FILES_ROUTE,
       {
+        onRequest: learningOff,
         preHandler: productAdmin,
         schema: {
           response: {
@@ -258,6 +266,7 @@ export function registerLibraryFilesRoutes(
   typed.get(
     FILES_ROUTE,
     {
+      onRequest: learningOff,
       preHandler: [authenticate, requireCurrentTermsUnlessProductAdmin],
       schema: { response: { 200: LibraryFilesResponseSchema, 401: ErrorResponseSchema, 403: ErrorResponseSchema } },
     },
@@ -270,6 +279,7 @@ export function registerLibraryFilesRoutes(
   typed.patch(
     `${FILES_ROUTE}/:fileId`,
     {
+      onRequest: learningOff,
       preHandler: productAdmin,
       schema: {
         params: FileParamsSchema,
@@ -292,6 +302,7 @@ export function registerLibraryFilesRoutes(
   typed.delete(
     `${FILES_ROUTE}/:fileId`,
     {
+      onRequest: learningOff,
       preHandler: productAdmin,
       schema: {
         params: FileParamsSchema,
@@ -308,7 +319,7 @@ export function registerLibraryFilesRoutes(
   typed.get(
     `${FILES_ROUTE}/:fileId/file`,
     // No response schema: the answer is a stream, and a refusal the envelope.
-    { preHandler: memberRead, schema: { params: FileParamsSchema } },
+    { onRequest: learningOff, preHandler: memberRead, schema: { params: FileParamsSchema } },
     async (request, reply) => {
       rateLimiters.libraryFileDownloadsPerUser(requireAuthentication(request).context.userId);
       return sendBytes(reply, await service.openFile(request.params.fileId), { isPublic: false });
@@ -319,6 +330,7 @@ export function registerLibraryFilesRoutes(
   typed.post(
     `${FILES_ROUTE}/:fileId/link`,
     {
+      onRequest: learningOff,
       preHandler: memberRead,
       schema: {
         params: FileParamsSchema,
@@ -342,7 +354,7 @@ export function registerLibraryFilesRoutes(
     LIBRARY_LINK_ROUTE_PATH,
     {
       exposeHeadRoute: false,
-      onRequest: rateLimiters.libraryLinksPerIp,
+      onRequest: [learningOff, rateLimiters.libraryLinksPerIp],
       errorHandler: createPublicDownloadErrorHandler((request) => linkedFiles.get(request)),
       schema: { params: LinkParamsSchema },
     },

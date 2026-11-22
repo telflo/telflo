@@ -11,9 +11,9 @@ import {
 } from "./support/database.js";
 import { downloaded } from "./support/downloads.js";
 import { open } from "./support/editor-page.js";
-import { E2E_WEB_URL } from "./support/environment.js";
+import { E2E_SAAS_WEB_URL } from "./support/environment.js";
 import { signInThroughApi } from "./support/session.js";
-import { ADMIN_NAV_ITEMS, adminNavItems, productAdminSession } from "./support/test-templates-page.js";
+import { SAAS_ADMIN_NAV_ITEMS, adminNavItems, productAdminSession } from "./support/test-templates-page.js";
 import { toastWith } from "./support/test-suites-page.js";
 
 // The library, in the browser: product admin's Library tab (its place in the
@@ -70,7 +70,8 @@ const test = base.extend<{ libraryFiles: LibraryFiles }>({
   },
 });
 
-test.use({ viewport: { width: 1440, height: 1000 }, trace: "off" });
+// On the SaaS pair: TELFLO_LEARNING is off on the default pair, the open source's default.
+test.use({ viewport: { width: 1440, height: 1000 }, trace: "off", baseURL: E2E_SAAS_WEB_URL });
 
 /** A library file name no other test uses, with the clean-up's prefix. */
 function uniqueLibraryName(): string {
@@ -125,9 +126,9 @@ async function listLibraryFilesThroughApi(request: APIRequestContext): Promise<L
 async function openLibraryAdmin(page: Page): Promise<void> {
   await open(page, "/app");
   await page.getByRole("link", { name: "Product Admin" }).click();
-  await expect(page).toHaveURL(`${E2E_WEB_URL}/product-admin/flows`);
+  await expect(page).toHaveURL(`${E2E_SAAS_WEB_URL}/product-admin/flows`);
   await adminNavItems(page).filter({ hasText: "Library" }).click();
-  await expect(page).toHaveURL(`${E2E_WEB_URL}/product-admin/library`);
+  await expect(page).toHaveURL(`${E2E_SAAS_WEB_URL}/product-admin/library`);
   await expect(page.getByRole("heading", { level: 1, name: "Library", exact: true })).toBeVisible();
   await expect(page.getByText("Loading library files...")).toHaveCount(0);
 }
@@ -146,7 +147,7 @@ function memberRow(page: Page, name: string): Locator {
 async function openLibraryFromSidebar(page: Page): Promise<void> {
   await open(page, "/app");
   await page.getByRole("link", { name: "Learning" }).click();
-  await expect(page).toHaveURL(`${E2E_WEB_URL}/library`);
+  await expect(page).toHaveURL(`${E2E_SAAS_WEB_URL}/library`);
   await expect(page.getByRole("heading", { level: 1, name: "Library", exact: true })).toBeVisible();
   await expect(page.getByRole("status", { name: "Loading library files" })).toHaveCount(0);
 }
@@ -187,7 +188,7 @@ test("a product admin's nav lists Library fourth, after User Feedback; a library
   const errors = pageErrors(page);
   await signedInProductAdmin(page);
   await openLibraryAdmin(page);
-  await expect(adminNavItems(page)).toHaveText(ADMIN_NAV_ITEMS);
+  await expect(adminNavItems(page)).toHaveText(SAAS_ADMIN_NAV_ITEMS);
   const name = uniqueLibraryName();
   libraryFiles.names.push(name);
   const file = libraryFileContent();
@@ -263,7 +264,7 @@ test("the sidebar's Learning opens /library; a member searches by name and descr
   libraryFiles,
 }) => {
   const errors = pageErrors(page);
-  const { request } = await productAdminSession(playwright, PASSWORD);
+  const { request } = await productAdminSession(playwright, PASSWORD, E2E_SAAS_WEB_URL);
   const marker = randomUUID();
   const first = { name: uniqueLibraryName(), description: `Logs sample ${marker}`, file: libraryFileContent() };
   const second = { name: uniqueLibraryName(), description: `Metrics sample ${marker}`, file: libraryFileContent() };
@@ -314,7 +315,7 @@ test("Copy curl puts `curl -fL '<link>' -o '<name>'` on the clipboard under the 
   libraryFiles,
 }) => {
   const errors = pageErrors(page);
-  const { request } = await productAdminSession(playwright, PASSWORD);
+  const { request } = await productAdminSession(playwright, PASSWORD, E2E_SAAS_WEB_URL);
   const entry = { name: uniqueLibraryName(), description: "For curl", file: libraryFileContent() };
   libraryFiles.names.push(entry.name);
   try {
@@ -365,7 +366,7 @@ test("Copy curl puts `curl -fL '<link>' -o '<name>'` on the clipboard under the 
   expect(copyFailed, "no copy failure toasted").toBe(false);
   // The command's shape, checked by a boolean: the page's own origin, single quotes.
   const shape = new RegExp(
-    `^${COMMAND_START} '(${escaped(E2E_WEB_URL)}${LINK_PATH})' -o '${escaped(entry.file.name)}'$`,
+    `^${COMMAND_START} '(${escaped(E2E_SAAS_WEB_URL)}${LINK_PATH})' -o '${escaped(entry.file.name)}'$`,
   );
   const matched = shape.exec(command);
   expect(matched !== null, "the clipboard holds the curl command, its link under the page's own origin").toBe(true);

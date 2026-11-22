@@ -308,6 +308,7 @@ site() {
   fresh && setup "${MAILPIT[@]}" && rc_is 0 &&
     is TELFLO_REGISTRATION invite-only && is TELFLO_PLAYGROUND false && is TELFLO_ANONYMOUS_VALIDATE false &&
     is TELFLO_PUBLIC_FLOWS false && is TELFLO_SALES_INQUIRY false && is TELFLO_EMAIL_NOTIFICATIONS false &&
+    is TELFLO_USER_FEEDBACK false && is TELFLO_LEARNING false && is TELFLO_USER_ADMIN false &&
     is TELFLO_DOCS_URL https://docs.telflo.com/ && is TELFLO_TERMS_VERSION "" && is TELFLO_TERMS_URL "" &&
     is TELFLO_PRIVACY_URL "" && is TELFLO_COOKIE_POLICY_URL "" && is TELFLO_TRUST_PROXY_HOPS 1
 }

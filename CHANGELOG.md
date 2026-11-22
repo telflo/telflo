@@ -7,6 +7,25 @@ release's images, Helm chart and Compose install are on its
 
 ## Unreleased
 
+### Added
+
+- Three site switches, each `false` by default
+  ([`docs/configuration.md`](docs/configuration.md), "The site"):
+  `TELFLO_USER_FEEDBACK` (the sidebar's Contact us and Product admin ›
+  User Feedback), `TELFLO_LEARNING` (the sidebar's Learning, `/library`,
+  and Product admin › Library) and `TELFLO_USER_ADMIN` (Product admin ›
+  Users). Off, each one's nav items are hidden, its pages are 404s and
+  its API routes answer 404 `not_found`. Their tables stay in every
+  install.
+
+### Changed
+
+- Contact us, Learning and Product admin's User Feedback, Library and
+  Users are no longer shown by default. To keep them, set
+  `TELFLO_USER_FEEDBACK`, `TELFLO_LEARNING` and `TELFLO_USER_ADMIN` to
+  `true` (the chart's `site.userFeedback`, `site.learning` and
+  `site.userAdmin`).
+
 ## 0.2.2 - 2026-11-21
 
 ### Added

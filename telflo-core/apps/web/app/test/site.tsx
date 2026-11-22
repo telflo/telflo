@@ -6,7 +6,8 @@ type StubRoutes = Parameters<typeof createRoutesStub>[0];
 /**
  * The SaaS's site values, as the tests' setup pins them for the server:
  * registration open, the playground and the anonymous reads on, Settings ›
- * Notifications shown, the Terms asked with the three `/home/…` URLs, the
+ * Notifications, Contact us and User Feedback, Learning and the library, and
+ * Product admin › Users shown, the Terms asked with the three `/home/…` URLs, the
  * default docs.
  */
 export const SAAS_SITE: SiteSettings = {
@@ -16,6 +17,9 @@ export const SAAS_SITE: SiteSettings = {
   anonymousValidate: true,
   publicFlows: true,
   emailNotifications: true,
+  userFeedback: true,
+  learning: true,
+  userAdmin: true,
   terms: {
     version: "2026-01-01",
     termsUrl: "/home/terms-of-service",

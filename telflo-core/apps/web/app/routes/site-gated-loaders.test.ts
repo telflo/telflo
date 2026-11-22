@@ -1,7 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { loader as playgroundLoader } from "./playground.js";
 import { loader as playgroundEditorLoader } from "./playground.editor.js";
+import { loader as libraryLoader } from "./library.js";
 import { loader as publicEditorLoader } from "./public-editor.js";
+import { loader as adminLibraryLoader } from "./product-admin/library.js";
+import { loader as userFeedbackLoader } from "./product-admin/user-feedback.js";
+import { loader as usersLoader } from "./product-admin/users.js";
 
 /*
  * The pages a site switch turns off answer 404 from their server loader:
@@ -50,6 +54,37 @@ describe.each(GATED)("%s", (_page, loader) => {
     vi.stubEnv("TELFLO_PLAYGROUND", "true");
     vi.stubEnv("TELFLO_ANONYMOUS_VALIDATE", "true");
     vi.stubEnv("TELFLO_PUBLIC_FLOWS", "true");
+    expect(thrownBy(loader)).toBe("returned");
+    expect(loader()).toBeNull();
+  });
+});
+
+/*
+ * The pages behind TELFLO_USER_FEEDBACK, TELFLO_LEARNING and
+ * TELFLO_USER_ADMIN: Product admin › User Feedback; Learning (`/library`)
+ * and Product admin › Library; Product admin › Users. Each a 404 with its
+ * switch unset, "" or "false" (the open source's default), rendered with it
+ * "true". Product admin's layout checks the flag beside them
+ * (product-admin.test.tsx).
+ */
+const SWITCHED = [
+  ["/product-admin/user-feedback", "TELFLO_USER_FEEDBACK", userFeedbackLoader],
+  ["/library", "TELFLO_LEARNING", libraryLoader],
+  ["/product-admin/library", "TELFLO_LEARNING", adminLibraryLoader],
+  ["/product-admin/users", "TELFLO_USER_ADMIN", usersLoader],
+] as const;
+
+describe.each(SWITCHED)("%s", (_page, variable, loader) => {
+  it.each([undefined, "", "false"])(`is a 404 with ${variable} %s, the open source's default`, (value) => {
+    vi.stubEnv(variable, value);
+    const thrown = thrownBy(loader);
+
+    expect(thrown).toBeInstanceOf(Response);
+    expect((thrown as Response).status).toBe(404);
+  });
+
+  it(`renders with ${variable} "true"`, () => {
+    vi.stubEnv(variable, "true");
     expect(thrownBy(loader)).toBe("returned");
     expect(loader()).toBeNull();
   });

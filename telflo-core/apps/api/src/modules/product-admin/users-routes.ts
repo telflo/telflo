@@ -1,6 +1,7 @@
 import { AdminUsersPageSchema, ErrorResponseSchema, ListAdminUsersQuerySchema } from "@telflo/contracts";
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
+import { notFoundWhen } from "../../http/not-found-when.js";
 import type { RateLimiters } from "../../http/rate-limits.js";
 import { canonicalIdOf } from "../organizations/service.js";
 import { userNotFound } from "./errors.js";
@@ -29,7 +30,8 @@ import { createUsersService } from "./users-service.js";
  *     when the caller lost the flag meanwhile; 10 a minute per product
  *     admin (`productAdminDeletesPerUser`).
  *
- * Both through users-service.ts. The delete's limit is counted after the gate,
+ * Both through users-service.ts, and both answer as a path nothing serves
+ * (404 not_found) while TELFLO_USER_ADMIN is off, the open source's default. The delete's limit is counted after the gate,
  * the path's schema and canonicalIdOf (a non-canonical id is 404 and counts
  * nothing), before the database is asked, so an unknown person's 404 counts.
  * The search's term reaches the database only: the request log drops the query
@@ -49,10 +51,13 @@ export function registerProductAdminUsersRoutes(
     log: server.log,
   });
   const typed = server.withTypeProvider<ZodTypeProvider>();
+  // Users' switch (TELFLO_USER_ADMIN): first in every route's onRequest.
+  const userAdminOff = notFoundWhen(!deps.settings.site.userAdmin);
 
   typed.get(
     `${PRODUCT_ADMIN_ROUTE_PREFIX}/users`,
     {
+      onRequest: userAdminOff,
       preHandler: gate,
       onSend: noStore,
       schema: {
@@ -66,6 +71,7 @@ export function registerProductAdminUsersRoutes(
   typed.delete(
     `${PRODUCT_ADMIN_ROUTE_PREFIX}/users/:userId`,
     {
+      onRequest: userAdminOff,
       preHandler: gate,
       onSend: noStore,
       schema: {
