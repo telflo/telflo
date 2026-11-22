@@ -1,10 +1,10 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { open } from "./editor-page.js";
-import { E2E_WEB_URL } from "./environment.js";
+import { E2E_SAAS_WEB_URL } from "./environment.js";
 import { adminNavItems } from "./test-templates-page.js";
 
 // The Users page for the browser tests: `/product-admin/users`, its search,
-// its rows and the delete dialog.
+// its rows and the delete dialog, on the SaaS pair (TELFLO_USER_ADMIN on).
 //
 // The page lists every account in the e2e database, parallel workers'
 // included: a test finds only its own people, by searching for their own
@@ -15,9 +15,9 @@ import { adminNavItems } from "./test-templates-page.js";
 export async function openUsers(page: Page): Promise<void> {
   await open(page, "/app");
   await page.getByRole("link", { name: "Product Admin" }).click();
-  await expect(page).toHaveURL(`${E2E_WEB_URL}/product-admin/flows`);
+  await expect(page).toHaveURL(`${E2E_SAAS_WEB_URL}/product-admin/flows`);
   await adminNavItems(page).filter({ hasText: /^Users$/ }).click();
-  await expect(page).toHaveURL(`${E2E_WEB_URL}/product-admin/users`);
+  await expect(page).toHaveURL(`${E2E_SAAS_WEB_URL}/product-admin/users`);
   await expect(page.getByRole("heading", { level: 1, name: "Users", exact: true })).toBeVisible();
   await expect(page.getByText("Loading users...")).toHaveCount(0);
 }

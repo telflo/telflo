@@ -1,13 +1,14 @@
 import { CSRF_HEADER_NAME, CSRF_HEADER_VALUE, DEFAULT_DOCS_URL } from "@telflo/contracts";
 import { expect, test, type APIRequestContext, type BrowserContext, type Page } from "@playwright/test";
-import { seedUser } from "./support/database.js";
+import { grantProductAdmin, revokeProductAdmin, seedUser } from "./support/database.js";
 import { E2E_ANALYTICS_WEB_URL, E2E_SAAS_WEB_URL, E2E_WEB_URL } from "./support/environment.js";
 import { signInThroughApi, waitForHydration } from "./support/session.js";
 
 // The site's switches in the browser: on the default pair, the open
 // source's defaults (no marketing site, `/` to sign-in or the app, robots
 // disallowing everything, the playground and the anonymous reads off, no
-// Sign up, no request leaving the site); the "on" cases on the SaaS pair.
+// Contact us, Learning or Product admin's User Feedback, Library and Users,
+// no Sign up, no request leaving the site); the "on" cases on the SaaS pair.
 // The switched pages answer 404 on a full load and on a client-side
 // navigation alike (server loaders, never client ones).
 
@@ -30,6 +31,19 @@ const REMOVED_PAGES = [
   "/flows/pii-redaction-gateway",
   "/sitemap.xml",
 ];
+
+/** The pages behind TELFLO_USER_FEEDBACK, TELFLO_LEARNING and TELFLO_USER_ADMIN. */
+const SWITCHED_PAGES = ["/library", "/product-admin/user-feedback", "/product-admin/library", "/product-admin/users"];
+
+/** The routes behind them, one of each switch's, through the web server's /api proxy. */
+function switchedCalls(request: APIRequestContext) {
+  return {
+    feedback: () => request.post("/api/v1/feedback", { headers: { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE }, data: { text: "Hello." } }),
+    adminFeedback: () => request.get("/api/v1/product-admin/feedback"),
+    libraryFiles: () => request.get("/api/v1/library-files"),
+    users: () => request.get("/api/v1/product-admin/users"),
+  };
+}
 
 /** The playground's pages, behind TELFLO_PLAYGROUND. */
 const PLAYGROUND_PAGES = ["/playground", "/playground/flows", "/playground/fleet-management", "/playground/editor", "/public-editor"];
@@ -116,6 +130,34 @@ test.describe("the open source's defaults (the default pair)", () => {
     }
   });
 
+  test("the user feedback's, the library's and Users' routes answer as a path nothing serves", async ({ request }) => {
+    for (const [name, call] of Object.entries(switchedCalls(request))) {
+      const response = await call();
+      expect(response.status(), name).toBe(404);
+      expect(((await response.json()) as { error: { code: string } }).error.code, name).toBe("not_found");
+    }
+  });
+
+  test("a product admin has no Contact us or Learning, no User Feedback, Library or Users, and their pages are 404s", async ({ page }) => {
+    const admin = await seedUser({ password: PASSWORD });
+    await grantProductAdmin(admin.email);
+    try {
+      await signInThroughApi(page, admin);
+      await page.goto("/product-admin/flows");
+      await waitForHydration(page);
+      await expect(page.getByRole("button", { name: "Test Templates", exact: true })).toBeVisible();
+      await expect(page.getByRole("button", { name: "Contact us", exact: true })).toHaveCount(0);
+      await expect(page.getByRole("link", { name: "Learning", exact: true })).toHaveCount(0);
+      for (const name of [/^User Feedback/, /^Library$/, /^Users$/]) {
+        await expect(page.getByRole("button", { name })).toHaveCount(0);
+      }
+
+      for (const path of SWITCHED_PAGES) await expectNotFoundPage(page, path);
+    } finally {
+      await revokeProductAdmin(admin.email);
+    }
+  });
+
   test("sign-in offers no Sign up: the site is invitation-only", async ({ page }) => {
     await page.goto("/login");
     await waitForHydration(page);
@@ -183,6 +225,25 @@ test.describe("the SaaS's values (the SaaS pair)", () => {
     expect((await calls.publishedFlows()).status()).toBe(200);
     expect((await calls.showcase()).status()).toBe(200);
     expect((await calls.salesInquiry()).status()).toBe(404);
+  });
+
+  test("the user feedback's, the library's and Users' routes are there: signed out, they ask for a session", async ({ request }) => {
+    for (const [name, call] of Object.entries(switchedCalls(request))) {
+      const response = await call();
+      expect(response.status(), name).toBe(401);
+    }
+  });
+
+  test("a signed-in person has Contact us and Learning, and /library renders", async ({ page }) => {
+    const user = await seedUser({ password: PASSWORD });
+    await signInThroughApi(page, user);
+
+    const response = await page.goto("/library");
+    expect(response?.status()).toBe(200);
+    await waitForHydration(page);
+    await expect(page.getByRole("link", { name: "Learning", exact: true })).toHaveAttribute("aria-current", "page");
+    await expect(page.getByRole("button", { name: "Contact us", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "404", exact: true })).toHaveCount(0);
   });
 
   test("sign-in offers Sign up: registration is open", async ({ page }) => {

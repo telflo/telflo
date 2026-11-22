@@ -363,6 +363,9 @@ const E2E_OPEN_SOURCE_SITE_ENV: Record<string, string> = {
   TELFLO_PUBLIC_FLOWS: "",
   TELFLO_SALES_INQUIRY: "",
   TELFLO_EMAIL_NOTIFICATIONS: "",
+  TELFLO_USER_FEEDBACK: "",
+  TELFLO_LEARNING: "",
+  TELFLO_USER_ADMIN: "",
   TELFLO_DOCS_URL: DEFAULT_DOCS_URL,
   TELFLO_TERMS_VERSION: "",
   TELFLO_TERMS_URL: "",
@@ -372,8 +375,9 @@ const E2E_OPEN_SOURCE_SITE_ENV: Record<string, string> = {
 
 /**
  * The SaaS pair's site values: registration open; the playground,
- * anonymous validate and public flows on; Settings › Notifications shown;
- * the Terms asked, at E2E_SAAS_TERMS_VERSION, with three legal-page URLs
+ * anonymous validate and public flows on; Settings › Notifications,
+ * Contact us and User Feedback, Learning and the library, and Product admin
+ * › Users shown; the Terms asked, at E2E_SAAS_TERMS_VERSION, with three legal-page URLs
  * (nothing serves them in the browser tests); no sales inquiries.
  */
 const E2E_SAAS_SITE_ENV: Record<string, string> = {
@@ -383,6 +387,9 @@ const E2E_SAAS_SITE_ENV: Record<string, string> = {
   TELFLO_ANONYMOUS_VALIDATE: "true",
   TELFLO_PUBLIC_FLOWS: "true",
   TELFLO_EMAIL_NOTIFICATIONS: "true",
+  TELFLO_USER_FEEDBACK: "true",
+  TELFLO_LEARNING: "true",
+  TELFLO_USER_ADMIN: "true",
   TELFLO_TERMS_VERSION: E2E_SAAS_TERMS_VERSION,
   TELFLO_TERMS_URL: "/home/terms-of-service",
   TELFLO_PRIVACY_URL: "/home/privacy-policy",
