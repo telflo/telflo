@@ -201,6 +201,8 @@ test("a version created while dirty holds the unsaved text, and switching back t
 test("switching while dirty asks with Unsaved Changes: Cancel stays, Discard Changes switches, Save & Continue saves, then switches", async ({
   page,
 }) => {
+  // Every way out of Unsaved Changes, typing into Monaco twice: over 30 s on WebKit in CI.
+  test.slow();
   const { configurationId, versionIds } = await seedSignedIn(page, { v2Yaml: V2_YAML });
   const v1 = versionPath(configurationId, versionIds[1]!);
   const v2 = versionPath(configurationId, versionIds[2]!);

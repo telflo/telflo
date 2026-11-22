@@ -10,16 +10,16 @@ export interface Credentials {
 }
 
 /**
- * Waits until React has taken over the server-rendered page. Until then a
+ * Waits until React has hydrated the server-rendered page. Until then a
  * click lands on inert HTML and is lost, and hydration clears what was typed.
  * On a cold dev server (every CI run, and each browser's first page) that
- * window is long enough for a test to fall into it. Once React has attached
- * to the document, which marks it with a `__reactContainer$…` key, React 19
- * captures events and replays them after hydration, so nothing is lost.
+ * window is long enough for a test to fall into it. The document's
+ * `__reactContainer$…` key isn't enough: React sets it when hydration
+ * starts, and WebKit on CI typed an email that hydration then cleared. Root's
+ * effect sets `<html data-hydrated>` once hydration has finished.
  */
 export async function waitForHydration(page: Page): Promise<void> {
-  // A string, evaluated in the page: the E2E code is typechecked without DOM types.
-  await page.waitForFunction(`Object.keys(document).some((key) => key.startsWith("__reactContainer$"))`);
+  await page.locator("html[data-hydrated]").waitFor({ state: "attached" });
 }
 
 /** Signs in the way a person does: the /login form, then the shell at /app. */
