@@ -38,6 +38,8 @@ npm-debug.log*
 
 # Development scratch files
 .superpowers/
+scratch.txt
+/debug.sh
 
 # The release pipeline's private tools (scripts/release/tools.sh)
 .tools/
