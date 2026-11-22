@@ -8,6 +8,9 @@ const SAAS = {
   TELFLO_ANONYMOUS_VALIDATE: "true",
   TELFLO_PUBLIC_FLOWS: "true",
   TELFLO_EMAIL_NOTIFICATIONS: "true",
+  TELFLO_USER_FEEDBACK: "true",
+  TELFLO_LEARNING: "true",
+  TELFLO_USER_ADMIN: "true",
   TELFLO_TERMS_VERSION: "2026-01-01",
   TELFLO_TERMS_URL: "/home/terms-of-service",
   TELFLO_PRIVACY_URL: "/home/privacy-policy",
@@ -33,6 +36,9 @@ describe("parseSiteSettings", () => {
       publicFlows: false,
       salesInquiry: false,
       emailNotifications: false,
+      userFeedback: false,
+      learning: false,
+      userAdmin: false,
       docsUrl: "https://docs.telflo.com/",
       terms: { version: "", termsUrl: "", privacyUrl: "", cookiePolicyUrl: "" },
     });
@@ -54,6 +60,9 @@ describe("parseSiteSettings", () => {
       publicFlows: true,
       salesInquiry: true,
       emailNotifications: true,
+      userFeedback: true,
+      learning: true,
+      userAdmin: true,
       docsUrl: DEFAULT_DOCS_URL,
       terms: {
         version: "2026-01-01",
@@ -76,7 +85,8 @@ describe("parseSiteSettings", () => {
   });
 
   it("takes only \"true\" and \"false\" for each switch", () => {
-    for (const name of ["TELFLO_ANONYMOUS_VALIDATE", "TELFLO_PUBLIC_FLOWS", "TELFLO_SALES_INQUIRY", "TELFLO_EMAIL_NOTIFICATIONS"]) {
+    for (const name of ["TELFLO_ANONYMOUS_VALIDATE", "TELFLO_PUBLIC_FLOWS", "TELFLO_SALES_INQUIRY", "TELFLO_EMAIL_NOTIFICATIONS",
+      "TELFLO_USER_FEEDBACK", "TELFLO_LEARNING", "TELFLO_USER_ADMIN"]) {
       expect(refusal({ [name]: "true" })).toBeNull();
       expect(refusal({ [name]: "false" })).toBeNull();
       for (const raw of ["yes", "1", "TRUE", "true "]) {

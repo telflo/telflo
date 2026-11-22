@@ -4,7 +4,8 @@
  * alike from the same environment variables, so the two pods can't
  * disagree about a rule. Their defaults are the open source's:
  * invitation-only registration, the playground and the anonymous reads
- * off, Settings › Notifications hidden, no Terms, the public docs.
+ * off, Settings › Notifications hidden, no Contact us or user feedback, no
+ * Learning or library, no Product admin › Users, no Terms, the public docs.
  *
  * Nothing here is secret: the web sends the whole object to every browser.
  */
@@ -47,6 +48,22 @@ export interface SiteSettings {
    * its nav item and page. The preferences it shows stay in `/me` either way.
    */
   emailNotifications: boolean;
+  /**
+   * TELFLO_USER_FEEDBACK (default false): the sidebar's Contact us and
+   * Product admin › User Feedback, their pages, and the feedback API
+   * (`/api/v1/feedback`, `/api/v1/product-admin/feedback`).
+   */
+  userFeedback: boolean;
+  /**
+   * TELFLO_LEARNING (default false): the sidebar's Learning (`/library`),
+   * Product admin › Library, their pages, and `/api/v1/library-files`.
+   */
+  learning: boolean;
+  /**
+   * TELFLO_USER_ADMIN (default false): Product admin › Users, its page, and
+   * `/api/v1/product-admin/users` (the list and the delete).
+   */
+  userAdmin: boolean;
   /** TELFLO_DOCS_URL (default the public docs): "" hides every docs link. */
   docsUrl: string;
   terms: SiteTerms;
@@ -63,6 +80,9 @@ export const OPEN_SOURCE_SITE: SiteSettings = Object.freeze({
   publicFlows: false,
   salesInquiry: false,
   emailNotifications: false,
+  userFeedback: false,
+  learning: false,
+  userAdmin: false,
   docsUrl: DEFAULT_DOCS_URL,
   terms: Object.freeze({ version: "", termsUrl: "", privacyUrl: "", cookiePolicyUrl: "" }),
 }) as SiteSettings;
@@ -89,6 +109,9 @@ export const SITE_VARIABLES = {
   publicFlows: "TELFLO_PUBLIC_FLOWS",
   salesInquiry: "TELFLO_SALES_INQUIRY",
   emailNotifications: "TELFLO_EMAIL_NOTIFICATIONS",
+  userFeedback: "TELFLO_USER_FEEDBACK",
+  learning: "TELFLO_LEARNING",
+  userAdmin: "TELFLO_USER_ADMIN",
   docsUrl: "TELFLO_DOCS_URL",
   termsVersion: "TELFLO_TERMS_VERSION",
   termsUrl: "TELFLO_TERMS_URL",
@@ -141,6 +164,9 @@ export function parseSiteSettings(env: Environment): SiteSettings {
   const publicFlows = siteBoolean(env, SITE_VARIABLES.publicFlows, OPEN_SOURCE_SITE.publicFlows);
   const salesInquiry = siteBoolean(env, SITE_VARIABLES.salesInquiry, OPEN_SOURCE_SITE.salesInquiry);
   const emailNotifications = siteBoolean(env, SITE_VARIABLES.emailNotifications, OPEN_SOURCE_SITE.emailNotifications);
+  const userFeedback = siteBoolean(env, SITE_VARIABLES.userFeedback, OPEN_SOURCE_SITE.userFeedback);
+  const learning = siteBoolean(env, SITE_VARIABLES.learning, OPEN_SOURCE_SITE.learning);
+  const userAdmin = siteBoolean(env, SITE_VARIABLES.userAdmin, OPEN_SOURCE_SITE.userAdmin);
   if (playground && !(anonymousValidate && publicFlows)) {
     throw new Error(
       `Environment variable ${SITE_VARIABLES.playground} may be "true" only with ${SITE_VARIABLES.anonymousValidate} and ${SITE_VARIABLES.publicFlows} "true" too (the playground needs both)`,
@@ -166,6 +192,9 @@ export function parseSiteSettings(env: Environment): SiteSettings {
     publicFlows,
     salesInquiry,
     emailNotifications,
+    userFeedback,
+    learning,
+    userAdmin,
     docsUrl,
     terms: { version, termsUrl, privacyUrl, cookiePolicyUrl },
   };

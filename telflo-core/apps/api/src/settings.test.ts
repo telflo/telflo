@@ -560,6 +560,9 @@ describe("loadSettings", () => {
       TELFLO_ANONYMOUS_VALIDATE: "true",
       TELFLO_PUBLIC_FLOWS: "true",
       TELFLO_EMAIL_NOTIFICATIONS: "true",
+      TELFLO_USER_FEEDBACK: "true",
+      TELFLO_LEARNING: "true",
+      TELFLO_USER_ADMIN: "true",
       TELFLO_TERMS_VERSION: "2026-01-01",
       TELFLO_TERMS_URL: "/home/terms-of-service",
       TELFLO_PRIVACY_URL: "/home/privacy-policy",
@@ -573,6 +576,9 @@ describe("loadSettings", () => {
         publicFlows: false,
         salesInquiry: false,
         emailNotifications: false,
+        userFeedback: false,
+        learning: false,
+        userAdmin: false,
         docsUrl: "https://docs.telflo.com/",
         terms: { version: "", termsUrl: "", privacyUrl: "", cookiePolicyUrl: "" },
       });
@@ -585,6 +591,9 @@ describe("loadSettings", () => {
         anonymousValidate: true,
         publicFlows: true,
         emailNotifications: true,
+        userFeedback: true,
+        learning: true,
+        userAdmin: true,
         terms: { version: "2026-01-01", termsUrl: "/home/terms-of-service", privacyUrl: "/home/privacy-policy", cookiePolicyUrl: "" },
       });
     });
@@ -597,6 +606,13 @@ describe("loadSettings", () => {
         { TELFLO_EMAIL_NOTIFICATIONS: "on" },
         'Environment variable TELFLO_EMAIL_NOTIFICATIONS must be "true" or "false"',
       ],
+      [
+        "the feedback's switch that isn't true or false",
+        { TELFLO_USER_FEEDBACK: "1" },
+        'Environment variable TELFLO_USER_FEEDBACK must be "true" or "false"',
+      ],
+      ["Learning's switch that isn't true or false", { TELFLO_LEARNING: "yes" }, 'Environment variable TELFLO_LEARNING must be "true" or "false"'],
+      ["Users' switch that isn't true or false", { TELFLO_USER_ADMIN: "on" }, 'Environment variable TELFLO_USER_ADMIN must be "true" or "false"'],
       [
         "the playground without the anonymous reads",
         { TELFLO_PLAYGROUND: "true" },
@@ -632,6 +648,9 @@ describe("loadSettings", () => {
         TELFLO_PUBLIC_FLOWS: "${TELFLO_PUBLIC_FLOWS:-false}",
         TELFLO_SALES_INQUIRY: "${TELFLO_SALES_INQUIRY:-false}",
         TELFLO_EMAIL_NOTIFICATIONS: "${TELFLO_EMAIL_NOTIFICATIONS:-false}",
+        TELFLO_USER_FEEDBACK: "${TELFLO_USER_FEEDBACK:-false}",
+        TELFLO_LEARNING: "${TELFLO_LEARNING:-false}",
+        TELFLO_USER_ADMIN: "${TELFLO_USER_ADMIN:-false}",
         // Without the colon: an empty value hides the docs links, and only an unset one is the default.
         TELFLO_DOCS_URL: "${TELFLO_DOCS_URL-https://docs.telflo.com/}",
         TELFLO_TERMS_VERSION: "${TELFLO_TERMS_VERSION:-}",

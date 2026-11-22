@@ -7,6 +7,7 @@ import {
 } from "@telflo/contracts";
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
+import { notFoundWhen } from "../../http/not-found-when.js";
 import type { RateLimiters } from "../../http/rate-limits.js";
 import { createFeedbackAdminService } from "./feedback-admin-service.js";
 import { createSystemRepository } from "./repositories/system-repository.js";
@@ -36,6 +37,9 @@ import {
  *     `product_admin_required` when the caller lost the flag meanwhile; 30
  *     a minute per product admin (`productAdminWritesPerUser`).
  *
+ * Every one answers as a path nothing serves (404 not_found) while
+ * TELFLO_USER_FEEDBACK is off, the open source's default.
+ *
  * The service does the work: feedback-admin-service.ts.
  */
 export function registerProductAdminFeedbackRoutes(
@@ -53,6 +57,8 @@ export function registerProductAdminFeedbackRoutes(
   });
   const gate = productAdminGate(deps);
   const typed = server.withTypeProvider<ZodTypeProvider>();
+  // The feedback's switch (TELFLO_USER_FEEDBACK): first in every route's onRequest.
+  const userFeedbackOff = notFoundWhen(!deps.settings.site.userFeedback);
   const route = `${PRODUCT_ADMIN_ROUTE_PREFIX}/feedback`;
   const writeResponses = {
     204: noContent,
@@ -67,6 +73,7 @@ export function registerProductAdminFeedbackRoutes(
   typed.get(
     route,
     {
+      onRequest: userFeedbackOff,
       preHandler: gate,
       onSend: noStore,
       schema: {
@@ -80,6 +87,7 @@ export function registerProductAdminFeedbackRoutes(
   typed.get(
     `${route}/pending-count`,
     {
+      onRequest: userFeedbackOff,
       preHandler: gate,
       onSend: noStore,
       schema: { response: { 200: PendingFeedbackCountSchema, 401: ErrorResponseSchema, 403: ErrorResponseSchema } },
@@ -90,6 +98,7 @@ export function registerProductAdminFeedbackRoutes(
   typed.post(
     `${route}/:id/acknowledge`,
     {
+      onRequest: userFeedbackOff,
       preHandler: gate,
       onSend: noStore,
       schema: { params: FeedbackIdParamsSchema, body: AcknowledgeFeedbackRequestSchema, response: writeResponses },
@@ -103,6 +112,7 @@ export function registerProductAdminFeedbackRoutes(
   typed.post(
     `${route}/:id/dismiss`,
     {
+      onRequest: userFeedbackOff,
       preHandler: gate,
       onSend: noStore,
       schema: { params: FeedbackIdParamsSchema, response: writeResponses },

@@ -3,6 +3,7 @@ import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { auditUserAgent } from "../../http/audit-user-agent.js";
 import { clientIpForAudit } from "../../http/client-ip.js";
+import { notFoundWhen } from "../../http/not-found-when.js";
 import type { RateLimiters } from "../../http/rate-limits.js";
 import type { ProductAdminRoutesDependencies } from "../product-admin/routing.js";
 import { createAuthenticate, requireAuthentication, requireCurrentTerms } from "../sessions/authenticate.js";
@@ -10,8 +11,9 @@ import { createDatabaseSessionService } from "../sessions/routes.js";
 import { createFeedbackService } from "./service.js";
 
 /*
- * "Contact us": `POST /api/v1/feedback` `{ text }` for any signed-in
- * person with the current terms (`[authenticate, requireCurrentTerms]`,
+ * "Contact us" (only while TELFLO_USER_FEEDBACK is on; off, the open
+ * source's default, a path nothing serves): `POST /api/v1/feedback`
+ * `{ text }` for any signed-in person with the current terms (`[authenticate, requireCurrentTerms]`,
  * as any member route; CSRF is global), in their active organization: 201
  * `{ id }`. The text trimmed, 1 to 5,000 characters; 10 an hour per
  * person (`feedbackPerUser`, 429 with Retry-After). Writes the row (the
@@ -38,10 +40,13 @@ export function registerFeedbackRoutes(
   });
   const authenticate = createAuthenticate(createDatabaseSessionService(deps).service);
   const typed = server.withTypeProvider<ZodTypeProvider>();
+  // The feedback's switch (TELFLO_USER_FEEDBACK): first in every route's onRequest.
+  const userFeedbackOff = notFoundWhen(!deps.settings.site.userFeedback);
 
   typed.post(
     "/api/v1/feedback",
     {
+      onRequest: userFeedbackOff,
       preHandler: [authenticate, requireCurrentTerms],
       schema: {
         body: CreateFeedbackRequestSchema,
