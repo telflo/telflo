@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import {
   isRouteErrorResponse,
   Links,
@@ -65,9 +66,18 @@ export const meta: Route.MetaFunction = () => [
 // loader data can be undefined here (the Layout also wraps the error
 // boundary), and the JSON-LD then leaves them out, as without the setting.
 // Its `<`s are escaped, so no setting can end the script early.
+//
+// <html data-hydrated> marks the end of hydration. The Layout wraps every
+// page and the error boundary, and its effect runs after all of theirs,
+// once React owns the whole document. Until then a controlled field typed
+// into is reset to its state on hydration, so the E2E tests
+// (e2e/support/session.ts's waitForHydration) wait for the mark.
 export function Layout({ children }: { children: React.ReactNode }) {
   const rootData = useRouteLoaderData<typeof loader>("root");
   const theme = usePageTheme();
+  useEffect(() => {
+    document.documentElement.dataset.hydrated = "true";
+  }, []);
   return (
     <html lang="en" className={themeClassName(theme)}>
       <head>
