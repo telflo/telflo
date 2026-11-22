@@ -75,10 +75,14 @@ export default defineConfig({
   // runs dependencies, a failure in an earlier project skips the exclusive
   // ones. To run one alone, pass its project with --no-deps (e.g. --project
   // chromium-exclusive --no-deps).
+  //
+  // WebKit's tests get 60 s each instead of 30: on a CI runner it takes
+  // about twice as long as Chromium, most of all where Monaco renders, and
+  // the editor's longer tests came within a step of 30 s.
   projects: [
     { name: "chromium", testIgnore: EXCLUSIVE_SPECS, use: { ...devices["Desktop Chrome"] } },
     { name: "firefox", testIgnore: EXCLUSIVE_SPECS, use: { ...devices["Desktop Firefox"] } },
-    { name: "webkit", testIgnore: EXCLUSIVE_SPECS, use: { ...devices["Desktop Safari"] } },
+    { name: "webkit", testIgnore: EXCLUSIVE_SPECS, timeout: 60_000, use: { ...devices["Desktop Safari"] } },
     {
       name: "chromium-exclusive",
       testMatch: EXCLUSIVE_SPECS,
@@ -86,7 +90,13 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
     },
     { name: "firefox-exclusive", testMatch: EXCLUSIVE_SPECS, dependencies: ["chromium-exclusive"], use: { ...devices["Desktop Firefox"] } },
-    { name: "webkit-exclusive", testMatch: EXCLUSIVE_SPECS, dependencies: ["firefox-exclusive"], use: { ...devices["Desktop Safari"] } },
+    {
+      name: "webkit-exclusive",
+      testMatch: EXCLUSIVE_SPECS,
+      dependencies: ["firefox-exclusive"],
+      timeout: 60_000,
+      use: { ...devices["Desktop Safari"] },
+    },
   ],
   // Never `reuseExistingServer`: a server already on any of these ports is not one
   // these tests configured, and could be the developer's. Playwright fails
