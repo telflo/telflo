@@ -2429,9 +2429,20 @@ step "start a second replica of the opamp-server: docker compose run ... opamp-s
 replica_name="$compose_project-opamp-replica-2"
 replica_url="http://$replica_name:51234/opamp/api/v1"
 replica_container="$replica_name"
-docker compose run -d --no-deps --name "$replica_name" -e "OPAMP_SERVER_URL=$replica_url" \
-  -p "127.0.0.1:$OPAMP_REPLICA_PORT:51234" opamp-server serve >/dev/null ||
-  fail "starting the second replica failed"
+# Its host port is bound here, minutes into the run: on Linux it lies in the
+# range the kernel gives outgoing connections (32768-60999), so one of the
+# run's own sockets can hold it. Then, once, on a free port Docker picks.
+start_replica() {
+  docker compose run -d --no-deps --name "$replica_name" -e "OPAMP_SERVER_URL=$replica_url" \
+    -p "127.0.0.1:$1:51234" opamp-server serve >/dev/null
+}
+if ! start_replica "$OPAMP_REPLICA_PORT"; then
+  docker rm -f "$replica_name" >/dev/null 2>&1 || true
+  echo "stack smoke: the second replica couldn't publish 127.0.0.1:$OPAMP_REPLICA_PORT: again, on a port Docker picks"
+  start_replica "" || fail "starting the second replica failed"
+  OPAMP_REPLICA_PORT=$(docker port "$replica_name" 51234/tcp | sed -n 's/^127\.0\.0\.1://p' | head -n 1)
+  [[ "$OPAMP_REPLICA_PORT" =~ ^[0-9]+$ ]] || fail "the second replica's published port is unknown"
+fi
 REPLICA_AGENT_URL="http://127.0.0.1:$OPAMP_REPLICA_PORT"
 replica_status=""
 for _ in $(seq 1 30); do
