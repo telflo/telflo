@@ -33,7 +33,7 @@
 # CLI's anonymous validate exits 3 login_required. Every other step is the
 # same. Last, in both modes, the API's, the gateway's and the web server's
 # logs are searched (grep -cF -f, counts only) for the run's secrets: both
-# passwords, the invitations' tokens and, in oss, the set-password link's
+# passwords, the invitation's token and, in oss, the set-password link's
 # token.
 #
 # Checks the paths that only the assembled stack exercises: the gateway
@@ -658,7 +658,7 @@ step() { echo "--- $*"; }
 
 # The run's secrets, one a line in a 0600 file of the work folder (gone with
 # it), for the last step's search of the logs (grep -cF -f, counts only):
-# both passwords, the invitations' tokens and, in oss, the set-password
+# both passwords, the invitation's token and, in oss, the set-password
 # link's token. Never printed.
 RUN_SECRETS="$work_dir/run-secrets"
 remember_secret() {
@@ -5579,15 +5579,15 @@ body=$(sed '$d' <<<"$response")
   fail "after the delete, /me is not the account in its personal organization: $body"
 
 
-# The run's secrets in no log: both passwords, the invitations' tokens and, in oss, the
+# The run's secrets in no log: both passwords, the invitation's token and, in oss, the
 # bootstrap's set-password link's token (run-secrets, written as each was read), searched in the API's, the
 # gateway's and the web server's logs at the end of the run, counts only.
 if [ "$SMOKE_SITE" = "saas" ]; then
-  secret_kinds="both passwords and the invitations' tokens"
+  secret_kinds="both passwords and the invitation's token"
   expected_secrets=3
 else
-  secret_kinds="both passwords, the invitations' tokens and the set-password link's token"
-  expected_secrets=5
+  secret_kinds="both passwords, the invitation's token and the set-password link's token"
+  expected_secrets=4
 fi
 step "last: the API's, the gateway's and the web server's logs hold none of the run's secrets ($secret_kinds): grep -cF -f, counts only (docker compose logs api gateway web)"
 secret_lines=$(grep -c '' "$RUN_SECRETS" || true)
