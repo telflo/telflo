@@ -7,12 +7,14 @@ process, before any collector starts:
 2. `providers.neutralize_providers` replaces every live non-`env` confmap
    reference found on the DECODED keys and values (escapes, tagged scalars,
    keys and aliases included) by splicing its node's source span. R-105's
-   advisory names the schemes it returns.
+   advisory names the schemes it returns. A text holding a `!!binary` value
+   is refused first: the collector decodes it, so its references can't be
+   seen here.
 3. C-000 to C-006, the strategy pick and the mutations (R-105 is step 2's,
    not a mutation's walk).
 4. `backstop` on the exact text each collector reads: a text that no longer
-   reads as one document, or still holds a live non-`env` reference, is
-   refused and never runs.
+   reads as one document, or still holds a live non-`env` reference or a
+   `!!binary` value, is refused and never runs.
    Beside it (`app/run.py`), C-006's file-settings check runs on the same
    text, on the node graph composed by the backstop's own reader
    (`bounded_yaml.single_node`, never constructed, so no tag hides a
@@ -30,7 +32,7 @@ from dataclasses import dataclass, field
 
 from app import bounded_yaml
 from app.bounded_yaml import ALIASES_MESSAGE, DEPTH_MESSAGE, TooDeep, TooManyAliases
-from app.providers import live_nonenv_schemes, neutralize_providers
+from app.providers import BINARY_MESSAGE, has_binary_node, live_nonenv_schemes, neutralize_providers
 
 # C-000: the text can't be read. "could not parse YAML: …", with only
 # PyYAML's own problem and line (the validator's rule), never the text.
@@ -117,6 +119,10 @@ def neutralise(text: str) -> Neutralised | Refusal:
         return _unreadable(DEPTH_MESSAGE, "TooDeep")
     except TooManyAliases:
         return _unreadable(ALIASES_MESSAGE, "TooManyAliases")
+    # A `!!binary` value: the collector decodes it and expands the references
+    # in what it decodes, which the splices can't see (providers.BINARY_TAG).
+    if has_binary_node(root):
+        return Refusal(code="refused", message=BINARY_MESSAGE)
     spliced, schemes = neutralize_providers(text, root)
     return Neutralised(text=spliced, schemes=schemes, mutations=[r105(schemes)] if schemes else [])
 
@@ -131,6 +137,8 @@ def backstop(text: str, neutralised_schemes: list[str]) -> Refusal | None:
     except (bounded_yaml.YAMLError, TooDeep, TooManyAliases):
         live: list[str] = []  # unreadable: refused all the same
     else:
+        if has_binary_node(root):
+            return Refusal(code="refused", message=BINARY_MESSAGE)
         live = live_nonenv_schemes(text, root)
         if not live:
             return None

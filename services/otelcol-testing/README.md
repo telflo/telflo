@@ -91,7 +91,9 @@ child (`app/run.py`):
    of alias expansion; anything it can't read is C-000). It finds every
    live non-`env` confmap reference on the decoded keys and scalars, tagged
    ones included, and splices each out by its source span, putting in the
-   validator's typed placeholder (R-105).
+   validator's typed placeholder (R-105). A text holding a `!!binary` value
+   is refused first (`refused`): the collector decodes it and expands the
+   references in what it decodes, which no scan here can see.
 2. **The run:**
    - the text read with ruamel (C-000 if it can't be read, or isn't shaped
      as a collector configuration);

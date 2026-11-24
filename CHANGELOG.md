@@ -7,6 +7,16 @@ release's images, Helm chart and Compose install are on its
 
 ## Unreleased
 
+### Security
+
+- The collector validator and the collector tester refuse a configuration
+  holding a `!!binary` value. PyYAML reads it as its base64 text, but the
+  collector decodes it and expands the configuration provider references
+  in what it decodes, so a `${file:…}` or `${http:…}` reference written
+  that way got past the neutralization: the collector read the file or
+  made the request, and quoted the result in its errors. Such a text is
+  now answered `refused`, and no collector runs.
+
 ## 0.2.2 - 2026-11-22
 
 ### Added
