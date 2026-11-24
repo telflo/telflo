@@ -102,7 +102,7 @@ describe("postToListener", () => {
     expect(await postToListener(54321, { state: STATE, error: "denied" })).toBe(204);
     const options = { method: "POST", headers: { "content-type": "application/json" }, credentials: "omit", cache: "no-store", referrerPolicy: "no-referrer" };
     expect(fetch).toHaveBeenCalledTimes(2);
-    const [[firstUrl, first], [secondUrl, second]] = fetch.mock.calls as unknown as Array<[string, RequestInit]>;
+    const [[firstUrl, first], [secondUrl, second]] = fetch.mock.calls as unknown as [[string, RequestInit], [string, RequestInit]];
     expect(firstUrl).toBe("http://127.0.0.1:54321/callback");
     const { body: challengeBody, ...challengeOptions } = first;
     expect(challengeOptions).toEqual(options);
