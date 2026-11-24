@@ -85,7 +85,7 @@ export default function SettingsAccountRoute() {
         </>
       )}
       <SessionsCard />
-      <PersonalApiTokensCard />
+      <PersonalApiTokensCard hasPassword={read.kind === "read" ? read.value.hasPassword : undefined} />
     </>
   );
 }

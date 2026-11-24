@@ -1,11 +1,18 @@
-import { API_TOKENS_LIVE_MAXIMUM, API_TOKEN_NOT_FOUND_MESSAGE, type ServiceAccountErrorCode } from "./service-accounts.js";
+import type { z } from "zod";
+import { CurrentPasswordSchema } from "./account.js";
+import {
+  API_TOKENS_LIVE_MAXIMUM,
+  API_TOKEN_NOT_FOUND_MESSAGE,
+  CreateApiTokenRequestSchema,
+  type ServiceAccountErrorCode,
+} from "./service-accounts.js";
 
 /**
  * A person's own API tokens, on their Account page, beside the account
  * routes:
  *
  *   GET    /api/v1/auth/me/api-tokens             → ApiTokensResponseSchema
- *   POST   /api/v1/auth/me/api-tokens             CreateApiTokenRequestSchema → 201 CreatedApiTokenResponseSchema (no-store)
+ *   POST   /api/v1/auth/me/api-tokens             CreatePersonalApiTokenRequestSchema → 201 CreatedApiTokenResponseSchema (no-store)
  *   DELETE /api/v1/auth/me/api-tokens/{tokenId}   → 204 (a revoke)
  *
  * The shapes are the service accounts' (service-accounts.ts): a token as
@@ -15,8 +22,21 @@ import { API_TOKENS_LIVE_MAXIMUM, API_TOKEN_NOT_FOUND_MESSAGE, type ServiceAccou
  * by `X-Telflo-Org`; only its person lists or revokes it.
  *
  * The refusals are the service accounts' `api_token_*` codes with a person's
- * words: never a token, its prefix or its name.
+ * words: never a token, its prefix or its name; and the account routes'
+ * `400 current_password_incorrect`.
  */
+
+/**
+ * The create's request: a service account's, and the person's current
+ * password, required when the account has one (the API decides, as a link's
+ * start does). A session alone mints no token: one stolen or left open
+ * isn't turned into a credential that outlives it.
+ */
+export const CreatePersonalApiTokenRequestSchema = CreateApiTokenRequestSchema.extend({
+  currentPassword: CurrentPasswordSchema.optional(),
+}).strict();
+
+export type CreatePersonalApiTokenRequest = z.infer<typeof CreatePersonalApiTokenRequestSchema>;
 
 /** The codes the personal-token routes answer (the service accounts'). */
 export const PERSONAL_API_TOKEN_ERROR_CODES = [

@@ -31,7 +31,7 @@ export type AccountErrorCode = (typeof ACCOUNT_ERROR_CODES)[number];
  * A current password as typed: anything not empty, as sign-in takes it, up
  * to the Argon2id bound. Deliberately not trimmed (`RegisterRequestSchema`).
  */
-const CurrentPasswordSchema = z.string().min(1).max(PASSWORD_MAXIMUM_LENGTH);
+export const CurrentPasswordSchema = z.string().min(1).max(PASSWORD_MAXIMUM_LENGTH);
 
 /** `PUT /api/v1/auth/me/password`. */
 export const ChangePasswordRequestSchema = z

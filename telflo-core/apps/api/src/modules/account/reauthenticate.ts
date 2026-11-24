@@ -1,4 +1,4 @@
-import type { AuthContext } from "../../database/context.js";
+import type { ActorContext } from "../../database/context.js";
 import { verifyPassword as verifyPasswordWithArgon2 } from "../identity/password.js";
 import type { IAuditRepository } from "../identity/repositories/audit-repository.js";
 import { currentPasswordIncorrect } from "./errors.js";
@@ -7,7 +7,7 @@ import { currentPasswordIncorrect } from "./errors.js";
  * What a current password is asked for, recorded as
  * `user.reauthentication_failed`'s only metadata.
  */
-export type ReauthenticationPurpose = "password_change" | "identity_link" | "identity_unlink";
+export type ReauthenticationPurpose = "password_change" | "identity_link" | "identity_unlink" | "personal_api_token_create";
 
 /** Where a request came from, for the audit trail: the audit row's own columns. */
 export interface ReauthenticationOrigin {
@@ -27,7 +27,7 @@ export interface ReauthenticationAttempt {
   user: { id: string; email: string };
   purpose: ReauthenticationPurpose;
   /** The request's session: its organization is the audit row's (as `user.terms_accepted` records it). */
-  context: AuthContext;
+  context: ActorContext;
   origin: ReauthenticationOrigin;
 }
 
@@ -62,9 +62,10 @@ export async function recordReauthenticationFailure(
 
 /**
  * Re-authentication by the current password, shared by the password
- * change, the link start and the unlink: one Argon2id verify, outside any
- * transaction so no row is held for its duration. A wrong password is
- * audited, as sign-in audits its failures, then refused with
+ * change, the link start, the unlink and a personal token's create: one
+ * Argon2id verify, outside any transaction so no row is held for its
+ * duration. A wrong password is audited, as sign-in audits its failures,
+ * then refused with
  * `400 current_password_incorrect`.
  *
  * The verify proves the password only as of the read: the caller rechecks

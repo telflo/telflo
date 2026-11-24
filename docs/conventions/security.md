@@ -2370,19 +2370,21 @@ no user id: the person is always the session's user
 | Set a password (an account without one) | `POST /auth/password-reset-requests`, for the account's own email | the emailed link | `user.password_reset_requested` and `user.password_reset` | the reset email |
 | Link Google | `POST /auth/me/identity-link-requests`, then the provider | the current password when the account has one, then the provider's sign-in | `user.identity_linked` `{provider, via: "settings"}` | "Google sign-in was linked to your Telflo account" |
 | Unlink Google | `DELETE /auth/me/identities/{provider}` | a password set, and the current password | `user.identity_unlinked` `{provider}` | "Google sign-in was removed from your Telflo account" |
+| Create a personal API token (Settings, or `telflo login`'s Approve) | `POST /auth/me/api-tokens` | the current password when the account has one | `personal_api_token.created` `{access, expiresAt}` | none |
 | Sign out one session | `DELETE /auth/sessions/{sessionId}` | the session only | `user.session_revoked` | none |
 | Sign out everywhere | `DELETE /auth/sessions` | a confirm in the page; the route itself, the session only | `user.signed_out_everywhere` `{count}` | none |
 | Change a preference | `PATCH /auth/me/preferences` | the session only | none | none |
 
-A wrong current password, on any of the three routes that ask for it, is
+A wrong current password, on any of the four routes that ask for it, is
 `400 current_password_incorrect` ("The current password is incorrect."),
 never `401`, which the web client reads as the session's end, and writes
 `user.reauthentication_failed` `{purpose}` (`password_change`,
-`identity_link` or `identity_unlink`), as sign-in audits its failures. The
+`identity_link`, `identity_unlink` or `personal_api_token_create`), as
+sign-in audits its failures. The
 verify is one Argon2id check outside any transaction, so no row is held for
 its duration (`apps/api/src/modules/account/reauthenticate.ts:63-82`).
 
-**One budget with sign-in, per address.** The three routes take the shared
+**One budget with sign-in, per address.** The four routes take the shared
 per-IP bucket first (`identityPerIp`, 30 requests per 5 minutes), then,
 after `authenticate`, sign-in's own per-email failure budget (10 failures
 per 15 minutes), keyed by the address the session's user row holds, never by
@@ -2391,7 +2393,8 @@ failure is counted up front, and the route settles the request exactly once,
 in a `finally`: a verified current password clears the address, as a
 successful sign-in does; only `current_password_incorrect` keeps the count;
 anything else (a `404`, a `409`, a `503`, a server failure, a link started
-by an account with no password to ask for) takes it back. So the sign-in
+or a token created by an account with no password to ask for) takes it
+back. So the sign-in
 form and Settings share one budget: guessing through Settings gets no more
 tries than through the sign-in form.
 
@@ -3140,6 +3143,17 @@ role and their drafts, in any organization they belong to.
   the person's tokens not yet revoked, expired ones included. A revoked or
   another person's token answers `404 api_token_not_found`. No terms check,
   no emails.
+- **The current password** is asked before a token is made, when the
+  account has one (one without, OIDC only, is asked nothing), as a link's
+  start asks it: a session alone mints no token, so a session stolen or
+  left open isn't turned into a credential that outlives its sign-out or a
+  password reset, neither of which revokes a token. A missing or wrong one
+  is `400 current_password_incorrect` and `user.reauthentication_failed`
+  `{purpose: "personal_api_token_create"}`, nothing made; the hash is read
+  again under the user's lock, and one changed, reset or set since the
+  verify is refused alike. The create shares sign-in's per-email budget
+  ("One budget with sign-in" above). Revoking tokens on a reset or a
+  sign-out everywhere, and an email on a create, were left for later.
 - **`X-Telflo-Org`** names the organization on each request (an id only:
   it is never logged). Missing where a route needs it (every route but
   `/whoami` and `/orgs`), or not a uuid wherever it is sent: `400
@@ -3429,6 +3443,11 @@ public route changed for it:
   sign-in's round trip, the layout's client-side refresh failure and
   `/register` lose it (the invalid link's words; `telflo login` run again
   then works at once). `robots.txt` disallows `/cli-auth`.
+- **The current password**: the page reads the account's sign-in
+  methods first (Approve waits for that read); the field is required when
+  the account has a password, shown without blocking when the read failed,
+  and absent for an account without one. A wrong one is said under the
+  field, which is emptied, and nothing is made or handed over.
 - **Approve** (disabled while in flight) creates the token (`POST
   /api/v1/auth/me/api-tokens`, named `CLI — <host> · <YYYY-MM-DD
   HH:MM:SS>` UTC, the access and expiry chosen: write and 30 days by

@@ -6,7 +6,9 @@ import { SecretCopyBox } from "~/components/secrets/SecretCopyBox.js";
 import { Alert, AlertDescription } from "~/components/ui/alert.js";
 import { Button } from "~/components/ui/button.js";
 import { Card, CardContent, CardHeader } from "~/components/ui/card.js";
-import { ApiError, getPersonalApiTokens, isSessionEnded } from "~/lib/api-client.js";
+import { Input } from "~/components/ui/input.js";
+import { Label } from "~/components/ui/label.js";
+import { ApiError, getPersonalApiTokens, getSignInMethods, isSessionEnded } from "~/lib/api-client.js";
 import {
   cliTokenName,
   cliTokenNamePrefix,
@@ -15,7 +17,12 @@ import {
   postToListener,
   type CliAuthParameters,
 } from "~/lib/cli-auth.js";
-import { usePersonalApiTokenCalls } from "~/lib/personal-api-tokens.js";
+import {
+  CURRENT_PASSWORD_LABEL,
+  currentPasswordAskOf,
+  isCurrentPasswordIncorrect,
+  usePersonalApiTokenCalls,
+} from "~/lib/personal-api-tokens.js";
 import { API_TOKEN_CREATE_FAILED_MESSAGE } from "~/lib/service-accounts.js";
 
 /*
@@ -40,6 +47,12 @@ import { API_TOKEN_CREATE_FAILED_MESSAGE } from "~/lib/service-accounts.js";
  *   browser may ask for local network access. A 204 is "Done."; a
  *   `TypeError`, 60 s, or any other status shows the token once to paste,
  *   and the request stays open: a 204 after that still says "Done.".
+ * - "Current password", as the Account page's create asks it: the account's
+ *   sign-in methods are read first (Approve waits for that read), then the
+ *   field is required when it has one, shown without blocking when the read
+ *   failed, and absent for an account without one. A wrong one is said
+ *   under the field, which is emptied; nothing was made. Enter in it
+ *   approves. The password goes in the create's body only.
  * - Cancel posts the denial (best effort) and says "Cancelled.".
  * - A 409 shows the API's own message; the limit's with a link to the
  *   Account page.
@@ -133,6 +146,13 @@ function CliAuthSession({ parameters }: { parameters: CliAuthParameters }) {
   const [busy, setBusy] = useState(false);
   const busyRef = useRef(false);
   const [problem, setProblem] = useState<Problem | null>(null);
+  // Whether the account has a password: undefined until read (or if the read failed).
+  const [hasPassword, setHasPassword] = useState<boolean | undefined>(undefined);
+  const [methodsSettled, setMethodsSettled] = useState(false);
+  const passwordField = useRef<HTMLInputElement>(null);
+  const [passwordTyped, setPasswordTyped] = useState(false);
+  const [passwordProblem, setPasswordProblem] = useState<string | null>(null);
+  const asksPassword = currentPasswordAskOf(hasPassword);
   // The token: the create's reply, held for the handoff only.
   const tokenRef = useRef<string | null>(null);
   // The fallback's display: set only when the page shows the token to paste.
@@ -147,6 +167,20 @@ function CliAuthSession({ parameters }: { parameters: CliAuthParameters }) {
     },
     [],
   );
+
+  useEffect(() => {
+    const controller = new AbortController();
+    getSignInMethods({ signal: controller.signal }).then(
+      (methods) => {
+        setHasPassword(methods.hasPassword);
+        setMethodsSettled(true);
+      },
+      () => {
+        if (!controller.signal.aborted) setMethodsSettled(true);
+      },
+    );
+    return () => controller.abort();
+  }, []);
 
   const { state, port, host } = parameters;
 
@@ -191,13 +225,22 @@ function CliAuthSession({ parameters }: { parameters: CliAuthParameters }) {
   };
 
   const approve = async (): Promise<void> => {
-    if (busyRef.current) return;
+    if (busyRef.current || !methodsSettled) return;
+    const typedPassword = asksPassword === undefined ? "" : (passwordField.current?.value ?? "");
+    if (asksPassword === "required" && typedPassword === "") return;
     busyRef.current = true;
     setBusy(true);
     setProblem(null);
+    setPasswordProblem(null);
     const isCurrent = calls.startCall();
     try {
-      const created = await calls.create({ name: cliTokenName(host, new Date()), access, expiresInDays });
+      const created = await calls.create({
+        name: cliTokenName(host, new Date()),
+        access,
+        expiresInDays,
+        ...(typedPassword === "" ? {} : { currentPassword: typedPassword }),
+      });
+      if (passwordField.current) passwordField.current.value = "";
       // A session left while it was made (a new link's fragment, the page left) never hands it off:
       // the token is revoked, best effort, and the reply dropped.
       const abandon = (): void => {
@@ -211,6 +254,13 @@ function CliAuthSession({ parameters }: { parameters: CliAuthParameters }) {
       handOff(created.token, isCurrent);
     } catch (failure) {
       if (!isCurrent() || isSessionEnded(failure)) return;
+      if (asksPassword !== undefined && isCurrentPasswordIncorrect(failure)) {
+        if (passwordField.current) passwordField.current.value = "";
+        setPasswordTyped(false);
+        setPasswordProblem(failure.message);
+        passwordField.current?.focus();
+        return;
+      }
       const limit = failure instanceof ApiError && failure.code === "api_token_limit_reached";
       setProblem({ message: calls.failureMessage(failure, API_TOKEN_CREATE_FAILED_MESSAGE), accountLink: limit });
     } finally {
@@ -256,6 +306,34 @@ function CliAuthSession({ parameters }: { parameters: CliAuthParameters }) {
               ))}
             </div>
           </fieldset>
+          {asksPassword !== undefined && (
+            <div className="space-y-1.5">
+              <Label htmlFor="cli-auth-current-password">{CURRENT_PASSWORD_LABEL}</Label>
+              <Input
+                ref={passwordField}
+                id="cli-auth-current-password"
+                name="currentPassword"
+                type="password"
+                autoComplete="current-password"
+                autoFocus
+                disabled={busy}
+                aria-invalid={passwordProblem !== null}
+                aria-describedby={passwordProblem === null ? undefined : "cli-auth-current-password-problem"}
+                onInput={(event) => {
+                  setPasswordTyped(event.currentTarget.value !== "");
+                  setPasswordProblem(null);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") void approve();
+                }}
+              />
+              {passwordProblem !== null && (
+                <p id="cli-auth-current-password-problem" role="alert" className="text-xs text-fail">
+                  {passwordProblem}
+                </p>
+              )}
+            </div>
+          )}
           {problem !== null && (
             <Alert variant="destructive">
               <AlertDescription>
@@ -275,7 +353,11 @@ function CliAuthSession({ parameters }: { parameters: CliAuthParameters }) {
             <Button type="button" variant="outline" onClick={cancel} disabled={busy}>
               Cancel
             </Button>
-            <Button type="button" onClick={() => void approve()} disabled={busy}>
+            <Button
+              type="button"
+              onClick={() => void approve()}
+              disabled={busy || !methodsSettled || (asksPassword === "required" && !passwordTyped)}
+            >
               {busy ? "Approving…" : "Approve"}
             </Button>
           </div>

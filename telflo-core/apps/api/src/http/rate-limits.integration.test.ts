@@ -601,6 +601,41 @@ describe("rate limits", () => {
       expectNotRateLimited(await call(server, "register", from));
       expectRateLimited(await unlinkFromOne());
     });
+
+    const createToken = (server: FastifyInstance, access: string, body: Record<string, unknown>) =>
+      server.inject({
+        method: "POST",
+        url: "/api/v1/auth/me/api-tokens",
+        remoteAddress: nextAddress(),
+        headers: headersFor({}),
+        cookies: { telflo_access: access },
+        payload: { name: `t-${Math.random().toString(36).slice(2)}`, access: "read", expiresInDays: 1, ...body },
+      });
+
+    it("a personal token's wrong current passwords count toward the address's sign-in budget too; at the limit the right one is 429", async () => {
+      const server = await serverWith();
+      const { email, access } = await signedInAccount(server);
+
+      for (let attempt = 0; attempt < MAX; attempt += 1) {
+        const response = await createToken(server, access, { currentPassword: WRONG_PASSWORD });
+        expect(response.statusCode).toBe(400);
+        expect(response.json()).toMatchObject({ error: { code: "current_password_incorrect" } });
+      }
+      expectRateLimited(await createToken(server, access, { currentPassword: PASSWORD }));
+      expectRateLimited(await signIn(server, email));
+    });
+
+    it("a personal token's create by an account without a password counts nothing", async () => {
+      const server = await serverWith();
+      const { userId, email, access } = await signedInAccount(server);
+      await ownerDb.updateTable("users").set({ password_hash: null }).where("id", "=", userId).execute();
+
+      for (let attempt = 0; attempt < MAX + 1; attempt += 1) {
+        expect((await createToken(server, access, {})).statusCode).toBe(201);
+      }
+      await ownerDb.updateTable("users").set({ password_hash: passwordHash }).where("id", "=", userId).execute();
+      expect((await signIn(server, email)).statusCode).toBe(200);
+    });
   });
 
   describe("email requests per address", () => {

@@ -24,6 +24,7 @@ import {
   ServiceAccountsResponseSchema,
   type ApiTokensResponse,
   type CreateApiTokenRequest,
+  type CreatePersonalApiTokenRequest,
   type CreatedApiTokenResponse,
   type CreateServiceAccountRequest,
   type RenameServiceAccountRequest,
@@ -1058,7 +1059,7 @@ export function getPersonalApiTokens(options: { signal?: AbortSignal } = {}): Pr
  * the only answer that carries it. The caller shows it once and keeps it
  * nowhere else.
  */
-export function createPersonalApiToken(request: CreateApiTokenRequest): Promise<CreatedApiTokenResponse> {
+export function createPersonalApiToken(request: CreatePersonalApiTokenRequest): Promise<CreatedApiTokenResponse> {
   return send("POST", PERSONAL_API_TOKENS_PATH, request, CreatedApiTokenResponseSchema);
 }
 

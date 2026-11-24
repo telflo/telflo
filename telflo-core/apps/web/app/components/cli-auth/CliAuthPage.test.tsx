@@ -15,6 +15,7 @@ import * as apiClient from "~/lib/api-client.js";
 import { ApiError } from "~/lib/api-client.js";
 import { HANDOFF_WAIT_MS, PROOF_CONTEXT } from "~/lib/cli-auth.js";
 import { API_TOKEN_CREATE_FAILED_MESSAGE } from "~/lib/service-accounts.js";
+import { signInMethods } from "~/test/account.js";
 import { attributesHolding } from "~/test/fleets.js";
 import { apiToken, buildApiToken, expectTokenOnlyInsideNoCapture, quietQueries, showsText } from "~/test/service-accounts.js";
 import {
@@ -158,7 +159,16 @@ beforeEach(() => {
   log = [];
   unquiet = quietQueries();
   arriveAt(FRAGMENT);
+  // An account without a password unless a test says: no field, Approve as it was ("the current password" below).
+  vi.spyOn(apiClient, "getSignInMethods").mockResolvedValue(signInMethods({ hasPassword: false }));
 });
+
+/** Approve, once the account's sign-in methods are read (it waits for them). */
+async function enabledApprove(): Promise<HTMLElement> {
+  const button = await screen.findByRole("button", { name: "Approve" });
+  await waitFor(() => expect(button).toBeEnabled());
+  return button;
+}
 
 afterEach(() => {
   unquiet();
@@ -237,7 +247,7 @@ describe("Approve", () => {
   it("creates, lists, revokes this machine's earlier CLI tokens (never the new one), then hands the token to the listener: Done", async () => {
     const calls = stubCalls();
     renderPage();
-    fireEvent.click(await screen.findByRole("button", { name: "Approve" }));
+    fireEvent.click(await enabledApprove());
     expect(await screen.findByText(DONE_WORDS)).toBeInTheDocument();
     expect(log).toEqual([
       "create write 30",
@@ -259,7 +269,7 @@ describe("Approve", () => {
     renderPage();
     fireEvent.click(await screen.findByRole("radio", { name: "Read" }));
     fireEvent.click(screen.getByRole("radio", { name: "7 days" }));
-    fireEvent.click(screen.getByRole("button", { name: "Approve" }));
+    fireEvent.click(await enabledApprove());
     await screen.findByText(DONE_WORDS);
     expect(log[0]).toBe("create read 7");
   });
@@ -269,7 +279,7 @@ describe("Approve", () => {
     const calls = stubCalls();
     calls.create.mockImplementation(() => new Promise<CreatedApiTokenResponse>((resolve) => (finish = resolve)));
     renderPage();
-    const approve = await screen.findByRole("button", { name: "Approve" });
+    const approve = await enabledApprove();
     fireEvent.click(approve);
     fireEvent.click(approve);
     expect(screen.getByRole("button", { name: "Approving…" })).toBeDisabled();
@@ -284,7 +294,7 @@ describe("Approve", () => {
     calls.revoke.mockRejectedValueOnce(new ApiError("internal_error", "Something went wrong.", { status: 500 }));
     const warning = vi.spyOn(toast, "warning");
     renderPage();
-    fireEvent.click(await screen.findByRole("button", { name: "Approve" }));
+    fireEvent.click(await enabledApprove());
     await screen.findByText(DONE_WORDS);
     expect(warning).toHaveBeenCalledWith(REVOKE_FAILED_WARNING);
     expect(log.at(-1)?.startsWith("listener")).toBe(true);
@@ -295,7 +305,7 @@ describe("Approve", () => {
     calls.list.mockRejectedValueOnce(new TypeError("Failed to fetch"));
     const warning = vi.spyOn(toast, "warning");
     renderPage();
-    fireEvent.click(await screen.findByRole("button", { name: "Approve" }));
+    fireEvent.click(await enabledApprove());
     await screen.findByText(DONE_WORDS);
     expect(warning).toHaveBeenCalledWith(REVOKE_FAILED_WARNING);
     expect(calls.revoke).not.toHaveBeenCalled();
@@ -306,7 +316,7 @@ describe("Approve", () => {
     let answer!: (response: Response) => void;
     stubCalls(() => new Promise<Response>((resolve) => (answer = resolve)));
     renderPage();
-    fireEvent.click(await screen.findByRole("button", { name: "Approve" }));
+    fireEvent.click(await enabledApprove());
     expect(await screen.findByText(WAITING_WORDS)).toBeInTheDocument();
     expect(pageHoldsToken()).toBe(false);
 
@@ -336,7 +346,7 @@ describe("Approve", () => {
     vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"], shouldAdvanceTime: true });
     stubCalls(listener);
     renderPage();
-    fireEvent.click(await screen.findByRole("button", { name: "Approve" }));
+    fireEvent.click(await enabledApprove());
     expect(await screen.findByText(FALLBACK_WORDS)).toBeInTheDocument();
     expectTokenOnlyInsideNoCapture(token);
     // The 60 s timer was cleared: nothing changes when it would have fired.
@@ -349,7 +359,7 @@ describe("Approve", () => {
     const toasts = [vi.spyOn(toast, "success"), vi.spyOn(toast, "error"), vi.spyOn(toast, "warning"), vi.spyOn(toast, "message")];
     stubCalls(async () => new Response(null, { status: 403 }));
     renderPage();
-    fireEvent.click(await screen.findByRole("button", { name: "Approve" }));
+    fireEvent.click(await enabledApprove());
     await screen.findByText(FALLBACK_WORDS);
     const stored = setItem.mock.calls.some((call) => call.join(" ").includes(token));
     const toasted = toasts.some((spy) => JSON.stringify(spy.mock.calls).includes(token));
@@ -372,7 +382,7 @@ describe("a new link in the same tab", () => {
   it("after Done, a new fragment is read: the form for the new host, the fragment removed, Approve for the new listener", async () => {
     const calls = stubCalls();
     renderPage();
-    fireEvent.click(await screen.findByRole("button", { name: "Approve" }));
+    fireEvent.click(await enabledApprove());
     await screen.findByText(DONE_WORDS);
 
     await arriveAgain(NEW_FRAGMENT);
@@ -382,7 +392,7 @@ describe("a new link in the same tab", () => {
     expect(screen.getByRole("radio", { name: "Write" })).toBeChecked();
 
     log = [];
-    fireEvent.click(screen.getByRole("button", { name: "Approve" }));
+    fireEvent.click(await enabledApprove());
     await screen.findByText(DONE_WORDS);
     const [url, init] = calls.fetch.mock.calls.at(-1) ?? [];
     expect(url).toBe(`http://127.0.0.1:${NEW_PORT}/callback`);
@@ -399,7 +409,7 @@ describe("a new link in the same tab", () => {
 
     await arriveAgain(NEW_FRAGMENT);
     expect(await screen.findByRole("heading", { name: `Sign in the Telflo CLI on ${NEW_HOST}` })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Approve" })).toBeEnabled();
+    expect(await enabledApprove()).toBeEnabled();
     expect(showsText(CANCELLED_WORDS)).toBe(false);
     expect(window.location.hash).toBe("");
   });
@@ -420,7 +430,7 @@ describe("a new link in the same tab", () => {
     const calls = stubCalls();
     calls.create.mockImplementationOnce(() => new Promise<CreatedApiTokenResponse>((resolve) => (finish = resolve)));
     renderPage();
-    fireEvent.click(await screen.findByRole("button", { name: "Approve" }));
+    fireEvent.click(await enabledApprove());
     expect(calls.create).toHaveBeenCalledTimes(1);
 
     await arriveAgain(NEW_FRAGMENT);
@@ -433,7 +443,7 @@ describe("a new link in the same tab", () => {
     expect(calls.fetch).not.toHaveBeenCalled();
     expect(pageHoldsToken()).toBe(false);
     expect(pageStateHolds()).toBe(false);
-    expect(screen.getByRole("button", { name: "Approve" })).toBeEnabled();
+    expect(await enabledApprove()).toBeEnabled();
     expect(screen.queryByRole("alert")).toBeNull();
   });
 
@@ -442,7 +452,7 @@ describe("a new link in the same tab", () => {
     const calls = stubCalls();
     calls.list.mockImplementationOnce(() => new Promise<{ items: ApiToken[] }>((resolve) => (listed = resolve)));
     renderPage();
-    fireEvent.click(await screen.findByRole("button", { name: "Approve" }));
+    fireEvent.click(await enabledApprove());
     await waitFor(() => expect(calls.list).toHaveBeenCalledTimes(1));
 
     await arriveAgain(NEW_FRAGMENT);
@@ -462,7 +472,7 @@ describe("a new link in the same tab", () => {
     calls.revoke.mockRejectedValueOnce(new TypeError("Failed to fetch"));
     const warning = vi.spyOn(toast, "warning");
     renderPage();
-    fireEvent.click(await screen.findByRole("button", { name: "Approve" }));
+    fireEvent.click(await enabledApprove());
     await arriveAgain(NEW_FRAGMENT);
     await screen.findByRole("heading", { name: `Sign in the Telflo CLI on ${NEW_HOST}` });
     await act(async () => finish(created()));
@@ -476,7 +486,7 @@ describe("a new link in the same tab", () => {
     stubCalls(() => new Promise<Response>((resolve) => (answer = resolve)));
     vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"], shouldAdvanceTime: true });
     renderPage();
-    fireEvent.click(await screen.findByRole("button", { name: "Approve" }));
+    fireEvent.click(await enabledApprove());
     await screen.findByText(WAITING_WORDS);
     act(() => vi.advanceTimersByTime(HANDOFF_WAIT_MS));
     await screen.findByText(FALLBACK_WORDS);
@@ -489,7 +499,7 @@ describe("a new link in the same tab", () => {
     // The earlier listener's late 204 belongs to the earlier session: the new one's form stays.
     await act(async () => answer(new Response(null, { status: 204 })));
     expect(showsText(DONE_WORDS)).toBe(false);
-    expect(screen.getByRole("button", { name: "Approve" })).toBeEnabled();
+    expect(await enabledApprove()).toBeEnabled();
   });
 });
 
@@ -506,20 +516,22 @@ describe("Cancel and refusals", () => {
   });
 
   it("Cancel says Cancelled even when the listener can't be reached", async () => {
-    stubCalls(async () => Promise.reject(new TypeError("Failed to fetch")));
+    const calls = stubCalls(async () => Promise.reject(new TypeError("Failed to fetch")));
     renderPage();
     fireEvent.click(await screen.findByRole("button", { name: "Cancel" }));
     expect(await screen.findByText(CANCELLED_WORDS)).toBeInTheDocument();
+    // The denial follows the challenge's proof: both sent here, so neither lands on the next test's fetch.
+    await waitFor(() => expect(calls.fetch).toHaveBeenCalledTimes(2));
   });
 
   it("shows the API's limit message with a link to the Account page, and nothing after the create", async () => {
     const calls = stubCalls();
     calls.create.mockRejectedValue(new ApiError("api_token_limit_reached", PERSONAL_API_TOKEN_LIMIT_REACHED_MESSAGE, { status: 409 }));
     renderPage();
-    fireEvent.click(await screen.findByRole("button", { name: "Approve" }));
+    fireEvent.click(await enabledApprove());
     expect(await screen.findByText(PERSONAL_API_TOKEN_LIMIT_REACHED_MESSAGE, { exact: false })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Go to the Account page" }).getAttribute("href")).toBe("/settings/account");
-    expect(screen.getByRole("button", { name: "Approve" })).toBeEnabled();
+    expect(await enabledApprove()).toBeEnabled();
     expect(calls.list).not.toHaveBeenCalled();
     expect(calls.fetch).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole("link", { name: "Go to the Account page" }));
@@ -530,7 +542,7 @@ describe("Cancel and refusals", () => {
     const calls = stubCalls();
     calls.create.mockRejectedValue(new ApiError("api_token_name_taken", PERSONAL_API_TOKEN_NAME_TAKEN_MESSAGE, { status: 409 }));
     renderPage();
-    fireEvent.click(await screen.findByRole("button", { name: "Approve" }));
+    fireEvent.click(await enabledApprove());
     expect(await screen.findByText(PERSONAL_API_TOKEN_NAME_TAKEN_MESSAGE)).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Go to the Account page" })).toBeNull();
   });
@@ -539,7 +551,7 @@ describe("Cancel and refusals", () => {
     const calls = stubCalls();
     calls.create.mockRejectedValue(new TypeError("Failed to fetch: something private"));
     renderPage();
-    fireEvent.click(await screen.findByRole("button", { name: "Approve" }));
+    fireEvent.click(await enabledApprove());
     expect(await screen.findByText(API_TOKEN_CREATE_FAILED_MESSAGE)).toBeInTheDocument();
     expect(showsText("something private")).toBe(false);
   });
@@ -548,8 +560,86 @@ describe("Cancel and refusals", () => {
     const calls = stubCalls();
     calls.create.mockRejectedValue(new ApiError("unauthenticated", "Not signed in.", { status: 401 }));
     renderPage();
-    fireEvent.click(await screen.findByRole("button", { name: "Approve" }));
+    fireEvent.click(await enabledApprove());
     await waitFor(() => expect(screen.getByRole("button", { name: "Approve" })).toBeEnabled());
     expect(screen.queryByRole("alert")).toBeNull();
+  });
+});
+
+describe("the current password", () => {
+  const PASSWORD = "canary-current-5d1c-password";
+  const field = () => screen.getByLabelText("Current password");
+  const sentPasswords = () => vi.mocked(apiClient.createPersonalApiToken).mock.calls.map(([request]) => request.currentPassword);
+
+  it("an account with a password: Approve waits for it, sends it in the create's body only, and the field is emptied", async () => {
+    vi.mocked(apiClient.getSignInMethods).mockResolvedValue(signInMethods({ hasPassword: true }));
+    stubCalls();
+    renderPage();
+    const approve = await screen.findByRole("button", { name: "Approve" });
+    await waitFor(() => expect(field()).toBeInTheDocument());
+    expect(approve).toBeDisabled();
+    fireEvent.input(field(), { target: { value: PASSWORD } });
+    expect(approve).toBeEnabled();
+    fireEvent.click(approve);
+    await screen.findByText(DONE_WORDS);
+    expect(sentPasswords()).toEqual([PASSWORD]);
+    // Never to the listener, in the page's text or attributes.
+    expect(log.some((line) => line.includes(PASSWORD))).toBe(false);
+    expect(document.documentElement.outerHTML.includes(PASSWORD)).toBe(false);
+  });
+
+  it("a wrong one is said under the field, which is emptied; nothing is handed over, and Approve waits for a new one", async () => {
+    vi.mocked(apiClient.getSignInMethods).mockResolvedValue(signInMethods({ hasPassword: true }));
+    const calls = stubCalls();
+    calls.create.mockRejectedValueOnce(new ApiError("current_password_incorrect", "The current password is incorrect.", { status: 400 }));
+    renderPage();
+    await waitFor(() => expect(field()).toBeInTheDocument());
+    fireEvent.input(field(), { target: { value: "wrong-one" } });
+    fireEvent.click(await enabledApprove());
+    expect(await screen.findByRole("alert")).toHaveTextContent("The current password is incorrect.");
+    expect(field()).toHaveValue("");
+    expect(field()).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByRole("button", { name: "Approve" })).toBeDisabled();
+    expect(calls.list).not.toHaveBeenCalled();
+    expect(calls.fetch).not.toHaveBeenCalled();
+
+    // Typing clears the words; Enter approves.
+    fireEvent.input(field(), { target: { value: PASSWORD } });
+    expect(screen.queryByRole("alert")).toBeNull();
+    fireEvent.keyDown(field(), { key: "Enter" });
+    await screen.findByText(DONE_WORDS);
+    expect(sentPasswords()).toEqual(["wrong-one", PASSWORD]);
+  });
+
+  it("an account without a password: no field, and the create sends none", async () => {
+    stubCalls();
+    renderPage();
+    fireEvent.click(await enabledApprove());
+    await screen.findByText(DONE_WORDS);
+    expect(sentPasswords()).toEqual([undefined]);
+  });
+
+  it("the sign-in methods unread (a failed read): the field shown, Approve not blocked by it; blank sends none", async () => {
+    vi.mocked(apiClient.getSignInMethods).mockRejectedValue(new TypeError("Failed to fetch"));
+    stubCalls();
+    renderPage();
+    const approve = await enabledApprove();
+    expect(field()).toBeInTheDocument();
+    fireEvent.click(approve);
+    await screen.findByText(DONE_WORDS);
+    expect(sentPasswords()).toEqual([undefined]);
+  });
+
+  it("Approve is disabled while the sign-in methods are read", async () => {
+    let answer!: (value: ReturnType<typeof signInMethods>) => void;
+    vi.mocked(apiClient.getSignInMethods).mockImplementation(() => new Promise((resolve) => (answer = resolve)));
+    const calls = stubCalls();
+    renderPage();
+    const approve = await screen.findByRole("button", { name: "Approve" });
+    expect(approve).toBeDisabled();
+    fireEvent.click(approve);
+    expect(calls.create).not.toHaveBeenCalled();
+    await act(async () => answer(signInMethods({ hasPassword: false })));
+    expect(approve).toBeEnabled();
   });
 });

@@ -13,6 +13,7 @@ import { Label } from "~/components/ui/label.js";
 import { isSessionEnded } from "~/lib/api-client.js";
 import type { ApiTokenCalls } from "~/lib/api-tokens.js";
 import { useOpeningKey } from "~/lib/hooks/use-opening-key.js";
+import { CURRENT_PASSWORD_LABEL, isCurrentPasswordIncorrect, type CurrentPasswordAsk } from "~/lib/personal-api-tokens.js";
 import { API_TOKEN_CREATE_FAILED_MESSAGE, useServiceAccountTokenCalls } from "~/lib/service-accounts.js";
 
 /*
@@ -38,6 +39,12 @@ import { API_TOKEN_CREATE_FAILED_MESSAGE, useServiceAccountTokenCalls } from "~/
  * - Whose token: a service account's (its organization and id), or anyone's
  *   given as `calls` (the Account page's own tokens): the create, whether
  *   its answer still belongs on screen, and the failure words.
+ * - "Current password" (the person's own tokens only, `currentPassword`):
+ *   "required" enables "Create token" only once it is typed; "optional"
+ *   (whether the account has one isn't known) shows it without blocking;
+ *   absent (an account without one), no field. Uncontrolled, sent only when
+ *   typed. A wrong one is said under the field, which is emptied, and the
+ *   dialog stays: nothing was made.
  */
 
 interface CreateApiTokenDialogBaseProps {
@@ -53,10 +60,10 @@ interface CreateApiTokenDialogBaseProps {
 export type CreateApiTokenDialogProps = CreateApiTokenDialogBaseProps &
   (
     | { organizationId: string; serviceAccountId: string; calls?: never }
-    | { calls: ApiTokenCalls; organizationId?: never; serviceAccountId?: never }
+    | { calls: ApiTokenCalls; currentPassword?: CurrentPasswordAsk; organizationId?: never; serviceAccountId?: never }
   );
 
-type CreateSessionProps = CreateApiTokenDialogBaseProps & { calls: ApiTokenCalls };
+type CreateSessionProps = CreateApiTokenDialogBaseProps & { calls: ApiTokenCalls; currentPassword?: CurrentPasswordAsk };
 
 /** A blank expiry is never; else a whole number of days from 1 to 3650, or undefined for anything else. */
 export function expiryDaysOf(typed: string): number | null | undefined {
@@ -88,9 +95,12 @@ function CreateApiTokenSessions(props: CreateSessionProps) {
   return <CreateSession key={opening} {...props} />;
 }
 
-function CreateSession({ open, onOpenChange, calls, onCreated, onUnknownOutcome }: CreateSessionProps) {
+function CreateSession({ open, onOpenChange, calls, currentPassword: asksPassword, onCreated, onUnknownOutcome }: CreateSessionProps) {
   const id = useId();
   const [hasName, setHasName] = useState(false);
+  const [hasPassword, setHasPassword] = useState(false);
+  const [passwordProblem, setPasswordProblem] = useState<string | null>(null);
+  const passwordField = useRef<HTMLInputElement>(null);
   const [allowWrite, setAllowWrite] = useState(false);
   const [expiryProblem, setExpiryProblem] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -112,17 +122,32 @@ function CreateSession({ open, onOpenChange, calls, onCreated, onUnknownOutcome 
       return;
     }
     setExpiryProblem(false);
+    const typedPassword = asksPassword === undefined ? "" : String(fields.get("currentPassword") ?? "");
+    if (asksPassword === "required" && typedPassword === "") return;
+    setPasswordProblem(null);
     creatingRef.current = true;
     setCreating(true);
     const isStillCurrent = calls.startCall();
     try {
-      const created = await calls.create({ name, access: allowWrite ? "write" : "read", expiresInDays });
+      const created = await calls.create({
+        name,
+        access: allowWrite ? "write" : "read",
+        expiresInDays,
+        ...(typedPassword === "" ? {} : { currentPassword: typedPassword }),
+      });
       if (!isStillCurrent()) return;
       onOpenChange(false);
       onCreated(created.token);
     } catch (failure) {
       if (!isStillCurrent() || isSessionEnded(failure)) return;
       if (calls.leaveOn(failure, () => onOpenChange(false))) return;
+      if (asksPassword !== undefined && isCurrentPasswordIncorrect(failure)) {
+        if (passwordField.current) passwordField.current.value = "";
+        setHasPassword(false);
+        setPasswordProblem(failure.message);
+        passwordField.current?.focus();
+        return;
+      }
       toast.error(calls.failureMessage(failure, API_TOKEN_CREATE_FAILED_MESSAGE));
       if (!calls.isRefusal(failure)) onUnknownOutcome();
     } finally {
@@ -134,6 +159,7 @@ function CreateSession({ open, onOpenChange, calls, onCreated, onUnknownOutcome 
   const nameId = `${id}-name`;
   const writeId = `${id}-write`;
   const expiryId = `${id}-expiry`;
+  const passwordId = `${id}-current-password`;
   return (
     <Dialog open={open} onOpenChange={changeOpen}>
       <DialogContent>
@@ -183,12 +209,36 @@ function CreateSession({ open, onOpenChange, calls, onCreated, onUnknownOutcome 
                 </p>
               )}
             </div>
+            {asksPassword !== undefined && (
+              <div className="space-y-1.5">
+                <Label htmlFor={passwordId}>{CURRENT_PASSWORD_LABEL}</Label>
+                <Input
+                  ref={passwordField}
+                  id={passwordId}
+                  name="currentPassword"
+                  type="password"
+                  autoComplete="current-password"
+                  readOnly={creating}
+                  aria-invalid={passwordProblem !== null}
+                  aria-describedby={passwordProblem === null ? undefined : `${passwordId}-problem`}
+                  onInput={(event) => {
+                    setHasPassword(event.currentTarget.value !== "");
+                    setPasswordProblem(null);
+                  }}
+                />
+                {passwordProblem !== null && (
+                  <p id={`${passwordId}-problem`} role="alert" className="text-xs text-fail">
+                    {passwordProblem}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => changeOpen(false)} disabled={creating}>
               Cancel
             </Button>
-            <Button type="submit" disabled={creating || !hasName}>
+            <Button type="submit" disabled={creating || !hasName || (asksPassword === "required" && !hasPassword)}>
               {creating ? "Creating…" : "Create token"}
             </Button>
           </DialogFooter>

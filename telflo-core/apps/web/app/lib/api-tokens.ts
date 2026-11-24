@@ -1,4 +1,4 @@
-import type { CreateApiTokenRequest, CreatedApiTokenResponse } from "@telflo/contracts";
+import type { CreatedApiTokenResponse, CreatePersonalApiTokenRequest } from "@telflo/contracts";
 
 /*
  * What the token dialogs need of whoever owns the tokens: a service account's
@@ -9,8 +9,12 @@ import type { CreateApiTokenRequest, CreatedApiTokenResponse } from "@telflo/con
  * token, its prefix and its name never reach a toast.
  */
 export interface ApiTokenCalls {
-  /** The create: its reply is the only one that carries the token. */
-  create(request: CreateApiTokenRequest): Promise<CreatedApiTokenResponse>;
+  /**
+   * The create: its reply is the only one that carries the token. A current
+   * password is sent only for the person's own (the dialog asks it only
+   * then); a service account's create never has one.
+   */
+  create(request: CreatePersonalApiTokenRequest): Promise<CreatedApiTokenResponse>;
   /** The revoke (204). */
   revoke(tokenId: string): Promise<undefined>;
   /** Starts a call: the function answers whether its answer, when it comes, still belongs on screen. */
