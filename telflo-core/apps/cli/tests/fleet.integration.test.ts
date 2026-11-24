@@ -227,7 +227,9 @@ describe("telflo fleet install (the command is a secret)", () => {
       env: [{ name: "NGINX_ENV", value: VALUE }],
     });
     expectCommandOnlyOnStdout(run, expected);
-    expect(run.stdout.startsWith("docker run")).toBe(true);
+    // The secrets are docker's environment, set before it: never its arguments.
+    expect(run.stdout.startsWith("OPAMP_TOKEN='")).toBe(true);
+    expect(run.stdout.includes(" \\\ndocker run ")).toBe(true);
     expect(run.stderr.startsWith(`# docker install for server fleet ${fleetId}, group "Default" (${groupId})\n`)).toBe(true);
     // The variable not given is named in the notes, on stderr.
     expect(run.stderr.includes("BACKEND_API_KEY")).toBe(true);
