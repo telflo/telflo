@@ -100,7 +100,8 @@ function prefixOf(token: string): string {
 
 /**
  * "Create token" on the account's page, as an admin does: the name, write
- * access when asked, the expiry's days when given. The reply is 201 and
+ * access when asked, the expiry's days when given, the admin's current
+ * password. The reply is 201 and
  * `no-store`, its token of the right shape (checked as booleans); the
  * reveal opens. Answers the token.
  */
@@ -113,6 +114,7 @@ async function createTokenOnPage(
   await dialog.getByLabel("Name").fill(name);
   if (write) await dialog.getByRole("checkbox", { name: "Allow write access" }).check();
   if (expiresInDays !== undefined) await dialog.getByLabel("Expires in (days, optional)").fill(String(expiresInDays));
+  await dialog.getByLabel("Current password").fill(PASSWORD);
   const answered = page.waitForResponse(isPostTo(TOKENS_PATH));
   await dialog.getByRole("button", { name: "Create token" }).click();
   const response = await answered;
@@ -414,6 +416,7 @@ test("a token expired in the database shows Expired and answers 401", async ({ p
     name,
     access: "read",
     expiresInDays: 1,
+    currentPassword: PASSWORD,
   });
   expectWhoAmI(await whoami(playwright, token), token, { organizationId: admin.organizationId, tokenName: name, access: "read" });
 
@@ -440,6 +443,7 @@ test("typing the name deletes the account: its token answers 401, and its config
     name: `Deleted token ${unique()}`,
     access: "write",
     expiresInDays: null,
+    currentPassword: PASSWORD,
   });
   // Published: an admin sees no other member's draft.
   const configurationName = `Made by the account ${unique()}`;

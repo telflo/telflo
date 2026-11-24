@@ -2371,20 +2371,21 @@ no user id: the person is always the session's user
 | Link Google | `POST /auth/me/identity-link-requests`, then the provider | the current password when the account has one, then the provider's sign-in | `user.identity_linked` `{provider, via: "settings"}` | "Google sign-in was linked to your Telflo account" |
 | Unlink Google | `DELETE /auth/me/identities/{provider}` | a password set, and the current password | `user.identity_unlinked` `{provider}` | "Google sign-in was removed from your Telflo account" |
 | Create a personal API token (Settings, or `telflo login`'s Approve) | `POST /auth/me/api-tokens` | the current password when the account has one | `personal_api_token.created` `{access, expiresAt}` | none |
+| Create a service account's API token (an admin) | `POST /organizations/{id}/service-accounts/{id}/api-tokens` | the admin's current password when their account has one | `api_token.created` `{serviceAccountId, access, expiresAt}` | none |
 | Sign out one session | `DELETE /auth/sessions/{sessionId}` | the session only | `user.session_revoked` | none |
 | Sign out everywhere | `DELETE /auth/sessions` | a confirm in the page; the route itself, the session only | `user.signed_out_everywhere` `{count}` | none |
 | Change a preference | `PATCH /auth/me/preferences` | the session only | none | none |
 
-A wrong current password, on any of the four routes that ask for it, is
+A wrong current password, on any of the five routes that ask for it, is
 `400 current_password_incorrect` ("The current password is incorrect."),
 never `401`, which the web client reads as the session's end, and writes
 `user.reauthentication_failed` `{purpose}` (`password_change`,
-`identity_link`, `identity_unlink` or `personal_api_token_create`), as
-sign-in audits its failures. The
+`identity_link`, `identity_unlink`, `personal_api_token_create` or
+`service_account_token_create`), as sign-in audits its failures. The
 verify is one Argon2id check outside any transaction, so no row is held for
 its duration (`apps/api/src/modules/account/reauthenticate.ts:63-82`).
 
-**One budget with sign-in, per address.** The four routes take the shared
+**One budget with sign-in, per address.** The five routes take the shared
 per-IP bucket first (`identityPerIp`, 30 requests per 5 minutes), then,
 after `authenticate`, sign-in's own per-email failure budget (10 failures
 per 15 minutes), keyed by the address the session's user row holds, never by
@@ -3030,6 +3031,21 @@ download's requester, a sales inquiry) reads it through `auditUserAgent`
 the header may hold a `tf_`, `tll_` or `tqd_` in any spelling the request
 log recognizes (`mayHoldCredential`), else the header as sent, so a CI
 runner's name holding a token isn't kept for good.
+
+**The admin's current password** is asked before a token is made, when
+their account has one (one without, OIDC only, is asked nothing), as for a
+personal token (below), after the role check (a contributor's `403` asks
+nothing) and before the organization lock: a token outlives the admin's
+session, their sign-out everywhere and a password reset, and, acting as no
+person, their removal from the organization, so a session alone mints none.
+A missing or wrong one is `400 current_password_incorrect` and
+`user.reauthentication_failed` `{purpose: "service_account_token_create"}`;
+under the organization lock the admin's hash is read again (`for share`)
+and one changed, reset or set since is refused alike. The route shares
+sign-in's per-email budget ("One budget with sign-in"). The web's create
+dialog reads the admin's sign-in methods as it opens
+(`apps/api/src/modules/account/reauthenticate.ts`'s
+`reauthenticateForTokenCreate`, shared with the personal create).
 
 **A `tf_` token is a secret like a bearer.** Never in a log line, an error
 message, a span, an audit row, a URL, a toast, an attribute, browser

@@ -191,7 +191,8 @@ describe("API token routes", () => {
       url: tokensUrl(organizationId, serviceAccountId),
       headers: csrfHeaders,
       cookies: { telflo_access: access },
-      payload: { name: `token-${randomUUID()}`, access: "read", expiresInDays: null, ...body },
+      // The admin's current password unless `body` names its own (undefined: none sent).
+      payload: { name: `token-${randomUUID()}`, access: "read", expiresInDays: null, currentPassword: PASSWORD, ...body },
     });
 
   const revokeToken = (access: string, organizationId: string, serviceAccountId: string, tokenId: string) =>
@@ -402,6 +403,46 @@ describe("API token routes", () => {
       const listed = await listTokens(admin.access, admin.group.id, account.id);
       expect(listed.body.includes(token.slice(3))).toBe(false);
       expect(listed.body.includes(stored.token_hash)).toBe(false);
+    });
+
+    it("asks the admin's current password: a missing or a wrong one is 400 current_password_incorrect, audited by purpose, and makes nothing", async () => {
+      const admin = await memberActiveInGroup("admin");
+      const account = await serviceAccountIn(admin.group.id);
+      const canary = "canary-wrong-41c9-password";
+
+      for (const currentPassword of [undefined, canary]) {
+        const response = await createToken(admin.access, admin.group.id, account.id, { currentPassword });
+        expect(response.statusCode).toBe(400);
+        expect(response.json()).toEqual({ error: { code: "current_password_incorrect", message: "The current password is incorrect." } });
+      }
+      expect(await ownerDb.selectFrom("api_tokens").select("id").execute()).toEqual([]);
+      const failures = await ownerDb.selectFrom("audit_events").selectAll().where("action", "=", "user.reauthentication_failed").execute();
+      expect(failures).toHaveLength(2);
+      for (const row of failures) {
+        expect(row).toMatchObject({
+          actor_user_id: admin.user.id,
+          organization_id: admin.group.id,
+          metadata: { purpose: "service_account_token_create" },
+        });
+      }
+      const everything = JSON.stringify(await ownerDb.selectFrom("audit_events").selectAll().execute());
+      expect(everything.includes(canary) || everything.includes(PASSWORD)).toBe(false);
+      expect(await ownerDb.selectFrom("audit_events").select("id").where("action", "=", "api_token.created").execute()).toEqual([]);
+
+      // An empty one is the contract's 400; the right one makes the token.
+      expect((await createToken(admin.access, admin.group.id, account.id, { currentPassword: "" })).statusCode).toBe(400);
+      expect((await createToken(admin.access, admin.group.id, account.id)).statusCode).toBe(201);
+    });
+
+    it("asks nothing of an admin without a password (OIDC only)", async () => {
+      const admin = await memberActiveInGroup("admin");
+      await ownerDb.updateTable("users").set({ password_hash: null }).where("id", "=", admin.user.id).execute();
+      const account = await serviceAccountIn(admin.group.id);
+
+      expect((await createToken(admin.access, admin.group.id, account.id, { currentPassword: undefined })).statusCode).toBe(201);
+      expect(
+        await ownerDb.selectFrom("audit_events").select("id").where("action", "=", "user.reauthentication_failed").execute(),
+      ).toEqual([]);
     });
 
     it("expiresInDays sets expiresAt to 24-hour days after createdAt; null never expires; 0 and 3651 are 400", async () => {

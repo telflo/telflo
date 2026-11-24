@@ -17,12 +17,8 @@ import {
   postToListener,
   type CliAuthParameters,
 } from "~/lib/cli-auth.js";
-import {
-  CURRENT_PASSWORD_LABEL,
-  currentPasswordAskOf,
-  isCurrentPasswordIncorrect,
-  usePersonalApiTokenCalls,
-} from "~/lib/personal-api-tokens.js";
+import { CURRENT_PASSWORD_LABEL, currentPasswordAskOf, isCurrentPasswordIncorrect } from "~/lib/api-tokens.js";
+import { usePersonalApiTokenCalls } from "~/lib/personal-api-tokens.js";
 import { API_TOKEN_CREATE_FAILED_MESSAGE } from "~/lib/service-accounts.js";
 
 /*

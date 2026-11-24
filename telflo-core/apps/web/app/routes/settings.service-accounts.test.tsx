@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SERVICE_ACCOUNT_NOT_FOUND_MESSAGE, type ApiToken, type ServiceAccount } from "@telflo/contracts";
 import routes from "../routes.js";
 import * as apiClient from "~/lib/api-client.js";
+import { signInMethods } from "~/test/account.js";
 import { ApiError } from "~/lib/api-client.js";
 import { useUserStore } from "~/lib/stores/user-store.js";
 import { anyStateHolds, attributesHolding } from "~/test/fleets.js";
@@ -93,6 +94,8 @@ describe("the Service Accounts pages' privacy", () => {
     useUserStore.getState().clear();
     localStorage.clear();
     sessionStorage.clear();
+    // The create dialog reads the admin's sign-in methods: none with a password here (no field).
+    vi.spyOn(apiClient, "getSignInMethods").mockResolvedValue(signInMethods({ hasPassword: false }));
     unquiet = quietQueries();
   });
   afterEach(() => {

@@ -10,8 +10,8 @@ import { Button } from "~/components/ui/button.js";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card.js";
 import { useAccountRead } from "~/lib/account.js";
 import { getPersonalApiTokens } from "~/lib/api-client.js";
+import { currentPasswordAskOf } from "~/lib/api-tokens.js";
 import {
-  currentPasswordAskOf,
   PERSONAL_API_TOKENS_DESCRIPTION,
   PERSONAL_API_TOKENS_EMPTY,
   PERSONAL_API_TOKENS_LOAD_FAILED_MESSAGE,

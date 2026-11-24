@@ -1,18 +1,18 @@
-import { PERSONAL_API_TOKENS_LIVE_MAXIMUM, type ApiTokenAccess, type SessionErrorCode } from "@telflo/contracts";
+import { PERSONAL_API_TOKENS_LIVE_MAXIMUM, type ApiTokenAccess } from "@telflo/contracts";
 import type { ActorContext } from "../../database/context.js";
-import { AppError } from "../../errors.js";
 import type { IAuditRepository } from "../identity/repositories/audit-repository.js";
 import type { IUserRepository } from "../identity/repositories/user-repository.js";
 import { canonicalIdOf } from "../organizations/service.js";
 import { isApiTokenExpired } from "../service-accounts/service.js";
 import { mintApiToken, type MintedApiToken } from "../service-accounts/tokens.js";
+import { personalApiTokenLimitReached, personalApiTokenNameTaken, personalApiTokenNotFound } from "./errors.js";
 import {
-  currentPasswordIncorrect,
-  personalApiTokenLimitReached,
-  personalApiTokenNameTaken,
-  personalApiTokenNotFound,
-} from "./errors.js";
-import { recordReauthenticationFailure, verifyCurrentPassword, type ReauthenticationAttempt } from "./reauthenticate.js";
+  accountGone,
+  passwordChangedSince,
+  reauthenticateForTokenCreate,
+  refuseChangedSince,
+  type TokenCreateReauthenticationDependencies,
+} from "./reauthenticate.js";
 import {
   PersonalApiTokenNameTakenError,
   type IPersonalApiTokenRepository,
@@ -114,55 +114,19 @@ export interface IPersonalApiTokenService {
 export interface PersonalApiTokenServiceDependencies {
   withTransaction: WithPersonalApiTokenTransaction;
   now: () => Date;
-  /** Outside any transaction: the account's password hash, for the current password's verify. */
-  users: Pick<IUserRepository, "findById">;
-  /** Outside any transaction: a refused current password's row stands whatever follows. */
-  audit: IAuditRepository;
-  /** Injectable so tests can hold or observe it; defaults to identity's Argon2id verify. */
-  verifyPassword?: ((hashValue: string, plaintext: string) => Promise<boolean>) | undefined;
+  /** Outside any transaction: the current password's verify (`reauthenticateForTokenCreate`). */
+  users: TokenCreateReauthenticationDependencies["users"];
+  audit: TokenCreateReauthenticationDependencies["audit"];
+  verifyPassword?: TokenCreateReauthenticationDependencies["verifyPassword"];
   /** A new token, its hash and its prefix; `mintApiToken` unless a test injects one. */
   mintToken?: () => MintedApiToken;
 }
 
 const DAY_MILLISECONDS = 24 * 60 * 60 * 1000;
 
-/** The session's person is gone (deleted since `authenticate` accepted it): the session is over. */
-function unauthenticated(): AppError {
-  return new AppError("unauthenticated" satisfies SessionErrorCode, "You need to sign in.", 401);
-}
 
 export function createPersonalApiTokenService(deps: PersonalApiTokenServiceDependencies): IPersonalApiTokenService {
   const { withTransaction, now, mintToken = mintApiToken } = deps;
-
-  /**
-   * The current password, when the account has one: verified outside any
-   * transaction (a missing one audited and refused as a wrong one). Answers
-   * the hash it was verified against, null for an account without one, for
-   * the recheck under the lock.
-   */
-  const reauthenticate = async (
-    actor: PersonalApiTokenActor,
-    currentPassword: string | undefined,
-  ): Promise<{ verifiedHash: string | null; attempt: ReauthenticationAttempt }> => {
-    const user = await deps.users.findById(actor.context.userId);
-    if (!user) throw unauthenticated();
-    const attempt: ReauthenticationAttempt = {
-      user: { id: user.id, email: user.email },
-      purpose: "personal_api_token_create",
-      context: actor.context,
-      origin: { ipAddress: actor.ipAddress, userAgent: actor.userAgent },
-    };
-    if (user.passwordHash === null) return { verifiedHash: null, attempt };
-    if (currentPassword === undefined) {
-      await recordReauthenticationFailure(deps.audit, attempt);
-      throw currentPasswordIncorrect();
-    }
-    await verifyCurrentPassword(
-      { audit: deps.audit, verifyPassword: deps.verifyPassword },
-      { ...attempt, user: { ...attempt.user, passwordHash: user.passwordHash }, currentPassword },
-    );
-    return { verifiedHash: user.passwordHash, attempt };
-  };
 
   const listedAt = (token: PersonalApiToken, at: Date): ListedPersonalApiToken => ({
     ...token,
@@ -199,23 +163,29 @@ export function createPersonalApiTokenService(deps: PersonalApiTokenServiceDepen
     },
 
     /**
-     * The current password first (`reauthenticate`), then under the lock on
-     * the user's row (every account transaction locks the user first): the
-     * hash read again, and one not the verified one (changed, reset or set
-     * since) refused as a wrong password; 20 live tokens already (neither
-     * revoked nor expired), the 409; a name taken by a token not yet revoked, expired included, the 409
-     * (its unique index behind it); then the mint, the row and the audit row
+     * The current password first (`reauthenticateForTokenCreate`), then
+     * under the lock on the user's row (every account transaction locks the
+     * user first): the hash read again, and one not the verified one
+     * (changed, reset or set since) refused as a wrong password; 20 live
+     * tokens already (neither revoked nor expired), the 409; a name taken by
+     * a token not yet revoked, expired included, the 409 (its unique index
+     * behind it); then the mint, the row and the audit row
      * (the access and the expiry only). `expiresAt` is the creation plus that
      * many days of 24 hours.
      */
     async create(actor, request) {
       const { userId } = actor.context;
-      const { verifiedHash, attempt } = await reauthenticate(actor, request.currentPassword);
+      const verified = await reauthenticateForTokenCreate(deps, {
+        context: actor.context,
+        origin: { ipAddress: actor.ipAddress, userAgent: actor.userAgent },
+        purpose: "personal_api_token_create",
+        currentPassword: request.currentPassword,
+      });
       const outcome = await withTransaction(actor.context, async (transaction) => {
         await transaction.users.lockForUpdate(userId);
-        const currentHash = await transaction.users.findPasswordHashForShare(userId);
-        if (currentHash === undefined) return { status: "gone" as const };
-        if (currentHash !== verifiedHash) return { status: "changed_since" as const };
+        const since = await passwordChangedSince(transaction.users, verified);
+        if (since === "gone") return { status: "gone" as const };
+        if (since === "changed") return { status: "changed" as const };
         const at = now();
         if ((await transaction.tokens.countLive(userId, at)) >= PERSONAL_API_TOKENS_LIVE_MAXIMUM) {
           throw personalApiTokenLimitReached();
@@ -245,12 +215,9 @@ export function createPersonalApiTokenService(deps: PersonalApiTokenServiceDepen
         });
         return { status: "created" as const, created: { apiToken: listedAt(created, at), token } };
       });
-      if (outcome.status === "gone") throw unauthenticated();
-      if (outcome.status === "changed_since") {
-        await recordReauthenticationFailure(deps.audit, attempt);
-        throw currentPasswordIncorrect();
-      }
-      return { ...outcome.created, isReauthenticated: verifiedHash !== null };
+      if (outcome.status === "gone") throw accountGone();
+      if (outcome.status === "changed") return refuseChangedSince(deps.audit, verified);
+      return { ...outcome.created, isReauthenticated: verified.verifiedHash !== null };
     },
 
     /**

@@ -5061,7 +5061,9 @@ api_token_shaped() { [[ "${!1}" =~ ^tf_[A-Za-z0-9_-]{43}$ ]]; }
 # checks fail.
 mint_api_token() {
   local variable=$1 url=$2 name=$3 access=$4 id_variable=${5:-}
-  platform POST "$url" "$(jq -cn --arg name "$name" --arg access "$access" '{name: $name, access: $access, expiresInDays: 1}')"
+  # A token's create asks the signed-in person's current password: the reset's (NEW_PASSWORD, remembered as a secret).
+  platform POST "$url" "$(jq -cn --arg name "$name" --arg access "$access" --arg password "$NEW_PASSWORD" \
+    '{name: $name, access: $access, expiresInDays: 1, currentPassword: $password}')"
   body=""
   minted_token_id=$(reply_json '.apiToken.id // empty')
   if [ -n "$id_variable" ]; then printf -v "$id_variable" '%s' "$minted_token_id"; fi

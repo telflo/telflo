@@ -142,7 +142,7 @@ describe("the token check and GET /api/public/v1/whoami", () => {
       url: `/api/v1/organizations/${admin.group.id}/service-accounts/${serviceAccountId}/api-tokens`,
       headers: csrfHeaders,
       cookies: { telflo_access: admin.access },
-      payload: { name: `token-${randomUUID()}`, access: "read", expiresInDays: null, ...body },
+      payload: { name: `token-${randomUUID()}`, access: "read", expiresInDays: null, currentPassword: PASSWORD, ...body },
     });
     expect(response.statusCode).toBe(201);
     const { apiToken, token } = response.json<{ apiToken: { id: string; name: string }; token: string }>();

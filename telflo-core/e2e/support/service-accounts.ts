@@ -49,15 +49,15 @@ export async function deleteServiceAccountThroughApi(page: Page, organizationId:
 }
 
 /**
- * A token made through the API on the account: its id and the token from
- * the create's reply (the only one that carries it). The token's shape is
+ * A token made through the API on the account, with the admin's current
+ * password: its id and the token from the create's reply (the only one that carries it). The token's shape is
  * checked as a boolean, so a failure prints nothing of it.
  */
 export async function createApiTokenThroughApi(
   page: Page,
   organizationId: string,
   serviceAccountId: string,
-  request: { name: string; access: ApiTokenAccess; expiresInDays: number | null },
+  request: { name: string; access: ApiTokenAccess; expiresInDays: number | null; currentPassword: string },
 ): Promise<{ tokenId: string; token: string }> {
   const response = await page.request.post(apiTokensApiPath(organizationId, serviceAccountId), { data: request, headers: CSRF });
   expect(response.status()).toBe(201);

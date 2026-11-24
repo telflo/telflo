@@ -11,7 +11,7 @@ import {
 import * as apiClient from "~/lib/api-client.js";
 import { ApiError } from "~/lib/api-client.js";
 import { API_TOKEN_CREATE_FAILED_MESSAGE } from "~/lib/service-accounts.js";
-import { held } from "~/test/account.js";
+import { held, signInMethods } from "~/test/account.js";
 import { anyStateHolds, attributesHolding } from "~/test/fleets.js";
 import {
   ACCOUNT_ID,
@@ -65,6 +65,8 @@ describe("CreateApiTokenDialog", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     unquiet = quietQueries();
+    // An admin without a password unless a test says ("the admin's current password" below).
+    vi.spyOn(apiClient, "getSignInMethods").mockResolvedValue(signInMethods({ hasPassword: false }));
   });
   afterEach(() => unquiet());
 
@@ -230,5 +232,49 @@ describe("CreateApiTokenDialog", () => {
     await waitFor(() => expect(error).toHaveBeenCalledWith("the owner's words"));
     expect(calls.leaveOn).toHaveBeenCalledTimes(1);
     expect(screen.getByRole("dialog")).toBe(dialog);
+  });
+
+  describe("the admin's current password (a service account's token)", () => {
+    const PASSWORD = "canary-admin-3b7e-password";
+
+    it("an admin with a password: read as the dialog opens; Create token waits for it, and it goes in the create's body", async () => {
+      vi.mocked(apiClient.getSignInMethods).mockResolvedValue(signInMethods({ hasPassword: true }));
+      const create = vi.spyOn(apiClient, "createApiToken").mockResolvedValue(created(buildApiToken()));
+      const { user, dialog } = await openDialog();
+      await user.type(within(dialog).getByLabelText("Name"), "ci");
+      const field = await within(dialog).findByLabelText("Current password");
+      await waitFor(() => expect(within(dialog).getByRole("button", { name: "Create token" })).toBeDisabled());
+      await user.type(field, PASSWORD);
+      await user.click(within(dialog).getByRole("button", { name: "Create token" }));
+      await waitFor(() => expect(create).toHaveBeenCalledTimes(1));
+      expect(create.mock.calls[0]).toEqual([ORGANIZATION_ID, ACCOUNT_ID, { name: "ci", access: "read", expiresInDays: null, currentPassword: PASSWORD }]);
+    });
+
+    it("a wrong one is said under the field, which is emptied; no toast, nothing read again", async () => {
+      vi.mocked(apiClient.getSignInMethods).mockResolvedValue(signInMethods({ hasPassword: true }));
+      vi.spyOn(apiClient, "createApiToken").mockRejectedValue(
+        new ApiError("current_password_incorrect", "The current password is incorrect.", { status: 400 }),
+      );
+      const error = vi.spyOn(toast, "error");
+      const { user, dialog, onUnknownOutcome } = await openDialog();
+      await user.type(within(dialog).getByLabelText("Name"), "ci");
+      const field = await within(dialog).findByLabelText("Current password");
+      await user.type(field, "wrong-one");
+      await user.click(within(dialog).getByRole("button", { name: "Create token" }));
+      expect(await within(dialog).findByRole("alert")).toHaveTextContent("The current password is incorrect.");
+      expect(field).toHaveValue("");
+      expect(error).not.toHaveBeenCalled();
+      expect(onUnknownOutcome).not.toHaveBeenCalled();
+    });
+
+    it("an admin without a password (OIDC only): no field once read, and none sent", async () => {
+      const create = vi.spyOn(apiClient, "createApiToken").mockResolvedValue(created(buildApiToken()));
+      const { user, dialog } = await openDialog();
+      await waitFor(() => expect(within(dialog).queryByLabelText("Current password")).toBeNull());
+      await user.type(within(dialog).getByLabelText("Name"), "ci");
+      await user.click(within(dialog).getByRole("button", { name: "Create token" }));
+      await waitFor(() => expect(create).toHaveBeenCalledTimes(1));
+      expect(create.mock.calls[0]?.[2]).not.toHaveProperty("currentPassword");
+    });
   });
 });

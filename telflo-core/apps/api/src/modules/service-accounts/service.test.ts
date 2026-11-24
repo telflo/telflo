@@ -77,7 +77,13 @@ function buildHarness() {
     tokenNameTaken: false,
     tokenCreateFailure: undefined as Error | undefined,
     revocable: new Set<string>(),
+    // The acting admin's password hash as the verify reads it, and as the lock reads it again
+    // (undefined: the account gone). None by default: an account without a password is asked nothing.
+    passwordHashAtVerify: null as string | null,
+    passwordHashAtLock: null as string | null | undefined,
   };
+  /** The rows the current password's refusals write outside any transaction. */
+  const outsideAudits: AuditEvent[] = [];
   const hex = { next: 0 };
 
   const transaction = {
@@ -199,6 +205,9 @@ function buildHarness() {
         auditEvents.push(event);
       }),
     },
+    users: {
+      findPasswordHashForShare: vi.fn(async () => state.passwordHashAtLock),
+    },
   } satisfies ServiceAccountTransaction;
 
   const service = createServiceAccountService({
@@ -212,6 +221,16 @@ function buildHarness() {
       minted += 1;
       return { token: MINTED_TOKEN, tokenHash: "f".repeat(64), tokenPrefix: MINTED_TOKEN.slice(0, 11) };
     },
+    users: {
+      findById: async (id: string) => {
+        const person = people.get(id);
+        return person === undefined
+          ? undefined
+          : { id, email: person.email, passwordHash: state.passwordHashAtVerify, emailVerifiedAt: NOW, acceptedTermsVersion: null, createdAt: NOW };
+      },
+    },
+    audit: { record: async (event: AuditEvent) => void outsideAudits.push(event) },
+    verifyPassword: async (hash, plaintext) => hash === "admin-hash" && plaintext === "the-right-password",
   });
 
   /** A caller acting in the organization, as `authenticate` read their role, and as the lock re-reads it. */
@@ -262,6 +281,7 @@ function buildHarness() {
     transaction,
     transactions: () => transactions,
     minted: () => minted,
+    outsideAudits,
   };
 }
 
@@ -659,5 +679,76 @@ describe("tokens", () => {
   ])("%s by a contributor is 403 before any transaction", async (_label, route) => {
     expect(await refusal(route())).toMatchObject({ code: "organization_admin_required", statusCode: 403 });
     expect(harness.transactions()).toBe(0);
+  });
+});
+
+describe("a token's create: the admin's current password", () => {
+  const token = { name: "Deploy", access: "write" as const, expiresInDays: 30 };
+  const withPassword = () => {
+    harness.state.passwordHashAtVerify = "admin-hash";
+    harness.state.passwordHashAtLock = "admin-hash";
+  };
+
+  it("an admin with a password: the right one makes the token, reauthenticated", async () => {
+    withPassword();
+    const live = harness.account();
+    const created = await harness.service.createToken(harness.actor(), harness.organization.id, live.id, {
+      ...token,
+      currentPassword: "the-right-password",
+    });
+    expect(created.isReauthenticated).toBe(true);
+    expect(harness.minted()).toBe(1);
+  });
+
+  it("a missing or a wrong one is 400 current_password_incorrect before any transaction, audited by purpose", async () => {
+    withPassword();
+    const live = harness.account();
+    for (const currentPassword of [undefined, "wrong"]) {
+      const error = await refusal(
+        harness.service.createToken(harness.actor(), harness.organization.id, live.id, { ...token, currentPassword }),
+      );
+      expect(error).toMatchObject({ code: "current_password_incorrect", statusCode: 400 });
+    }
+    expect(harness.transactions()).toBe(0);
+    expect(harness.minted()).toBe(0);
+    expect(harness.outsideAudits).toEqual([
+      expect.objectContaining({ action: "user.reauthentication_failed", metadata: { purpose: "service_account_token_create" } }),
+      expect.objectContaining({ action: "user.reauthentication_failed", metadata: { purpose: "service_account_token_create" } }),
+    ]);
+  });
+
+  it("a password changed, reset or set between the verify and the lock: refused, nothing made, audited", async () => {
+    for (const [atVerify, atLock] of [
+      ["admin-hash", "hash-after-reset"],
+      [null, "hash-just-set"],
+    ] as const) {
+      harness = buildHarness();
+      harness.state.passwordHashAtVerify = atVerify;
+      harness.state.passwordHashAtLock = atLock;
+      const live = harness.account();
+      const error = await refusal(
+        harness.service.createToken(harness.actor(), harness.organization.id, live.id, { ...token, currentPassword: "the-right-password" }),
+      );
+      expect(error).toMatchObject({ code: "current_password_incorrect", statusCode: 400 });
+      expect(harness.minted()).toBe(0);
+      expect(harness.transaction.apiTokens.create).not.toHaveBeenCalled();
+      expect(harness.outsideAudits.map((each) => each.action)).toEqual(["user.reauthentication_failed"]);
+    }
+  });
+
+  it("an admin without a password (OIDC only) is asked nothing, and isn't reauthenticated", async () => {
+    const live = harness.account();
+    const created = await harness.service.createToken(harness.actor(), harness.organization.id, live.id, token);
+    expect(created.isReauthenticated).toBe(false);
+    expect(harness.outsideAudits).toEqual([]);
+  });
+
+  it("a contributor's create is 403 before the password is asked", async () => {
+    withPassword();
+    const error = await refusal(
+      harness.service.createToken(harness.actor("contributor"), harness.organization.id, randomUUID(), { ...token, currentPassword: "wrong" }),
+    );
+    expect(error).toMatchObject({ code: "organization_admin_required", statusCode: 403 });
+    expect(harness.outsideAudits).toEqual([]);
   });
 });

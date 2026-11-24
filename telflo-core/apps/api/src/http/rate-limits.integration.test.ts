@@ -625,6 +625,33 @@ describe("rate limits", () => {
       expectRateLimited(await signIn(server, email));
     });
 
+    it("a service account token's wrong current passwords count toward the admin's sign-in budget too", async () => {
+      const server = await serverWith();
+      const { userId, email, access } = await signedInAccount(server);
+      // Signed in to their personal organization, whose owner is its admin.
+      const organizationId = (
+        await ownerDb.selectFrom("organization_members").select("organization_id").where("user_id", "=", userId).executeTakeFirstOrThrow()
+      ).organization_id;
+      const account = await addServiceAccount(ownerDb, { organizationId });
+      const createServiceToken = (currentPassword: string) =>
+        server.inject({
+          method: "POST",
+          url: `/api/v1/organizations/${organizationId}/service-accounts/${account.user.id}/api-tokens`,
+          remoteAddress: nextAddress(),
+          headers: headersFor({}),
+          cookies: { telflo_access: access },
+          payload: { name: `t-${Math.random().toString(36).slice(2)}`, access: "read", expiresInDays: 1, currentPassword },
+        });
+
+      for (let attempt = 0; attempt < MAX; attempt += 1) {
+        const response = await createServiceToken(WRONG_PASSWORD);
+        expect(response.statusCode).toBe(400);
+        expect(response.json()).toMatchObject({ error: { code: "current_password_incorrect" } });
+      }
+      expectRateLimited(await createServiceToken(PASSWORD));
+      expectRateLimited(await signIn(server, email));
+    });
+
     it("a personal token's create by an account without a password counts nothing", async () => {
       const server = await serverWith();
       const { userId, email, access } = await signedInAccount(server);

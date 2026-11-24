@@ -53,6 +53,7 @@ test("the API reference: Authorize with a real token, try GET /whoami, and the t
     name: `Reference token ${randomUUID().slice(0, 8)}`,
     access: "read",
     expiresInDays: 1,
+    currentPassword: PASSWORD,
   });
   const webOrigin = new URL(E2E_WEB_URL).origin;
   const holds = (text: string | null | undefined) => typeof text === "string" && (text.includes(token) || text.includes(token.slice(3)));

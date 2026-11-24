@@ -155,7 +155,7 @@ export function buildServer(deps: ServerDependencies): FastifyInstance {
   // After the session routes, which declare the request's authentication.
   registerOrganizationRoutes(server, moduleDeps, rateLimiters);
   // The organization's service accounts, for its admins.
-  registerServiceAccountRoutes(server, moduleDeps);
+  registerServiceAccountRoutes(server, moduleDeps, rateLimiters);
   // The public surface, /api/public/v1/: a service account's tf_ token, no session, no terms.
   registerPublicApiRoutes(server, moduleDeps, rateLimiters);
   registerConfigurationRoutes(server, moduleDeps);

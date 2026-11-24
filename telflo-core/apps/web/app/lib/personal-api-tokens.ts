@@ -31,28 +31,6 @@ const REFUSAL_CODES: ReadonlySet<string> = new Set<string>([
   "rate_limited",
 ]);
 
-/** The current password's field, on the create dialog and the CLI's approval page. */
-export const CURRENT_PASSWORD_LABEL = "Current password";
-
-/**
- * Whether a create asks the current password: "required" when the account
- * has one, "optional" when that isn't known (the sign-in methods unread: the
- * field shown, never blocking an account without one, the API deciding),
- * and `undefined` for an account without one (OIDC only), which is asked
- * nothing.
- */
-export type CurrentPasswordAsk = "required" | "optional" | undefined;
-
-export function currentPasswordAskOf(hasPassword: boolean | undefined): CurrentPasswordAsk {
-  if (hasPassword === undefined) return "optional";
-  return hasPassword ? "required" : undefined;
-}
-
-/** A create refused for its current password: shown under the field, which is emptied; nothing was made. */
-export function isCurrentPasswordIncorrect(error: unknown): error is ApiError {
-  return error instanceof ApiError && error.code === "current_password_incorrect";
-}
-
 /** Whether a failure is the API refusing with one of those codes. */
 export function isPersonalApiTokenRefusal(error: unknown): error is ApiError {
   return error instanceof ApiError && REFUSAL_CODES.has(error.code);

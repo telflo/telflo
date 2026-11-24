@@ -1,7 +1,7 @@
 import {
   ApiTokensResponseSchema,
   ChangePasswordRequestSchema,
-  CreatePersonalApiTokenRequestSchema,
+  CreateApiTokenRequestSchema,
   CreatedApiTokenResponseSchema,
   ErrorResponseSchema,
   UpdateUserPreferencesRequestSchema,
@@ -245,7 +245,7 @@ export function registerAccountRoutes(
       onRequest: rateLimiters.identityPerIp,
       preHandler: [authenticate, rateLimiters.signInPerEmail.reauthenticationPreHandler],
       schema: {
-        body: CreatePersonalApiTokenRequestSchema,
+        body: CreateApiTokenRequestSchema,
         response: { 201: CreatedApiTokenResponseSchema, ...errorResponses, 409: ErrorResponseSchema, 429: ErrorResponseSchema },
       },
     },

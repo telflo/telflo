@@ -76,7 +76,12 @@ export function listedPrefix(prefix: string): string {
  * token codes, a request the API refused (`invalid_request`) and a limit's
  * 429. Their messages are fixed words.
  */
-const REFUSAL_CODES: ReadonlySet<string> = new Set<string>([...SERVICE_ACCOUNT_ERROR_CODES, "invalid_request", "rate_limited"]);
+const REFUSAL_CODES: ReadonlySet<string> = new Set<string>([
+  ...SERVICE_ACCOUNT_ERROR_CODES,
+  "current_password_incorrect",
+  "invalid_request",
+  "rate_limited",
+]);
 
 /** Whether a failure is the API refusing with one of those codes. */
 export function isServiceAccountRefusal(error: unknown): error is ApiError {

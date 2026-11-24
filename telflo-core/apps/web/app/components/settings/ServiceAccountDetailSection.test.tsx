@@ -12,7 +12,7 @@ import {
   formatServiceAccountDate,
 } from "~/lib/service-accounts.js";
 import { useUserStore } from "~/lib/stores/user-store.js";
-import { held } from "~/test/account.js";
+import { held, signInMethods } from "~/test/account.js";
 import { anyStateHolds, attributesHolding } from "~/test/fleets.js";
 import {
   ACCOUNT_ID,
@@ -77,6 +77,8 @@ describe("ServiceAccountDetailSection", () => {
     vi.restoreAllMocks();
     useUserStore.getState().clear();
     unquiet = quietQueries();
+    // The create dialog reads the admin's sign-in methods: none with a password here (no field).
+    vi.spyOn(apiClient, "getSignInMethods").mockResolvedValue(signInMethods({ hasPassword: false }));
   });
   afterEach(() => unquiet());
 

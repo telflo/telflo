@@ -73,11 +73,13 @@ release's images, Helm chart and Compose install are on its
   values' bare sha256, so anyone who could read pods but not Secrets could
   test guesses at a weak value offline. The pods still roll exactly when a
   value changes.
-- Creating a personal API token asks for the current password, when the
-  account has one: in Settings' Create API token dialog, and on the page
-  `telflo login` opens, before Approve. Before, a signed-in session alone
-  could make a write token that never expires, and the token outlived the
-  session's sign-out and a password reset. A wrong password is refused and
+- Creating an API token asks for the current password, when the account
+  has one: a personal token in Settings' Create API token dialog and on
+  the page `telflo login` opens, before Approve; a service account's token
+  in its Create API token dialog, the admin's password. Before, a
+  signed-in session alone could make a write token that never expires, and
+  the token outlived the session's sign-out and a password reset (a service
+  account's, even the admin's removal). A wrong password is refused and
   audited, counts toward the sign-in's failure limit, and makes nothing.
   An account that signs in only with Google is asked nothing.
 

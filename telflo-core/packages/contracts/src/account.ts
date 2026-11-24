@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { PASSWORD_MINIMUM_LENGTH } from "./identity.js";
 import { OidcProviderSchema } from "./sessions.js";
-import { PASSWORD_MAXIMUM_LENGTH } from "./shared.js";
+import { CurrentPasswordSchema, PASSWORD_MAXIMUM_LENGTH } from "./shared.js";
 
 /**
  * The account's own security routes: changing the password, the sign-in
@@ -27,11 +27,6 @@ export const ACCOUNT_ERROR_CODES = [
 
 export type AccountErrorCode = (typeof ACCOUNT_ERROR_CODES)[number];
 
-/**
- * A current password as typed: anything not empty, as sign-in takes it, up
- * to the Argon2id bound. Deliberately not trimmed (`RegisterRequestSchema`).
- */
-export const CurrentPasswordSchema = z.string().min(1).max(PASSWORD_MAXIMUM_LENGTH);
 
 /** `PUT /api/v1/auth/me/password`. */
 export const ChangePasswordRequestSchema = z

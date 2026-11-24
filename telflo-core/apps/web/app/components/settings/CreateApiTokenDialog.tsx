@@ -11,9 +11,15 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "~/components/ui/input.js";
 import { Label } from "~/components/ui/label.js";
 import { isSessionEnded } from "~/lib/api-client.js";
-import type { ApiTokenCalls } from "~/lib/api-tokens.js";
+import {
+  CURRENT_PASSWORD_LABEL,
+  currentPasswordAskOf,
+  isCurrentPasswordIncorrect,
+  useAccountHasPassword,
+  type ApiTokenCalls,
+  type CurrentPasswordAsk,
+} from "~/lib/api-tokens.js";
 import { useOpeningKey } from "~/lib/hooks/use-opening-key.js";
-import { CURRENT_PASSWORD_LABEL, isCurrentPasswordIncorrect, type CurrentPasswordAsk } from "~/lib/personal-api-tokens.js";
 import { API_TOKEN_CREATE_FAILED_MESSAGE, useServiceAccountTokenCalls } from "~/lib/service-accounts.js";
 
 /*
@@ -39,7 +45,9 @@ import { API_TOKEN_CREATE_FAILED_MESSAGE, useServiceAccountTokenCalls } from "~/
  * - Whose token: a service account's (its organization and id), or anyone's
  *   given as `calls` (the Account page's own tokens): the create, whether
  *   its answer still belongs on screen, and the failure words.
- * - "Current password" (the person's own tokens only, `currentPassword`):
+ * - "Current password" (`currentPassword`: the person's own tokens' card
+ *   says whether the account has one; a service account's dialog reads the
+ *   admin's sign-in methods as it opens):
  *   "required" enables "Create token" only once it is typed; "optional"
  *   (whether the account has one isn't known) shows it without blocking;
  *   absent (an account without one), no field. Uncontrolled, sent only when
@@ -87,7 +95,9 @@ function ServiceAccountCreateApiTokenDialog({
   ...rest
 }: CreateApiTokenDialogBaseProps & { organizationId: string; serviceAccountId: string }) {
   const calls = useServiceAccountTokenCalls(organizationId, serviceAccountId);
-  return <CreateApiTokenSessions {...rest} calls={calls} />;
+  // The admin's current password: a service account's token outlives their session too.
+  const hasPassword = useAccountHasPassword(rest.open);
+  return <CreateApiTokenSessions {...rest} calls={calls} currentPassword={currentPasswordAskOf(hasPassword)} />;
 }
 
 function CreateApiTokenSessions(props: CreateSessionProps) {
