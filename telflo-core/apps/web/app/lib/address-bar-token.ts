@@ -1,7 +1,8 @@
 /**
  * An emailed link's single-use token, taken out of the address bar: the
  * password reset's, in its fragment (`/reset-password#token=…`), the email
- * confirmation's, in its query (`/verify-email?token=…`), and the
+ * confirmation's, in its fragment (`/verify-email#token=…`; a link sent
+ * before carries it in its query, `/verify-email?token=…`), and the
  * invitation's, in its fragment (`/accept-invitation#token=…`), whose page
  * did this first and now uses this too.
  *

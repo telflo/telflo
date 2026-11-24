@@ -873,14 +873,14 @@ register_verified() {
   [ -n "$message_id" ] || fail "no email to $label arrived in Mailpit within 30s"
 
   text=$(curl -s "$MAILPIT_URL/api/v1/message/$message_id" | jq -r '.Text')
-  link=$(grep -oE 'https?://[^[:space:]]+/verify-email\?token=[A-Za-z0-9_-]+' <<<"$text" | head -n1)
-  [ -n "$link" ] || fail "the email contains no verification link"
-  [[ "$link" == "$GATEWAY_URL/verify-email?token="* ]] ||
-    fail "the link points at ${link%%\?*}, not the gateway ($GATEWAY_URL)"
+  link=$(grep -oE 'https?://[^[:space:]]+/verify-email#token=[A-Za-z0-9_-]+' <<<"$text" | head -n1)
+  [ -n "$link" ] || fail "the email contains no verification link, its token in the fragment"
+  [[ "$link" == "$GATEWAY_URL/verify-email#token="* ]] ||
+    fail "the link points at ${link%%#*}, not the gateway ($GATEWAY_URL)"
 
-  step "the emailed link's page loads through the gateway"
-  status=$(curl -s -o /dev/null -w '%{http_code}' "$link")
-  [ "$status" = "200" ] || fail "GET ${link%%\?*} returned HTTP $status"
+  step "the emailed link's page loads through the gateway (curl sends no fragment)"
+  status=$(curl -s -o /dev/null -w '%{http_code}' "${link%%#*}")
+  [ "$status" = "200" ] || fail "GET ${link%%#*} returned HTTP $status"
 
   step "the token from the email verifies the account"
   token="${link##*token=}"

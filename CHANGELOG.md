@@ -27,6 +27,18 @@ release's images, Helm chart and Compose install are on its
   cookie), decided by the route the request matched. Before, a spelling of
   the `/api/v1/` prefix the router decodes (`/%61pi/v1/…`) skipped the
   check and still reached the cookie-authenticated route.
+- The gateway reads a request line in linear time when it decides whether
+  to redact the line's URL as the public API's. The pattern was
+  unanchored, with two greedy runs, and backtracked in the cube of the
+  line's length: one request of about 6,600 characters, with no
+  credentials, held an nginx worker for 20 seconds. The same fix is in the
+  Helm chart's gateway, the Compose install's and the development stack's.
+- An email confirmation link carries its token in the fragment
+  (`/verify-email#token=…`), as the password reset and the invitation
+  links do, so it never reaches a server, its logs or a `Referer`. Before,
+  it was in the query, and the gateway logged it in full. A link sent
+  before still works, and the gateway now logs `/verify-email` without its
+  query and redacts a `Referer` naming it.
 
 ## 0.2.2 - 2026-11-22
 

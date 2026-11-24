@@ -1097,6 +1097,38 @@ else
   fail "a public line isn't in the main format: $(shown_public "$first")"
 fi
 
+# The public map reads a request line in linear time. The unanchored
+# pattern backtracked in the cube of a line's length on a line of /api/public
+# repeated with no v1: 6,600 characters held a worker for 20 s (at 8 KiB
+# PCRE's match limit cut it short). A long public path (many /api, then
+# /public, many /x, then /v1) is answered, and logged redacted, in time too.
+# The map runs in the log phase, after the reply is sent, so each line is
+# followed by a short request on the same connection, which the worker
+# answers only once the first is logged: the two together, under a second.
+# Prints the seconds GET $1 and then GET / took on one connection.
+two_on_one_connection() {
+  curl -s --path-as-is -o /dev/null -o /dev/null -w '%{time_total}\n' \
+    "http://127.0.0.1:$PORT$1" "http://127.0.0.1:$PORT/" | awk '{ total += $1 } END { printf "%.3f", total }'
+}
+under_a_second() { awk -v s="$1" 'BEGIN { exit !(s < 1) }'; }
+for repeats in 200 400 600 700; do
+  target=$(printf '/api/public%.0s' $(seq 1 "$repeats"))
+  seconds=$(two_on_one_connection "$target")
+  if under_a_second "$seconds"; then
+    echo "ok: a ${#target}-character line of /api/public, no v1, answered and logged in ${seconds}s"
+  else
+    fail "a ${#target}-character line of /api/public, no v1, took ${seconds}s (the public map backtracks)"
+  fi
+done
+long_public="$(printf '/api%.0s' $(seq 1 600))/public$(printf '/x%.0s' $(seq 1 600))/v1/$PIPELINE_MARKER"
+seconds=$(two_on_one_connection "$long_public")
+sleep 0.5
+if under_a_second "$seconds" && ! docker logs "$CONTAINER" 2>&1 | grep -qF "$PIPELINE_MARKER"; then
+  echo "ok: a ${#long_public}-character public line answered and logged in ${seconds}s, redacted"
+else
+  fail "a ${#long_public}-character public line took ${seconds}s or was logged with its pipeline name (the public location backtracks)"
+fi
+
 # ---------------------------------------------------------------------------
 # 6. The public surface, the upstreams down: nginx's error log quotes a
 # request line when its upstream fails, so every public location logs crit
@@ -1282,6 +1314,58 @@ check_failure_logged() {
     fail "$1: its upstream's failure isn't in the error log, so the check proves nothing"
   fi
 }
+
+# ---------------------------------------------------------------------------
+# 8a. The email confirmation, the upstreams up, on a fresh container: a link
+# sent before the token moved to the fragment carried it in the query
+# (/verify-email?token=…). No access or error log line holds it: the line is
+# the method, the path as nginx routes it, the protocol, and a Referer naming
+# the page (its asset loads would repeat the query) is "[redacted]".
+VERIFY_MARKER="verifytokenmarker$$"
+VERIFY_PATHS=("/verify-email" "/verify-email/" "//verify-email" "/Verify-Email" "/x/../verify-email")
+start_gateway up
+verify_sent=0
+for path in "${VERIFY_PATHS[@]}"; do
+  send "$path?token=$VERIFY_MARKER&utm_source=mail"
+  verify_sent=$((verify_sent + 1))
+  [ "$status $body" = "200 web stand-in" ] || fail "verify-email case $verify_sent answered '$status', not the web app's"
+done
+send "/assets/app.js" "http://localhost/verify-email?token=$VERIFY_MARKER"
+send "/verify-email#token=$VERIFY_MARKER"
+read_logs $((verify_sent + 2))
+if printf '%s\n%s\n' "$access" "$errors" | grep -qF "$VERIFY_MARKER"; then
+  fail "email confirmation: $(printf '%s\n%s\n' "$access" "$errors" | grep -cF "$VERIFY_MARKER") access or error log line(s) hold the token (not printed)"
+else
+  echo "ok: email confirmation: no access or error log line holds the token, in a query or a Referer"
+fi
+logged=$(printf '%s\n' "$access" | grep -ciE '"GET /verify-email/? HTTP/1\.1" 200 ')
+if [ "$logged" -ge "$verify_sent" ]; then
+  echo "ok: email confirmation: each of the $verify_sent requests is logged GET <its path> HTTP/1.1, without its query"
+else
+  fail "email confirmation: $logged of $verify_sent requests logged GET <its path> HTTP/1.1"
+fi
+
+# 8b. The same, the upstreams down: nginx's error log would quote the request
+# line, query and all, so the location logs crit only.
+start_gateway down
+verify_down=0
+for path in "${VERIFY_PATHS[@]}"; do
+  send "$path?token=$VERIFY_MARKER"
+  verify_down=$((verify_down + 1))
+  [ "$status" = 502 ] || fail "verify-email case $verify_down answered $status with the web app down, not 502"
+done
+send "/login?x=1"
+read_logs $((verify_down + 1))
+if printf '%s\n%s\n' "$access" "$errors" | grep -qF "$VERIFY_MARKER"; then
+  fail "email confirmation, upstreams down: $(printf '%s\n%s\n' "$access" "$errors" | grep -cF "$VERIFY_MARKER") access or error log line(s) hold the token (not printed)"
+else
+  echo "ok: email confirmation, upstreams down: no access or error log line holds the token"
+fi
+if printf '%s\n' "$errors" | grep -F 'connect() failed' | grep -qF 'request: "GET /login?x=1 HTTP/1.1"'; then
+  echo "ok: email confirmation: an ordinary web request's upstream failure is still in the error log"
+else
+  fail "email confirmation: an ordinary web request's upstream failure isn't in the error log, so the check proves nothing"
+fi
 
 # ---------------------------------------------------------------------------
 # 9. An organization's fleets, its configurations list and the open flow

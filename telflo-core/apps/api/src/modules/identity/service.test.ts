@@ -317,7 +317,7 @@ describe("registerUser", () => {
     await service.registerUser(registration);
     expect(harness.mailer.sent).toHaveLength(1);
     expect(harness.mailer.sent[0]?.to).toBe("person@example.com");
-    expect(harness.mailer.sent[0]?.text).toContain("https://app.telflo.local/verify-email?token=");
+    expect(harness.mailer.sent[0]?.text).toContain("https://app.telflo.local/verify-email#token=");
   });
 
   it("stores the token hashed, never in plaintext", async () => {
@@ -795,8 +795,8 @@ describe("resendVerification", () => {
     expect(harness.mailer.sent).toHaveLength(1);
     const message = harness.mailer.sent[0]!;
     expect(message).toMatchObject({ to: user.email, subject: "Confirm your Telflo email address" });
-    const token = message.text.match(/\/verify-email\?token=([A-Za-z0-9_-]+)/)![1]!;
-    expect(message.text).toContain(`https://app.telflo.local/verify-email?token=${token}`);
+    const token = message.text.match(/\/verify-email#token=([A-Za-z0-9_-]+)/)![1]!;
+    expect(message.text).toContain(`https://app.telflo.local/verify-email#token=${token}`);
     expect(harness.verificationTokens.create).toHaveBeenCalledOnce();
     expect(harness.verificationTokens.create).toHaveBeenCalledWith({
       userId: user.id,

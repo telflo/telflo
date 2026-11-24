@@ -9,7 +9,7 @@ import {
 } from "./emails.js";
 
 describe("buildVerificationEmail", () => {
-  const url = "https://app.telflo.local/verify-email?token=abc123";
+  const url = "https://app.telflo.local/verify-email#token=abc123";
   const ttlHours = 24;
 
   it("puts the verification url in both the text and html bodies", () => {
@@ -44,7 +44,7 @@ describe("buildVerificationEmail", () => {
   it("escapes html-significant characters in the url attribute", () => {
     // A url is placed inside an href; unescaped quotes would break out of it.
     const email = buildVerificationEmail({
-      verificationUrl: 'https://app.telflo.local/verify-email?token=a"onmouseover="alert(1)',
+      verificationUrl: 'https://app.telflo.local/verify-email#token=a"onmouseover="alert(1)',
       ttlHours,
     });
     expect(email.html).not.toContain('="alert(1)');

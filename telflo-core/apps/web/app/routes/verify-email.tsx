@@ -17,17 +17,21 @@ export function meta(_args: Route.MetaArgs) {
 }
 
 /*
- * The link's token is in its query, `?token=…`. The page takes it out of the
- * address bar when it mounts, before analytics can record the URL, and keeps
- * it for a reload, which confirms again as the link did. Until then the
- * panel waits, as it does on the server.
+ * The link's token is in its fragment, `#token=…`, as the reset's and the
+ * invitation's: a fragment never reaches a server, its logs or a Referer. A
+ * link sent before carries it in its query, `?token=…`, and still works (a
+ * link lasts 24 hours). The page takes it out of the address bar when it
+ * mounts, before analytics can record the URL, and keeps it for a reload,
+ * which confirms again as the link did. Until then the panel waits, as it
+ * does on the server.
  */
 export default function VerifyEmailPage() {
   /** `undefined` until the address bar has been read; then the token, or null. */
   const [token, setToken] = useState<string | null | undefined>(undefined);
 
   useEffect(() => {
-    setToken(takeAddressBarToken("query", VERIFY_TOKEN_STORAGE_KEY));
+    const place = new URLSearchParams(window.location.hash.slice(1)).has("token") ? "fragment" : "query";
+    setToken(takeAddressBarToken(place, VERIFY_TOKEN_STORAGE_KEY));
   }, []);
 
   return (
