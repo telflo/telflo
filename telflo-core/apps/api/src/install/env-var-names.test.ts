@@ -57,4 +57,38 @@ describe("requiredEnvVarNames", () => {
   it("keeps a lower-case or mixed-case name as written", () => {
     expect(requiredEnvVarNames("a: ${env:my_key}\nb: ${env:My_Key}")).toEqual(["my_key", "My_Key"]);
   });
+
+  it("reads a text the collector's $$ escapes and defaults mix as the single pattern did (random texts)", () => {
+    // The single pattern this replaced: the same answers, on texts built from the pieces that matter.
+    const single = /(\$+)\{env:([A-Za-z_][A-Za-z0-9_]*)(:-[^}]*)?\}/g;
+    const reference = (yaml: string): string[] => {
+      const names: string[] = [];
+      for (const [, dollars, name, fallback] of yaml.matchAll(single) as Iterable<[string, string, string, string | undefined]>) {
+        if (dollars.length % 2 === 1 && fallback === undefined && !names.includes(name) && name !== "OPAMP_TOKEN") names.push(name);
+      }
+      return names;
+    };
+    const pieces = ["$", "$$", "{", "}", "env:", "A", "B", "OPAMP_TOKEN", ":-", ":", "-", "x", " ", "\n"];
+    let seed = 1;
+    const next = (bound: number): number => {
+      seed = (seed * 48271) % 2147483647;
+      return seed % bound;
+    };
+    for (let i = 0; i < 5000; i += 1) {
+      let yaml = "";
+      for (let j = next(30); j > 0; j -= 1) yaml += pieces[next(pieces.length)];
+      expect(requiredEnvVarNames(yaml), yaml).toEqual(reference(yaml));
+    }
+  });
+
+  it("reads 256 KiB of a dollar run, or of defaults never closed, in linear time", () => {
+    const limit = 262_144;
+    for (const yaml of [`receivers: {}\n# ${"$".repeat(limit)}`, `# ${"${env:A:-".repeat(limit / 9)}`, `# ${"${env:".repeat(limit / 6)}`]) {
+      const started = performance.now();
+      expect(requiredEnvVarNames(yaml)).toEqual([]);
+      // The single pattern took seconds to minutes on each (the square of the length).
+      expect(performance.now() - started).toBeLessThan(250);
+    }
+  });
 });
+

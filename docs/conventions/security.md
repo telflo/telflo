@@ -16,7 +16,13 @@ refreshes has passed.
 **Transport:** both tokens are `HttpOnly; Secure; SameSite` cookies. No
 token is reachable from JavaScript, which is the largest available XSS
 mitigation, and SSR authentication becomes trivial. CSRF is handled by
-`SameSite=Lax` plus a required custom header.
+`SameSite=Lax` plus a required custom header (`X-Telflo-CSRF: 1`) on every
+state-changing request but the public surface's (`http/csrf.ts`). Which
+surface a request is on is read from the route the router matched, never
+from the raw URL: the router percent-decodes a path before matching it, so
+`/%61pi/v1/…` reaches the same cookie route as `/api/v1/…`. A request no
+route matched is exempt only when `http/public-path.ts` puts it under
+`/api/public/v1`; any other is refused `403`.
 
 **Organization switching** is an explicit token exchange:
 
@@ -2900,8 +2906,8 @@ The public surface, `/api/public/v1/`, is the API's own. Its plugin's
 check before any body is read or validated, never `authenticate` and never
 `requireCurrentTerms`: a service account never accepts the terms, so a terms
 bump locks none out, and a person's own token doesn't check them either (a
-CI job never stops on a terms change). CSRF doesn't apply (the guard covers
-`/api/v1/` only, and a browser never attaches a bearer on its own), and CORS
+CI job never stops on a terms change). CSRF doesn't apply (the guard exempts
+the public surface's routes, and a browser never attaches a bearer on its own), and CORS
 allows no `authorization` header, so a cross-origin page can't call it. In
 order:
 1. the client address's failure budget: blocked → `429 rate_limited` with

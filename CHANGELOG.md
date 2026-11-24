@@ -16,6 +16,17 @@ release's images, Helm chart and Compose install are on its
   that way got past the neutralization: the collector read the file or
   made the request, and quoted the result in its errors. Such a text is
   now answered `refused`, and no collector runs.
+- An install's needed environment variables are read in linear time.
+  The scan of a published version's YAML took time in the square of its
+  length on a long run of `$`, or of `${env:A:-` with no closing `}`: a
+  member's 256 KiB version held the API's event loop, for every
+  organization, for up to minutes, each time its install dialog or a
+  quick-deploy download was opened.
+- The CSRF header is required on every state-changing request but the
+  public API's (`/api/public/v1`, which takes a bearer token and no
+  cookie), decided by the route the request matched. Before, a spelling of
+  the `/api/v1/` prefix the router decodes (`/%61pi/v1/…`) skipped the
+  check and still reached the cookie-authenticated route.
 
 ## 0.2.2 - 2026-11-22
 
