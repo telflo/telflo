@@ -569,6 +569,22 @@ for role in node cluster gateway; do
 done
 run_case "checksum/collector-env changes with a value" env_checksum_changes
 run_case "checksum/collector-env: two renders of one value agree" env_checksum_same
+# keyed: not the values' own hash (which a pod reader could test guesses
+# against), and another token gives another hash for the same values
+env_checksum_keyed() {
+  local got bare
+  next_file; got="$(env_checksum_of node --set-string collectorEnv.LEVEL=debug)" || return 1
+  bare="$(printf '%s' '{"LEVEL":"debug"}' | shasum -a 256 | cut -c1-64)"
+  [ -n "$bare" ] && [ "$got" != "$bare" ]
+}
+run_case "checksum/collector-env isn't the bare sha256 of the values" env_checksum_keyed
+env_checksum_token() {
+  local a b
+  next_file; a="$(env_checksum_of node --set-string collectorEnv.LEVEL=debug)" || return 1
+  next_file; b="$(env_checksum_of node --set-string collectorEnv.LEVEL=debug --set-string token=another-token)" || return 1
+  [ "$a" != "$b" ]
+}
+run_case "checksum/collector-env changes with the token, the values the same" env_checksum_token
 
 # ---------------------------------------------------------------------------
 echo "# a pod's identity, mounts and RBAC rules (the current behavior is pinned too: a change is deliberate)"

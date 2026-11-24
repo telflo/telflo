@@ -312,8 +312,9 @@ parse by Helm's own `fromYaml`, in a throwaway chart the test writes into
 its temporary directory (no PyYAML, no `kubectl`); `checksum/token` on
 every workload, equal to the sha256 of the rendered token Secret,
 different for two tokens and equal across endpoint, image, `collectorEnv`,
-namespace and release changes, and `checksum/collector-env`; each pod's
-identity variables, its mounts paired with its volumes and claims, and each
+namespace and release changes, and `checksum/collector-env` (keyed by the
+token: not the values' bare sha256, and another token another hash); each
+pod's identity variables, its mounts paired with its volumes and claims, and each
 ClusterRole's rules exactly (`HOST_IP` = `status.podIP` and the volume
 slug pinned, so changing them is deliberate); the image's
 `repository:tag`; `helm lint --strict` for each role with values.

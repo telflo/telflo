@@ -68,6 +68,11 @@ release's images, Helm chart and Compose install are on its
   1.33 (or without fine-grained authorization) asks for `nodes/proxy` for
   those two instead: on such a cluster they answer 403 until the release
   sets `kubeletProxy: true`, which grants it again.
+- The same chart's `checksum/collector-env` pod annotation hashes the
+  `collectorEnv` values together with the fleet's token. It was the
+  values' bare sha256, so anyone who could read pods but not Secrets could
+  test guesses at a weak value offline. The pods still roll exactly when a
+  value changes.
 
 ## 0.2.2 - 2026-11-22
 

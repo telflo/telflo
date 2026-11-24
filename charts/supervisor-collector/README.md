@@ -46,7 +46,7 @@ overwritten), and the platform's default chart version moves with it.
 | `serviceAccount.create`, `serviceAccount.name` | Create the ServiceAccount (default `true`); its name, default the fullname. |
 | `nodeLogHostPath` | The node role's log directory, mounted read-only at `/var/log/pods`. Default `/var/log/pods`. |
 | `kubeletProxy` | The node role's ClusterRole adds `get` on `nodes/proxy` when `true`; default `false`, a boolean (guarded). `kubeletstats` reads `/stats/summary` (`nodes/stats`) and, for `extra_metadata_labels` and the request and limit utilization metrics, `/pods`, which a kubelet with fine-grained authorization (Kubernetes 1.33 and later) allows with `nodes/pods`. An older kubelet asks for `nodes/proxy` instead, and only there does this help. **`nodes/proxy` is as strong as exec**: it reaches every kubelet path, exec into any pod on the node included, and any member who can deploy to the Agent can have its collector send its token out. Chart 0.1.0 always granted it. |
-| `collectorEnv` | Variables the deployed configuration reads with `${env:NAME}`, as `NAME: value`. Kept in the Secret `<fullname>-collector-env`, given to the collector by `envFrom` (explicit variables, such as `OPAMP_*`, win); a `checksum/collector-env` annotation rolls the pods when a value changes. Every name is quoted, so any variable name arrives as written, a YAML word such as `ON`, `yes`, `null` or `~` included. |
+| `collectorEnv` | Variables the deployed configuration reads with `${env:NAME}`, as `NAME: value`. Kept in the Secret `<fullname>-collector-env`, given to the collector by `envFrom` (explicit variables, such as `OPAMP_*`, win); a `checksum/collector-env` annotation rolls the pods when a value changes. It hashes the values together with `token`, so whoever can read pods but not Secrets can't test guesses at a value against it (chart 0.1.0 hashed the values alone). Every name is quoted, so any variable name arrives as written, a YAML word such as `ON`, `yes`, `null` or `~` included. |
 | `volumes` | Extra hostPath mounts for every role: `hostPath`, `hostPathType` (default `Directory`), `mountPath`, `readOnly` (default `true`; an explicit `false` stays writable). |
 | `clickhouse.*`, `collectorDataDir` | A ClickStack mode, not used by the platform: with `clickhouse.endpoint` set, the pods run as uid 10001, get `CLICKHOUSE_*` and `OPAMP_SERVER_URL`, a `<fullname>-clickhouse` Secret (or `existingSecret`) and a durable `collectorDataDir` (a PVC, or the node's hostPath `/var/lib/telflo/collector/<fullname>`). |
 
@@ -170,7 +170,7 @@ values); every guard alone with its message and no value in the output; the
 names with and without an override, two fleets' overrides disjoint, a gateway
 ignoring one; YAML-word names, `collectorEnv` keys and volume mount and host
 paths checked after a YAML 1.1 parse by Helm's own `fromYaml`;
-`checksum/token` on every workload and `checksum/collector-env`; each pod's
+`checksum/token` on every workload and `checksum/collector-env` (keyed by the token: not the values' bare sha256, and another token another hash); each pod's
 identity variables (`COLLECTOR_GROUP_ID`, `OPAMP_ENDPOINT`,
 `OPAMP_ALLOW_INSECURE_CONNECTIONS`, the token's reference, the field
 references, `HOST_IP` the pod's IP), its mounts paired with its volumes and
