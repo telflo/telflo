@@ -14,6 +14,13 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/telflo/telflo/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/telflo/telflo/actions/workflows/ci.yml/badge.svg?branch=main"></a>
+  <a href="https://github.com/telflo/telflo/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/telflo/telflo"></a>
+  <a href="telflo-core/package.json"><img alt="Node" src="https://img.shields.io/badge/node-%3E%3D22-339933?logo=nodedotjs&amp;logoColor=white"></a>
+  <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-Apache%202.0-blue"></a>
+</p>
+
+<p align="center">
   <a href="#quick-start"><strong>Quick start</strong></a> ·
   <a href="#documentation"><strong>Docs</strong></a> ·
   <a href="docs/configuration.md"><strong>Settings</strong></a> ·
