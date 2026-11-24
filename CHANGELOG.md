@@ -39,6 +39,11 @@ release's images, Helm chart and Compose install are on its
   it was in the query, and the gateway logged it in full. A link sent
   before still works, and the gateway now logs `/verify-email` without its
   query and redacts a `Referer` naming it.
+- `telflo config pull` and `telflo flows pull` print stored YAML to a
+  terminal without its control characters, as every other human output
+  does. Another member's YAML holding an escape sequence (concealed text,
+  a link, a clipboard write) could drive the reader's terminal. Piped or
+  redirected output is still the YAML byte for byte.
 
 ## 0.2.2 - 2026-11-22
 

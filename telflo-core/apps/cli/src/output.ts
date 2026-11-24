@@ -43,12 +43,15 @@ export interface Io {
   stdin: NodeJS.ReadableStream & { isTTY?: boolean; setRawMode?: (mode: boolean) => unknown };
   stdout: (text: string) => void;
   stderr: (text: string) => void;
+  /** Whether stdout is a terminal (not a pipe or a file). */
+  stdoutIsTty: () => boolean;
 }
 
 const PROCESS_IO: Io = {
   stdin: process.stdin,
   stdout: (text) => void process.stdout.write(text),
   stderr: (text) => void process.stderr.write(text),
+  stdoutIsTty: () => process.stdout.isTTY === true,
 };
 
 /** Any write failure but a closed pipe: fixed words, never the error's own text. */
@@ -156,6 +159,25 @@ const CONTROL_CHARACTERS_BUT_NEWLINE = /[\u0000-\u0009\u000b-\u001f\u007f-\u009f
  */
 export function terminalText(text: string): string {
   return text.replace(CONTROL_CHARACTERS, "");
+}
+
+/** A text of several lines, each through `terminalText`, its newlines and tabs kept (YAML and Markdown indent with them). */
+export function terminalLines(text: string): string {
+  return text
+    .split("\n")
+    .map((line) => line.split("\t").map(terminalText).join("\t"))
+    .join("\n");
+}
+
+/**
+ * Stored YAML on stdout (`config pull`, `flows pull`): through
+ * `terminalLines` when stdout is a terminal, so another member's text
+ * holding an escape sequence (concealed text, an OSC 8 link, an OSC 52
+ * clipboard write) can't drive the reader's terminal; byte for byte to a
+ * pipe or a file, so a redirect is the version as saved.
+ */
+export function writeYaml(yaml: string): void {
+  getIo().stdout(getIo().stdoutIsTty() ? terminalLines(yaml) : yaml);
 }
 
 /** A fixed-width table for human output: a header, a rule, then one line per row; every cell through `terminalText`. */

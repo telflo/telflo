@@ -41,6 +41,8 @@ export interface RunOptions {
   input?: string;
   /** A stdin the test drives itself (a terminal's keys). */
   stdin?: FakeStdin;
+  /** stdout is a terminal (a pipe by default). */
+  stdoutTty?: boolean;
 }
 
 /** `telflo <args…>` in process: its exit code and what it wrote. */
@@ -57,6 +59,7 @@ export async function runCli(args: readonly string[], options: RunOptions = {}):
     stderr: (text) => {
       stderr += text;
     },
+    stdoutIsTty: () => options.stdoutTty === true,
   };
   const code = await run(["node", "telflo", ...args], io);
   return { code, stdout, stderr };

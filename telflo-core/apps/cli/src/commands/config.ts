@@ -28,7 +28,7 @@ import {
   pushConfiguration,
 } from "../ops/configurations.js";
 import { renderValidationErrors } from "../ops/validate.js";
-import { emit, EXIT, ExitError, getIo, isJsonMode, printTable, terminalText, writeErr, writeNote } from "../output.js";
+import { emit, EXIT, ExitError, isJsonMode, printTable, terminalText, writeErr, writeNote, writeYaml } from "../output.js";
 import { describePin } from "../pin.js";
 
 export const NO_CONFIGURATIONS_MESSAGE = "No configurations.";
@@ -114,7 +114,7 @@ export async function configPull(id: string, options: { version?: number; out?: 
   } else if (isJsonMode()) {
     emit({ id: pulled.id, versionNumber: pulled.versionNumber, yaml: pulled.yaml, ...pin }, () => "");
   } else {
-    getIo().stdout(pulled.yaml);
+    writeYaml(pulled.yaml);
     writeErr(`# v${pulled.versionNumber}, ${pinned}`);
   }
 }

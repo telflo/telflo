@@ -9,18 +9,11 @@
 import type { Command } from "commander";
 import { requireClient } from "../context.js";
 import { flowPath, getFlow, getFlowYaml, listFlows } from "../ops/flows.js";
-import { emit, getIo, isJsonMode, printTable, terminalText } from "../output.js";
+import { emit, isJsonMode, printTable, terminalLines, terminalText, writeYaml } from "../output.js";
 import { describePin } from "../pin.js";
 import { writeOutputFile } from "./config.js";
 
 export const NO_FLOWS_MESSAGE = "No flows.";
-/** A text of several lines, each through `terminalText`, its newlines and tabs kept (YAML and Markdown indent with them). */
-function terminalLines(text: string): string {
-  return text
-    .split("\n")
-    .map((line) => line.split("\t").map(terminalText).join("\t"))
-    .join("\n");
-}
 
 /** A flow with no author is Telflo's own. */
 const TELFLO = "Telflo";
@@ -78,7 +71,7 @@ export async function flowsPull(slug: string, options: { out?: string }): Promis
   } else if (isJsonMode()) {
     emit({ slug: flow.slug, ...pin, yaml: flow.yaml }, () => "");
   } else {
-    getIo().stdout(flow.yaml);
+    writeYaml(flow.yaml);
   }
 }
 
