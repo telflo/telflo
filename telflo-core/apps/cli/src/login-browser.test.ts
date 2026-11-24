@@ -10,10 +10,9 @@ import {
   DENIED_MESSAGE,
   HOST_MAXIMUM_LENGTH,
   TIMED_OUT_MESSAGE,
-  TOO_MANY_REFUSALS_MESSAGE,
   UNKNOWN_HOST,
 } from "./login-browser.js";
-import { LISTENER_TIMEOUT_MS, MAXIMUM_REFUSALS, STATE_PATTERN } from "./login-listener.js";
+import { LISTENER_TIMEOUT_MS, STATE_PATTERN } from "./login-listener.js";
 import { CANCELLED_MESSAGE } from "./prompt.js";
 import { EXIT, ExitError, setIo } from "./output.js";
 
@@ -147,16 +146,14 @@ describe("browserLoginToken", () => {
     expect(await listening(port)).toBe(false);
   });
 
-  it(`ends with exit 3 after ${MAXIMUM_REFUSALS} refused requests`, async () => {
+  it("keeps listening however many requests it refuses: the page's answer after them is taken", async () => {
     const answer = browserLoginToken(SERVER, { open, machineName: () => "box" });
-    const ended = refusalOf(answer);
-    const { port } = parametersOf(await openedUrl());
-    for (let index = 0; index < MAXIMUM_REFUSALS; index += 1) {
+    const { port, state } = parametersOf(await openedUrl());
+    for (let index = 0; index < 20; index += 1) {
       expect((await handOff(port, "https://elsewhere.example", { state: "x", token })).status).toBe(403);
     }
-    const refusal = await ended;
-    expect([refusal.message, refusal.exitCode]).toEqual([TOO_MANY_REFUSALS_MESSAGE, EXIT.AUTH]);
-    expect(stdin.rawModes).toEqual([true, false]);
+    expect((await handOff(port, SERVER, { state, token })).status).toBe(204);
+    expect(await answer).toBe(token);
   });
 
   it("ends with exit 3 after five minutes without an answer", async () => {

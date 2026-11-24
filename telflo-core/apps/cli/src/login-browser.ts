@@ -6,7 +6,7 @@
  * closed (the listener stopped, the prompt closed with the terminal restored).
  *
  * The listener's endings are fixed words, exit 3: Cancel on the page, five
- * minutes without an answer, ten refused requests. The token itself is
+ * minutes without an answer. The token itself is
  * checked by `login` (its shape, then `/whoami`) whichever way it came.
  */
 
@@ -25,7 +25,7 @@ export const BROWSER_WORDS = (url: string): string => `Approve this login in you
 export const BROWSER_PASTE_PROMPT = "Or paste a token here: ";
 export const DENIED_MESSAGE = "The login was cancelled in the browser.";
 export const TIMED_OUT_MESSAGE = "Timed out waiting for the browser: run telflo login again, or telflo login --no-browser.";
-export const TOO_MANY_REFUSALS_MESSAGE = "The login listener refused too many requests: run telflo login again.";
+export const LISTENER_STOPPED_MESSAGE = "The login listener stopped: run telflo login again.";
 
 /**
  * The machine's name as the page shows it and the token's name holds it: its
@@ -54,9 +54,8 @@ function tokenOf(outcome: ListenerOutcome): string {
     case "timeout":
       throw new ExitError(TIMED_OUT_MESSAGE, EXIT.AUTH);
     // `closed` is this flow's own close, after the race: never what it waits on.
-    case "refused":
     case "closed":
-      throw new ExitError(TOO_MANY_REFUSALS_MESSAGE, EXIT.AUTH);
+      throw new ExitError(LISTENER_STOPPED_MESSAGE, EXIT.AUTH);
   }
 }
 

@@ -44,6 +44,13 @@ release's images, Helm chart and Compose install are on its
   does. Another member's YAML holding an escape sequence (concealed text,
   a link, a clipboard write) could drive the reader's terminal. Piped or
   redirected output is still the YAML byte for byte.
+- `telflo login`'s browser handoff: the CLI's local listener no longer
+  stops after ten refused requests, and the approval page sends the token
+  (or Cancel's answer) only after the listener proves, with an HMAC of a
+  fresh challenge keyed by the login's secret state, that it is this
+  login's. Before, another process on the machine could stop the listener
+  with ten requests, bind its port, and receive the token. A CLI older
+  than this page's check gets the token to paste instead.
 
 ## 0.2.2 - 2026-11-22
 

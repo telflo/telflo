@@ -1,3 +1,4 @@
+import { createHmac } from "node:crypto";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
@@ -12,7 +13,7 @@ import {
 } from "@telflo/contracts";
 import * as apiClient from "~/lib/api-client.js";
 import { ApiError } from "~/lib/api-client.js";
-import { HANDOFF_WAIT_MS } from "~/lib/cli-auth.js";
+import { HANDOFF_WAIT_MS, PROOF_CONTEXT } from "~/lib/cli-auth.js";
 import { API_TOKEN_CREATE_FAILED_MESSAGE } from "~/lib/service-accounts.js";
 import { attributesHolding } from "~/test/fleets.js";
 import { apiToken, buildApiToken, expectTokenOnlyInsideNoCapture, quietQueries, showsText } from "~/test/service-accounts.js";
@@ -43,6 +44,9 @@ const NEW_ID = "5b000000-0000-4000-8000-0000000000a1";
 const EARLIER_ID = "5b000000-0000-4000-8000-0000000000a2";
 const EARLIER_EXPIRED_ID = "5b000000-0000-4000-8000-0000000000a3";
 const LISTENER_URL = `http://127.0.0.1:${PORT}/callback`;
+/** A second link's listener (a new link in the same tab). */
+const NEW_STATE = `${"N".repeat(20)}-_${"m".repeat(21)}`;
+const NEW_PORT = 54999;
 
 let token: string;
 let log: string[];
@@ -63,6 +67,13 @@ function renderPage() {
 
 function created(over: Partial<ApiToken> = {}): CreatedApiTokenResponse {
   return { apiToken: apiToken({ id: NEW_ID, name: "CLI — ada-laptop.local · 2026-10-26 07:08:09", access: "write", ...over }), token };
+}
+
+/** The CLI's listener's answer to a challenge (apps/cli/src/login-listener.ts): HMAC-SHA256 keyed by the state of the listener at `url`. */
+function proved(url: string, challenge: string): Response {
+  const state = url === `http://127.0.0.1:${NEW_PORT}/callback` ? NEW_STATE : STATE;
+  const proof = createHmac("sha256", state).update(PROOF_CONTEXT + challenge, "utf8").digest("base64url");
+  return new Response(JSON.stringify({ proof }), { status: 200, headers: { "content-type": "application/json" } });
 }
 
 /** The API's three calls and the listener's fetch, each logged in order; the listener answers `listener`. */
@@ -92,6 +103,8 @@ function stubCalls(listener: () => Promise<Response> = async () => new Response(
   });
   const fetch = vi.fn(async (url: string, init: RequestInit) => {
     const body = JSON.parse(String(init.body)) as Record<string, unknown>;
+    // The listener's proof that it knows the state, asked before every answer (lib/cli-auth.ts): the CLI's, made here.
+    if (Object.keys(body).join(",") === "challenge") return proved(url, String(body.challenge));
     log.push(`listener ${url} ${Object.keys(body).sort().join(",")} ${body.state === STATE} ${body.token === token}`);
     return listener();
   });
@@ -346,8 +359,6 @@ describe("Approve", () => {
 });
 
 describe("a new link in the same tab", () => {
-  const NEW_STATE = `${"N".repeat(20)}-_${"m".repeat(21)}`;
-  const NEW_PORT = 54999;
   const NEW_HOST = "second-box";
   const NEW_FRAGMENT = `#state=${NEW_STATE}&port=${NEW_PORT}&host=${NEW_HOST}`;
 
@@ -489,7 +500,8 @@ describe("Cancel and refusals", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Cancel" }));
     expect(await screen.findByText(CANCELLED_WORDS)).toBeInTheDocument();
     await waitFor(() => expect(log).toEqual([`listener ${LISTENER_URL} error,state true false`]));
-    expect(JSON.parse(String(calls.fetch.mock.calls[0]?.[1]?.body))).toEqual({ state: STATE, error: "denied" });
+    // The second request: the first was the challenge.
+    expect(JSON.parse(String(calls.fetch.mock.calls[1]?.[1]?.body))).toEqual({ state: STATE, error: "denied" });
     expect(calls.create).not.toHaveBeenCalled();
   });
 

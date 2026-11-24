@@ -1,3 +1,4 @@
+import { createHmac } from "node:crypto";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ApiTokenNameSchema } from "@telflo/contracts";
 import {
@@ -6,8 +7,12 @@ import {
   isCliAuthDocument,
   isCliAuthPath,
   namesCliAuth,
+  listenerKnowsState,
+  listenerProof,
+  ListenerUnprovenError,
   parseCliAuthFragment,
   postToListener,
+  PROOF_CONTEXT,
 } from "./cli-auth.js";
 
 /*
@@ -70,24 +75,91 @@ describe("the token's name", () => {
   });
 });
 
+/** The CLI's listener's proof (apps/cli/src/login-listener.ts), made with node's crypto. */
+const cliProof = (state: string, challenge: string): string =>
+  createHmac("sha256", state).update(PROOF_CONTEXT + challenge, "utf8").digest("base64url");
+
+/** A fetch answering as the CLI's listener does: a challenge's proof, then 204 to the answer. */
+function cliListener(state: string = STATE) {
+  return vi.fn(async (_url: string, init: RequestInit) => {
+    const body = JSON.parse(String(init.body)) as Record<string, unknown>;
+    if ("challenge" in body) return new Response(JSON.stringify({ proof: cliProof(state, String(body.challenge)) }), { status: 200 });
+    return new Response(null, { status: 204 });
+  });
+}
+
+describe("listenerProof", () => {
+  it("is the CLI's: HMAC-SHA256 of the context and the challenge, keyed by the state, base64url", async () => {
+    const challenge = "c".repeat(43);
+    expect(await listenerProof(STATE, challenge)).toBe(cliProof(STATE, challenge));
+  });
+});
+
 describe("postToListener", () => {
-  it("posts the answer as JSON to 127.0.0.1's /callback, without credentials or referrer, and answers the status", async () => {
-    const fetch = vi.fn(async () => new Response(null, { status: 204 }));
+  it("first sends a fresh challenge, never the state; then, the proof checked, posts the answer, without credentials or referrer", async () => {
+    const fetch = cliListener();
     vi.stubGlobal("fetch", fetch);
     expect(await postToListener(54321, { state: STATE, error: "denied" })).toBe(204);
-    expect(fetch).toHaveBeenCalledWith("http://127.0.0.1:54321/callback", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ state: STATE, error: "denied" }),
-      credentials: "omit",
-      cache: "no-store",
-      referrerPolicy: "no-referrer",
-    });
+    const options = { method: "POST", headers: { "content-type": "application/json" }, credentials: "omit", cache: "no-store", referrerPolicy: "no-referrer" };
+    expect(fetch).toHaveBeenCalledTimes(2);
+    const [[firstUrl, first], [secondUrl, second]] = fetch.mock.calls as unknown as Array<[string, RequestInit]>;
+    expect(firstUrl).toBe("http://127.0.0.1:54321/callback");
+    const { body: challengeBody, ...challengeOptions } = first;
+    expect(challengeOptions).toEqual(options);
+    const { challenge } = JSON.parse(String(challengeBody)) as { challenge: string };
+    expect(challenge).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    expect(String(challengeBody).includes(STATE)).toBe(false);
+    expect([secondUrl, second]).toEqual(["http://127.0.0.1:54321/callback", { ...options, body: JSON.stringify({ state: STATE, error: "denied" }) }]);
+  });
+
+  it("sends a new challenge each time", async () => {
+    const fetch = cliListener();
+    vi.stubGlobal("fetch", fetch);
+    await postToListener(54321, { state: STATE, error: "denied" });
+    await postToListener(54321, { state: STATE, error: "denied" });
+    const challenges = (fetch.mock.calls as unknown as Array<[string, RequestInit]>)
+      .map(([, init]) => JSON.parse(String(init.body)) as Record<string, unknown>)
+      .filter((body) => "challenge" in body)
+      .map((body) => body.challenge);
+    expect(new Set(challenges).size).toBe(2);
+  });
+
+  it.each([
+    ["a listener keyed by another state", () => cliListener(`${"B".repeat(20)}-_${"c".repeat(21)}`)],
+    ["a 204 to the challenge (a CLI from before it)", () => vi.fn(async () => new Response(null, { status: 204 }))],
+    ["a 403 to the challenge", () => vi.fn(async () => new Response(null, { status: 403 }))],
+    ["a body that isn't JSON", () => vi.fn(async () => new Response("proof", { status: 200 }))],
+    ["no proof in the body", () => vi.fn(async () => new Response(JSON.stringify({ ok: true }), { status: 200 }))],
+  ])("refuses with ListenerUnprovenError for %s, sending only the challenge", async (_case, make) => {
+    const fetch = make();
+    vi.stubGlobal("fetch", fetch);
+    await expect(postToListener(54321, { state: STATE, token: "tf_x" })).rejects.toBeInstanceOf(ListenerUnprovenError);
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(await listenerKnowsState(54321, STATE)).toBe(false);
   });
 
   it("refuses as fetch does", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => Promise.reject(new TypeError("Failed to fetch"))));
     await expect(postToListener(54321, { state: STATE, error: "denied" })).rejects.toBeInstanceOf(TypeError);
+  });
+});
+
+describe("the handoff to a listener that took the port (it never saw the state)", () => {
+  const TOKEN = `tf_${"t".repeat(43)}`;
+
+  it("never sends the token, nor Cancel's answer, to a listener that can't prove the state", async () => {
+    // An impostor on the CLI's port: every request answered as the CLI's listener would accept one.
+    const bodies: string[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (_url: string, init: RequestInit) => {
+        bodies.push(String(init.body));
+        return new Response(JSON.stringify({ proof: "A".repeat(43) }), { status: 200 });
+      }),
+    );
+    await expect(postToListener(54321, { state: STATE, token: TOKEN })).rejects.toThrow();
+    await expect(postToListener(54321, { state: STATE, error: "denied" })).rejects.toThrow();
+    expect(bodies.some((body) => body.includes(TOKEN) || body.includes(STATE))).toBe(false);
   });
 });
 

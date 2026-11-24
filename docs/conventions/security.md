@@ -3365,21 +3365,33 @@ else `https://telflo.com`.
 **The login listener** (`src/login-listener.ts`, `src/login-browser.ts`),
 the CLI's side of `/cli-auth`:
 - It binds `127.0.0.1` on a free port and serves one path, `/callback`,
-  until an accepted answer, Cancel on the page, five minutes, or ten
-  refused requests (each exit 3 but the answer).
+  until an accepted answer, Cancel on the page, or five minutes (each exit
+  3 but the answer). Refused requests never stop it, however many: a limit
+  let another local process free its port with a few junk requests, bind
+  it, and receive the token the page then handed over.
 - `state` is 32 random bytes, base64url (43 characters), compared in
   constant time.
 - It accepts only `POST /callback` with `Origin` equal to the server's
   origin, `Host` equal to `127.0.0.1:<port>`, `Content-Type:
   application/json`, a body of at most 4 KiB (past it a 403 at once, the
-  connection dropped) and `{ state, token }` or `{ state, error: "denied"
-  }`; and the CORS preflight for it, answered with
+  connection dropped) and `{ challenge }`, `{ state, token }` or `{ state,
+  error: "denied" }`; and the CORS preflight for it, answered with
   `Access-Control-Allow-Methods: POST`, `-Headers: content-type`, and
   `Access-Control-Allow-Private-Network: true` only when the preflight asks
   for it. Anything else answers 403 or 404 with no body and keeps waiting.
-- **Every reply** (the preflight's, the 204, a 403 or 404) carries
-  `Access-Control-Allow-Origin: <the server's origin>`, never `*`, so the
-  page can read the answer.
+- **The page checks the listener before it sends anything**
+  (`apps/web/app/lib/cli-auth.ts`, `listenerKnowsState`): a fresh
+  `{ challenge }` of 32 random bytes, never the state, which the listener
+  answers `200 { proof }`, the HMAC-SHA256 of `"telflo cli-auth listener
+  proof\n" + challenge` keyed by the state. Only with that proof does the
+  page post the token, or Cancel's denial; otherwise it shows the token to
+  paste. Whatever holds the port without the state (a process that bound
+  it once the CLI stopped, at its five minutes or Ctrl-C) can't answer, so
+  it never gets a token, a denial or the state. A CLI from before the
+  challenge answers it 403, and its person pastes the token.
+- **Every reply** (the preflight's, the proof, the 204, a 403 or 404)
+  carries `Access-Control-Allow-Origin: <the server's origin>`, never `*`,
+  so the page can read the answer; only the proof has a body.
 - It imports only node's built-ins and `src/version.ts` (the browser tests
   import it).
 - The browser is opened (`open`, `xdg-open` or `cmd /c start`) on `<server>/cli-auth#state=…&port=…&host=…`, the URL
