@@ -148,25 +148,35 @@ async function openInstall(page: Page, opener: Locator): Promise<InstallFacts> {
   return facts;
 }
 
-/** The command's lines as the dialog shows them: one flag a line, continued with ` \`. */
-function commandOf(lines: string[]): string {
-  return lines.map((line, index) => (index === 0 ? line : `  ${line}`)).join(" \\\n");
+/** An included variable as the command writes it: its name, and its value already single-quoted. */
+interface QuotedEnv {
+  name: string;
+  quoted: string;
 }
 
-/** The container command's lines for `facts` with the token `token`, `extra` before the token's line. */
-function containerLines(facts: InstallFacts, token: string, { mounts = [], name, env = [] }: { mounts?: string[]; name?: string; env?: string[] } = {}) {
-  return commandOf([
-    "docker run -d --restart unless-stopped --name telflo-collector",
+/**
+ * The container command for `facts` with the token `token`, as the dialog
+ * shows it: the secrets as assignments first (the token, then each
+ * variable), `docker run`, then one flag a line, indented, continued with ` \`.
+ */
+function containerLines(facts: InstallFacts, token: string, { mounts = [], name, env = [] }: { mounts?: string[]; name?: string; env?: QuotedEnv[] } = {}) {
+  const flags = [
     "-v telflo-opamp:/app/opamp",
     ...mounts,
     `-e COLLECTOR_GROUP_ID='${facts.groupId}'`,
     `-e OPAMP_ENDPOINT='${E2E_OPAMP_AGENT_PUBLIC_URL}'`,
     "-e OPAMP_ALLOW_INSECURE_CONNECTIONS='false'",
     ...(name === undefined ? [] : [`-e OPAMP_SERVER_NAME='${name}'`]),
-    `-e OPAMP_TOKEN='${token}'`,
-    ...env,
+    "-e OPAMP_TOKEN",
+    ...env.map((each) => `-e ${each.name}`),
     `'${facts.imageTag}'`,
-  ]);
+  ];
+  return [
+    `OPAMP_TOKEN='${token}'`,
+    ...env.map((each) => `${each.name}=${each.quoted}`),
+    "docker run -d --restart unless-stopped --name telflo-collector",
+    ...flags.map((flag) => `  ${flag}`),
+  ].join(" \\\n");
 }
 
 /** The dialog's footer "Close" (its corner ✕, after it in the document, is named Close too). */
@@ -435,11 +445,11 @@ test("environment variables: the version's ${env:…} names offered, a ticked on
   await expect(value).toHaveAttribute("aria-invalid", "true");
   expect(reveals).toEqual([]);
 
-  // A value with a quote: single-quoted once in its own line, after the token's; SITE_NAME left out.
+  // A value with a quote: single-quoted once in its own assignment, after the token's; SITE_NAME left out.
   const canary = unique();
   await value.fill(`prod's-${canary}`);
   await expect(dialog.getByText("Type a value or untick it.")).toHaveCount(0);
-  const envLine = `-e NGINX_ENV='prod'\\''s-${canary}'`;
+  const envLine = { name: "NGINX_ENV", quoted: `'prod'\\''s-${canary}'` };
   await expect.poll(() => preview(dialog).textContent()).toBe(containerLines(facts, MASKED, { env: [envLine] }));
   const bearer = await revealAndCopy(page, browserName);
   const command = containerLines(facts, bearer, { env: [envLine] });

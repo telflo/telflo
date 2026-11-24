@@ -16,7 +16,9 @@ import { INSTALL_ENV_NAME_PATTERN, INSTALL_MASKED_TOKEN, RESERVED_INSTALL_ENV_NA
  * it on the clipboard only through its copy, the API answers it only in
  * install's `no-store` reply, and neither logs it; the preview holds the
  * masked token, never the bearer (`containerPreview` takes none). The display
- * name, the paths and the variables' values are configuration text.
+ * name, the paths and the variables' values are configuration text. The
+ * bearer and the variables' values reach `docker` through its environment,
+ * never its command line (`containerCommand`).
  */
 
 const RESERVED: ReadonlySet<string> = new Set(RESERVED_INSTALL_ENV_NAMES);
@@ -41,22 +43,30 @@ export interface ContainerCommandParts {
 }
 
 /**
- * The `docker run` command, one flag a line: the image's volume, a `-v`
+ * The `docker run` command, one part a line. First the secrets, as
+ * assignments before the command (`OPAMP_TOKEN='…' \`, then one per included
+ * variable): the shell sets each in `docker`'s environment for that one
+ * command, and `-e NAME` (no value) hands it to the container from there, so
+ * no secret is on docker's command line, which every local user can read
+ * (`ps`, /proc/<pid>/cmdline) while it pulls and starts; its environment
+ * only its owner and root can. Then `docker run`: the image's volume, a `-v`
  * per group mount (`:ro` when read-only), the group's id, the endpoint,
  * whether insecure connections are allowed, the display name when one is
- * given, the bearer, then a line per included variable, and the image
- * last.
+ * given (those four aren't secrets: `-e NAME='value'`), `-e OPAMP_TOKEN`,
+ * a `-e NAME` per included variable, and the image last. The assignments
+ * and `docker run` start their lines; its flags are indented.
  */
 export function containerCommand({ facts, bearer, displayName, env }: ContainerCommandParts): string {
-  const lines = ["docker run -d --restart unless-stopped --name telflo-collector", `-v ${OPAMP_VOLUME}`];
+  const assignments = [`OPAMP_TOKEN=${shellQuote(bearer)}`];
+  const flags = [`-v ${OPAMP_VOLUME}`];
   for (const mount of facts.mounts) {
-    lines.push(`-v ${shellQuote(`${mount.hostPath}:${mount.containerPath}${mount.readOnly ? ":ro" : ""}`)}`);
+    flags.push(`-v ${shellQuote(`${mount.hostPath}:${mount.containerPath}${mount.readOnly ? ":ro" : ""}`)}`);
   }
-  lines.push(`-e COLLECTOR_GROUP_ID=${shellQuote(facts.groupId)}`);
-  lines.push(`-e OPAMP_ENDPOINT=${shellQuote(facts.endpoint)}`);
-  lines.push(`-e OPAMP_ALLOW_INSECURE_CONNECTIONS=${shellQuote(facts.allowInsecureConnections ? "true" : "false")}`);
-  if (displayName !== "") lines.push(`-e OPAMP_SERVER_NAME=${shellQuote(displayName)}`);
-  lines.push(`-e OPAMP_TOKEN=${shellQuote(bearer)}`);
+  flags.push(`-e COLLECTOR_GROUP_ID=${shellQuote(facts.groupId)}`);
+  flags.push(`-e OPAMP_ENDPOINT=${shellQuote(facts.endpoint)}`);
+  flags.push(`-e OPAMP_ALLOW_INSECURE_CONNECTIONS=${shellQuote(facts.allowInsecureConnections ? "true" : "false")}`);
+  if (displayName !== "") flags.push(`-e OPAMP_SERVER_NAME=${shellQuote(displayName)}`);
+  flags.push("-e OPAMP_TOKEN");
   const written = new Set<string>();
   for (const { name, value } of env) {
     // A name comes from the server's scan of the YAML; one that isn't a shell name is a broken contract, never written.
@@ -66,10 +76,11 @@ export function containerCommand({ facts, bearer, displayName, env }: ContainerC
     if (RESERVED.has(name)) throw new Error("An environment variable's name is one the install sets itself.");
     if (written.has(name)) throw new Error("An environment variable is given twice.");
     written.add(name);
-    lines.push(`-e ${name}=${shellQuote(value)}`);
+    assignments.push(`${name}=${shellQuote(value)}`);
+    flags.push(`-e ${name}`);
   }
-  lines.push(shellQuote(facts.imageTag));
-  return lines.map((line, index) => (index === 0 ? line : `  ${line}`)).join(" \\\n");
+  flags.push(shellQuote(facts.imageTag));
+  return [...assignments, "docker run -d --restart unless-stopped --name telflo-collector", ...flags.map((flag) => `  ${flag}`)].join(" \\\n");
 }
 
 /** The preview: the same command with the token masked. It takes no bearer, so it can hold none. */

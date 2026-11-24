@@ -51,6 +51,13 @@ release's images, Helm chart and Compose install are on its
   login's. Before, another process on the machine could stop the listener
   with ten requests, bind its port, and receive the token. A CLI older
   than this page's check gets the token to paste instead.
+- The container install command (the install dialog's "Container image
+  — pull and run", `telflo fleet install --platform docker` and the
+  public API's docker install) sets the fleet's token and the included
+  organization variables before `docker run`
+  (`OPAMP_TOKEN='…' NAME='…' docker run … -e OPAMP_TOKEN -e NAME …`), so
+  their values are in `docker`'s environment, never its command line,
+  which every user on the host can read while it runs.
 
 ## 0.2.2 - 2026-11-22
 

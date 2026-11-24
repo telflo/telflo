@@ -35,7 +35,8 @@ function argvOf(script: string, prelude: string): string[] {
   });
   return out.split("\u001e\n").slice(0, -1);
 }
-const DOCKER = `docker() { for a in "$@"; do printf '%s\\036\\n' "$a"; done; }`;
+// The fake docker: its arguments, then the two secrets as its environment holds them (`env:<OPAMP_TOKEN>|<SECRET>`).
+const DOCKER = `docker() { for a in "$@"; do printf '%s\\036\\n' "$a"; done; printf 'env:%s|%s\\036\\n' "$OPAMP_TOKEN" "$SECRET"; }`;
 
 /** A value no shell may expand or split: every probe harmless. */
 const PROBE = `it's $(echo EXPANDED) \`echo EXPANDED\` \${HOME} $HOME * ? [a] ~ \\ "q" #x`;
@@ -56,7 +57,7 @@ const MOUNTS: DockerMount[] = [
 ];
 
 describe("containerCommand", () => {
-  it("is the exact command, one flag a line, every value quoted once, no bash -c", () => {
+  it("is the exact command: the secrets as assignments first, then one flag a line, every value quoted once, no bash -c", () => {
     const command = containerCommand({
       facts: { ...FACTS, mounts: [MOUNTS[0]!] },
       bearer: BEARER,
@@ -65,6 +66,8 @@ describe("containerCommand", () => {
     });
     expect(command).toBe(
       [
+        `OPAMP_TOKEN='${BEARER}' \\`,
+        "NGINX_ENV='staging' \\",
         "docker run -d --restart unless-stopped --name telflo-collector \\",
         "  -v telflo-opamp:/app/opamp \\",
         "  -v '/var/log/nginx:/var/log/nginx:ro' \\",
@@ -72,8 +75,8 @@ describe("containerCommand", () => {
         "  -e OPAMP_ENDPOINT='wss://opamp.example.com/v1/opamp' \\",
         "  -e OPAMP_ALLOW_INSECURE_CONNECTIONS='false' \\",
         "  -e OPAMP_SERVER_NAME='prod-collector-east-1' \\",
-        `  -e OPAMP_TOKEN='${BEARER}' \\`,
-        "  -e NGINX_ENV='staging' \\",
+        "  -e OPAMP_TOKEN \\",
+        "  -e NGINX_ENV \\",
         "  'ghcr.io/telflo/telflo/collector:0.162.0'",
       ].join("\n"),
     );
@@ -94,6 +97,8 @@ describe("containerCommand", () => {
       env: variables ? [{ name: "NGINX_ENV", value: "staging" }, { name: "_API_KEY2", value: "k" }] : [],
     });
     const expected = [
+      `OPAMP_TOKEN='${BEARER}'`,
+      ...(variables ? ["NGINX_ENV='staging'", "_API_KEY2='k'"] : []),
       "docker run -d --restart unless-stopped --name telflo-collector",
       "-v telflo-opamp:/app/opamp",
       ...(mounts ? ["-v '/var/log/nginx:/var/log/nginx:ro'", "-v '/data:/var/lib/otelcol'"] : []),
@@ -101,18 +106,20 @@ describe("containerCommand", () => {
       `-e OPAMP_ENDPOINT='${FACTS.endpoint}'`,
       `-e OPAMP_ALLOW_INSECURE_CONNECTIONS='${insecure ? "true" : "false"}'`,
       ...(name ? ["-e OPAMP_SERVER_NAME='edge one'"] : []),
-      `-e OPAMP_TOKEN='${BEARER}'`,
-      ...(variables ? ["-e NGINX_ENV='staging'", "-e _API_KEY2='k'"] : []),
+      "-e OPAMP_TOKEN",
+      ...(variables ? ["-e NGINX_ENV", "-e _API_KEY2"] : []),
       `'${FACTS.imageTag}'`,
     ];
     const lines = command.split("\n");
     expect(lines.map((line) => line.replace(/^ {2}/, "").replace(/ \\$/, ""))).toEqual(expected);
-    // Every line but the last continues; every line but the first is indented two spaces.
+    // Every line but the last continues; the assignments and `docker run` start their lines, its flags indented two spaces.
     expect(lines.slice(0, -1).every((line) => line.endsWith(" \\"))).toBe(true);
     expect(lines.at(-1)!.endsWith("\\")).toBe(false);
-    expect(lines.slice(1).every((line) => line.startsWith("  -") || line.startsWith("  '"))).toBe(true);
-    // The bearer is on its one line only.
-    expect(lines.filter((line) => line.includes(BEARER))).toEqual([`  -e OPAMP_TOKEN='${BEARER}' \\`]);
+    const run = lines.findIndex((line) => line.startsWith("docker run "));
+    expect(lines.slice(0, run).every((line) => /^[A-Za-z_][A-Za-z0-9_]*='/.test(line))).toBe(true);
+    expect(lines.slice(run + 1).every((line) => line.startsWith("  -") || line.startsWith("  '"))).toBe(true);
+    // The bearer is on its one line only, the first: an assignment, never one of docker's arguments.
+    expect(lines.filter((line) => line.includes(BEARER))).toEqual([`OPAMP_TOKEN='${BEARER}' \\`]);
   });
 
   it("writes a ' as '\\'' in every value: the bearer, the name, a value, the image and the endpoint", () => {
@@ -122,14 +129,14 @@ describe("containerCommand", () => {
       displayName: "it's",
       env: [{ name: "V", value: "'quoted'" }],
     });
-    expect(command).toContain(`-e OPAMP_TOKEN='tok'\\''en'`);
+    expect(command.startsWith(`OPAMP_TOKEN='tok'\\''en' \\\n`)).toBe(true);
     expect(command).toContain(`-e OPAMP_SERVER_NAME='it'\\''s'`);
-    expect(command).toContain(`-e V=''\\''quoted'\\'''`);
+    expect(command).toContain(`\nV=''\\''quoted'\\''' \\\n`);
     expect(command).toContain(`-e OPAMP_ENDPOINT='wss://x/'\\''y'`);
     expect(command.endsWith(`'a'\\''b'`)).toBe(true);
   });
 
-  it("hands docker each value whole, as typed: quotes, spaces, $(…), backticks, variables, globs, ~, \\ and # never expand", () => {
+  it("hands docker each value whole, as typed: quotes, spaces, $(…), backticks, variables, globs, ~, \\ and # never expand; the secrets in its environment, not its arguments", () => {
     const command = containerCommand({
       facts: { ...FACTS, mounts: [MOUNTS[0]!] },
       bearer: "tok'en",
@@ -145,9 +152,10 @@ describe("containerCommand", () => {
       "-e", `OPAMP_ENDPOINT=${FACTS.endpoint}`,
       "-e", "OPAMP_ALLOW_INSECURE_CONNECTIONS=false",
       "-e", "OPAMP_SERVER_NAME=a b.c_d-e",
-      "-e", "OPAMP_TOKEN=tok'en",
-      "-e", `SECRET=${PROBE}`,
+      "-e", "OPAMP_TOKEN",
+      "-e", "SECRET",
       FACTS.imageTag,
+      `env:tok'en|${PROBE}`,
     ]);
   });
 
@@ -194,7 +202,8 @@ describe("containerCommand's backstops", () => {
         { name: "A_VAR", value: "a" },
       ],
     });
-    expect(command.indexOf("-e B_VAR='b'")).toBeLessThan(command.indexOf("-e A_VAR='a'"));
+    expect(command.indexOf("B_VAR='b'")).toBeLessThan(command.indexOf("A_VAR='a'"));
+    expect(command.indexOf("-e B_VAR \\")).toBeLessThan(command.indexOf("-e A_VAR \\"));
   });
 });
 
@@ -209,7 +218,7 @@ describe("containerPreview: the masked preview never holds the bearer", () => {
     expect(MASKED_TOKEN).toBe("••••••••••••••••");
     const preview = containerPreview(parts);
     expect(preview).toBe(containerCommand({ ...parts, bearer: MASKED_TOKEN }));
-    expect(preview.split("\n").filter((line) => line.includes("OPAMP_TOKEN"))).toEqual([`  -e OPAMP_TOKEN='${MASKED_TOKEN}' \\`]);
+    expect(preview.split("\n").filter((line) => line.includes("OPAMP_TOKEN"))).toEqual([`OPAMP_TOKEN='${MASKED_TOKEN}' \\`, "  -e OPAMP_TOKEN \\"]);
   });
 
   it("takes no bearer: one passed in is a type error, and dropped", () => {
