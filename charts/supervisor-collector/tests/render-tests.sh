@@ -258,6 +258,7 @@ M_RESERVED='group must not be node, cluster, telflo-node or telflo-cluster for a
 M_OVERRIDE='fullnameOverride must be a DNS-1123 label of at most 52 characters'
 M_GID="collectorGroupId must be a collector group's id (a UUID)"
 M_BOOT='endpoint and token are required'
+M_PROXY='kubeletProxy must be true or false'
 G52="g$(printf '%051d' 0 | tr 0 a)"   # 52 characters, a valid label
 O52="$(printf '%052d' 0 | tr 0 b)"
 
@@ -301,6 +302,13 @@ run_case "collectorGroupId in capitals renders" renders -f "$tmp/node.yaml" \
   --set-string "collectorGroupId=$(printf '%s' "$GID" | tr 'a-f' 'A-F')"
 run_case "endpoint missing refused" refused "$M_BOOT" "" -f "$tmp/node.yaml" --set-string endpoint=
 run_case "token missing refused" refused "$M_BOOT" "" -f "$tmp/gateway.yaml" --set-string token=
+# --set-string, a values file's quoted "false" or an empty value: a string,
+# which a template's `if` reads as true unless it is empty
+run_case "kubeletProxy the string false refused" refused "$M_PROXY" "" -f "$tmp/node.yaml" --set-string kubeletProxy=false
+run_case "kubeletProxy the string true refused" refused "$M_PROXY" "" -f "$tmp/node.yaml" --set-string kubeletProxy=true
+run_case "kubeletProxy empty refused" refused "$M_PROXY" "" -f "$tmp/node.yaml" --set-string kubeletProxy=
+run_case "kubeletProxy a number refused, on every role" refused "$M_PROXY" "" -f "$tmp/gateway.yaml" --set kubeletProxy=1
+run_case "kubeletProxy false renders" renders -f "$tmp/node.yaml" --set kubeletProxy=false
 run_case "a guard stops a render of another template alone" refused "$M_GID" "" -f "$tmp/node.yaml" \
   --set collectorGroupId=null --show-only templates/rbac.yaml
 
@@ -603,9 +611,22 @@ rules_are() {
 node_rules() {
   next_file
   render_list "$f" -f "$tmp/node.yaml" || return 1
-  rules_are "$f" '[""] ["nodes/stats","nodes/proxy"] ["get"]'
+  rules_are "$f" '[""] ["nodes/stats","nodes/pods"] ["get"]'
 }
-run_case "node: the ClusterRole's rules exactly" node_rules
+run_case "node: the ClusterRole's rules exactly (no nodes/proxy)" node_rules
+node_rules_proxy() {
+  next_file
+  render_list "$f" -f "$tmp/node.yaml" --set kubeletProxy=true || return 1
+  rules_are "$f" '[""] ["nodes/stats","nodes/pods","nodes/proxy"] ["get"]'
+}
+run_case "node: kubeletProxy true adds nodes/proxy, nothing else" node_rules_proxy
+# absent: null, or a --reuse-values upgrade from 0.1.0, whose values never had it
+node_rules_proxy_absent() {
+  next_file
+  render_list "$f" -f "$tmp/node.yaml" --set kubeletProxy=null || return 1
+  rules_are "$f" '[""] ["nodes/stats","nodes/pods"] ["get"]'
+}
+run_case "node: kubeletProxy absent (null) is false" node_rules_proxy_absent
 cluster_rules() {
   next_file
   render_list "$f" -f "$tmp/cluster.yaml" || return 1
@@ -614,6 +635,14 @@ cluster_rules() {
     '["apps"] ["deployments","replicasets","daemonsets","statefulsets"] ["get","list","watch"]'
 }
 run_case "cluster: the ClusterRole's rules exactly" cluster_rules
+cluster_ignores_proxy() {
+  next_file
+  render_list "$f" -f "$tmp/cluster.yaml" --set kubeletProxy=true || return 1
+  rules_are "$f" \
+    '[""] ["pods","nodes","namespaces","events","services","endpoints"] ["get","list","watch"]' \
+    '["apps"] ["deployments","replicasets","daemonsets","statefulsets"] ["get","list","watch"]'
+}
+run_case "cluster: kubeletProxy true changes nothing" cluster_ignores_proxy
 gateway_no_rbac() {
   next_file
   render_list "$f" -f "$tmp/gateway.yaml" || return 1

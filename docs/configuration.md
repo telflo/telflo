@@ -613,7 +613,7 @@ install with Helm: a values file with the fleet's default token, and a
 |---|---|---|---|---|
 | [`TELFLO_COLLECTOR_IMAGE_REPOSITORY`](#telflo_collector_image_repository) | API | not passed | not set | `ghcr.io/telflo/telflo/collector` |
 | [`TELFLO_HELM_CHART_REFERENCE`](#telflo_helm_chart_reference-and-telflo_helm_chart_version) | API | not passed | not set | `oci://ghcr.io/telflo/telflo/charts/supervisor-collector` |
-| [`TELFLO_HELM_CHART_VERSION`](#telflo_helm_chart_reference-and-telflo_helm_chart_version) | API | not passed | not set | `0.1.0` |
+| [`TELFLO_HELM_CHART_VERSION`](#telflo_helm_chart_reference-and-telflo_helm_chart_version) | API | not passed | not set | `0.2.0` |
 | [`TELFLO_INSTALL_TEMPLATES_DIR`](#telflo_install_templates_dir) | API | not passed | not set | `/etc/telflo/install-templates` |
 
 The agent endpoint the installs name is

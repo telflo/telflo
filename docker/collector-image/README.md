@@ -72,7 +72,7 @@ as the collector's Kubernetes attributes when set.
 
 **On Kubernetes** a Kubernetes-supervisor fleet's **Install with Helm**
 installs this image with the platform's chart (`supervisor-collector`
-0.1.0, `charts/supervisor-collector/`, published as
+0.2.0, `charts/supervisor-collector/`, published as
 `oci://ghcr.io/telflo/telflo/charts/supervisor-collector`), whose values
 file the platform builds, and the chart sets every
 variable above: `OPAMP_TOKEN` from the release's Secret (the values'

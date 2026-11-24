@@ -180,7 +180,7 @@ describe("the chart settings' rules", () => {
   // The platform's own chart.
   it("takes the defaults, the platform's own chart, and a mirror's reference with a port", () => {
     expect(DEFAULT_HELM_CHART_REFERENCE).toBe("oci://ghcr.io/telflo/telflo/charts/supervisor-collector");
-    expect(DEFAULT_HELM_CHART_VERSION).toBe("0.1.0");
+    expect(DEFAULT_HELM_CHART_VERSION).toBe("0.2.0");
     for (const reference of [DEFAULT_HELM_CHART_REFERENCE, "oci://registry.example:5000/mirror/charts/x", MIRROR]) {
       expect({ reference, ok: HELM_CHART_REFERENCE_PATTERN.test(reference) }).toEqual({ reference, ok: true });
     }
@@ -772,7 +772,7 @@ describe("the Helm commands", () => {
     expect(GATEWAY_52).toHaveLength(52);
     expect(NAMESPACE_63).toHaveLength(63);
     expect(helmInstallCommand(AGENT_INSTALL)).toBe(String.raw`helm upgrade --install 'telflo-node' 'oci://ghcr.io/telflo/telflo/charts/supervisor-collector' \
-  --version '0.1.0' \
+  --version '0.2.0' \
   -n 'observability' --create-namespace \
   -f 'telflo-node-values.yaml' \
   --wait --timeout=120s`);
@@ -782,7 +782,7 @@ describe("the Helm commands", () => {
   -f 'traces-sampling-pool-in-the-eu-west-region-number-01-values.yaml' \
   --wait --timeout=120s`);
     expect(helmInstallCommand({ ...AGENT_INSTALL, release: "telflo-cluster" })).toBe(String.raw`helm upgrade --install 'telflo-cluster' 'oci://ghcr.io/telflo/telflo/charts/supervisor-collector' \
-  --version '0.1.0' \
+  --version '0.2.0' \
   -n 'observability' --create-namespace \
   -f 'telflo-cluster-values.yaml' \
   --wait --timeout=120s`);
@@ -790,7 +790,7 @@ describe("the Helm commands", () => {
 
   it("names the file the browser's download saved, quoted once (golden)", () => {
     expect(helmInstallCommand({ ...AGENT_INSTALL, valuesFile: helmValuesFileName("telflo-node", "0a1b2c3d") })).toBe(String.raw`helm upgrade --install 'telflo-node' 'oci://ghcr.io/telflo/telflo/charts/supervisor-collector' \
-  --version '0.1.0' \
+  --version '0.2.0' \
   -n 'observability' --create-namespace \
   -f 'telflo-node-values-0a1b2c3d.yaml' \
   --wait --timeout=120s`);
@@ -816,7 +816,7 @@ describe("the Helm commands", () => {
     );
     expect(helmQuickDeployCommand(HTTPS_URL, { ...AGENT_INSTALL, release: "traces-sampling" })).toBe(String.raw`( umask 077 && printf 'url = "%s"\n' 'https://telflo.example.com/api/v1/quick-deploy/tqd_Ab9_-Ab9_-Ab9_-Ab9_-Ab9_-Ab9_-Ab9_-Ab9_-xyz' | curl -q -g -fsS --retry 3 --proto '=https' -K - -o 'traces-sampling-values.yaml' ) && \
 helm upgrade --install 'traces-sampling' 'oci://ghcr.io/telflo/telflo/charts/supervisor-collector' \
-  --version '0.1.0' \
+  --version '0.2.0' \
   -n 'observability' --create-namespace \
   -f 'traces-sampling-values.yaml' \
   --wait --timeout=120s`);

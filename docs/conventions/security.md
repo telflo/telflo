@@ -4516,6 +4516,29 @@ as in compose; in the cluster its plain HTTP crosses only the pod
 network. Only the agent endpoint faces collectors, through its own
 LoadBalancer Service ("The agent endpoint" above).
 
+### The Agent's kubelet access
+
+The supervisor-collector chart's Agent (the node role) runs whatever
+configuration a member deploys to its group, and its pods mount their
+ServiceAccount token: a configuration can send that token anywhere (a
+`filelog` receiver on the token file and any exporter). So the Agent's
+ClusterRole is what any member who can deploy to that group can do in the
+customer's cluster, and it is kept to what `kubeletstats` reads:
+
+- `get` on `nodes/stats` (`/stats/summary`) and `nodes/pods` (`/pods`, for
+  `extra_metadata_labels` and the request and limit utilization metrics),
+  and nothing else by default.
+- `nodes/proxy` is every other kubelet path, exec, attach and
+  port-forward into any pod on any node included: the same as exec, so
+  close to the cluster's whole. A kubelet without fine-grained
+  authorization (before Kubernetes 1.33, or with it turned off) asks for
+  it for `/pods`. The chart grants it only with `kubeletProxy: true`, an
+  operator's choice its values file and README describe as exec. Before
+  chart 0.2.0 it was always granted.
+- The platform doesn't police the configuration's endpoints instead (a
+  `kubeletstats` endpoint other than the node's own): the token leaves by
+  any exporter, so the ClusterRole is the boundary.
+
 ### The pull secret
 
 The platform's images and chart are public on GHCR, as the opamp-server's

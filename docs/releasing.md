@@ -236,8 +236,8 @@ order. Each `gh api` line runs with that admin's own GitHub CLI login.
 5. **The collector images first**: the collector workflow
    with `all` and `publish: true` (below), so `ghcr.io/telflo/telflo/
    collector` holds every version the catalog offers and the
-   supervisor-collector chart 0.1.0 is published. The release's first job
-   fails otherwise (`run the collector workflow for <version>`). After
+   supervisor-collector chart at the contracts' `DEFAULT_HELM_CHART_VERSION`
+   is published. The release's first job fails otherwise (`run the collector workflow for <version>`). After
    steps 1, 2 and 4 (the publish job runs in the `release` environment),
    start it:
 

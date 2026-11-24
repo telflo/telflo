@@ -4302,7 +4302,7 @@ platform PATCH "$K8S_FLEET_URL/groups/$k8s_default_group_id" "$(jq -cn --argjson
 # perhaps) in the throwaway stack by a failed one, which is harmless.
 # The platform's own chart and image: the settings' defaults.
 HELM_CHART_REFERENCE="oci://ghcr.io/telflo/telflo/charts/supervisor-collector"
-HELM_CHART_VERSION="0.1.0"
+HELM_CHART_VERSION="0.2.0"
 HELM_IMAGE_REPOSITORY="ghcr.io/telflo/telflo/collector"
 HELM_TOKEN_LINE='^token: "([A-Za-z0-9+/]+={0,2})"$'
 # helm_token_of <file>: the values file's one token line's bearer, into $helm_token ("" unless exactly one line

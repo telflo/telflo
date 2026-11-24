@@ -58,6 +58,16 @@ release's images, Helm chart and Compose install are on its
   (`OPAMP_TOKEN='…' NAME='…' docker run … -e OPAMP_TOKEN -e NAME …`), so
   their values are in `docker`'s environment, never its command line,
   which every user on the host can read while it runs.
+- The supervisor-collector chart 0.2.0 (the platform's default): the
+  Agent's ClusterRole grants `get` on `nodes/stats` and `nodes/pods`, no
+  longer `nodes/proxy`. `nodes/proxy` reaches every kubelet path, exec into
+  any pod included, and any member who can deploy to the Agent's group
+  could have its collector send its token out. `kubeletstats` needs only
+  `nodes/stats`, plus `nodes/pods` for `extra_metadata_labels` and the
+  request and limit utilization metrics. A kubelet older than Kubernetes
+  1.33 (or without fine-grained authorization) asks for `nodes/proxy` for
+  those two instead: on such a cluster they answer 403 until the release
+  sets `kubeletProxy: true`, which grants it again.
 
 ## 0.2.2 - 2026-11-22
 
