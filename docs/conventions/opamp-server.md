@@ -372,6 +372,13 @@ of the local testing above):
      (`scripts/smoke-kind.sh`) and the PIN check's self-test read the
      version and digest from the PIN, so they need no edit. A changed
      platform chart ships in its next version;
+   - the static jobs' clone of the server, in `.github/workflows/ci.yml`
+     and `.github/workflows/release.yml`: `git clone --branch v0.2.0
+     https://github.com/telflo/opamp-server.git ../opamp-server`, the PIN's
+     tag (`scripts/release/check-workflows.sh` refuses any other), and the
+     two fixtures that break it, `scripts/release/testdata/workflows/`
+     `37-opamp-clone.fixture` and `131-ci-opamp-clone-version.fixture`,
+     whose find text is that line;
    - the vendored files from the new tag, which `--restore` writes from the
      PIN's commit and then checks:
 
