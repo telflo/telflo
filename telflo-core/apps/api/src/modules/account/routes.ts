@@ -94,7 +94,12 @@ export function createDatabasePersonalApiTokenService(db: Kysely<Database>, now:
         audit: createAuditRepository(transaction),
       }),
     );
-  return createPersonalApiTokenService({ withTransaction, now });
+  return createPersonalApiTokenService({
+    withTransaction,
+    now,
+    users: createUserRepository(db),
+    audit: createAuditRepository(db),
+  });
 }
 
 /**
@@ -217,8 +222,9 @@ export function registerAccountRoutes(
 
   // A person's own API tokens: the person's only, never an organization's,
   // so no admin check and no organization in the path; `authenticate` only
-  // (no terms), the CSRF guard on the writes. Not rate limited: the cap of 20
-  // under the user's lock bounds a create.
+  // (no terms), the CSRF guard on the writes. The list and the revoke aren't
+  // rate limited; the create is, for its password (the cap of 20 under the
+  // user's lock bounds what it makes).
   typed.get(
     "/api/v1/auth/me/api-tokens",
     { preHandler: authenticate, schema: { response: { 200: ApiTokensResponseSchema, ...errorResponses } } },
@@ -229,18 +235,38 @@ export function registerAccountRoutes(
   );
 
   // The one reply that carries a personal token: never logged (the request
-  // log has no bodies), never cached.
+  // log has no bodies, so neither the token nor the password), never cached.
+  // The current password, when the account has one, before anything is made
+  // (the service), behind the password change's limits: the shared per-IP
+  // bucket, then sign-in's per-email failure budget by the session's address.
   typed.post(
     "/api/v1/auth/me/api-tokens",
     {
-      preHandler: authenticate,
+      onRequest: rateLimiters.identityPerIp,
+      preHandler: [authenticate, rateLimiters.signInPerEmail.reauthenticationPreHandler],
       schema: {
         body: CreateApiTokenRequestSchema,
-        response: { 201: CreatedApiTokenResponseSchema, ...errorResponses, 409: ErrorResponseSchema },
+        response: { 201: CreatedApiTokenResponseSchema, ...errorResponses, 409: ErrorResponseSchema, 429: ErrorResponseSchema },
       },
     },
     async (request, reply) => {
-      const created = await personalApiTokens.create(actorOf(request), request.body);
+      const authentication = requireAuthentication(request);
+      // Settled exactly once: a verified password clears the address;
+      // anything else, an account without a password included, keeps the
+      // count only for a wrong current password.
+      let isReauthenticated = false;
+      let failure: unknown;
+      let created;
+      try {
+        created = await personalApiTokens.create(actorOf(request), request.body);
+        isReauthenticated = created.isReauthenticated;
+      } catch (error) {
+        failure = error;
+        throw error;
+      } finally {
+        if (isReauthenticated) rateLimiters.signInPerEmail.reauthenticated(authentication.email);
+        else rateLimiters.signInPerEmail.reauthenticationSettled(authentication.email, failure);
+      }
       return reply
         .status(201)
         .header("cache-control", NO_STORE)

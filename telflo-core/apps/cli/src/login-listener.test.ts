@@ -1,4 +1,4 @@
-import { randomBytes } from "node:crypto";
+import { createHmac, randomBytes } from "node:crypto";
 import { request } from "node:http";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { handOff, sendToListener, type ListenerReply } from "../tests/listener-request.js";
@@ -6,9 +6,10 @@ import {
   CALLBACK_PATH,
   cliAuthUrl,
   LISTENER_TIMEOUT_MS,
+  listenerProof,
   MAXIMUM_BODY_BYTES,
-  MAXIMUM_REFUSALS,
   newState,
+  PROOF_CONTEXT,
   startLoginListener,
   STATE_PATTERN,
   type ListenerOutcome,
@@ -17,9 +18,9 @@ import {
 
 /*
  * The login listener against real loopback requests: what it accepts,
- * every refusal (403 or 404, no body, the wait kept),
- * `Access-Control-Allow-Origin` on every reply, the preflight, ten
- * refusals, the five minutes. Tokens are made at run time and checked with
+ * every refusal (403 or 404, no body, the wait kept, however many),
+ * `Access-Control-Allow-Origin` on every reply, the preflight, the
+ * challenge's proof, the five minutes. Tokens are made at run time and checked with
  * boolean canaries only.
  */
 
@@ -271,20 +272,15 @@ describe("the listener refuses anything else, and keeps waiting", () => {
     expect(await settledAnswer(started)).toBe(PENDING);
   });
 
-  it(`stops after ${MAXIMUM_REFUSALS} refusals, a valid answer after them never taken`, async () => {
+  it("keeps waiting however many requests it refuses, so none frees its port: a valid answer after 50 is taken", async () => {
     const started = await start();
-    for (let index = 1; index < MAXIMUM_REFUSALS; index += 1) {
+    for (let index = 0; index < 50; index += 1) {
       expectRefusal(await handOff(started.port, "https://elsewhere.example", { state, token }), 403);
+      expectRefusal(await sendToListener(started.port, { method: "GET", path: "/" }), 404);
     }
     expect(await settledAnswer(started)).toBe(PENDING);
-    expectRefusal(await sendToListener(started.port, { method: "GET", path: "/" }), 404);
-    expect(await started.answer).toEqual({ kind: "refused" });
-    const after = await handOff(started.port, ORIGIN, { state, token }).then(
-      (each) => each.status,
-      () => "refused",
-    );
-    expect(after === "refused" || after === 403).toBe(true);
-    expect(await started.answer).toEqual({ kind: "refused" });
+    expect((await handOff(started.port, ORIGIN, { state, token })).status).toBe(204);
+    expect(await started.answer).toEqual({ kind: "token", token });
   });
 });
 
@@ -318,3 +314,46 @@ describe("the listener's end", () => {
     expect(await started.answer).toEqual({ kind: "closed" });
   });
 });
+
+describe("the challenge: the listener proves it knows the state before the page sends anything", () => {
+  const challenge = (): string => randomBytes(32).toString("base64url");
+
+  it("answers { challenge } with 200 { proof }, the HMAC-SHA256 of the challenge keyed by the state, and keeps waiting", async () => {
+    const started = await start();
+    const sent = challenge();
+    const reply = await handOff(started.port, ORIGIN, { challenge: sent });
+    expect(reply.status).toBe(200);
+    expect(reply.headers["access-control-allow-origin"]).toBe(ORIGIN);
+    expect(reply.headers["content-type"]).toBe("application/json");
+    expect(reply.headers["cache-control"]).toBe("no-store");
+    const expected = createHmac("sha256", state).update(PROOF_CONTEXT + sent, "utf8").digest("base64url");
+    expect(JSON.parse(reply.body)).toEqual({ proof: expected });
+    expect(listenerProof(state, sent)).toBe(expected);
+    // The body holds a proof, never the state.
+    expect(reply.body.includes(state)).toBe(false);
+    expect(await settledAnswer(started)).toBe(PENDING);
+    expect((await handOff(started.port, ORIGIN, { state, token })).status).toBe(204);
+    expect(await started.answer).toEqual({ kind: "token", token });
+  });
+
+  it("proves each challenge anew: two challenges, two proofs", async () => {
+    const started = await start();
+    const [first, second] = [challenge(), challenge()];
+    const proofs = await Promise.all([first, second].map(async (each) => JSON.parse((await handOff(started.port, ORIGIN, { challenge: each })).body).proof));
+    expect(proofs).toEqual([listenerProof(state, first), listenerProof(state, second)]);
+    expect(proofs[0]).not.toBe(proofs[1]);
+  });
+
+  it.each([
+    ["another origin", "https://elsewhere.example", { challenge: "c".repeat(43) }],
+    ["a challenge too short", ORIGIN, { challenge: "c".repeat(42) }],
+    ["a challenge not base64url", ORIGIN, { challenge: `${"c".repeat(42)}=` }],
+    ["a challenge that isn't a string", ORIGIN, { challenge: 43 }],
+    ["a challenge beside another key", ORIGIN, { challenge: "c".repeat(43), state: "x" }],
+  ] as const)("refuses %s (403, no body), and keeps waiting", async (_case, origin, body) => {
+    const started = await start();
+    expectRefusal(await handOff(started.port, origin, body), 403);
+    expect(await settledAnswer(started)).toBe(PENDING);
+  });
+});
+

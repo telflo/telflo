@@ -10,6 +10,7 @@ import { Button } from "~/components/ui/button.js";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card.js";
 import { useAccountRead } from "~/lib/account.js";
 import { getPersonalApiTokens } from "~/lib/api-client.js";
+import { currentPasswordAskOf } from "~/lib/api-tokens.js";
 import {
   PERSONAL_API_TOKENS_DESCRIPTION,
   PERSONAL_API_TOKENS_EMPTY,
@@ -29,7 +30,8 @@ import {
  *   visible text in the masked shell; "Loading…", or "Failed to load API
  *   tokens" with "Try again"; "No tokens yet."
  * - "Create token" opens the shared create dialog (CreateApiTokenDialog) with
- *   the person's own calls; its reply's token is held in this card's state for
+ *   the person's own calls, asking the current password unless the account
+ *   is known to have none; its reply's token is held in this card's state for
  *   the reveal dialog alone (inside ph-no-capture, the copy button only),
  *   dropped however the reveal closes, and the list is read again then, not
  *   while it is shown.
@@ -43,7 +45,12 @@ import {
 
 const loadTokens = (signal: AbortSignal): Promise<ApiTokensResponse> => getPersonalApiTokens({ signal });
 
-export function PersonalApiTokensCard() {
+/**
+ * `hasPassword`: whether the account has a password, from the page's
+ * sign-in methods (undefined while unread or failed): the create asks the
+ * current password when it does, and may when that isn't known.
+ */
+export function PersonalApiTokensCard({ hasPassword }: { hasPassword?: boolean | undefined } = {}) {
   const { read, reload } = useAccountRead(loadTokens);
   const calls = usePersonalApiTokenCalls();
   const [createOpen, setCreateOpen] = useState(false);
@@ -90,6 +97,7 @@ export function PersonalApiTokensCard() {
         open={createOpen}
         onOpenChange={setCreateOpen}
         calls={calls}
+        currentPassword={currentPasswordAskOf(hasPassword)}
         onCreated={setRevealed}
         onUnknownOutcome={reload}
       />

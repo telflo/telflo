@@ -150,7 +150,7 @@ describe("the token check end to end, on a test-only route", () => {
       url: `${accountUrl(admin.group.id, serviceAccountId)}/api-tokens`,
       headers: csrfHeaders,
       cookies: { telflo_access: admin.access },
-      payload: { name: `token-${randomUUID()}`, access: "write", expiresInDays: null },
+      payload: { name: `token-${randomUUID()}`, access: "write", expiresInDays: null, currentPassword: PASSWORD },
     });
     expect(minted.statusCode).toBe(201);
     const { apiToken, token } = minted.json<{ apiToken: { id: string }; token: string }>();

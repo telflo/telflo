@@ -155,6 +155,12 @@ Pre-indented to 6 spaces (pod template metadata).
       annotations:
         checksum/token: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
 {{- if .Values.collectorEnv }}
-        checksum/collector-env: {{ .Values.collectorEnv | toJson | sha256sum }}
+{{- /*
+Keyed by the token: whoever reads pods but not Secrets sees this hash, and
+the values' own hash would let them test guesses offline. The token is in a
+Secret, and unguessable (an AES-GCM blob); one token and one map give one
+hash on every render (helm template too), and a value's change changes it.
+*/}}
+        checksum/collector-env: {{ dict "token" .Values.token "collectorEnv" .Values.collectorEnv | toJson | sha256sum }}
 {{- end }}
 {{- end -}}

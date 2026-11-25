@@ -16,6 +16,7 @@ import pytest
 
 from app import run as run_module
 from app.neutralise import (
+    BINARY_MESSAGE,
     REFUSED_PROVIDERS_MESSAGE,
     UNCHECKED_MESSAGE,
     Neutralised,
@@ -167,3 +168,39 @@ def test_the_backstop_reads_the_exact_text_the_collector_gets(
     assert answer["status"] == "succeeded"
     assert checked == [(workspace.parent / "as-read").read_text()]
     assert checked[0].endswith("# mutated\n")
+
+
+# A `!!binary` value: the collector decodes it and expands the references in
+# what it decodes (base64 of `${file:/etc/hostname}` here), which no scan of
+# the composed values sees, so a text holding one is refused before any
+# collector starts, in every spelling of the tag (providers.BINARY_TAG).
+_BINARY_REFERENCE = "JHtmaWxlOi9ldGMvaG9zdG5hbWV9"
+_BINARY_TEXTS = [
+    f"a: !!binary {_BINARY_REFERENCE}\n",
+    f"a: !<tag:yaml.org,2002:binary> {_BINARY_REFERENCE}\n",
+    f"%TAG !y! tag:yaml.org,2002:\n---\na: !y!binary {_BINARY_REFERENCE}\n",
+    f"? !!binary {_BINARY_REFERENCE}\n: x\n",
+    f"r: &r !!binary {_BINARY_REFERENCE}\na: *r\n",
+]
+
+
+@pytest.mark.parametrize("text", _BINARY_TEXTS)
+def test_neutralise_refuses_a_binary_value(text: str) -> None:
+    assert neutralise(text) == Refusal(code="refused", message=BINARY_MESSAGE)
+
+
+@pytest.mark.parametrize("text", _BINARY_TEXTS)
+def test_the_backstop_refuses_a_binary_value(text: str) -> None:
+    assert backstop(text, []) == Refusal(code="refused", message=BINARY_MESSAGE)
+
+
+def test_a_binary_value_never_reaches_a_collector(marked: tuple[Path, Path, Path]) -> None:
+    binary, workspace, marker = marked
+
+    answer = asyncio.run(execute(_request(binary, workspace, _BINARY_TEXTS[0])))
+
+    assert answer["status"] == "failed"
+    assert answer["error"] == {"code": "refused", "message": BINARY_MESSAGE}
+    assert answer["mutatedYaml"] is None
+    assert not marker.exists()
+    assert not (workspace / "config.yaml").exists()

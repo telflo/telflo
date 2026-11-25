@@ -86,7 +86,8 @@ export function createIdentityService(deps: IdentityDependencies) {
     await mailer.send({
       to: email,
       ...buildVerificationEmail({
-        verificationUrl: `${settings.publicWebUrl}/verify-email?token=${token}`,
+        // In the fragment, as the reset's and the invitation's: it never reaches a server, its logs or a Referer.
+        verificationUrl: `${settings.publicWebUrl}/verify-email#token=${token}`,
         ttlHours: settings.verificationTokenTtlHours,
       }),
     });

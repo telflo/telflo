@@ -7,6 +7,82 @@ release's images, Helm chart and Compose install are on its
 
 ## Unreleased
 
+### Security
+
+- The collector validator and the collector tester refuse a configuration
+  holding a `!!binary` value. PyYAML reads it as its base64 text, but the
+  collector decodes it and expands the configuration provider references
+  in what it decodes, so a `${file:…}` or `${http:…}` reference written
+  that way got past the neutralization: the collector read the file or
+  made the request, and quoted the result in its errors. Such a text is
+  now answered `refused`, and no collector runs.
+- An install's needed environment variables are read in linear time.
+  The scan of a published version's YAML took time in the square of its
+  length on a long run of `$`, or of `${env:A:-` with no closing `}`: a
+  member's 256 KiB version held the API's event loop, for every
+  organization, for up to minutes, each time its install dialog or a
+  quick-deploy download was opened.
+- The CSRF header is required on every state-changing request but the
+  public API's (`/api/public/v1`, which takes a bearer token and no
+  cookie), decided by the route the request matched. Before, a spelling of
+  the `/api/v1/` prefix the router decodes (`/%61pi/v1/…`) skipped the
+  check and still reached the cookie-authenticated route.
+- The gateway reads a request line in linear time when it decides whether
+  to redact the line's URL as the public API's. The pattern was
+  unanchored, with two greedy runs, and backtracked in the cube of the
+  line's length: one request of about 6,600 characters, with no
+  credentials, held an nginx worker for 20 seconds. The same fix is in the
+  Helm chart's gateway, the Compose install's and the development stack's.
+- An email confirmation link carries its token in the fragment
+  (`/verify-email#token=…`), as the password reset and the invitation
+  links do, so it never reaches a server, its logs or a `Referer`. Before,
+  it was in the query, and the gateway logged it in full. A link sent
+  before still works, and the gateway now logs `/verify-email` without its
+  query and redacts a `Referer` naming it.
+- `telflo config pull` and `telflo flows pull` print stored YAML to a
+  terminal without its control characters, as every other human output
+  does. Another member's YAML holding an escape sequence (concealed text,
+  a link, a clipboard write) could drive the reader's terminal. Piped or
+  redirected output is still the YAML byte for byte.
+- `telflo login`'s browser handoff: the CLI's local listener no longer
+  stops after ten refused requests, and the approval page sends the token
+  (or Cancel's answer) only after the listener proves, with an HMAC of a
+  fresh challenge keyed by the login's secret state, that it is this
+  login's. Before, another process on the machine could stop the listener
+  with ten requests, bind its port, and receive the token. A CLI older
+  than this page's check gets the token to paste instead.
+- The container install command (the install dialog's "Container image
+  — pull and run", `telflo fleet install --platform docker` and the
+  public API's docker install) sets the fleet's token and the included
+  organization variables before `docker run`
+  (`OPAMP_TOKEN='…' NAME='…' docker run … -e OPAMP_TOKEN -e NAME …`), so
+  their values are in `docker`'s environment, never its command line,
+  which every user on the host can read while it runs.
+- The supervisor-collector chart 0.2.0 (the platform's default): the
+  Agent's ClusterRole grants `get` on `nodes/stats` and `nodes/pods`, no
+  longer `nodes/proxy`. `nodes/proxy` reaches every kubelet path, exec into
+  any pod included, and any member who can deploy to the Agent's group
+  could have its collector send its token out. `kubeletstats` needs only
+  `nodes/stats`, plus `nodes/pods` for `extra_metadata_labels` and the
+  request and limit utilization metrics. A kubelet older than Kubernetes
+  1.33 (or without fine-grained authorization) asks for `nodes/proxy` for
+  those two instead: on such a cluster they answer 403 until the release
+  sets `kubeletProxy: true`, which grants it again.
+- The same chart's `checksum/collector-env` pod annotation hashes the
+  `collectorEnv` values together with the fleet's token. It was the
+  values' bare sha256, so anyone who could read pods but not Secrets could
+  test guesses at a weak value offline. The pods still roll exactly when a
+  value changes.
+- Creating an API token asks for the current password, when the account
+  has one: a personal token in Settings' Create API token dialog and on
+  the page `telflo login` opens, before Approve; a service account's token
+  in its Create API token dialog, the admin's password. Before, a
+  signed-in session alone could make a write token that never expires, and
+  the token outlived the session's sign-out and a password reset (a service
+  account's, even the admin's removal). A wrong password is refused and
+  audited, counts toward the sign-in's failure limit, and makes nothing.
+  An account that signs in only with Google is asked nothing.
+
 ## 0.2.2 - 2026-11-22
 
 ### Added

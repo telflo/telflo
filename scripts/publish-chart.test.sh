@@ -174,6 +174,10 @@ edit() { # <file> <sed expression>
   sed -e "$2" "$1" >"$1.new" && mv "$1.new" "$1"
 }
 HELM_TS=telflo-core/packages/contracts/src/helm.ts
+# The chart's own version, read so a version bump needs no change here (9.9.9
+# is any other); V_RE is it as an extended regex.
+V="$(sed -n 's/^version: //p' "$root/charts/supervisor-collector/Chart.yaml")"
+V_RE="$(printf '%s' "$V" | sed 's/\./\\./g')"
 
 # The repository most cases run from.
 make_copy; repo="$copy"; script="$repo/scripts/publish-chart.sh"
@@ -200,7 +204,7 @@ for bad in docker.io ghcr.io/telflo/platform ghcr.io/telflo 10.0.0.1:5000 localh
 done
 run --dry-run --bogus
 check "an unknown argument refused" "[ $rc -eq 2 ] && has 'unknown argument: --bogus' && no_helm"
-make_copy; edit "$copy/charts/supervisor-collector/Chart.yaml" 's/^version: .*/version: 0.1.1/'
+make_copy; edit "$copy/charts/supervisor-collector/Chart.yaml" 's/^version: .*/version: 9.9.9/'
 run_script "$copy/scripts/publish-chart.sh" --dry-run
 check "a chart version not the contracts' DEFAULT_HELM_CHART_VERSION refused" \
   "[ $rc -eq 2 ] && has \"is not the contracts' DEFAULT_HELM_CHART_VERSION\" && no_helm"
@@ -208,11 +212,11 @@ make_copy; edit "$copy/charts/supervisor-collector/Chart.yaml" 's/^name: .*/name
 run_script "$copy/scripts/publish-chart.sh" --dry-run
 check "a chart name not the contracts' reference's last segment refused" \
   "[ $rc -eq 2 ] && has \"is not the last segment of the contracts' DEFAULT_HELM_CHART_REFERENCE\" && no_helm"
-make_copy; edit "$copy/$HELM_TS" 's/^export const DEFAULT_HELM_CHART_VERSION = "0.1.0";$/export const DEFAULT_HELM_CHART_VERSION = "0.2.0";/'
+make_copy; edit "$copy/$HELM_TS" 's/^export const DEFAULT_HELM_CHART_VERSION = "[^"]*";$/export const DEFAULT_HELM_CHART_VERSION = "9.9.9";/'
 run_script "$copy/scripts/publish-chart.sh" --dry-run
 check "the contracts' version moved without the chart's refused" \
-  "[ $rc -eq 2 ] && has \"is not the contracts' DEFAULT_HELM_CHART_VERSION ('0.2.0')\" && no_helm"
-make_copy; printf 'export const DEFAULT_HELM_CHART_VERSION = "0.1.0";\n' >>"$copy/$HELM_TS"
+  "[ $rc -eq 2 ] && has \"is not the contracts' DEFAULT_HELM_CHART_VERSION ('9.9.9')\" && no_helm"
+make_copy; printf 'export const DEFAULT_HELM_CHART_VERSION = "%s";\n' "$V" >>"$copy/$HELM_TS"
 run_script "$copy/scripts/publish-chart.sh" --dry-run
 check "two DEFAULT_HELM_CHART_VERSION lines refused" "[ $rc -eq 2 ] && has 'expected exactly one line' && no_helm"
 make_copy; edit "$copy/$HELM_TS" 's/^export const DEFAULT_HELM_CHART_REFERENCE = /export const DEFAULT_HELM_CHART_REFERENCE: string = /'
@@ -245,14 +249,14 @@ check "a contracts' default that isn't lowercase oci:// refused" "[ $rc -eq 2 ] 
 
 # --- 2. a dry run: the checks in order, the exact push printed ---------------------------
 run --dry-run
-want_re="^helm push '$tmp/scratch/publish-chart\.[A-Za-z0-9]+/package/supervisor-collector-0\.1\.0\.tgz' 'oci://ghcr\.io/telflo/telflo/charts'\$"
+want_re="^helm push '$tmp/scratch/publish-chart\.[A-Za-z0-9]+/package/supervisor-collector-$V_RE\.tgz' 'oci://ghcr\.io/telflo/telflo/charts'\$"
 check "a clean checkout goes on" "[ $rc -eq 0 ] && ! has 'uncommitted' && helm_ran package"
 check "a dry run prints exactly: helm push '<package>' 'oci://ghcr.io/telflo/telflo/charts'" \
   "[ $rc -eq 0 ] && [ \$(printf '%s\n' \"\$printed\" | grep -c '') -eq 1 ] && printf '%s\n' \"\$printed\" | grep -qE \"\$want_re\""
-check "the package is supervisor-collector-0.1.0.tgz, made in a temporary directory removed afterwards" \
-  "has 'supervisor-collector-0.1.0.tgz' && [ -z \"\$(ls '$tmp/scratch')\" ]"
+check "the package is supervisor-collector-$V.tgz, made in a temporary directory removed afterwards" \
+  "has 'supervisor-collector-$V.tgz' && [ -z \"\$(ls '$tmp/scratch')\" ]"
 check "the registry asked (crane manifest) for exactly the contracts' reference and version" \
-  "[ \"\$(cat '$logs/crane-calls.log')\" = 'manifest ghcr.io/telflo/telflo/charts/supervisor-collector:0.1.0 ' ] && has 'is not in the registry yet'"
+  "[ \"\$(cat '$logs/crane-calls.log')\" = 'manifest ghcr.io/telflo/telflo/charts/supervisor-collector:$V ' ] && has 'is not in the registry yet'"
 check "the render tests ran (helm template) and helm lint --strict for the three roles before packaging" \
   "helm_ran template && [ \$(grep -cE '^lint --strict [^ ]+/charts/supervisor-collector -f [^ ]+/values/(node|cluster|gateway)\.yaml' '$logs/helm-calls.log') -eq 3 ] && [ \"\$(last_line_of template)\" -lt \"\$(line_of package)\" ] && [ \"\$(last_line_of lint)\" -lt \"\$(line_of package)\" ]"
 check "nothing pushed" "! helm_ran push && has 'dry run: nothing pushed'"
@@ -273,10 +277,10 @@ check "a version the registry holds refused (dry run): nothing printed" \
   "[ $rc -eq 1 ] && has 'is published already' && [ -z \"\$printed\" ]"
 STANDIN_CRANE=denied run --dry-run
 check "any other answer: the dry run says it can't tell, with crane's error line, and prints the push" \
-  "[ $rc -eq 0 ] && has \"can't tell whether oci://ghcr.io/telflo/telflo/charts/supervisor-collector 0.1.0 is published\" && has 'DENIED' && ! has 'No matching credentials' && printf '%s\n' \"\$printed\" | grep -q '^helm push '"
+  "[ $rc -eq 0 ] && has \"can't tell whether oci://ghcr.io/telflo/telflo/charts/supervisor-collector $V is published\" && has 'DENIED' && ! has 'No matching credentials' && printf '%s\n' \"\$printed\" | grep -q '^helm push '"
 STANDIN_CRANE=name-unknown run --dry-run --registry 127.0.0.1:5999
 check "NAME_UNKNOWN is absent; --registry 127.0.0.1:<port>: <registry>/telflo/telflo/charts, the push with --plain-http" \
-  "[ $rc -eq 0 ] && crane_read 127.0.0.1:5999/telflo/telflo/charts/supervisor-collector:0.1.0 && printf '%s\n' \"\$printed\" | grep -qE \"^helm push --plain-http '[^']+/supervisor-collector-0\\.1\\.0\\.tgz' 'oci://127\\.0\\.0\\.1:5999/telflo/telflo/charts'\\\$\""
+  "[ $rc -eq 0 ] && crane_read 127.0.0.1:5999/telflo/telflo/charts/supervisor-collector:$V && printf '%s\n' \"\$printed\" | grep -qE \"^helm push --plain-http '[^']+/supervisor-collector-$V_RE\\.tgz' 'oci://127\\.0\\.0\\.1:5999/telflo/telflo/charts'\\\$\""
 clear_logs
 out="$(env -u HELM_REGISTRY_CONFIG -u DOCKER_CONFIG TMPDIR="$tmp/scratch" TELFLO_HELM_CHART_REFERENCE=oci://ghcr.io/telflo/platform/charts/supervisor-collector "$shell" "$script" --dry-run --registry 127.0.0.1:5999 2>&1)"; rc=$?
 check "TELFLO_HELM_CHART_REFERENCE refused with --registry" "[ $rc -eq 2 ] && has 'TELFLO_HELM_CHART_REFERENCE is refused' && no_helm && no_crane"
@@ -284,12 +288,12 @@ check "TELFLO_HELM_CHART_REFERENCE refused with --registry" "[ $rc -eq 2 ] && ha
 # --- 4. --package: every check but the registry's, then the package --------------------
 pkg="$(fresh_pkg)"
 run --package "$pkg"
-want_sum="$(shasum -a 256 "$pkg/supervisor-collector-0.1.0.tgz" 2>/dev/null | cut -c1-64)"
-check "--package writes <dir>/supervisor-collector-0.1.0.tgz and prints its path and sha256, one line" \
-  "[ $rc -eq 0 ] && [ -f '$pkg/supervisor-collector-0.1.0.tgz' ] && [ \"\$printed\" = \"$pkg/supervisor-collector-0.1.0.tgz sha256:\$want_sum\" ] && [ \"\$(ls '$pkg')\" = supervisor-collector-0.1.0.tgz ]"
+want_sum="$(shasum -a 256 "$pkg/supervisor-collector-$V.tgz" 2>/dev/null | cut -c1-64)"
+check "--package writes <dir>/supervisor-collector-$V.tgz and prints its path and sha256, one line" \
+  "[ $rc -eq 0 ] && [ -f '$pkg/supervisor-collector-$V.tgz' ] && [ \"\$printed\" = \"$pkg/supervisor-collector-$V.tgz sha256:\$want_sum\" ] && [ \"\$(ls '$pkg')\" = supervisor-collector-$V.tgz ]"
 check "--package ran the render tests and lint first, asked no registry, pushed nothing" \
   "helm_ran template && helm_ran lint && helm_ran package && no_crane && ! helm_ran push && [ -z \"\$(ls '$tmp/scratch')\" ]"
-tar -tzf "$pkg/supervisor-collector-0.1.0.tgz" >"$logs/package-files" 2>/dev/null
+tar -tzf "$pkg/supervisor-collector-$V.tgz" >"$logs/package-files" 2>/dev/null
 check "the package is the chart, without its tests" \
   "grep -qx 'supervisor-collector/Chart.yaml' '$logs/package-files' && grep -qx 'supervisor-collector/templates/secret.yaml' '$logs/package-files' && ! grep -q '/tests/' '$logs/package-files'"
 run --package "$pkg"
@@ -302,13 +306,13 @@ repack() { # <source tgz> <destination tgz> <sed expression on Chart.yaml> [<fil
   [ -z "${4:-}" ] || printf '# changed\n' >>"$d/supervisor-collector/$4"
   (cd "$d" && tar -czf "$2" supervisor-collector)
 }
-the_package="$pkg/supervisor-collector-0.1.0.tgz"
+the_package="$pkg/supervisor-collector-$V.tgz"
 mkdir -p "$tmp/other-version" "$tmp/other-bytes"
-repack "$the_package" "$tmp/other-version/supervisor-collector-0.1.1.tgz" 's/^version: .*/version: 0.1.1/'
-repack "$the_package" "$tmp/other-bytes/supervisor-collector-0.1.0.tgz" 's/^version: /version: /' values.yaml
-run --push-package "$tmp/other-version/supervisor-collector-0.1.1.tgz"
+repack "$the_package" "$tmp/other-version/supervisor-collector-9.9.9.tgz" 's/^version: .*/version: 9.9.9/'
+repack "$the_package" "$tmp/other-bytes/supervisor-collector-$V.tgz" 's/^version: /version: /' values.yaml
+run --push-package "$tmp/other-version/supervisor-collector-9.9.9.tgz"
 check "a package whose version isn't HEAD's Chart.yaml's refused before the registry" \
-  "[ $rc -eq 1 ] && has \"version '0.1.1', but HEAD's charts/supervisor-collector/Chart.yaml is 0.1.0\" && no_crane && ! helm_ran push"
+  "[ $rc -eq 1 ] && has \"version '9.9.9', but HEAD's charts/supervisor-collector/Chart.yaml is $V\" && no_crane && ! helm_ran push"
 pkg_t="$(fresh_pkg)"; mkdir -p "$pkg_t/x/telflo"
 printf 'apiVersion: v2\nname: telflo\nversion: 0.1.0\nappVersion: "0.1.0"\n' >"$pkg_t/x/telflo/Chart.yaml"
 (cd "$pkg_t/x" && tar -czf "$pkg_t/telflo-0.1.0.tgz" telflo)
@@ -319,10 +323,10 @@ out="$(env -u HELM_REGISTRY_CONFIG -u DOCKER_CONFIG TMPDIR="$tmp/scratch" TELFLO
 check "TELFLO_HELM_CHART_REFERENCE refused with --push-package (its destination is fixed)" "[ $rc -eq 2 ] && has 'TELFLO_HELM_CHART_REFERENCE is refused' && no_crane"
 STANDIN_CRANE=denied run --push-package "$the_package"
 check "--push-package refuses when the registry can't tell (DENIED), nothing pushed" \
-  "[ $rc -eq 1 ] && has \"can't tell whether oci://ghcr.io/telflo/telflo/charts/supervisor-collector:0.1.0 is published\" && ! helm_ran push"
+  "[ $rc -eq 1 ] && has \"can't tell whether oci://ghcr.io/telflo/telflo/charts/supervisor-collector:$V is published\" && ! helm_ran push"
 STANDIN_CRANE=present STANDIN_DIGEST="sha256:$want_sum" run --push-package "$the_package"
 check "--push-package skips a version whose chart layer is this package's sha256, nothing pushed" \
-  "[ $rc -eq 0 ] && has 'holds this package already' && [ \"\$printed\" = 'oci://ghcr.io/telflo/telflo/charts/supervisor-collector:0.1.0 sha256:$want_sum' ] && ! helm_ran push"
+  "[ $rc -eq 0 ] && has 'holds this package already' && [ \"\$printed\" = 'oci://ghcr.io/telflo/telflo/charts/supervisor-collector:$V sha256:$want_sum' ] && ! helm_ran push"
 STANDIN_CRANE=present run --push-package "$the_package"
 check "--push-package refuses a version published with another content digest, nothing pushed" \
   "[ $rc -eq 1 ] && has 'is published already with sha256:1111' && has 'nothing pushed' && ! helm_ran push"
@@ -342,15 +346,15 @@ if $push_ok; then
     out="$(printf '%s\n' "$printed"; cat "$tmp/stderr")"
     printf '%s\n' "$out" >>"$logs/all-output.log"
   }
-  layer() { DOCKER_CONFIG="$TR_CONFIG" "$real_crane" manifest "$REG/telflo/telflo/charts/supervisor-collector:0.1.0" 2>/dev/null \
+  layer() { DOCKER_CONFIG="$TR_CONFIG" "$real_crane" manifest "$REG/telflo/telflo/charts/supervisor-collector:$V" 2>/dev/null \
     | python3 -I -c 'import json,sys; print([l["digest"] for l in json.load(sys.stdin)["layers"] if l["mediaType"].endswith("chart.content.v1.tar+gzip")][0])' 2>/dev/null; }
   rpush "$the_package"
   check "--push-package pushes the file (real helm, --plain-http, oci://$REG/telflo/telflo/charts); the chart layer is its sha256" \
-    "[ $rc -eq 0 ] && [ \"\$printed\" = 'oci://$REG/telflo/telflo/charts/supervisor-collector:0.1.0 sha256:$want_sum' ] && [ \"\$(layer)\" = 'sha256:$want_sum' ] && [ \"\$(tr '\n' ' ' <'$logs/push-args')\" = 'push --plain-http $the_package oci://$REG/telflo/telflo/charts ' ]"
-  check "the registry asked before and after the push" "[ \$(grep -c '^manifest $REG/telflo/telflo/charts/supervisor-collector:0.1.0 ' '$logs/crane-calls.log') -eq 2 ]"
+    "[ $rc -eq 0 ] && [ \"\$printed\" = 'oci://$REG/telflo/telflo/charts/supervisor-collector:$V sha256:$want_sum' ] && [ \"\$(layer)\" = 'sha256:$want_sum' ] && [ \"\$(tr '\n' ' ' <'$logs/push-args')\" = 'push --plain-http $the_package oci://$REG/telflo/telflo/charts ' ]"
+  check "the registry asked before and after the push" "[ \$(grep -c '^manifest $REG/telflo/telflo/charts/supervisor-collector:$V ' '$logs/crane-calls.log') -eq 2 ]"
   rpush "$the_package"
   check "a re-run skips the published version (the same sha256): helm push not run" "[ $rc -eq 0 ] && has 'holds this package already' && ! helm_ran push"
-  rpush "$tmp/other-bytes/supervisor-collector-0.1.0.tgz"
+  rpush "$tmp/other-bytes/supervisor-collector-$V.tgz"
   check "another package of the same version (another sha256) refused: helm push not run, the chart unchanged" \
     "[ $rc -eq 1 ] && has 'is published already with sha256:$want_sum' && ! helm_ran push && [ \"\$(layer)\" = 'sha256:$want_sum' ]"
   if [ "$TR_AUTH" = 1 ]; then
@@ -742,13 +746,13 @@ check "the repository is clean again (telflo's inputs)" "[ -z \"\$(git -C '$repo
 # 7f. the default is supervisor-collector, unchanged: its own lines exactly, the same as
 # --chart supervisor-collector's, and telflo's inputs aren't its
 own_lines() { printf '%s\n' "$out" | grep -E '^(publish-chart: |helm push )' | sed -E "s#$tmp/scratch/publish-chart\.[A-Za-z0-9]+#<tmp>#g"; }
-default_want="helm push '<tmp>/package/supervisor-collector-0.1.0.tgz' 'oci://ghcr.io/telflo/telflo/charts'
+default_want="helm push '<tmp>/package/supervisor-collector-$V.tgz' 'oci://ghcr.io/telflo/telflo/charts'
 publish-chart: the chart's render tests
 publish-chart: helm lint --strict (node)
 publish-chart: helm lint --strict (cluster)
 publish-chart: helm lint --strict (gateway)
 publish-chart: helm package
-publish-chart: oci://ghcr.io/telflo/telflo/charts/supervisor-collector 0.1.0 is not in the registry yet
+publish-chart: oci://ghcr.io/telflo/telflo/charts/supervisor-collector $V is not in the registry yet
 publish-chart: dry run: nothing pushed (--package makes the package, --push-package pushes that file)"
 run --dry-run
 default_lines="$(own_lines)"

@@ -34,6 +34,10 @@ tests, tests/render-tests.sh, carry every guard.)
 {{- if not (regexMatch "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$" .Values.collectorGroupId) -}}
 {{- fail "collectorGroupId must be a collector group's id (a UUID)" -}}
 {{- end -}}
+{{- /* Absent (null, or a --reuse-values upgrade from a chart without it) is false. */ -}}
+{{- if not (or (kindIs "bool" .Values.kubeletProxy) (kindIs "invalid" .Values.kubeletProxy)) -}}
+{{- fail "kubeletProxy must be true or false" -}}
+{{- end -}}
 {{- if or (not .Values.endpoint) (not .Values.token) -}}
 {{- fail "endpoint and token are required" -}}
 {{- end -}}

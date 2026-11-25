@@ -473,9 +473,10 @@ describe("InstallDialog's container method", () => {
     serve();
     await renderDialog();
     await loaded();
-    const preview = within(dialog()).getByText(/^docker run/);
+    const preview = within(dialog()).getByText(/^OPAMP_TOKEN=/);
     expect(preview.textContent).toBe(
       [
+        `OPAMP_TOKEN='${MASKED_TOKEN}' \\`,
         "docker run -d --restart unless-stopped --name telflo-collector \\",
         "  -v telflo-opamp:/app/opamp \\",
         "  -v '/var/log/nginx:/var/log/nginx:ro' \\",
@@ -483,7 +484,7 @@ describe("InstallDialog's container method", () => {
         `  -e COLLECTOR_GROUP_ID='${GATEWAYS_GROUP_ID}' \\`,
         "  -e OPAMP_ENDPOINT='wss://opamp.example.com/v1/opamp' \\",
         "  -e OPAMP_ALLOW_INSECURE_CONNECTIONS='false' \\",
-        `  -e OPAMP_TOKEN='${MASKED_TOKEN}' \\`,
+        "  -e OPAMP_TOKEN \\",
         "  'ghcr.io/telflo/telflo/collector:0.159.0'",
       ].join("\n"),
     );
@@ -510,14 +511,15 @@ describe("InstallDialog's container method", () => {
     expect(calls.revealEnrollmentToken).toHaveBeenCalledWith(GROUP_ID, FLEET_ID, DEFAULT_TOKEN_ID, expect.objectContaining({ signal: expect.any(AbortSignal) }));
     expect(writeText).toHaveBeenCalledTimes(1);
     const copied = writeText.mock.calls[0]![0] as string;
-    expect(copied).toContain(`  -e OPAMP_TOKEN='${BEARER}' \\\n`);
+    expect(copied.startsWith(`OPAMP_TOKEN='${BEARER}' \\\n`)).toBe(true);
+    expect(copied).toContain("  -e OPAMP_TOKEN \\\n");
     expect(copied).not.toContain(MASKED_TOKEN);
     expect(success).toHaveBeenCalledWith(COPIED_MESSAGE);
     expect(onInstallStarted).toHaveBeenCalledTimes(1);
     // The box holds what was copied; the preview and the reveal are gone.
     expect(box.closest(".ph-no-capture")?.querySelector("code")?.textContent).toBe(copied);
     expect(within(dialog()).queryByRole("button", { name: "Reveal & copy command" })).toBeNull();
-    expect(within(dialog()).queryByText(/^docker run.*/)).toBe(box.closest(".ph-no-capture")?.querySelector("code"));
+    expect(within(dialog()).queryByText(/^OPAMP_TOKEN=.*/)).toBe(box.closest(".ph-no-capture")?.querySelector("code"));
     expectTextOnlyInsideNoCapture(BEARER);
     // No toast held it.
     for (const call of [...success.mock.calls]) expect(JSON.stringify(call)).not.toContain(BEARER);
@@ -546,12 +548,13 @@ describe("InstallDialog's container method", () => {
     await within(dialog()).findByRole("button", { name: "Copy command" });
     const copied = writeText.mock.calls[0]![0] as string;
     expect(copied).toContain("  -e OPAMP_SERVER_NAME='prod-east-1' \\\n");
-    expect(copied).toContain("  -e NGINX_ENV='sek'\\''ret' \\\n");
+    expect(copied).toContain("\nNGINX_ENV='sek'\\''ret' \\\n");
+    expect(copied).toContain("  -e NGINX_ENV \\\n");
     expect(copied.indexOf("OPAMP_TOKEN")).toBeLessThan(copied.indexOf("NGINX_ENV"));
 
     // Live: untick the variable, its line goes; a bad name hides the box and shows its message.
     await user.click(screen.getByRole("checkbox", { name: "Include NGINX_ENV" }));
-    expect(within(dialog()).getByText(/^docker run/).textContent).not.toContain("NGINX_ENV");
+    expect(within(dialog()).getByText(/^OPAMP_TOKEN=/).textContent).not.toContain("NGINX_ENV");
     await user.type(name, "'");
     expect(within(dialog()).queryByRole("button", { name: "Copy command" })).toBeNull();
     expect(within(dialog()).getByText("Use letters, digits, spaces, dots, dashes and underscores.")).toBeInTheDocument();
@@ -578,7 +581,7 @@ describe("InstallDialog's container method", () => {
     expect(value).toHaveAttribute("placeholder", "value");
     expect(value.closest(".ph-no-capture")).not.toBeNull();
     await user.type(value, "abc");
-    expect(within(dialog()).getByText(/^docker run/).textContent).toContain("  -e BACKEND_KEY='abc' \\\n");
+    expect(within(dialog()).getByText(/^OPAMP_TOKEN=/).textContent).toContain("\nBACKEND_KEY='abc' \\\n");
   });
 
   it("shows no variables section when the version reads none", async () => {
@@ -642,7 +645,7 @@ describe("InstallDialog's container method", () => {
     await user.click(screen.getByRole("button", { name: "open install" }));
     await loaded();
     expect(document.body.textContent).not.toContain(BEARER);
-    expect(within(dialog()).getByText(/^docker run/).textContent).toContain(MASKED_TOKEN);
+    expect(within(dialog()).getByText(/^OPAMP_TOKEN=/).textContent).toContain(MASKED_TOKEN);
   });
 
   it("disables the display name and the variables while revealing: the command copied is the one shown", async () => {
@@ -752,7 +755,7 @@ describe("InstallDialog's container method", () => {
     );
     expect(dialog()).toHaveTextContent(MOUNTS_UNREADABLE_WORDS);
     expect(dialog()).not.toHaveTextContent("From the group's mounts:");
-    expect(within(dialog()).getByText(/^docker run/).textContent).not.toContain("-v '");
+    expect(within(dialog()).getByText(/^OPAMP_TOKEN=/).textContent).not.toContain("-v '");
   });
 
   it("says nothing of unreadable mounts when they were read", async () => {
@@ -1060,13 +1063,16 @@ describe("InstallDialog's variables named as Object.prototype's keys", () => {
       expect(value).not.toHaveAttribute("aria-invalid");
       await user.type(value, `${name}-value`);
     }
-    const preview = within(dialog()).getByText(/^docker run/).textContent ?? "";
-    for (const name of ["constructor", "__proto__", "toString"]) expect(preview).toContain(`  -e ${name}='${name}-value' \\\n`);
+    const preview = within(dialog()).getByText(/^OPAMP_TOKEN=/).textContent ?? "";
+    for (const name of ["constructor", "__proto__", "toString"]) {
+      expect(preview).toContain(`\n${name}='${name}-value' \\\n`);
+      expect(preview).toContain(`  -e ${name} \\\n`);
+    }
     expect(preview).not.toContain("hasOwnProperty");
 
     await user.click(revealButton());
     await within(dialog()).findByRole("button", { name: "Copy command" });
-    expect(writeText.mock.calls[0]![0]).toContain("  -e __proto__='__proto__-value' \\\n");
+    expect(writeText.mock.calls[0]![0]).toContain("\n__proto__='__proto__-value' \\\n");
     expect(consoleError).not.toHaveBeenCalled();
   });
 

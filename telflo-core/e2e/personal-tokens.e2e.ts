@@ -75,6 +75,7 @@ test("a personal token: created and shown once, copied by its button, /whoami as
   expect(await attributeHoldersOf(page, [name])).toEqual([[]]);
   await expect(dialog.locator(".ph-no-capture").getByLabel("Name")).toHaveCount(1);
   await dialog.getByRole("checkbox", { name: "Allow write access" }).check();
+  await dialog.getByLabel("Current password").fill(PASSWORD);
   if (browserName === "chromium") await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   const answered = page.waitForResponse(isTokenCreate);
   await dialog.getByRole("button", { name: "Create token" }).click();
@@ -176,7 +177,7 @@ test("a token made elsewhere is listed by its prefix, and its X-Telflo-Org is ch
   const person = await seedUser({ password: PASSWORD });
   await signInThroughApi(page, person);
   const name = `Canary listed ${randomUUID().slice(0, 8)}`;
-  const { token } = await createPersonalApiTokenThroughApi(page, { name, access: "read", expiresInDays: 30 });
+  const { token } = await createPersonalApiTokenThroughApi(page, { name, access: "read", expiresInDays: 30, currentPassword: PASSWORD });
 
   const malformed = await whoami(playwright, token, { organizationId: "not-an-organization" });
   expectNoTokenIn(malformed, token);

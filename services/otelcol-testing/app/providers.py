@@ -290,6 +290,43 @@ def live_nonenv_schemes(text: str, root: Node | None) -> list[str]:
     return sorted(set(schemes))
 
 
+# A `!!binary` node (SECURITY-CRITICAL). PyYAML composes its scalar's value as
+# the base64 text, but the collector's YAML decoder decodes it to a string
+# and confmap expands the references in what it decodes: `!!binary
+# JHtmaWxlOi9wcm9jLzEvZW52aXJvbn0=` is `${file:/proc/1/environ}`, which no
+# scan of the composed values sees. A text holding one is refused, never
+# run. The tag is matched as resolved, so every spelling is caught:
+# `!!binary`, `!<tag:yaml.org,2002:binary>` and a `%TAG` handle.
+BINARY_TAG = "tag:yaml.org,2002:binary"
+BINARY_MESSAGE = (
+    "The configuration holds a '!!binary' value, which can't be checked safely, "
+    "so it isn't run. Write the value as plain text."
+)
+
+
+def has_binary_node(root: Node | None) -> bool:
+    """True when any node under `root` (keys as well as values, each node
+    reached through aliases walked once) is tagged `!!binary`."""
+    if root is None:
+        return False
+    seen: set[int] = set()
+    stack: list[Node] = [root]
+    while stack:
+        node = stack.pop()
+        if id(node) in seen:
+            continue
+        seen.add(id(node))
+        if node.tag == BINARY_TAG:
+            return True
+        if isinstance(node, SequenceNode):
+            stack.extend(node.value)
+        elif isinstance(node, MappingNode):
+            for key_node, value_node in node.value:
+                stack.append(key_node)
+                stack.append(value_node)
+    return False
+
+
 def _neutralize_disallowed_providers(yaml_content: str) -> tuple[str, list[str]]:
     """Compose `yaml_content` and neutralize it (`neutralize_providers`) in
     one call; the tests' entry point (the runner composes once and calls

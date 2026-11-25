@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { hasUnstorableCharacter } from "./configurations.js";
+import { CurrentPasswordSchema } from "./shared.js";
 
 /**
  * Service accounts and their API tokens. A service account is a `users` row
@@ -218,8 +219,14 @@ export type ApiTokensResponse = z.infer<typeof ApiTokensResponseSchema>;
 export const API_TOKEN_EXPIRY_DAYS_MESSAGE = `Enter a whole number of days from 1 to ${API_TOKEN_EXPIRY_DAYS_MAXIMUM}.`;
 
 /**
- * `expiresInDays` is a whole number from 1 to 3650, or null for never;
- * `access` is required (the web's checkbox defaults to read).
+ * A token's create, a service account's or a person's own: `expiresInDays`
+ * is a whole number from 1 to 3650, or null for never; `access` is required
+ * (the web's checkbox defaults to read). `currentPassword` is the signed-in
+ * person's, required when their account has one (the API decides, as a
+ * link's start does): a session alone mints no token, so one stolen or left
+ * open isn't turned into a credential that outlives its sign-out or a
+ * password reset. A wrong or missing one is the account routes'
+ * `400 current_password_incorrect`.
  */
 export const CreateApiTokenRequestSchema = z
   .object({
@@ -231,6 +238,7 @@ export const CreateApiTokenRequestSchema = z
       .min(1, API_TOKEN_EXPIRY_DAYS_MESSAGE)
       .max(API_TOKEN_EXPIRY_DAYS_MAXIMUM, API_TOKEN_EXPIRY_DAYS_MESSAGE)
       .nullable(),
+    currentPassword: CurrentPasswordSchema.optional(),
   })
   .strict();
 

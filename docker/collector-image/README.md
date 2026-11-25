@@ -24,14 +24,20 @@ On the fleet's page, choose **Install collector**, then the method
 **Container image — pull and run**, and copy the command. It looks like this:
 
 ```bash
+OPAMP_TOKEN='<the fleet token>' \
 docker run -d --restart unless-stopped --name telflo-collector \
   -v telflo-opamp:/app/opamp \
   -e COLLECTOR_GROUP_ID='<group id>' \
   -e OPAMP_ENDPOINT='<the fleet OpAMP endpoint>' \
   -e OPAMP_ALLOW_INSECURE_CONNECTIONS='false' \
-  -e OPAMP_TOKEN='<the fleet token>' \
+  -e OPAMP_TOKEN \
   'ghcr.io/telflo/telflo/collector:0.162.0'
 ```
+
+The token is set before `docker run`, for that one command, and `-e
+OPAMP_TOKEN` (no value) hands it to the container from `docker`'s
+environment. A process's arguments are readable by every user on the
+machine (`ps`) while it runs; its environment only by its owner and root.
 
 The tag is the collector version of the group's published version. Within
 about a minute the collector connects, joins its group, receives the group's
@@ -66,7 +72,7 @@ as the collector's Kubernetes attributes when set.
 
 **On Kubernetes** a Kubernetes-supervisor fleet's **Install with Helm**
 installs this image with the platform's chart (`supervisor-collector`
-0.1.0, `charts/supervisor-collector/`, published as
+0.2.0, `charts/supervisor-collector/`, published as
 `oci://ghcr.io/telflo/telflo/charts/supervisor-collector`), whose values
 file the platform builds, and the chart sets every
 variable above: `OPAMP_TOKEN` from the release's Secret (the values'
@@ -104,17 +110,21 @@ A configuration can read environment variables with the collector's
 `docker run`: the collector inherits the container's environment.
 
 ```bash
+OPAMP_TOKEN='<the fleet token>' \
+BACKEND_ENDPOINT='https://otlp.example.com:4318' \
 docker run -d --restart unless-stopped --name telflo-collector \
   -v telflo-opamp:/app/opamp \
   -e OPAMP_ENDPOINT='<the fleet OpAMP endpoint>' \
-  -e OPAMP_TOKEN='<the fleet token>' \
-  -e BACKEND_ENDPOINT='https://otlp.example.com:4318' \
+  -e OPAMP_TOKEN \
+  -e BACKEND_ENDPOINT \
   'ghcr.io/telflo/telflo/collector:0.162.0'
 ```
 
 The install dialog offers an input for every variable the published
-version reads. For secrets, prefer `--env-file` to inline flags, to keep the
-values out of your shell's history.
+version reads, and writes each the same way: set before `docker run`, and
+`-e NAME` with no value, so no value is on `docker`'s command line. For
+secrets, prefer `--env-file` to keep the values out of your shell's history
+as well.
 
 ### Persistence
 

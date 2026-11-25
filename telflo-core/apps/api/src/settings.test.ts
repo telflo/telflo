@@ -1531,7 +1531,7 @@ describe("loadSettings", () => {
         collectorImageRepository: "ghcr.io/telflo/telflo/collector",
         allowInsecureConnections: false,
         helmChartReference: "oci://ghcr.io/telflo/telflo/charts/supervisor-collector",
-        helmChartVersion: "0.1.0",
+        helmChartVersion: "0.2.0",
         templatesDirectory: "/etc/telflo/install-templates",
       });
     });
@@ -1549,7 +1549,7 @@ describe("loadSettings", () => {
         collectorImageRepository: "registry.internal:5000/mirror/telflo-collector",
         allowInsecureConnections: true,
         helmChartReference: "oci://ghcr.io/telflo/telflo/charts/supervisor-collector",
-        helmChartVersion: "0.1.0",
+        helmChartVersion: "0.2.0",
         templatesDirectory: "/srv/telflo/templates",
       });
     });
@@ -1618,10 +1618,10 @@ describe("loadSettings", () => {
     });
 
     // The Helm chart's reference and version.
-    it("defaults the Helm chart to the platform's own, oci://ghcr.io/telflo/telflo/charts/supervisor-collector 0.1.0, when unset or empty", () => {
+    it("defaults the Helm chart to the platform's own, oci://ghcr.io/telflo/telflo/charts/supervisor-collector 0.2.0, when unset or empty", () => {
       for (const env of [complete, { ...complete, TELFLO_HELM_CHART_REFERENCE: "", TELFLO_HELM_CHART_VERSION: "" }]) {
         const install = loadSettings(env).install;
-        expect([install.helmChartReference, install.helmChartVersion]).toEqual(["oci://ghcr.io/telflo/telflo/charts/supervisor-collector", "0.1.0"]);
+        expect([install.helmChartReference, install.helmChartVersion]).toEqual(["oci://ghcr.io/telflo/telflo/charts/supervisor-collector", "0.2.0"]);
       }
     });
 

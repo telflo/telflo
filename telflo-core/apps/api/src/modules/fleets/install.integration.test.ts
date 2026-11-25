@@ -544,7 +544,7 @@ describe("the install routes", () => {
 
   describe("a Kubernetes group's Helm facts", () => {
     // The platform's own chart and image, the settings' defaults.
-    const CHART = { chartReference: "oci://ghcr.io/telflo/telflo/charts/supervisor-collector", chartVersion: "0.1.0", imageRepository: "ghcr.io/telflo/telflo/collector" };
+    const CHART = { chartReference: "oci://ghcr.io/telflo/telflo/charts/supervisor-collector", chartVersion: "0.2.0", imageRepository: "ghcr.io/telflo/telflo/collector" };
     const SERVER_FACTS = {
       imageTag: "ghcr.io/telflo/telflo/collector:0.162.0",
       endpoint: "https://opamp-agent-placeholder.invalid/v1/opamp",

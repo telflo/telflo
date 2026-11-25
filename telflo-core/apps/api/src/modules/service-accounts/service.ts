@@ -5,7 +5,15 @@ import {
   type ApiTokenAccess,
 } from "@telflo/contracts";
 import type { ActorContext } from "../../database/context.js";
+import {
+  accountGone,
+  passwordChangedSince,
+  reauthenticateForTokenCreate,
+  refuseChangedSince,
+  type TokenCreateReauthenticationDependencies,
+} from "../account/reauthenticate.js";
 import type { AuditEvent, IAuditRepository } from "../identity/repositories/audit-repository.js";
+import type { IUserRepository } from "../identity/repositories/user-repository.js";
 import type { IMemberRepository } from "../organizations/repositories/member-repository.js";
 import {
   assertActiveOrganization,
@@ -41,7 +49,10 @@ import { mintApiToken, type MintedApiToken } from "./tokens.js";
  *
  * An account's API tokens are its admins' too: listed by their prefix,
  * created once (the token crosses the API only in the create's reply),
- * limited to 20 live, and revoked, never deleted.
+ * limited to 20 live, and revoked, never deleted. A create asks the admin's
+ * current password, when their account has one, as a personal token's
+ * does: a token outlives the admin's session, their sign-out and a reset,
+ * and acts as no person, so a session alone mints none.
  *
  * The name and the address are organization content, and a token is a
  * secret like a bearer: nothing here logs any of them or a token's name or
@@ -56,6 +67,8 @@ export interface ServiceAccountTransaction {
   serviceAccounts: IServiceAccountRepository;
   apiTokens: Pick<IApiTokenRepository, "list" | "countLive" | "isNameTaken" | "create" | "revoke" | "revokeAllOf">;
   audit: IAuditRepository;
+  /** The acting admin's own row: a token create's password hash read again under the lock. */
+  users: Pick<IUserRepository, "findPasswordHashForShare">;
 }
 
 /**
@@ -76,6 +89,10 @@ export interface ServiceAccountServiceDependencies {
   randomHex: () => string;
   /** A new token, its hash and its prefix; `mintApiToken` unless a test injects one. */
   mintToken?: () => MintedApiToken;
+  /** Outside any transaction: a token create's current password (`reauthenticateForTokenCreate`). */
+  users: TokenCreateReauthenticationDependencies["users"];
+  audit: TokenCreateReauthenticationDependencies["audit"];
+  verifyPassword?: TokenCreateReauthenticationDependencies["verifyPassword"];
 }
 
 /** A token as its account's page lists it: `isExpired` by the API's clock. */
@@ -83,17 +100,24 @@ export interface ListedApiToken extends ApiToken {
   isExpired: boolean;
 }
 
-/** What an admin asks for: the name, the access and the days to expiry, or null for never. */
+/**
+ * What an admin asks for: the name, the access and the days to expiry, or
+ * null for never; and their current password (required when their account
+ * has one).
+ */
 export interface CreateApiTokenRequest {
   name: string;
   access: ApiTokenAccess;
   expiresInDays: number | null;
+  currentPassword?: string | undefined;
 }
 
 /** The create's answer: the token, the only time it is handed out, beside the row as listed. */
 export interface CreatedApiToken {
   apiToken: ListedApiToken;
   token: string;
+  /** Whether a current password was verified (not for an account without one): the route's sign-in budget clears on it. */
+  isReauthenticated: boolean;
 }
 
 /**
@@ -311,9 +335,13 @@ export function createServiceAccountService(deps: ServiceAccountServiceDependenc
     },
 
     /**
-     * Under the organization lock (every write to the organization's
-     * accounts and tokens takes it first, so the count is exact): the
-     * account live, else 404 (a deleted account gets no token); 20 live
+     * The role first (a contributor's 403 asks no password), then the
+     * admin's current password (`reauthenticateForTokenCreate`), then under
+     * the organization lock (every write to the organization's accounts and
+     * tokens takes it first, so the count is exact): the admin's hash read
+     * again (`for share`; one changed, reset or set since is refused as a
+     * wrong password); the account live, else 404 (a deleted account gets
+     * no token); 20 live
      * tokens already, the 409; a name taken by a token not yet revoked,
      * expired included, the 409 (its unique index behind it); then the
      * mint, the row and the audit row, which holds the account's id, the
@@ -323,8 +351,17 @@ export function createServiceAccountService(deps: ServiceAccountServiceDependenc
     async createToken(actor, organizationId, serviceAccountId, request) {
       assertMayManage(actor, organizationId);
       const id = canonicalIdOf(serviceAccountId);
-      return withTransaction(actor.context, async (transaction) => {
+      const verified = await reauthenticateForTokenCreate(deps, {
+        context: actor.context,
+        origin: { ipAddress: actor.ipAddress, userAgent: actor.userAgent },
+        purpose: "service_account_token_create",
+        currentPassword: request.currentPassword,
+      });
+      const outcome = await withTransaction(actor.context, async (transaction) => {
         await lockAsAdmin(transaction, actor);
+        const since = await passwordChangedSince(transaction.users, verified);
+        if (since === "gone") return { status: "gone" as const };
+        if (since === "changed") return { status: "changed" as const };
         const account = await liveAccount(transaction, id);
         const at = now();
         if ((await transaction.apiTokens.countLive(account.id, at)) >= API_TOKENS_LIVE_MAXIMUM) {
@@ -357,8 +394,11 @@ export function createServiceAccountService(deps: ServiceAccountServiceDependenc
             expiresAt: expiresAt === null ? null : expiresAt.toISOString(),
           }),
         );
-        return { apiToken: listedAt(created, at), token };
+        return { status: "created" as const, created: { apiToken: listedAt(created, at), token } };
       });
+      if (outcome.status === "gone") throw accountGone();
+      if (outcome.status === "changed") return refuseChangedSince(deps.audit, verified);
+      return { ...outcome.created, isReauthenticated: verified.verifiedHash !== null };
     },
 
     /**

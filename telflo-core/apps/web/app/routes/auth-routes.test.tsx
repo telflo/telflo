@@ -289,12 +289,30 @@ describe("auth routes", () => {
     expect(await screen.findByRole("heading", { name: /sign in to telflo/i })).toBeInTheDocument();
   });
 
-  it("passes the link's token to the verification panel", async () => {
+  it("passes the link's token, in its fragment, to the verification panel", async () => {
+    const spy = vi.spyOn(apiClient, "postVerifyEmail").mockResolvedValue({ status: "verified" });
+    renderAt("/verify-email#token=from-the-email");
+
+    expect(await screen.findByText(/your email address is confirmed/i)).toBeInTheDocument();
+    expect(spy).toHaveBeenCalledWith({ token: "from-the-email" });
+    expect(window.location.href).not.toContain("from-the-email");
+  });
+
+  it("still reads a link sent before, its token in its query", async () => {
     const spy = vi.spyOn(apiClient, "postVerifyEmail").mockResolvedValue({ status: "verified" });
     renderAt("/verify-email?token=from-the-email");
 
     expect(await screen.findByText(/your email address is confirmed/i)).toBeInTheDocument();
     expect(spy).toHaveBeenCalledWith({ token: "from-the-email" });
+  });
+
+  it("prefers the fragment's token to a query's, and takes both out of the address bar's fragment", async () => {
+    const spy = vi.spyOn(apiClient, "postVerifyEmail").mockResolvedValue({ status: "verified" });
+    renderAt("/verify-email?utm_source=mail#token=from-the-fragment");
+
+    await screen.findByText(/your email address is confirmed/i);
+    expect(spy).toHaveBeenCalledWith({ token: "from-the-fragment" });
+    expect(window.location.pathname + window.location.search + window.location.hash).toBe("/verify-email?utm_source=mail");
   });
 
   it("takes the verification token out of the address bar as the page mounts", async () => {

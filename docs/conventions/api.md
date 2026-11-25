@@ -91,7 +91,8 @@ route answers `403 insufficient_access`.
   scheme case aside, one space, then the token, exactly `tf_` and 43
   base64url characters. A token is a service account's (its organization's)
   or a person's own (made on their Account page). No cookie is read and no
-  CSRF header is needed (the CSRF guard covers `/api/v1/` only). No public
+  CSRF header is needed (the CSRF guard exempts the public surface's
+  routes, by the route matched, and nothing else). No public
   route checks the terms, for either kind. A `tf_` token sent to `/api/v1/`
   is no session there: `401 unauthenticated`.
 - **`X-Telflo-Org: <organizationId>`** with a personal token, on every

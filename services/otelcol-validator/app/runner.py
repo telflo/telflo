@@ -69,7 +69,9 @@ from app.placeholders import (
 )
 from app.providers import (
     _TELFLO_SCHEMES,
+    BINARY_MESSAGE,
     apply_splices,
+    has_binary_node,
     live_nonenv_schemes,
     neutralize_providers,
     scalar_splice,
@@ -531,6 +533,12 @@ def _prepare_text(
     scanned_requirements = text_requirements(yaml_content)
     scanned_errors = text_errors(yaml_content)
 
+    # A `!!binary` value is refused before anything else reads the text: the
+    # collector decodes it and expands the references in what it decodes,
+    # which the neutralization below can't see (providers.BINARY_TAG).
+    if has_binary_node(root):
+        return _refused(BINARY_MESSAGE, "refused", organization_requirements)
+
     # Neutralize non-``env`` confmap providers before the collector sees the
     # text: it would otherwise expand ``${file:...}`` / ``${http:...}`` at
     # load time and echo host files and secrets back through its messages.
@@ -580,12 +588,12 @@ def _prepare_text(
 def _still_references(yaml_content: str) -> bool:
     """The fail-closed backstop: True when the text a collector run is about
     to read no longer reads as one YAML document, or still holds a live
-    non-env reference in any decoded key or value."""
+    non-env reference in any decoded key or value, or a `!!binary` value."""
     try:
         root = bounded_yaml.single_node(yaml_content)
     except (bounded_yaml.YAMLError, TooDeep, TooManyAliases):
         return True
-    return bool(live_nonenv_schemes(yaml_content, root))
+    return has_binary_node(root) or bool(live_nonenv_schemes(yaml_content, root))
 
 
 def _backstop(

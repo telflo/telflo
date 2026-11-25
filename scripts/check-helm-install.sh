@@ -119,7 +119,7 @@ set -euo pipefail
 PROFILE=${CHECK_HELM_PROFILE:-telflo-helm-check}
 # The platform's own packages: the stack's defaults, and what this check installs.
 PLATFORM_CHART_REFERENCE="oci://ghcr.io/telflo/telflo/charts/supervisor-collector"
-PLATFORM_CHART_VERSION="0.1.0"
+PLATFORM_CHART_VERSION="0.2.0"
 PLATFORM_IMAGE_REPOSITORY="ghcr.io/telflo/telflo/collector"
 NS_NODE=telflo-hc-node
 NS_CLUSTER=telflo-hc-cluster
@@ -595,7 +595,7 @@ for _ in $(seq 1 30); do
 done
 [ -n "$message_id" ] || fail "no verification email to $email reached $TELFLO_MAILPIT_API_URL within 30 s"
 verify_token=$(curl -s "$TELFLO_MAILPIT_API_URL/api/v1/message/$message_id" | jq -r '.Text' |
-  grep -oE '/verify-email\?token=[A-Za-z0-9_-]+' | head -n1 | sed 's/.*token=//' || true)
+  grep -oE '/verify-email#token=[A-Za-z0-9_-]+' | head -n1 | sed 's/.*token=//' || true)
 [ -n "$verify_token" ] || fail "the verification email holds no link"
 status=$(curl -s -o "$REPLY_BODY" -w '%{http_code}' -X POST "$TELFLO_GATEWAY_URL/api/v1/auth/verify-email" -H 'content-type: application/json' \
   -H 'X-Telflo-CSRF: 1' --data-binary "$(jq -cn --arg t "$verify_token" '{token: $t}')" || true)

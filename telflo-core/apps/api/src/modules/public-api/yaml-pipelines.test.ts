@@ -82,6 +82,15 @@ describe("pipelineKeysOf", () => {
     lines.push("service:", "  pipelines:", "    logs: *a8", "");
     expect(pipelineKeysOf(lines.join("\n"))).toBeUndefined();
   });
+
+  it("refuses a merge-key chain, whose aliases under << count too (two a level, 30 levels: 2^30 merges were it converted)", () => {
+    const lines = ["a0: &a0 {k: v}"];
+    for (let level = 1; level <= 30; level += 1) lines.push(`a${level}: &a${level} {<<: [*a${level - 1}, *a${level - 1}], k${level}: v}`);
+    lines.push("service:", "  pipelines:", "    logs: *a30", "");
+    const started = performance.now();
+    expect(pipelineKeysOf(lines.join("\n"))).toBeUndefined();
+    expect(performance.now() - started).toBeLessThan(1_000);
+  });
 });
 
 describe("hasPipelineKey", () => {

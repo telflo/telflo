@@ -413,7 +413,8 @@
 # and 4), test (a spec, a sample file and two OTTL rules, in the real tester),
 # fleet create (no bearer), fleet groups, deploy --group (the Default group:
 # an install needs a group that serves a version), fleet install --platform
-# docker (its stdout 0600, `grep -q '^docker run'` only), logout (then whoami
+# docker (its stdout 0600, only grepped: its first line the OPAMP_TOKEN
+# assignment, a line of its own `docker run`), logout (then whoami
 # exit 3); every output goes to 0600 files read by jq, grep and cmp. Then no
 # tf_, tqd_ or tll_ in its outputs but install's stdout, and install's
 # stdout's lines (grep -cF -f) in none of its other outputs nor the API's
@@ -873,14 +874,14 @@ register_verified() {
   [ -n "$message_id" ] || fail "no email to $label arrived in Mailpit within 30s"
 
   text=$(curl -s "$MAILPIT_URL/api/v1/message/$message_id" | jq -r '.Text')
-  link=$(grep -oE 'https?://[^[:space:]]+/verify-email\?token=[A-Za-z0-9_-]+' <<<"$text" | head -n1)
-  [ -n "$link" ] || fail "the email contains no verification link"
-  [[ "$link" == "$GATEWAY_URL/verify-email?token="* ]] ||
-    fail "the link points at ${link%%\?*}, not the gateway ($GATEWAY_URL)"
+  link=$(grep -oE 'https?://[^[:space:]]+/verify-email#token=[A-Za-z0-9_-]+' <<<"$text" | head -n1)
+  [ -n "$link" ] || fail "the email contains no verification link, its token in the fragment"
+  [[ "$link" == "$GATEWAY_URL/verify-email#token="* ]] ||
+    fail "the link points at ${link%%#*}, not the gateway ($GATEWAY_URL)"
 
-  step "the emailed link's page loads through the gateway"
-  status=$(curl -s -o /dev/null -w '%{http_code}' "$link")
-  [ "$status" = "200" ] || fail "GET ${link%%\?*} returned HTTP $status"
+  step "the emailed link's page loads through the gateway (curl sends no fragment)"
+  status=$(curl -s -o /dev/null -w '%{http_code}' "${link%%#*}")
+  [ "$status" = "200" ] || fail "GET ${link%%#*} returned HTTP $status"
 
   step "the token from the email verifies the account"
   token="${link##*token=}"
@@ -4313,7 +4314,7 @@ platform PATCH "$K8S_FLEET_URL/groups/$k8s_default_group_id" "$(jq -cn --argjson
 # perhaps) in the throwaway stack by a failed one, which is harmless.
 # The platform's own chart and image: the settings' defaults.
 HELM_CHART_REFERENCE="oci://ghcr.io/telflo/telflo/charts/supervisor-collector"
-HELM_CHART_VERSION="0.1.0"
+HELM_CHART_VERSION="0.2.0"
 HELM_IMAGE_REPOSITORY="ghcr.io/telflo/telflo/collector"
 HELM_TOKEN_LINE='^token: "([A-Za-z0-9+/]+={0,2})"$'
 # helm_token_of <file>: the values file's one token line's bearer, into $helm_token ("" unless exactly one line
@@ -5072,7 +5073,9 @@ api_token_shaped() { [[ "${!1}" =~ ^tf_[A-Za-z0-9_-]{43}$ ]]; }
 # checks fail.
 mint_api_token() {
   local variable=$1 url=$2 name=$3 access=$4 id_variable=${5:-}
-  platform POST "$url" "$(jq -cn --arg name "$name" --arg access "$access" '{name: $name, access: $access, expiresInDays: 1}')"
+  # A token's create asks the signed-in person's current password: the reset's (NEW_PASSWORD, remembered as a secret).
+  platform POST "$url" "$(jq -cn --arg name "$name" --arg access "$access" --arg password "$NEW_PASSWORD" \
+    '{name: $name, access: $access, expiresInDays: 1, currentPassword: $password}')"
   body=""
   minted_token_id=$(reply_json '.apiToken.id // empty')
   if [ -n "$id_variable" ]; then printf -v "$id_variable" '%s' "$minted_token_id"; fi
@@ -5200,7 +5203,7 @@ public_api_body install --arg group "$public_api_group_id" '{platform: "docker",
 public_api_call public_api_write_token POST "/fleets/$public_api_fleet_id/install" "$public_api_file"
 [ "$status" = "200" ] || fail "the public API docker install returned HTTP $status: $(reply_code)"
 no_store || fail "the public API docker install's reply, holding the fleet's bearer, isn't Cache-Control: no-store"
-public_api_reply_is '.platform == "docker" and (.command | startswith("docker run"))' ||
+public_api_reply_is '.platform == "docker" and (.command | startswith("OPAMP_TOKEN=\u0027")) and any(.command | split("\n")[]; startswith("docker run "))' ||
   fail "the public API docker install's command isn't a docker run (not printed)"
 (umask 077 && : >"$PLATFORM_REPLY_BODY")
 
@@ -5401,7 +5404,7 @@ cli_run deploy --json deploy --fleet "$cli_fleet_id" --config "$cli_configuratio
   fail "telflo deploy --group didn't put v1 on the Default group: $(cli_said deploy)"
 cli_run install fleet install "$cli_fleet_id" --platform docker
 [ "$cli_code" = "0" ] || fail "telflo fleet install --platform docker exited $cli_code (its output not printed)"
-grep -q '^docker run' "$CLI_DIR/install.out" || fail "telflo fleet install's stdout isn't a docker run (not printed)"
+{ head -n 1 "$CLI_DIR/install.out" | grep -q "^OPAMP_TOKEN='" && grep -q '^docker run ' "$CLI_DIR/install.out"; } || fail "telflo fleet install's stdout isn't a docker run (not printed)"
 
 step "telflo logout --json removes the credentials file; telflo whoami is then exit 3, not logged in"
 cli_run logout --json logout

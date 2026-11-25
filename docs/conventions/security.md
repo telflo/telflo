@@ -16,7 +16,13 @@ refreshes has passed.
 **Transport:** both tokens are `HttpOnly; Secure; SameSite` cookies. No
 token is reachable from JavaScript, which is the largest available XSS
 mitigation, and SSR authentication becomes trivial. CSRF is handled by
-`SameSite=Lax` plus a required custom header.
+`SameSite=Lax` plus a required custom header (`X-Telflo-CSRF: 1`) on every
+state-changing request but the public surface's (`http/csrf.ts`). Which
+surface a request is on is read from the route the router matched, never
+from the raw URL: the router percent-decodes a path before matching it, so
+`/%61pi/v1/…` reaches the same cookie route as `/api/v1/…`. A request no
+route matched is exempt only when `http/public-path.ts` puts it under
+`/api/public/v1`; any other is refused `403`.
 
 **Organization switching** is an explicit token exchange:
 
@@ -2364,19 +2370,22 @@ no user id: the person is always the session's user
 | Set a password (an account without one) | `POST /auth/password-reset-requests`, for the account's own email | the emailed link | `user.password_reset_requested` and `user.password_reset` | the reset email |
 | Link Google | `POST /auth/me/identity-link-requests`, then the provider | the current password when the account has one, then the provider's sign-in | `user.identity_linked` `{provider, via: "settings"}` | "Google sign-in was linked to your Telflo account" |
 | Unlink Google | `DELETE /auth/me/identities/{provider}` | a password set, and the current password | `user.identity_unlinked` `{provider}` | "Google sign-in was removed from your Telflo account" |
+| Create a personal API token (Settings, or `telflo login`'s Approve) | `POST /auth/me/api-tokens` | the current password when the account has one | `personal_api_token.created` `{access, expiresAt}` | none |
+| Create a service account's API token (an admin) | `POST /organizations/{id}/service-accounts/{id}/api-tokens` | the admin's current password when their account has one | `api_token.created` `{serviceAccountId, access, expiresAt}` | none |
 | Sign out one session | `DELETE /auth/sessions/{sessionId}` | the session only | `user.session_revoked` | none |
 | Sign out everywhere | `DELETE /auth/sessions` | a confirm in the page; the route itself, the session only | `user.signed_out_everywhere` `{count}` | none |
 | Change a preference | `PATCH /auth/me/preferences` | the session only | none | none |
 
-A wrong current password, on any of the three routes that ask for it, is
+A wrong current password, on any of the five routes that ask for it, is
 `400 current_password_incorrect` ("The current password is incorrect."),
 never `401`, which the web client reads as the session's end, and writes
 `user.reauthentication_failed` `{purpose}` (`password_change`,
-`identity_link` or `identity_unlink`), as sign-in audits its failures. The
+`identity_link`, `identity_unlink`, `personal_api_token_create` or
+`service_account_token_create`), as sign-in audits its failures. The
 verify is one Argon2id check outside any transaction, so no row is held for
 its duration (`apps/api/src/modules/account/reauthenticate.ts:63-82`).
 
-**One budget with sign-in, per address.** The three routes take the shared
+**One budget with sign-in, per address.** The five routes take the shared
 per-IP bucket first (`identityPerIp`, 30 requests per 5 minutes), then,
 after `authenticate`, sign-in's own per-email failure budget (10 failures
 per 15 minutes), keyed by the address the session's user row holds, never by
@@ -2385,7 +2394,8 @@ failure is counted up front, and the route settles the request exactly once,
 in a `finally`: a verified current password clears the address, as a
 successful sign-in does; only `current_password_incorrect` keeps the count;
 anything else (a `404`, a `409`, a `503`, a server failure, a link started
-by an account with no password to ask for) takes it back. So the sign-in
+or a token created by an account with no password to ask for) takes it
+back. So the sign-in
 form and Settings share one budget: guessing through Settings gets no more
 tries than through the sign-in form.
 
@@ -2900,8 +2910,8 @@ The public surface, `/api/public/v1/`, is the API's own. Its plugin's
 check before any body is read or validated, never `authenticate` and never
 `requireCurrentTerms`: a service account never accepts the terms, so a terms
 bump locks none out, and a person's own token doesn't check them either (a
-CI job never stops on a terms change). CSRF doesn't apply (the guard covers
-`/api/v1/` only, and a browser never attaches a bearer on its own), and CORS
+CI job never stops on a terms change). CSRF doesn't apply (the guard exempts
+the public surface's routes, and a browser never attaches a bearer on its own), and CORS
 allows no `authorization` header, so a cross-origin page can't call it. In
 order:
 1. the client address's failure budget: blocked → `429 rate_limited` with
@@ -3022,6 +3032,21 @@ the header may hold a `tf_`, `tll_` or `tqd_` in any spelling the request
 log recognizes (`mayHoldCredential`), else the header as sent, so a CI
 runner's name holding a token isn't kept for good.
 
+**The admin's current password** is asked before a token is made, when
+their account has one (one without, OIDC only, is asked nothing), as for a
+personal token (below), after the role check (a contributor's `403` asks
+nothing) and before the organization lock: a token outlives the admin's
+session, their sign-out everywhere and a password reset, and, acting as no
+person, their removal from the organization, so a session alone mints none.
+A missing or wrong one is `400 current_password_incorrect` and
+`user.reauthentication_failed` `{purpose: "service_account_token_create"}`;
+under the organization lock the admin's hash is read again (`for share`)
+and one changed, reset or set since is refused alike. The route shares
+sign-in's per-email budget ("One budget with sign-in"). The web's create
+dialog reads the admin's sign-in methods as it opens
+(`apps/api/src/modules/account/reauthenticate.ts`'s
+`reauthenticateForTokenCreate`, shared with the personal create).
+
 **A `tf_` token is a secret like a bearer.** Never in a log line, an error
 message, a span, an audit row, a URL, a toast, an attribute, browser
 storage, an analytics property, a report, a commit or a test's printed
@@ -3134,6 +3159,17 @@ role and their drafts, in any organization they belong to.
   the person's tokens not yet revoked, expired ones included. A revoked or
   another person's token answers `404 api_token_not_found`. No terms check,
   no emails.
+- **The current password** is asked before a token is made, when the
+  account has one (one without, OIDC only, is asked nothing), as a link's
+  start asks it: a session alone mints no token, so a session stolen or
+  left open isn't turned into a credential that outlives its sign-out or a
+  password reset, neither of which revokes a token. A missing or wrong one
+  is `400 current_password_incorrect` and `user.reauthentication_failed`
+  `{purpose: "personal_api_token_create"}`, nothing made; the hash is read
+  again under the user's lock, and one changed, reset or set since the
+  verify is refused alike. The create shares sign-in's per-email budget
+  ("One budget with sign-in" above). Revoking tokens on a reset or a
+  sign-out everywhere, and an email on a create, were left for later.
 - **`X-Telflo-Org`** names the organization on each request (an id only:
   it is never logged). Missing where a route needs it (every route but
   `/whoami` and `/orgs`), or not a uuid wherever it is sent: `400
@@ -3359,21 +3395,33 @@ else `https://telflo.com`.
 **The login listener** (`src/login-listener.ts`, `src/login-browser.ts`),
 the CLI's side of `/cli-auth`:
 - It binds `127.0.0.1` on a free port and serves one path, `/callback`,
-  until an accepted answer, Cancel on the page, five minutes, or ten
-  refused requests (each exit 3 but the answer).
+  until an accepted answer, Cancel on the page, or five minutes (each exit
+  3 but the answer). Refused requests never stop it, however many: a limit
+  let another local process free its port with a few junk requests, bind
+  it, and receive the token the page then handed over.
 - `state` is 32 random bytes, base64url (43 characters), compared in
   constant time.
 - It accepts only `POST /callback` with `Origin` equal to the server's
   origin, `Host` equal to `127.0.0.1:<port>`, `Content-Type:
   application/json`, a body of at most 4 KiB (past it a 403 at once, the
-  connection dropped) and `{ state, token }` or `{ state, error: "denied"
-  }`; and the CORS preflight for it, answered with
+  connection dropped) and `{ challenge }`, `{ state, token }` or `{ state,
+  error: "denied" }`; and the CORS preflight for it, answered with
   `Access-Control-Allow-Methods: POST`, `-Headers: content-type`, and
   `Access-Control-Allow-Private-Network: true` only when the preflight asks
   for it. Anything else answers 403 or 404 with no body and keeps waiting.
-- **Every reply** (the preflight's, the 204, a 403 or 404) carries
-  `Access-Control-Allow-Origin: <the server's origin>`, never `*`, so the
-  page can read the answer.
+- **The page checks the listener before it sends anything**
+  (`apps/web/app/lib/cli-auth.ts`, `listenerKnowsState`): a fresh
+  `{ challenge }` of 32 random bytes, never the state, which the listener
+  answers `200 { proof }`, the HMAC-SHA256 of `"telflo cli-auth listener
+  proof\n" + challenge` keyed by the state. Only with that proof does the
+  page post the token, or Cancel's denial; otherwise it shows the token to
+  paste. Whatever holds the port without the state (a process that bound
+  it once the CLI stopped, at its five minutes or Ctrl-C) can't answer, so
+  it never gets a token, a denial or the state. A CLI from before the
+  challenge answers it 403, and its person pastes the token.
+- **Every reply** (the preflight's, the proof, the 204, a 403 or 404)
+  carries `Access-Control-Allow-Origin: <the server's origin>`, never `*`,
+  so the page can read the answer; only the proof has a body.
 - It imports only node's built-ins and `src/version.ts` (the browser tests
   import it).
 - The browser is opened (`open`, `xdg-open` or `cmd /c start`) on `<server>/cli-auth#state=…&port=…&host=…`, the URL
@@ -3411,6 +3459,11 @@ public route changed for it:
   sign-in's round trip, the layout's client-side refresh failure and
   `/register` lose it (the invalid link's words; `telflo login` run again
   then works at once). `robots.txt` disallows `/cli-auth`.
+- **The current password**: the page reads the account's sign-in
+  methods first (Approve waits for that read); the field is required when
+  the account has a password, shown without blocking when the read failed,
+  and absent for an account without one. A wrong one is said under the
+  field, which is emptied, and nothing is made or handed over.
 - **Approve** (disabled while in flight) creates the token (`POST
   /api/v1/auth/me/api-tokens`, named `CLI — <host> · <YYYY-MM-DD
   HH:MM:SS>` UTC, the access and expiry chosen: write and 30 days by
@@ -4497,6 +4550,29 @@ name. The management secret's rules ("The management secret" above) hold
 as in compose; in the cluster its plain HTTP crosses only the pod
 network. Only the agent endpoint faces collectors, through its own
 LoadBalancer Service ("The agent endpoint" above).
+
+### The Agent's kubelet access
+
+The supervisor-collector chart's Agent (the node role) runs whatever
+configuration a member deploys to its group, and its pods mount their
+ServiceAccount token: a configuration can send that token anywhere (a
+`filelog` receiver on the token file and any exporter). So the Agent's
+ClusterRole is what any member who can deploy to that group can do in the
+customer's cluster, and it is kept to what `kubeletstats` reads:
+
+- `get` on `nodes/stats` (`/stats/summary`) and `nodes/pods` (`/pods`, for
+  `extra_metadata_labels` and the request and limit utilization metrics),
+  and nothing else by default.
+- `nodes/proxy` is every other kubelet path, exec, attach and
+  port-forward into any pod on any node included: the same as exec, so
+  close to the cluster's whole. A kubelet without fine-grained
+  authorization (before Kubernetes 1.33, or with it turned off) asks for
+  it for `/pods`. The chart grants it only with `kubeletProxy: true`, an
+  operator's choice its values file and README describe as exec. Before
+  chart 0.2.0 it was always granted.
+- The platform doesn't police the configuration's endpoints instead (a
+  `kubeletstats` endpoint other than the node's own): the token leaves by
+  any exporter, so the ClusterRole is the boundary.
 
 ### The pull secret
 

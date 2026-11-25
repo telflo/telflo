@@ -618,6 +618,22 @@ describe("lintFlowConfig: the accepted differences (YAML 1.2, not 1.1)", () => {
     ]);
   });
 
+  it("a merge-key chain is invalid-yaml too: its aliases under << count (two a level, 30 levels: 2^30 merges were it converted)", () => {
+    const lines = ["a0: &a0 {k: v}"];
+    for (let level = 1; level <= 30; level += 1) lines.push(`a${level}: &a${level} {<<: [*a${level - 1}, *a${level - 1}], k${level}: v}`);
+    lines.push("processors: {memory_limiter: *a30}", "");
+    const started = performance.now();
+    expect(lint(lines.join("\n")).findings).toEqual([
+      {
+        severity: "block",
+        code: "invalid-yaml",
+        message: "Configuration is not valid YAML: Excessive alias count indicates a resource exhaustion attack",
+        path: "config",
+      },
+    ]);
+    expect(performance.now() - started).toBeLessThan(1_000);
+  });
+
   it("invalid-yaml's message is the `yaml` package's, not PyYAML's (the code and path are fixed)", () => {
     // PyYAML: "while parsing a block mapping … expected <block end>, but found '['".
     expect(lint("exporters:\n  otlp:\n    endpoint: x\n  [bad").findings).toEqual([

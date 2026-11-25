@@ -170,8 +170,8 @@ test("Approve hands a new personal token to the CLI's listener, revokes the mach
   await signInThroughApi(page, person);
   await grant(context, browserName);
   const host = uniqueHost();
-  const earlier = await createPersonalApiTokenThroughApi(page, { name: `CLI — ${host} · 2026-01-02 03:04:05`, access: "write", expiresInDays: 30 });
-  const other = await createPersonalApiTokenThroughApi(page, { name: `CLI — ${host}x · 2026-01-02 03:04:05`, access: "read", expiresInDays: 30 });
+  const earlier = await createPersonalApiTokenThroughApi(page, { name: `CLI — ${host} · 2026-01-02 03:04:05`, access: "write", expiresInDays: 30, currentPassword: PASSWORD });
+  const other = await createPersonalApiTokenThroughApi(page, { name: `CLI — ${host}x · 2026-01-02 03:04:05`, access: "read", expiresInDays: 30, currentPassword: PASSWORD });
   listener = await startListener(E2E_WEB_URL);
   const urls = recordRequestUrls(context);
 
@@ -183,6 +183,7 @@ test("Approve hands a new personal token to the CLI's listener, revokes the mach
   expect(new URL(page.url()).pathname).toBe("/cli-auth");
   expect(await page.title()).toBe("CLI sign-in - Telflo");
   const created = page.waitForResponse(isTokenCreate);
+  await page.getByLabel("Current password").fill(PASSWORD);
   await page.getByRole("button", { name: "Approve" }).click();
   const createStatus = (await created).status();
 
@@ -231,6 +232,7 @@ test("with the listener down, the page shows the token once inside ph-no-capture
   await waitForHydration(page);
   await expect(page.getByRole("heading", { name: `Sign in the Telflo CLI on ${host}` })).toBeVisible();
   const answered = page.waitForResponse(isTokenCreate);
+  await page.getByLabel("Current password").fill(PASSWORD);
   await page.getByRole("button", { name: "Approve" }).click();
   const response = await answered;
 
@@ -294,6 +296,7 @@ test("a second telflo login's address opened in the same tab is read: a new sess
   await expect(page.getByRole("heading", { name: `Sign in the Telflo CLI on ${secondHost}` })).toBeVisible();
   expect(await page.evaluate<boolean>("window.__e2eSameDocument === true"), "the same document, not a new load").toBe(true);
   expect(new URL(page.url()).hash).toBe("");
+  await page.getByLabel("Current password").fill(PASSWORD);
   await page.getByRole("button", { name: "Approve" }).click();
 
   // --- Collect booleans only until the page is left. ---
@@ -347,6 +350,7 @@ test("signed out: the sign-in keeps the fragment, a password sign-in comes back 
   await expect(page.getByRole("heading", { name: `Sign in the Telflo CLI on ${host}` })).toBeVisible();
   expect(new URL(page.url()).pathname).toBe("/cli-auth");
   expect(new URL(page.url()).hash).toBe("");
+  await page.getByLabel("Current password").fill(PASSWORD);
   await page.getByRole("button", { name: "Approve" }).click();
 
   // --- Collect booleans only until the page is left. ---

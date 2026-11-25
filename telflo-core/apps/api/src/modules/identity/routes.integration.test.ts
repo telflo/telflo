@@ -699,7 +699,7 @@ describe("identity routes", () => {
       mailer.sent
         .filter((message) => message.to === email)
         .map((message) => {
-          const match = /\/verify-email\?token=([A-Za-z0-9_-]+)/.exec(message.text);
+          const match = /\/verify-email#token=([A-Za-z0-9_-]+)/.exec(message.text);
           if (!match) throw new Error("no confirmation link in the email");
           return match[1]!;
         });

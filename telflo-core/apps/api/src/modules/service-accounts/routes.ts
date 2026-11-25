@@ -18,11 +18,13 @@ import type { Kysely } from "kysely";
 import { z } from "zod";
 import { withAuthContext } from "../../database/context.js";
 import type { ServerDependencies } from "../../dependencies.js";
+import type { RateLimiters } from "../../http/rate-limits.js";
 import { createAuditRepository } from "../identity/repositories/audit-repository.js";
+import { createUserRepository } from "../identity/repositories/user-repository.js";
 import { createMemberRepository } from "../organizations/repositories/member-repository.js";
 import { createActiveOrganizationRepository } from "../organizations/repositories/organization-repository.js";
 import { actorOf } from "../organizations/routes.js";
-import { createAuthenticate } from "../sessions/authenticate.js";
+import { createAuthenticate, requireAuthentication } from "../sessions/authenticate.js";
 import { createDatabaseSessionService } from "../sessions/routes.js";
 import { createApiTokenRepository } from "./repositories/api-token-repository.js";
 import { createServiceAccountRepository, type ServiceAccount } from "./repositories/service-account-repository.js";
@@ -123,22 +125,36 @@ export function createDatabaseServiceAccountService(
         serviceAccounts: createServiceAccountRepository(transaction, scope),
         apiTokens: createApiTokenRepository(transaction, scope),
         audit: createAuditRepository(transaction),
+        users: createUserRepository(transaction),
       });
     });
-  return createServiceAccountService({ withTransaction, now, randomHex });
+  return createServiceAccountService({
+    withTransaction,
+    now,
+    randomHex,
+    users: createUserRepository(db),
+    audit: createAuditRepository(db),
+  });
 }
 
 /**
  * The service-account routes, and those of an account's tokens, under the
  * active organization as every management route: a session (`authenticate`
  * only, never the terms check, as organization management), admins only, reads
- * included. Not rate limited, as the other management routes. The CSRF guard
- * covers the writes, as every state-changing route.
+ * included. Not rate limited, as the other management routes, but for a
+ * token's create, which asks the admin's current password: the password
+ * change's limits (the shared per-IP bucket, then sign-in's per-email
+ * failure budget by the session's address). The CSRF guard covers the
+ * writes, as every state-changing route.
  *
  * The validator/serializer compilers are server-wide and set once in
  * buildServer, not here.
  */
-export function registerServiceAccountRoutes(server: FastifyInstance, deps: ServiceAccountRoutesDependencies): void {
+export function registerServiceAccountRoutes(
+  server: FastifyInstance,
+  deps: ServiceAccountRoutesDependencies,
+  rateLimiters: RateLimiters,
+): void {
   const { db, now } = deps;
   const authenticate = createAuthenticate(createDatabaseSessionService(deps).service);
   const service = createDatabaseServiceAccountService(db, now);
@@ -229,20 +245,37 @@ export function registerServiceAccountRoutes(server: FastifyInstance, deps: Serv
   );
 
   // The one reply that carries a token: never logged (the request log has no
-  // bodies), never cached.
+  // bodies, so neither the token nor the password), never cached.
   typed.post(
     "/api/v1/organizations/:organizationId/service-accounts/:serviceAccountId/api-tokens",
     {
-      preHandler: authenticate,
+      onRequest: rateLimiters.identityPerIp,
+      preHandler: [authenticate, rateLimiters.signInPerEmail.reauthenticationPreHandler],
       schema: {
         params: ServiceAccountParamsSchema,
         body: CreateApiTokenRequestSchema,
-        response: { 201: CreatedApiTokenResponseSchema, ...errorResponses },
+        response: { 201: CreatedApiTokenResponseSchema, ...errorResponses, 429: ErrorResponseSchema },
       },
     },
     async (request, reply) => {
       const { organizationId, serviceAccountId } = request.params;
-      const created = await service.createToken(actorOf(request), organizationId, serviceAccountId, request.body);
+      const authentication = requireAuthentication(request);
+      // Settled exactly once: a verified password clears the address;
+      // anything else (an account without a password, a 403 or 404 included)
+      // keeps the count only for a wrong current password.
+      let isReauthenticated = false;
+      let failure: unknown;
+      let created;
+      try {
+        created = await service.createToken(actorOf(request), organizationId, serviceAccountId, request.body);
+        isReauthenticated = created.isReauthenticated;
+      } catch (error) {
+        failure = error;
+        throw error;
+      } finally {
+        if (isReauthenticated) rateLimiters.signInPerEmail.reauthenticated(authentication.email);
+        else rateLimiters.signInPerEmail.reauthenticationSettled(authentication.email, failure);
+      }
       return reply
         .status(201)
         .header("cache-control", NO_STORE)

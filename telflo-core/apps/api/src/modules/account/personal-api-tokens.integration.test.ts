@@ -21,7 +21,9 @@ import { apiTokenHash } from "../service-accounts/tokens.js";
  * The list (the person's own, by prefix), the create (201 once with the token,
  * no-store; the stored hash; the expiry), the name's uniqueness, the cap of 20
  * live, the revoke (204; again, another person's, an unknown or a malformed
- * id: the one 404), the audit rows (ids and fixed values only, under the
+ * id: the one 404), the current password the create asks (a missing or
+ * wrong one refused and audited, nothing made; none asked of an account
+ * without one), the audit rows (ids and fixed values only, under the
  * session's active organization), a session and the CSRF header needed, the
  * current terms not, and the token working on the public surface until it is
  * revoked.
@@ -127,9 +129,19 @@ describe("a person's own API tokens", () => {
   const list = (person: Pick<Person, "access">) =>
     server.inject({ method: "GET", url: TOKENS_URL, cookies: { telflo_access: person.access } });
 
-  /** POST, answering the reply and, on 201, the token (checked by shape as a boolean) and the listed row. */
+  /**
+   * POST with the person's current password unless `payload` names its own
+   * (undefined: none sent), answering the reply and, on 201, the token
+   * (checked by shape as a boolean) and the listed row.
+   */
   const create = async (person: Pick<Person, "access">, payload: object, headers: Record<string, string> = csrfHeaders) => {
-    const response = await server.inject({ method: "POST", url: TOKENS_URL, headers, cookies: { telflo_access: person.access }, payload });
+    const response = await server.inject({
+      method: "POST",
+      url: TOKENS_URL,
+      headers: { ...headers, "user-agent": "personal-token-test" },
+      cookies: { telflo_access: person.access },
+      payload: { currentPassword: PASSWORD, ...payload },
+    });
     if (response.statusCode !== 201) return { response, token: undefined, apiToken: undefined };
     const { token, apiToken } = response.json<{ token: string; apiToken: ListedToken }>();
     expect(API_TOKEN_PATTERN.test(token)).toBe(true);
@@ -183,6 +195,47 @@ describe("a person's own API tokens", () => {
     // No log line holds the token, its hash or its prefix, nor its name as a field.
     const logged = logLines.join("\n");
     expect(holdsToken(logged, token!)).toBe(false);
+  });
+
+  it("asks for the current password: a missing or a wrong one is 400 current_password_incorrect, audited by purpose, and makes nothing", async () => {
+    const ana = await signedIn();
+    const canary = "canary-wrong-7f3e1a-password";
+
+    for (const currentPassword of [undefined, canary]) {
+      const { response } = await create(ana, { name: "CI", access: "write", expiresInDays: 30, currentPassword });
+      expect(response.statusCode).toBe(400);
+      expect(response.json()).toEqual({ error: { code: "current_password_incorrect", message: "The current password is incorrect." } });
+    }
+
+    expect((await list(ana)).json()).toEqual({ items: [] });
+    expect(await auditsOf("personal_api_token.created")).toEqual([]);
+    const failures = await auditsOf("user.reauthentication_failed");
+    expect(failures).toHaveLength(2);
+    for (const row of failures) {
+      expect(row).toMatchObject({
+        actor_user_id: ana.user.id,
+        organization_id: ana.organization.id,
+        subject_type: "user",
+        subject_id: ana.user.id,
+        metadata: { purpose: "personal_api_token_create" },
+        user_agent: "personal-token-test",
+      });
+    }
+    // The password, right or wrong, is in no audit row and no log line.
+    const everything = JSON.stringify(await ownerDb.selectFrom("audit_events").selectAll().execute()) + logLines.join("");
+    expect(everything.includes(canary) || everything.includes(PASSWORD)).toBe(false);
+
+    // The right one makes the token.
+    expect((await create(ana, { name: "CI", access: "write", expiresInDays: 30 })).response.statusCode).toBe(201);
+  });
+
+  it("asks nothing of an account without a password (OIDC only): no password makes the token, and one sent anyway is ignored", async () => {
+    const ana = await signedIn();
+    await ownerDb.updateTable("users").set({ password_hash: null }).where("id", "=", ana.user.id).execute();
+
+    expect((await create(ana, { name: "none", access: "read", expiresInDays: 1, currentPassword: undefined })).response.statusCode).toBe(201);
+    expect((await create(ana, { name: "any", access: "read", expiresInDays: 1, currentPassword: "anything-at-all" })).response.statusCode).toBe(201);
+    expect(await auditsOf("user.reauthentication_failed")).toEqual([]);
   });
 
   it("audits the create and the revoke with ids and fixed values only, under the session's active organization", async () => {
@@ -330,7 +383,7 @@ describe("a person's own API tokens", () => {
     expect((await ownerDb.selectFrom("personal_api_tokens").select("id").execute()).length).toBe(1);
   });
 
-  it("refuses a malformed request (400): a name too long, an expiry out of range, an unknown field", async () => {
+  it("refuses a malformed request (400): a name too long, an expiry out of range, an unknown field, an empty password", async () => {
     const ana = await signedIn();
     for (const payload of [
       { name: "x".repeat(65), access: "read", expiresInDays: null },
@@ -338,6 +391,7 @@ describe("a person's own API tokens", () => {
       { name: "CI", access: "read", expiresInDays: 3651 },
       { name: "CI", access: "admin", expiresInDays: null },
       { name: "CI", access: "read", expiresInDays: null, organizationId: "0192a6b0-0000-7000-8000-000000000000" },
+      { name: "CI", access: "read", expiresInDays: null, currentPassword: "" },
     ]) {
       expect((await create(ana, payload)).response.statusCode, JSON.stringify(payload)).toBe(400);
     }

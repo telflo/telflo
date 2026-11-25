@@ -10,7 +10,7 @@ command, for example:
 
 ```
 helm upgrade --install 'telflo-node' 'oci://ghcr.io/telflo/telflo/charts/supervisor-collector' \
-  --version '0.1.0' \
+  --version '0.2.0' \
   -n 'observability' --create-namespace \
   -f 'telflo-node-values-1a2b3c4d.yaml' \
   --wait --timeout=120s
@@ -25,7 +25,7 @@ overwritten), and the platform's default chart version moves with it.
 
 | Role | Workload | RBAC | Named |
 |---|---|---|---|
-| `node` (the Agent) | a DaemonSet, one pod a node; reads `/var/log/pods` read-only; state in the hostPath `/var/lib/telflo/supervisor/<fullname>` | a ClusterRole for `nodes/stats`, `nodes/proxy` | `fullnameOverride`, else `telflo-node` |
+| `node` (the Agent) | a DaemonSet, one pod a node; reads `/var/log/pods` read-only; state in the hostPath `/var/lib/telflo/supervisor/<fullname>` | a ClusterRole to get `nodes/stats` and `nodes/pods` (and `nodes/proxy` with `kubeletProxy`) | `fullnameOverride`, else `telflo-node` |
 | `cluster` (the Cluster) | a StatefulSet of one, state on a 1Gi PVC | a ClusterRole to get, list and watch pods, nodes, namespaces, events, services, endpoints and the `apps` workloads | `fullnameOverride`, else `telflo-cluster` |
 | `gateway` | a StatefulSet of `replicas`, state on 5Gi PVCs, and a Service on 4317 (OTLP gRPC) and 4318 (OTLP HTTP) | none | its `group` (the Service's address) |
 
@@ -45,7 +45,8 @@ overwritten), and the platform's default chart version moves with it.
 | `nodeSelector`, `tolerations` | The node role's DaemonSet only. |
 | `serviceAccount.create`, `serviceAccount.name` | Create the ServiceAccount (default `true`); its name, default the fullname. |
 | `nodeLogHostPath` | The node role's log directory, mounted read-only at `/var/log/pods`. Default `/var/log/pods`. |
-| `collectorEnv` | Variables the deployed configuration reads with `${env:NAME}`, as `NAME: value`. Kept in the Secret `<fullname>-collector-env`, given to the collector by `envFrom` (explicit variables, such as `OPAMP_*`, win); a `checksum/collector-env` annotation rolls the pods when a value changes. Every name is quoted, so any variable name arrives as written, a YAML word such as `ON`, `yes`, `null` or `~` included. |
+| `kubeletProxy` | The node role's ClusterRole adds `get` on `nodes/proxy` when `true`; default `false`, a boolean (guarded). `kubeletstats` reads `/stats/summary` (`nodes/stats`) and, for `extra_metadata_labels` and the request and limit utilization metrics, `/pods`, which a kubelet with fine-grained authorization (Kubernetes 1.33 and later) allows with `nodes/pods`. An older kubelet asks for `nodes/proxy` instead, and only there does this help. **`nodes/proxy` is as strong as exec**: it reaches every kubelet path, exec into any pod on the node included, and any member who can deploy to the Agent can have its collector send its token out. Chart 0.1.0 always granted it. |
+| `collectorEnv` | Variables the deployed configuration reads with `${env:NAME}`, as `NAME: value`. Kept in the Secret `<fullname>-collector-env`, given to the collector by `envFrom` (explicit variables, such as `OPAMP_*`, win); a `checksum/collector-env` annotation rolls the pods when a value changes. It hashes the values together with `token`, so whoever can read pods but not Secrets can't test guesses at a value against it (chart 0.1.0 hashed the values alone). Every name is quoted, so any variable name arrives as written, a YAML word such as `ON`, `yes`, `null` or `~` included. |
 | `volumes` | Extra hostPath mounts for every role: `hostPath`, `hostPathType` (default `Directory`), `mountPath`, `readOnly` (default `true`; an explicit `false` stays writable). |
 | `clickhouse.*`, `collectorDataDir` | A ClickStack mode, not used by the platform: with `clickhouse.endpoint` set, the pods run as uid 10001, get `CLICKHOUSE_*` and `OPAMP_SERVER_URL`, a `<fullname>-clickhouse` Secret (or `existingSecret`) and a durable `collectorDataDir` (a PVC, or the node's hostPath `/var/lib/telflo/collector/<fullname>`). |
 
@@ -66,6 +67,7 @@ names the key, never its value:
 | a gateway named `node`, `cluster`, `telflo-node` or `telflo-cluster` | `group must not be node, cluster, telflo-node or telflo-cluster for a gateway` |
 | a set `fullnameOverride` not a string, not `^[a-z0-9]([-a-z0-9]*[a-z0-9])?$` or over 52 characters | `fullnameOverride must be a DNS-1123 label of at most 52 characters` |
 | `collectorGroupId` missing, not a string or not `^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$` | `collectorGroupId must be a collector group's id (a UUID)` |
+| `kubeletProxy` set and not a boolean (a string, `--set-string` included; absent or null is `false`) | `kubeletProxy must be true or false` |
 | `endpoint` or `token` empty | `endpoint and token are required` |
 
 Helm 4's `helm lint` only logs a guard's `fail` (it passes with no values at
@@ -122,7 +124,7 @@ token would stall on the very pods it is meant to fix.
 
 ## Limits
 
-Recorded, not fixed in 0.1.0:
+Recorded, not fixed in 0.2.0:
 
 - Upgrading a release of the `telflo-supervisor-collector` chart (0.3.x) to
   this chart renames the Agent's and the Cluster's objects and moves the node
@@ -168,7 +170,7 @@ values); every guard alone with its message and no value in the output; the
 names with and without an override, two fleets' overrides disjoint, a gateway
 ignoring one; YAML-word names, `collectorEnv` keys and volume mount and host
 paths checked after a YAML 1.1 parse by Helm's own `fromYaml`;
-`checksum/token` on every workload and `checksum/collector-env`; each pod's
+`checksum/token` on every workload and `checksum/collector-env` (keyed by the token: not the values' bare sha256, and another token another hash); each pod's
 identity variables (`COLLECTOR_GROUP_ID`, `OPAMP_ENDPOINT`,
 `OPAMP_ALLOW_INSECURE_CONNECTIONS`, the token's reference, the field
 references, `HOST_IP` the pod's IP), its mounts paired with its volumes and

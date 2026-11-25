@@ -179,7 +179,7 @@ export interface InstallSettings {
    * form.
    */
   helmChartReference: string;
-  /** TELFLO_HELM_CHART_VERSION (default 0.1.0): the chart's exact version, `x.y.z`. */
+  /** TELFLO_HELM_CHART_VERSION (default 0.2.0): the chart's exact version, `x.y.z`. */
   helmChartVersion: string;
   /**
    * TELFLO_INSTALL_TEMPLATES_DIR (default /etc/telflo/install-templates, the

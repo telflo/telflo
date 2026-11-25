@@ -51,7 +51,7 @@ import { BEARER_PATTERN } from "./quick-deploy-command.js";
  * together.
  */
 export const DEFAULT_HELM_CHART_REFERENCE = "oci://ghcr.io/telflo/telflo/charts/supervisor-collector";
-export const DEFAULT_HELM_CHART_VERSION = "0.1.0";
+export const DEFAULT_HELM_CHART_VERSION = "0.2.0";
 
 /**
  * TELFLO_HELM_CHART_REFERENCE's form: an `oci://` reference of lowercase

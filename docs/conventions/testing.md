@@ -312,8 +312,9 @@ parse by Helm's own `fromYaml`, in a throwaway chart the test writes into
 its temporary directory (no PyYAML, no `kubectl`); `checksum/token` on
 every workload, equal to the sha256 of the rendered token Secret,
 different for two tokens and equal across endpoint, image, `collectorEnv`,
-namespace and release changes, and `checksum/collector-env`; each pod's
-identity variables, its mounts paired with its volumes and claims, and each
+namespace and release changes, and `checksum/collector-env` (keyed by the
+token: not the values' bare sha256, and another token another hash); each
+pod's identity variables, its mounts paired with its volumes and claims, and each
 ClusterRole's rules exactly (`HOST_IP` = `status.podIP` and the volume
 slug pinned, so changing them is deliberate); the image's
 `repository:tag`; `helm lint --strict` for each role with values.
@@ -609,7 +610,7 @@ request to the gateway on the host, and `helm_client_get` to
 `http://gateway`; the quick-deploy helpers they share are defined before the
 install steps, outside the image's condition. The Agent's facts are compared
 exactly with the platform's chart
-(`oci://ghcr.io/telflo/telflo/charts/supervisor-collector`, `0.1.0`), its
+(`oci://ghcr.io/telflo/telflo/charts/supervisor-collector`, `0.2.0`), its
 image repository (`ghcr.io/telflo/telflo/collector`) and its
 `fullnameOverride`, the fleet id's first 8 characters and `-default` (the
 stack's `TELFLO_HELM_CHART_*` and `TELFLO_COLLECTOR_IMAGE_REPOSITORY` must
@@ -894,7 +895,7 @@ The mail tests send through a real TLS connection to an in-process relay,
 throwaway minikube profile (`CHECK_HELM_PROFILE`, default `telflo-helm-check`),
 against a throwaway compose stack, through the platform's API as a person
 it registers there, from the platform's **published** chart and image
-(`oci://ghcr.io/telflo/telflo/charts/supervisor-collector` at `0.1.0`,
+(`oci://ghcr.io/telflo/telflo/charts/supervisor-collector` at `0.2.0`,
 `ghcr.io/telflo/telflo/collector`: the stack's defaults, each group's
 facts checked for all three; it has no local-chart option): the Agent, the
 Cluster and a 2-replica gateway (with a read-only `hostPath` volume) each

@@ -118,6 +118,24 @@ describe("the person's lints in flight", () => {
   });
 });
 
+describe("a merge-key chain", () => {
+  it("doesn't parse: its aliases under << count (two a level, 30 levels: 2^30 merges were it converted), and the evaluator is never asked", async () => {
+    const evaluator = validEverything();
+    const service = createOttlLintService({ evaluator: evaluator.client, limiter: createPerUserLimiter({ max: 1, windowMs: 60_000 }), log: silent });
+    const organization = randomUUID();
+    const lines = ["a0: &a0 {k: v}"];
+    for (let level = 1; level <= 30; level += 1) lines.push(`a${level}: &a${level} {<<: [*a${level - 1}, *a${level - 1}], k${level}: v}`);
+    lines.push("processors: {transform: *a30}", "");
+
+    const started = performance.now();
+    await expect(service.lintConfiguration(actorIn(randomUUID(), organization), organization, lines.join("\n"))).rejects.toMatchObject({
+      details: { errors: [{ message: "The YAML doesn't parse.", componentPath: null }] },
+    });
+    expect(performance.now() - started).toBeLessThan(1_000);
+    expect(evaluator.requests).toEqual([]);
+  });
+});
+
 describe("a YAML's expression over 8,192 characters", () => {
   const configuration = (long: string) => `
 processors:

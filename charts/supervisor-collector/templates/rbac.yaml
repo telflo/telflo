@@ -5,8 +5,15 @@ metadata:
   name: {{ include "tsc.fullname" . | quote }}
 rules:
 {{- if eq .Values.role "node" }}
+{{- /*
+kubeletstats: nodes/stats for /stats/summary; nodes/pods for /pods
+(extra_metadata_labels, the request and limit utilization metrics), which a
+kubelet with fine-grained authorization (Kubernetes 1.33+) checks first.
+nodes/proxy is every other kubelet path, exec, attach and port-forward
+included: only with kubeletProxy, for /pods on an older kubelet.
+*/}}
   - apiGroups: [""]
-    resources: ["nodes/stats", "nodes/proxy"]
+    resources: ["nodes/stats", "nodes/pods"{{ if .Values.kubeletProxy }}, "nodes/proxy"{{ end }}]
     verbs: ["get"]
 {{- else }}
   - apiGroups: [""]

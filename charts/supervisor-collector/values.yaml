@@ -50,6 +50,16 @@ serviceAccount:
 # Node role only: hostPath log source mounted read-only for filelog.
 nodeLogHostPath: /var/log/pods
 
+# Node role only. false (the default): the Agent's ClusterRole grants get on
+# nodes/stats and nodes/pods, what kubeletstats reads. true adds nodes/proxy,
+# which a kubelet older than Kubernetes 1.33 (or without fine-grained kubelet
+# authorization) asks for /pods: kubeletstats' extra_metadata_labels and its
+# request and limit utilization metrics. nodes/proxy reaches every kubelet
+# path, exec into any pod on the node included, and any member who can deploy
+# to the Agent can make its collector send its token out: grant it only where
+# that is accepted. A boolean (guarded); other roles ignore it.
+kubeletProxy: false
+
 # Extra environment variables for the collector container, as NAME: value
 # pairs. For values the deployed configuration references with ${env:NAME}.
 # Set by the Telflo platform's Install with Helm values file; also settable

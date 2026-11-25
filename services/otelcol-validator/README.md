@@ -141,6 +141,10 @@ is deployment hardening, left for later. Then, on the filled-in text:
    each collector run reads (after every splice and insert, the rerun's
    below included) is re-read, and the collector isn't run if it no longer
    reads as one document or any live non-env reference survives.
+   A text holding a `!!binary` value, in any spelling of the tag, is refused
+   before this step with `The configuration holds a '!!binary' value, …`:
+   PyYAML composes it as its base64 text, but the collector decodes it and
+   expands the references in what it decodes, which no scan here can see.
 3. Datadog exporters without a `hostname` get a placeholder one (so the
    constructor skips cloud hostname detection).
 4. `${env:X}` gets a placeholder value in the collector's environment only,

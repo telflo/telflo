@@ -15,7 +15,8 @@ import { API_TOKENS_LIVE_MAXIMUM, API_TOKEN_NOT_FOUND_MESSAGE, type ServiceAccou
  * by `X-Telflo-Org`; only its person lists or revokes it.
  *
  * The refusals are the service accounts' `api_token_*` codes with a person's
- * words: never a token, its prefix or its name.
+ * words: never a token, its prefix or its name; and the account routes'
+ * `400 current_password_incorrect`.
  */
 
 /** The codes the personal-token routes answer (the service accounts'). */

