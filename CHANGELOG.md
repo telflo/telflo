@@ -7,6 +7,8 @@ release's images, Helm chart and Compose install are on its
 
 ## Unreleased
 
+## 0.2.3 - 2026-11-24
+
 ### Security
 
 - The collector validator and the collector tester refuse a configuration
@@ -82,6 +84,8 @@ release's images, Helm chart and Compose install are on its
   account's, even the admin's removal). A wrong password is refused and
   audited, counts toward the sign-in's failure limit, and makes nothing.
   An account that signs in only with Google is asked nothing.
+  A script that creates tokens through the API sends the password as
+  `currentPassword` in the create's body.
 
 ## 0.2.2 - 2026-11-22
 

@@ -165,7 +165,7 @@ services:
   # One-shot, on every start: the platform's migrations as its owner, then
   # the API's login role. A no-op when the schema is current.
   migrate:
-    image: "${TELFLO_IMAGE_REGISTRY:-ghcr.io/telflo/telflo}/api:0.2.2"
+    image: "${TELFLO_IMAGE_REGISTRY:-ghcr.io/telflo/telflo}/api:0.2.3"
     working_dir: /app/packages/db
     command: ["node", "dist/migrate.js"]
     environment:
@@ -218,7 +218,7 @@ services:
   # own validate. The API is its only caller. It reads its secret from its
   # environment.
   otelcol-validator:
-    image: "${TELFLO_IMAGE_REGISTRY:-ghcr.io/telflo/telflo}/otelcol-validator:0.2.2"
+    image: "${TELFLO_IMAGE_REGISTRY:-ghcr.io/telflo/telflo}/otelcol-validator:0.2.3"
     environment:
       OTELCOL_VALIDATOR_SECRET: "${TELFLO_OTELCOL_VALIDATOR_SECRET:?run ./setup.sh first}"
     healthcheck:
@@ -232,7 +232,7 @@ services:
   # its own network with no way out, a read-only root, no capabilities, its
   # secret only from a file. The API is its only caller.
   otelcol-testing:
-    image: "${TELFLO_IMAGE_REGISTRY:-ghcr.io/telflo/telflo}/otelcol-testing:0.2.2"
+    image: "${TELFLO_IMAGE_REGISTRY:-ghcr.io/telflo/telflo}/otelcol-testing:0.2.3"
     read_only: true
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
@@ -255,7 +255,7 @@ services:
   # tester, on its own network (not the tester's), memory and threads
   # bounded, its secret only from a file. The API is its only caller.
   ottl-evaluator:
-    image: "${TELFLO_IMAGE_REGISTRY:-ghcr.io/telflo/telflo}/ottl-evaluator:0.2.2"
+    image: "${TELFLO_IMAGE_REGISTRY:-ghcr.io/telflo/telflo}/ottl-evaluator:0.2.3"
     command: ["serve"]
     read_only: true
     cap_drop: [ALL]
@@ -278,7 +278,7 @@ services:
   # The API. telflo-admin, its operator's commands, runs in this container:
   # `docker compose exec -T api telflo-admin bootstrap ...`.
   api:
-    image: "${TELFLO_IMAGE_REGISTRY:-ghcr.io/telflo/telflo}/api:0.2.2"
+    image: "${TELFLO_IMAGE_REGISTRY:-ghcr.io/telflo/telflo}/api:0.2.3"
     environment: *telflo-api-environment
     volumes:
       - file-store:/var/lib/telflo/file-store
@@ -304,7 +304,7 @@ services:
     restart: unless-stopped
 
   web:
-    image: "${TELFLO_IMAGE_REGISTRY:-ghcr.io/telflo/telflo}/web:0.2.2"
+    image: "${TELFLO_IMAGE_REGISTRY:-ghcr.io/telflo/telflo}/web:0.2.3"
     # telflo-web is the gateway's upstream name, as telflo-api is the API's.
     networks:
       default: { aliases: [telflo-web] }
