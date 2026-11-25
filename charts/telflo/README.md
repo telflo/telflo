@@ -3,7 +3,7 @@
 The Telflo platform on any Kubernetes cluster, from one chart: the API, the
 web app, the gateway, the collector validator and tester, the OTTL
 evaluator and one shared Postgres, with the
-[opamp-server chart](charts/opamp-server/README.md) (0.3.0, the version
+[opamp-server chart](charts/opamp-server/README.md) (0.3.1, the version
 `vendor/opamp-server/PIN` names) as a vendored dependency.
 
 The chart holds nothing specific to a cloud. A cloud's details (its load

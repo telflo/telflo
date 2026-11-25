@@ -108,7 +108,7 @@ the one-shot containers that create its roles and database
 doesn't answer. The opamp-server has its own repository,
 `github.com/telflo/opamp-server` (public, Apache-2.0), and the stack runs
 its published release, `ghcr.io/telflo/opamp-server`, pinned by version and
-digest (`vendor/opamp-server/PIN`; 0.3.0 since Telflo 0.1.2). The image is
+digest (`vendor/opamp-server/PIN`; 0.3.1 since Telflo 0.2.4). The image is
 public: the first run pulls it with no login. To run a change to the
 opamp-server before it is released (built from a clone beside this one,
 `../opamp-server`, with `docker-compose.opamp-server-dev.yml`), and to take
