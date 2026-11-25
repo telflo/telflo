@@ -413,7 +413,8 @@
 # and 4), test (a spec, a sample file and two OTTL rules, in the real tester),
 # fleet create (no bearer), fleet groups, deploy --group (the Default group:
 # an install needs a group that serves a version), fleet install --platform
-# docker (its stdout 0600, `grep -q '^docker run'` only), logout (then whoami
+# docker (its stdout 0600, only grepped: its first line the OPAMP_TOKEN
+# assignment, a line of its own `docker run`), logout (then whoami
 # exit 3); every output goes to 0600 files read by jq, grep and cmp. Then no
 # tf_, tqd_ or tll_ in its outputs but install's stdout, and install's
 # stdout's lines (grep -cF -f) in none of its other outputs nor the API's
@@ -5191,7 +5192,7 @@ public_api_body install --arg group "$public_api_group_id" '{platform: "docker",
 public_api_call public_api_write_token POST "/fleets/$public_api_fleet_id/install" "$public_api_file"
 [ "$status" = "200" ] || fail "the public API docker install returned HTTP $status: $(reply_code)"
 no_store || fail "the public API docker install's reply, holding the fleet's bearer, isn't Cache-Control: no-store"
-public_api_reply_is '.platform == "docker" and (.command | startswith("docker run"))' ||
+public_api_reply_is '.platform == "docker" and (.command | startswith("OPAMP_TOKEN=\u0027")) and any(.command | split("\n")[]; startswith("docker run "))' ||
   fail "the public API docker install's command isn't a docker run (not printed)"
 (umask 077 && : >"$PLATFORM_REPLY_BODY")
 
@@ -5392,7 +5393,7 @@ cli_run deploy --json deploy --fleet "$cli_fleet_id" --config "$cli_configuratio
   fail "telflo deploy --group didn't put v1 on the Default group: $(cli_said deploy)"
 cli_run install fleet install "$cli_fleet_id" --platform docker
 [ "$cli_code" = "0" ] || fail "telflo fleet install --platform docker exited $cli_code (its output not printed)"
-grep -q '^docker run' "$CLI_DIR/install.out" || fail "telflo fleet install's stdout isn't a docker run (not printed)"
+{ head -n 1 "$CLI_DIR/install.out" | grep -q "^OPAMP_TOKEN='" && grep -q '^docker run ' "$CLI_DIR/install.out"; } || fail "telflo fleet install's stdout isn't a docker run (not printed)"
 
 step "telflo logout --json removes the credentials file; telflo whoami is then exit 3, not logged in"
 cli_run logout --json logout
