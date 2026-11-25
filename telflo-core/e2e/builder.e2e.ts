@@ -407,13 +407,14 @@ test("a node can't be dragged out of its pipeline; moving it, resizing a group a
   await page.getByRole("button", { name: "Tidy up layout" }).click();
 
   await expect(unsavedBadge(page)).toBeVisible();
-  const beforeSave = arrangement(await shownNodes(page));
   await saveButton(page).click();
   await expect(page.getByText("Saved configuration")).toBeVisible();
   await expect(unsavedBadge(page)).toBeHidden();
 
-  // The database's nodes put each node where the canvas showed it (a
-  // child's position is relative to its group).
+  // The database's nodes put each node where the canvas shows it (a child's
+  // position is relative to its group). Polled: Tidy up grows the traces
+  // group, and until React Flow has measured its new size (a frame or two)
+  // it draws the group's nodes kept inside the old one.
   const stored = (await storedVersion(configurationId)).nodes as {
     type: string;
     position: { x: number; y: number };
@@ -427,14 +428,16 @@ test("a node can't be dragged out of its pipeline; moving it, resizing a group a
       return `${n.type} ${Math.round(n.position.x + (parent?.position.x ?? 0))},${Math.round(n.position.y + (parent?.position.y ?? 0))}`;
     })
     .sort();
-  const shownPlaces = (await shownNodes(page)).map((n) => `${n.type} ${Math.round(n.x)},${Math.round(n.y)}`).sort();
-  expect(storedPlaces).toEqual(shownPlaces);
+  const shownPlaces = async () =>
+    (await shownNodes(page)).map((n) => `${n.type} ${Math.round(n.x)},${Math.round(n.y)}`).sort();
+  await expect.poll(shownPlaces).toEqual(storedPlaces);
+  const saved = arrangement(await shownNodes(page));
 
   await page.reload();
   await waitForHydration(page);
   await waitForCanvas(page);
 
-  await expect.poll(async () => arrangement(await shownNodes(page))).toEqual(beforeSave);
+  await expect.poll(async () => arrangement(await shownNodes(page))).toEqual(saved);
   await expect(unsavedBadge(page)).toBeHidden();
 });
 
