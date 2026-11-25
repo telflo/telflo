@@ -432,7 +432,7 @@ services:
   # owner), then exits. A no-op when the schema is current. serve refuses a
   # schema that isn't exactly current, so it waits for this to succeed.
   opamp-migrate:
-    image: ghcr.io/telflo/opamp-server:0.3.0@sha256:525595dc26a5d601aed05a763475de9614fa11b44b5152d63c75086a7835ce5f
+    image: ghcr.io/telflo/opamp-server:0.3.1@sha256:81c5bf5bc681cfa807c5b71fa6618fa30ae3aa3545665019e26636103fe7e696
     command: ["migrate", "up"]
     environment:
       OPAMP_MIGRATION_DATABASE_URL: postgresql://telflo_opamp_server_owner:telflo-opamp-owner-local@db:5432/telflo_opamp_server
@@ -466,7 +466,7 @@ services:
   # Compose 2.6.0 ignores a secret's uid, gid and mode, so it is committed
   # world-readable (0644); a production file must be readable by uid 65532.
   opamp-server:
-    image: ghcr.io/telflo/opamp-server:0.3.0@sha256:525595dc26a5d601aed05a763475de9614fa11b44b5152d63c75086a7835ce5f
+    image: ghcr.io/telflo/opamp-server:0.3.1@sha256:81c5bf5bc681cfa807c5b71fa6618fa30ae3aa3545665019e26636103fe7e696
     command: ["serve"]
     # SIGTERM keeps the listeners open 5 s while /ready answers 503
     # (OPAMP_SHUTDOWN_DRAIN_SECONDS), gives requests in flight 10 s

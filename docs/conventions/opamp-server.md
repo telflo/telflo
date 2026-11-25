@@ -163,7 +163,7 @@ examples release `0.2.0`; use the version you are releasing.
   ```
 
   When everything matches it prints an OK line naming the pinned release;
-  for 0.3.0, `check-opamp-server-pin: OK: v0.3.0 (…)`. `--refresh` and
+  for 0.3.1, `check-opamp-server-pin: OK: v0.3.1 (…)`. `--refresh` and
   `--restore`, its two other modes, are below.
 - **The dev override, `docker-compose.opamp-server-dev.yml`,** builds the
   two services from the sibling (`build: ${OPAMP_SERVER_SRC:-../opamp-server}`,
@@ -372,6 +372,13 @@ of the local testing above):
      (`scripts/smoke-kind.sh`) and the PIN check's self-test read the
      version and digest from the PIN, so they need no edit. A changed
      platform chart ships in its next version;
+   - the static jobs' clone of the server, in `.github/workflows/ci.yml`
+     and `.github/workflows/release.yml`: `git clone --branch v0.2.0
+     https://github.com/telflo/opamp-server.git ../opamp-server`, the PIN's
+     tag (`scripts/release/check-workflows.sh` refuses any other), and the
+     two fixtures that break it, `scripts/release/testdata/workflows/`
+     `37-opamp-clone.fixture` and `131-ci-opamp-clone-version.fixture`,
+     whose find text is that line;
    - the vendored files from the new tag, which `--restore` writes from the
      PIN's commit and then checks:
 

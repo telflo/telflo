@@ -7,6 +7,13 @@ release's images, Helm chart and Compose install are on its
 
 ## Unreleased
 
+### Changed
+
+- The opamp-server is 0.3.1 (was 0.3.0), in the Helm chart, the Compose
+  install and the development stack: its Go dependencies updated
+  (`golang.org/x/net` 0.63.0, with `x/crypto`, `x/sync`, `x/sys` and
+  `x/text`). No schema or API change.
+
 ## 0.2.3 - 2026-11-24
 
 ### Security

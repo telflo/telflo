@@ -132,7 +132,7 @@ jobs:
       - run: bash scripts/release/tools.sh fetch crane
       - run: bash scripts/release/tools.sh fetch gitleaks
       - run: bash scripts/release/steps.sh pull-images
-      - run: git clone --branch v0.3.0 https://github.com/telflo/opamp-server.git ../opamp-server
+      - run: git clone --branch v0.3.1 https://github.com/telflo/opamp-server.git ../opamp-server
       - run: bash scripts/gates/static.sh --work "$RUNNER_TEMP/static"
 
   # One image per job, both processor types (arm64 under QEMU), from the
