@@ -23,7 +23,7 @@ kubectl --context <context> label namespace telflo pod-security.kubernetes.io/en
 
 # 2. The Secrets. Download create-secrets.sh from the release, with the checksums,
 #    and check it: it prints "create-secrets.sh: OK".
-release=https://github.com/telflo/telflo/releases/download/v0.2.2
+release=https://github.com/telflo/telflo/releases/download/v0.2.3
 curl -fsSL -O "$release/create-secrets.sh" -O "$release/SHA256SUMS"
 grep 'create-secrets.sh$' SHA256SUMS | if command -v sha256sum >/dev/null; then sha256sum -c -; else shasum -a 256 -c -; fi
 
@@ -35,7 +35,7 @@ bash create-secrets.sh --context <context> --namespace telflo my.secrets.env
 
 # 3. The chart. publicUrl is the gateway's https origin as browsers reach it; the
 #    opamp-server's publicUrl is the agent endpoint as collectors reach it.
-helm install telflo oci://ghcr.io/telflo/telflo/charts/telflo --version 0.2.2 --kube-context <context> -n telflo \
+helm install telflo oci://ghcr.io/telflo/telflo/charts/telflo --version 0.2.3 --kube-context <context> -n telflo \
   --set publicUrl=https://telflo.example.com \
   --set opamp-server.server.publicUrl=https://opamp.example.com/opamp/api/v1 \
   --set api.mail.from=telflo@example.com \
