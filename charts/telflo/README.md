@@ -116,9 +116,14 @@ always a Secret's name. The shape:
   (its README describes them). The defaults wire it to the platform, and
   the chart refuses a change that would break that wiring: its
   `fullnameOverride`, its Postgres off and `externalDatabase` on
-  `telflo-postgres`, its `imagePullSecrets` equal to
+  `telflo-postgres` (with no `urlKeys`), its `postgres.image` equal to
+  `postgres.image`, its `imagePullSecrets` equal to
   `global.imagePullSecrets`, its `networkPolicy.enabled` equal to the
-  platform's. You give it `server.publicUrl` (required): the agent
+  platform's. Its `postgres.image` is the image of its
+  `wait-for-postgres` init container, which holds the opamp-server's pods
+  until `telflo-postgres` answers: a mirror that moves
+  `postgres.image.registry` moves it too, as one `repository`
+  (`<registry>/postgres`). You give it `server.publicUrl` (required): the agent
   endpoint's URL as collectors reach it, such as
   `https://opamp.example.com/opamp/api/v1`. In practice http or https
   (the opamp-server chart's schema refuses ws and wss), a host or an IP

@@ -265,7 +265,9 @@ order. Each `gh api` line runs with that admin's own GitHub CLI login.
    18.x tag's index digest
    (`crane digest docker.io/library/postgres:18.<n>`, with
    `scripts/release/tools.sh fetch crane`) in `charts/telflo/values.yaml`'s
-   `postgres.image.digest` (and the comment above it), both `postgres`
+   `postgres.image.digest` (and the comment above it) and
+   `opamp-server.postgres.image.digest` (the opamp-server's
+   `wait-for-postgres`; a guard holds the two equal), both `postgres`
    lines of `deploy/compose/compose.yaml`, `scripts/release/tools.lock`'s
    `postgres` row (its version too), both `postgres` services of
    `.github/workflows/ci.yml` (`check-workflows.sh` holds them to the

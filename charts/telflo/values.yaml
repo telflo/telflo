@@ -371,6 +371,15 @@ opamp-server:
   # The platform's Postgres, never the opamp-server chart's own.
   postgres:
     enabled: false
+    # The image of the opamp-server's wait-for-postgres init container
+    # (pg_isready, until telflo-postgres answers): the same image as
+    # postgres.image, with its registry in the repository (a guard holds
+    # them equal), so a cluster pulls and mirrors one Postgres image.
+    image:
+      repository: docker.io/library/postgres
+      tag: "18"
+      digest: sha256:9f4fd4aa918f52ae3d6f3b687f1de90d8f867cd4d520021545a9a50c120eae3b
+      pullPolicy: IfNotPresent
   externalDatabase:
     host: telflo-postgres
     port: 5432
