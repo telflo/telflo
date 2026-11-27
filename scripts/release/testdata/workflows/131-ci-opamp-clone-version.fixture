@@ -2,7 +2,7 @@
 file: ci.yml
 rule: ci-opamp-clone
 <<<
-git clone --branch v0.3.1 https://github.com/telflo/opamp-server.git
+git clone --branch v0.3.2 https://github.com/telflo/opamp-server.git
 ===
 git clone --branch v0.2.0 https://github.com/telflo/opamp-server.git
 >>>

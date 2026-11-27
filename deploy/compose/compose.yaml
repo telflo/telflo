@@ -178,7 +178,7 @@ services:
   # One-shot, on every start: the opamp-server's migrations, as its schema's
   # owner. serve refuses a schema that isn't exactly current.
   opamp-migrate:
-    image: ghcr.io/telflo/opamp-server:0.3.1@sha256:81c5bf5bc681cfa807c5b71fa6618fa30ae3aa3545665019e26636103fe7e696
+    image: ghcr.io/telflo/opamp-server:0.3.2@sha256:677dd128bff6872dc92df2ab533d92fa21464490a5a58fb6d589b3f369a8d3ad
     command: ["migrate", "up"]
     environment:
       OPAMP_MIGRATION_DATABASE_URL: "postgresql://telflo_opamp_server_owner:${TELFLO_OPAMP_OWNER_PASSWORD:?run ./setup.sh first}@db:5432/telflo_opamp_server"
@@ -193,7 +193,7 @@ services:
   # (secrets/opamp-encryption-key), never in the environment: back it up
   # with .env, the stored tokens can't be read without it.
   opamp-server:
-    image: ghcr.io/telflo/opamp-server:0.3.1@sha256:81c5bf5bc681cfa807c5b71fa6618fa30ae3aa3545665019e26636103fe7e696
+    image: ghcr.io/telflo/opamp-server:0.3.2@sha256:677dd128bff6872dc92df2ab533d92fa21464490a5a58fb6d589b3f369a8d3ad
     command: ["serve"]
     # Drains for 5 s, then up to 22 s more for requests and telemetry.
     stop_grace_period: 30s

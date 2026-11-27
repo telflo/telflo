@@ -26,5 +26,5 @@ keywords:
 # never run `helm dependency update` or `build` here.
 dependencies:
   - name: opamp-server
-    version: 0.3.1
+    version: 0.3.2
     repository: oci://ghcr.io/telflo/charts

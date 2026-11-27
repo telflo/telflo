@@ -163,7 +163,7 @@ examples release `0.2.0`; use the version you are releasing.
   ```
 
   When everything matches it prints an OK line naming the pinned release;
-  for 0.3.1, `check-opamp-server-pin: OK: v0.3.1 (…)`. `--refresh` and
+  for 0.3.2, `check-opamp-server-pin: OK: v0.3.2 (…)`. `--refresh` and
   `--restore`, its two other modes, are below.
 - **The dev override, `docker-compose.opamp-server-dev.yml`,** builds the
   two services from the sibling (`build: ${OPAMP_SERVER_SRC:-../opamp-server}`,

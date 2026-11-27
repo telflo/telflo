@@ -342,7 +342,7 @@ opamp-server:
   fullnameOverride: telflo-opamp-server
   image:
     # vendor/opamp-server/PIN's digest.
-    digest: sha256:81c5bf5bc681cfa807c5b71fa6618fa30ae3aa3545665019e26636103fe7e696
+    digest: sha256:677dd128bff6872dc92df2ab533d92fa21464490a5a58fb6d589b3f369a8d3ad
   # The same list as global.imagePullSecrets (none by default).
   imagePullSecrets: []
   auth:
