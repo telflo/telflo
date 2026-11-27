@@ -11,7 +11,9 @@ PG_HEADLESS="Service/telflo-postgres-headless"
 # `postgres` row (the release scripts pull it from there). The vendored
 # opamp-server chart's own Postgres pin is never used here (its Postgres is
 # off: the opamp-server's database is on this one server) and moves only
-# with an opamp-server release, so it may differ.
+# with an opamp-server release, so it may differ: values.yaml sets
+# opamp-server.postgres.image (its wait-for-postgres's) to this image, and
+# a guard holds the two equal.
 PG_LOCK="$REPO_DIR/scripts/release/tools.lock"
 PG_DIGEST="$(awk '$1 == "image" && $2 == "postgres" && $3 == "postgres" { print $5; exit }' "$PG_LOCK")"
 
@@ -50,7 +52,8 @@ pg_image_full() {
 run_case "Postgres: its own image.registry replaces image.registry (full)" pg_image_full
 pg_no_digest() {
   next_file
-  render_flat "$f" "${D[@]}" --set-string postgres.image.digest= --set-string postgres.image.pullPolicy=Never || return 1
+  render_flat "$f" "${D[@]}" --set-string postgres.image.digest= --set-string postgres.image.pullPolicy=Never \
+    --set-string opamp-server.postgres.image.digest= || return 1
   eq "$f" "$PG_C.image" '"docker.io/library/postgres:18"' && eq "$f" "$PG_C.imagePullPolicy" '"Never"'
 }
 run_case "Postgres: an empty digest is the tag alone, and its own pullPolicy wins" pg_no_digest

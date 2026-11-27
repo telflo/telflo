@@ -7,6 +7,31 @@ release's images, Helm chart and Compose install are on its
 
 ## Unreleased
 
+## 0.2.5 - 2026-11-27
+
+### Changed
+
+- The opamp-server is 0.3.2 (was 0.3.1), in the Helm chart, the Compose
+  install and the development stack. Its `migrate` gives up a connection
+  attempt that gets no answer, and retries for up to two minutes while
+  the database can't be reached, instead of hanging. No schema or API
+  change.
+
+### Fixed
+
+- Helm chart: on a first install, the opamp-server's pods wait for
+  `telflo-postgres` to answer before they run their migrations
+  (`wait-for-postgres`, from opamp-server 0.3.2's chart). Before, the
+  migrations could start while Postgres was still creating its databases
+  and fail, and a restarted `migrate` could hang until
+  `helm install --wait` timed out.
+- Helm chart: the wait runs the platform's own Postgres image
+  (`opamp-server.postgres.image`, set to `postgres.image`), so a cluster
+  pulls and mirrors one Postgres image. The chart refuses the two set
+  differently, and refuses `opamp-server.externalDatabase.urlKeys`, which
+  would skip the wait and the check that the opamp-server uses
+  `telflo-postgres`.
+
 ## 0.2.4 - 2026-11-25
 
 ### Changed

@@ -141,6 +141,23 @@ M_DB="opamp-server.externalDatabase must be the platform's Postgres: host telflo
 run_case "guard: opamp-server.externalDatabase.host elsewhere" refused "$M_DB" "" "${D[@]}" --set-string opamp-server.externalDatabase.host=db.example.com
 run_case "guard: opamp-server.externalDatabase.port other" refused "$M_DB" "" "${D[@]}" --set opamp-server.externalDatabase.port=5433
 run_case "guard: opamp-server.externalDatabase.database other" refused "$M_DB" "" "${D[@]}" --set-string opamp-server.externalDatabase.database=opamp
+M_URLKEYS="opamp-server.externalDatabase.urlKeys must be empty: the opamp-server's URLs are made from host, port and database, and the Secret's owner-password and runtime-password"
+run_case "guard: opamp-server.externalDatabase.urlKeys set (both keys: no wait-for-postgres, and the host check bypassed)" refused "$M_URLKEYS" "" \
+  "${D[@]}" --set-string opamp-server.externalDatabase.urlKeys.runtime=runtime-url --set-string opamp-server.externalDatabase.urlKeys.migration=migration-url
+M_WAIT="opamp-server.postgres.image must be postgres.image (its repository with postgres.image's registry, the same tag and digest): the opamp-server's wait-for-postgres runs it"
+run_case "guard: postgres.image.registry changed alone (a mirror the wait wouldn't use)" refused "$M_WAIT" "" \
+  "${D[@]}" --set-string postgres.image.registry=registry.example.com/mirror
+run_case "guard: postgres.image.digest changed alone (a Postgres re-pin)" refused "$M_WAIT" "" \
+  "${D[@]}" --set-string postgres.image.digest=sha256:0000000000000000000000000000000000000000000000000000000000000000
+run_case "guard: opamp-server.postgres.image.repository other" refused "$M_WAIT" "" \
+  "${D[@]}" --set-string opamp-server.postgres.image.repository=postgres
+run_case "guard: opamp-server.postgres.image.tag other" refused "$M_WAIT" "" "${D[@]}" --set-string opamp-server.postgres.image.tag=17
+run_case "guard: opamp-server.postgres.image.digest emptied alone" refused "$M_WAIT" "" "${D[@]}" --set-string opamp-server.postgres.image.digest=
+wait_mirror() {
+  renders "${D[@]}" --set-string postgres.image.registry=registry.example.com/mirror \
+    --set-string opamp-server.postgres.image.repository=registry.example.com/mirror/postgres
+}
+run_case "guard: postgres.image's registry and opamp-server.postgres.image's repository moved together render" wait_mirror
 M_PULL="opamp-server.imagePullSecrets must be the same list as global.imagePullSecrets: the opamp-server chart reads only its own"
 run_case "guard: global.imagePullSecrets set alone (the defaults both empty)" refused "$M_PULL" "" "${D[@]}" --set-string 'global.imagePullSecrets[0].name=ghcr-pull'
 run_case "guard: opamp-server.imagePullSecrets set alone (the defaults both empty)" refused "$M_PULL" "" "${D[@]}" --set-string 'opamp-server.imagePullSecrets[0].name=ghcr-pull'

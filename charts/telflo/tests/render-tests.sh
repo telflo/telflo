@@ -382,11 +382,35 @@ opamp_db() {
   local pod
   for pod in $OPAMP_PODS; do
     eq "$1" "$pod.containers[serve].env[OPAMP_DATABASE_URL].value" '"postgresql://telflo_opamp_server:$(OPAMP_RUNTIME_PASSWORD)@telflo-postgres:5432/telflo_opamp_server?sslmode=disable"' &&
-      eq "$1" "$pod.initContainers[migrate].env[OPAMP_MIGRATION_DATABASE_URL].value" '"postgresql://telflo_opamp_server_owner:$(OPAMP_OWNER_PASSWORD)@telflo-postgres:5432/telflo_opamp_server?sslmode=disable"' &&
-      no_path "$1" "$pod.initContainers[wait-for-postgres]" || return 1
+      eq "$1" "$pod.initContainers[migrate].env[OPAMP_MIGRATION_DATABASE_URL].value" '"postgresql://telflo_opamp_server_owner:$(OPAMP_OWNER_PASSWORD)@telflo-postgres:5432/telflo_opamp_server?sslmode=disable"' || return 1
   done
 }
-each_profile "the opamp-server (both Deployments) reaches telflo-postgres's telflo_opamp_server (sslmode disable), with no wait-for-postgres of its own" opamp_db
+each_profile "the opamp-server (both Deployments) reaches telflo-postgres's telflo_opamp_server (sslmode disable)" opamp_db
+# The cold start: telflo-postgres and the opamp-server start together, and
+# migrate gives up after two minutes without a database, so (since
+# opamp-server 0.3.2) each pod first runs wait-for-postgres: pg_isready
+# against telflo-postgres until it answers, on the platform's own Postgres
+# image (the one the StatefulSet runs, a mirror's in the full profile), with
+# no credential, as the image's user 999 with a read-only root.
+opamp_wait() {
+  local pod w pg_image
+  pg_image="$(value "$1" "StatefulSet/telflo-postgres.spec.template.spec.containers[postgres].image")"
+  [ -n "$pg_image" ] || return 1
+  for pod in $OPAMP_PODS; do
+    w="$pod.initContainers[wait-for-postgres]"
+    [ "$(names_at "$1" "$pod.initContainers" | tr '\n' ' ')" = "wait-for-postgres migrate " ] &&
+      eq "$1" "$w.image" "$pg_image" && eq "$1" "$w.imagePullPolicy" '"IfNotPresent"' &&
+      eq "$1" "$w.command[0]" '"sh"' && eq "$1" "$w.command[1]" '"-c"' &&
+      eq "$1" "$w.command[2]" '"until pg_isready; do sleep 2; done"' && no_path "$1" "$w.command[3]" && no_path "$1" "$w.args" &&
+      [ "$(env_names "$1" "$w" | tr '\n' ' ')" = "PGHOST PGPORT PGUSER PGDATABASE " ] &&
+      eq "$1" "$w.env[PGHOST].value" '"telflo-postgres"' && eq "$1" "$w.env[PGPORT].value" '"5432"' &&
+      eq "$1" "$w.env[PGUSER].value" '"telflo_opamp_server_owner"' && eq "$1" "$w.env[PGDATABASE].value" '"telflo_opamp_server"' &&
+      [ -z "$(secret_keys "$1" "$w")" ] && no_path "$1" "$w.envFrom" && no_path "$1" "$w.volumeMounts" &&
+      eq "$1" "$w.securityContext.runAsUser" 999 && eq "$1" "$w.securityContext.runAsNonRoot" true &&
+      eq "$1" "$w.securityContext.readOnlyRootFilesystem" true && eq "$1" "$w.securityContext.allowPrivilegeEscalation" false || return 1
+  done
+}
+each_profile "the opamp-server's pods (both Deployments) wait for telflo-postgres (wait-for-postgres: pg_isready, the platform's Postgres image, no credential) before migrate" opamp_wait
 opamp_services() { eq "$1" "Service/$OPAMP-agent.spec.type" '"LoadBalancer"' && eq "$1" "Service/$OPAMP-management.spec.type" '"ClusterIP"'; }
 each_profile "the agent Service is a LoadBalancer; the management Service ClusterIP" opamp_services
 opamp_pull() {

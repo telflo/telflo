@@ -487,6 +487,22 @@ user and password).
 {{- if or (ne (toString (dig "host" "" $db)) "telflo-postgres") (ne (toString (dig "database" "" $db)) "telflo_opamp_server") (ne (int (dig "port" 0 $db)) 5432) }}
 {{- fail "opamp-server.externalDatabase must be the platform's Postgres: host telflo-postgres, port 5432, database telflo_opamp_server" }}
 {{- end }}
+{{- /* Whole URLs from the Secret would bypass the host check above, skip
+the opamp-server's wait-for-postgres (the chart doesn't know their host)
+and leave the bootstrap's owner-password and runtime-password unused. */}}
+{{- if or (dig "urlKeys" "runtime" "" $db) (dig "urlKeys" "migration" "" $db) }}
+{{- fail "opamp-server.externalDatabase.urlKeys must be empty: the opamp-server's URLs are made from host, port and database, and the Secret's owner-password and runtime-password" }}
+{{- end }}
+{{- /* The opamp-server's wait-for-postgres runs opamp-server.postgres.image:
+the platform's Postgres image, compared as the two charts render them. */}}
+{{- $waitImage := dig "postgres" "image" dict $o }}
+{{- $waitRef := printf "%s:%s" (toString (dig "repository" "" $waitImage)) (toString (default "18" (dig "tag" "" $waitImage))) }}
+{{- with (dig "digest" "" $waitImage) }}
+{{- $waitRef = printf "%s@%s" $waitRef . }}
+{{- end }}
+{{- if ne $waitRef (include "telflo.image" (list . "postgres")) }}
+{{- fail "opamp-server.postgres.image must be postgres.image (its repository with postgres.image's registry, the same tag and digest): the opamp-server's wait-for-postgres runs it" }}
+{{- end }}
 {{- if ne (toJson (default list $v.global.imagePullSecrets)) (toJson (default list (dig "imagePullSecrets" list $o))) }}
 {{- fail "opamp-server.imagePullSecrets must be the same list as global.imagePullSecrets: the opamp-server chart reads only its own" }}
 {{- end }}

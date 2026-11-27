@@ -1383,8 +1383,10 @@ never writes your kubeconfig); every image loaded with `kind load` and
 checked by image id, the chart's `postgres:18` pulled inside the node by
 digest; `create-secrets.sh --init`, then `create-secrets.sh`, and no
 `kind: Secret` in `helm template`; no pull Secret (every image is local,
-the chart's pull-secret lists stay empty); `helm install`, every pod
-Ready; a second release refused; the databases (each bootstrap ran once,
+the chart's pull-secret lists stay empty); `helm install` from a cold
+start (Postgres held unscheduled until both opamp-server pods have waited
+30 s in `wait-for-postgres`, then the opamp-server's `migrate` run once in
+each pod), every pod Ready; a second release refused; the databases (each bootstrap ran once,
 each refuses the other side's roles, `telflo_platform_owner` no superuser
 and the migrations' owner); `helm upgrade`, every pod new, no migration
 run again; the static facts (the management Service ClusterIP, the
