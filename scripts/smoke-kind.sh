@@ -61,7 +61,8 @@
 #      image id as the engine's image store gives it (smoke-kind/image-id.sh:
 #      the config digest on the classic store, the manifest digest on
 #      containerd's); the chart's own postgres:18 pinned by digest pulled
-#      inside the node, so the chart's default Postgres reference runs as is.
+#      inside the node, so the chart's default Postgres reference (Postgres's,
+#      and the opamp-server's wait-for-postgres's) runs as is.
 #   5. the release's namespace (labeled pod-security.kubernetes.io/enforce=
 #      restricted) and the collectors' namespace (no label: the collector
 #      chart's pods set no securityContext); the Mailpit fixture
@@ -72,11 +73,15 @@
 #      stay their default, empty (the [ghcr-pull] section's mechanics are
 #      create-secrets.test.sh's).
 #   7. helm template with the smoke's values renders no `kind: Secret`.
-#   8. helm install --wait (Postgres first; the API's migrate init container
-#      retries until Postgres answers), every pod Ready; a pod that can't
-#      start (an image or a Secret missing) fails at once; each platform pod
-#      runs the image the run means (with --images, the chart's own
-#      reference, ghcr.io/telflo/telflo/<name>:<version>).
+#   8. helm install --wait, the cold start: Postgres held unscheduled (a
+#      nodeSelector on a label the node gets later) until both opamp-server
+#      pods have waited 30 s in wait-for-postgres with migrate not started,
+#      then released; the API's migrate init container retries until Postgres
+#      answers. Every pod Ready; the opamp-server's migrate ran once in each
+#      pod, and succeeded; a pod that can't start (an image or a Secret
+#      missing) fails at once; each platform pod runs the image the run means
+#      (with --images, the chart's own reference,
+#      ghcr.io/telflo/telflo/<name>:<version>).
 #   9. a second release in the namespace refused by the chart's
 #      oneReleaseGuard (its fixed message; Helm's ownership check refusing
 #      it instead fails the step: the guard didn't fire).
@@ -476,6 +481,7 @@ built_images=""
 pulled_bases=""
 forward_pids=""
 helm_pid=""
+watch_tick=""
 probes_made=no
 logs_collected=no
 cleanup_failures=""
@@ -632,7 +638,8 @@ SUMMARY_JQ='
 pods_json() { kns get pods -l "app.kubernetes.io/instance=$RELEASE" -o json 2>>"$LOGS/kubectl.err"; }
 pods_summary() { pods_json | jq -r "$SUMMARY_JQ" 2>/dev/null | sed 's/^/       /'; }
 # run_watched <label> <log> <command...>: the command (a helm install or upgrade with --wait) in the background,
-# the release's pods watched meanwhile: a pod that can't start fails the step at once.
+# the release's pods watched meanwhile: a pod that can't start fails the step at once. $watch_tick, when set, names
+# a function run on every round of the watch (the first install's Postgres hold).
 # The background command's PID is $helm_pid while it runs, so on_exit stops it on any exit.
 run_watched() {
   local label=$1 log=$2 problems code=0
@@ -647,6 +654,7 @@ run_watched() {
       pods_summary >&2
       fail "$label: a pod can't start ($(echo "$problems" | head -n1 | redact)), so the run stops rather than wait"
     fi
+    [ -z "$watch_tick" ] || "$watch_tick"
     sleep 5
   done
   wait "$helm_pid" || code=$?
@@ -674,6 +682,67 @@ wait_every_pod_ready() {
     sleep 3
   done
 }
+# ---- The cold start: the first install's Postgres held back.
+# The smoke's values give Postgres a nodeSelector on $HOLD_LABEL, which the node doesn't carry yet, so
+# telflo-postgres-0 stays unscheduled while the rest of the release starts. hold_tick (run_watched's $watch_tick)
+# waits until both opamp-server pods are in wait-for-postgres, holds them there $HOLD_SECONDS with migrate not
+# started (without the wait, migrate would run at once against no Postgres), then labels the node, and Postgres
+# starts. Later installs and upgrades find the label and aren't held.
+HOLD_LABEL=telflo-smoke/postgres
+HOLD_SECONDS=30
+hold_state=holding
+hold_since=""
+hold_deadline=""
+# "<component> <wait-for-postgres's state> <migrate's state> <migrate's restarts> <migrate's earlier runs>" for each
+# opamp-server pod, sorted: held is "agent running waiting 0 0" and "management running waiting 0 0".
+OPAMP_INIT_JQ='
+.items[] | select(.metadata.deletionTimestamp == null)
+| select(.metadata.labels["app.kubernetes.io/component"] == "agent" or .metadata.labels["app.kubernetes.io/component"] == "management")
+| (.status.initContainerStatuses // []) as $s
+| [ .metadata.labels["app.kubernetes.io/component"],
+    ([$s[] | select(.name == "wait-for-postgres") | (.state // {}) | keys[0]][0] // "none"),
+    ([$s[] | select(.name == "migrate") | (.state // {}) | keys[0]][0] // "none"),
+    ([$s[] | select(.name == "migrate") | .restartCount][0] // 0 | tostring),
+    ([$s[] | select(.name == "migrate") | (.lastState // {}) | keys | length][0] // 0 | tostring) ]
+| join(" ")
+'
+opamp_init_states() { pods_json | jq -r "$OPAMP_INIT_JQ" 2>/dev/null | LC_ALL=C sort | tr '\n' ';'; }
+hold_tick() {
+  local states node
+  [ "$hold_state" = holding ] || return 0
+  states=$(opamp_init_states || true)
+  if [ "$states" = "agent running waiting 0 0;management running waiting 0 0;" ]; then
+    [ -n "$hold_since" ] || hold_since=$SECONDS
+  elif [ -z "$states" ] && { [ -n "$hold_since" ] || [ "$SECONDS" -lt "$hold_deadline" ]; }; then
+    # kubectl gave nothing this round: the next round asks again.
+    return 0
+  elif [ -n "$hold_since" ]; then
+    stop_helm
+    pods_summary >&2
+    fail "while Postgres was held, the opamp-server's init containers left wait-for-postgres: ${states:-no pods}"
+  elif [ "$SECONDS" -ge "$hold_deadline" ]; then
+    stop_helm
+    pods_summary >&2
+    fail "the opamp-server's two pods weren't both in wait-for-postgres within 300 s: ${states:-no pods}"
+  fi
+  [ -n "$hold_since" ] && [ $((SECONDS - hold_since)) -ge "$HOLD_SECONDS" ] || return 0
+  node=$(kns get pod telflo-postgres-0 -o jsonpath='{.spec.nodeName}' 2>>"$LOGS/kubectl.err") ||
+    fail "reading telflo-postgres-0 while it was held failed"
+  [ -z "$node" ] || fail "telflo-postgres-0 was scheduled (on $node) while it was held"
+  kube label node "$NODE" "$HOLD_LABEL=go" >>"$LOGS/hold.log" 2>&1 || fail "labelling the node $HOLD_LABEL=go failed"
+  note "Postgres held $((SECONDS - hold_since)) s with both opamp-server pods in wait-for-postgres and migrate not started; released"
+  hold_state=released
+}
+# "<pod> wait-for-postgres=<restarts>/<exit code> migrate=<restarts>/<exit code>" for each opamp-server pod.
+OPAMP_DONE_JQ='
+.items[] | select(.metadata.deletionTimestamp == null)
+| select(.metadata.labels["app.kubernetes.io/component"] == "agent" or .metadata.labels["app.kubernetes.io/component"] == "management")
+| (.status.initContainerStatuses // []) as $s
+| [ .metadata.name,
+    ($s[] | select(.name == "wait-for-postgres" or .name == "migrate")
+      | "\(.name)=\(.restartCount)/\(.state.terminated.exitCode // "none")") ]
+| join(" ")
+'
 pod_of() { kns get pods -l "app.kubernetes.io/instance=$RELEASE,app.kubernetes.io/component=$1" -o json 2>>"$LOGS/kubectl.err" |
   jq -r '[.items[] | select(.metadata.deletionTimestamp == null)][0].metadata.name // empty'; }
 # collect_logs <label>: every container's log (init containers' too, and a previous run's) of every pod in both
@@ -1155,9 +1224,11 @@ pass "four Secrets created by server-side apply (no last-applied annotation; key
   done
   echo "gateway:"
   echo "  image: {digest: \"\", pullPolicy: Never}"
-  echo "# Postgres: the chart's own reference, postgres:18 at its digest, pulled into the node first."
+  echo "# Postgres: the chart's own reference, postgres:18 at its digest, pulled into the node first. The"
+  echo "# nodeSelector holds it back on the first install, until the node gets the label (the cold start)."
   echo "postgres:"
   echo "  size: 2Gi"
+  echo "  nodeSelector: {$HOLD_LABEL: go}"
   echo "opamp-server:"
   echo "  image: {digest: \"\", pullPolicy: Never}"
   echo "  server:"
@@ -1180,12 +1251,24 @@ holds_value "$STATE/rendered.yaml" && fail "the rendered manifests hold a secret
 pass "$(grep -c '^kind:' "$STATE/rendered.yaml") objects rendered, no Secret, no secret value"
 
 # =====================================================================================================================
-step "helm install $RELEASE --wait (Postgres first; the API's migrations wait for it), every pod Ready"
+step "helm install $RELEASE --wait (Postgres held back $HOLD_SECONDS s, the opamp-server waiting for it; the API's migrations retry), every pod Ready"
+hold_deadline=$((SECONDS + 300))
+watch_tick=hold_tick
 run_watched "helm install" "$LOGS/helm-install.log" \
   helmk -n "$NS" install "$RELEASE" "$CHART" -f "$VALUES_FILE" --wait --timeout "${WAIT_TIMEOUT}s"
+watch_tick=""
+[ "$hold_state" = released ] || fail "helm install finished while Postgres was still held"
 wait_every_pod_ready 300
 pods_json >"$STATE/pods-installed.json"
 pods_summary
+# The opamp-server's pods: wait-for-postgres held migrate back, so migrate ran once, and succeeded.
+opamp_done=$(jq -r "$OPAMP_DONE_JQ" "$STATE/pods-installed.json" | LC_ALL=C sort)
+[ "$(printf '%s\n' "$opamp_done" | grep -c ' wait-for-postgres=0/0 migrate=0/0$')" = 2 ] ||
+  fail "the opamp-server's init containers (restarts/exit code): $(echo $opamp_done)"
+wait_tries=""
+for pod in $(printf '%s\n' "$opamp_done" | cut -d' ' -f1); do
+  wait_tries="$wait_tries $(kns logs "$pod" -c wait-for-postgres 2>>"$LOGS/kubectl.err" | grep -c . || true)"
+done
 api_pod=$(pod_of api) && [ -n "$api_pod" ] || fail "no API pod"
 migrate_restarts=$(kns get pod "$api_pod" -o jsonpath='{.status.initContainerStatuses[0].restartCount}' 2>/dev/null) || migrate_restarts=0
 # Each platform pod runs the image the run means, in every container (the API's migrate init container too).
@@ -1194,7 +1277,7 @@ for name in $PLATFORM_IMAGES; do
     | ((.spec.initContainers // []) + .spec.containers)[].image] | unique | join(" ")' "$STATE/pods-installed.json")
   [ "$images" = "$(ref_of "$name")" ] || fail "the $name pod runs '${images:-no pod}', not $(ref_of "$name")"
 done
-pass "installed; $(jq '.items | length' "$STATE/pods-installed.json") pods Ready (the API's migrate init container started $((migrate_restarts + 1)) times while Postgres came up); the platform's pods run $(ref_of api | sed 's/api:/<name>:/')"
+pass "installed; $(jq '.items | length' "$STATE/pods-installed.json") pods Ready (the API's migrate init container started $((migrate_restarts + 1)) times while Postgres came up; the opamp-server's migrate once in each pod, after wait-for-postgres's tries:${wait_tries}); the platform's pods run $(ref_of api | sed 's/api:/<name>:/')"
 
 # =====================================================================================================================
 step "a second release in $NS is refused"
