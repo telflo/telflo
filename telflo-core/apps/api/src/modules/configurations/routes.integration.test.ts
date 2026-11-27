@@ -1131,7 +1131,7 @@ describe("configuration routes", () => {
 
     it("creates from every seeded flow at its pin, the later migrations' included: each answers 201 and its version 1 holds the flow's YAML byte for byte at that pin", async () => {
       const seededFlows = await loadSeededFlows();
-      expect(seededFlows).toHaveLength(16);
+      expect(seededFlows).toHaveLength(20);
       const { organization, access } = await personalUser();
 
       for (const flow of seededFlows) {

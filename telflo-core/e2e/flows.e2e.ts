@@ -29,8 +29,8 @@ import { createVariableThroughApi, uniqueVariableName } from "./support/variable
 // hidden flow's page is a 404 for a non-admin; and a product admin whose
 // flag is cleared mid-visit.
 //
-// The seeded flows are global setup's (migrations 1700000000026's and
-// 1700000000045's rows, put back after the truncation), read here from the
+// The seeded flows are global setup's (migrations 1700000000026's,
+// 1700000000045's and 1700000000046's rows, put back after the truncation), read here from the
 // migrations' constants and never written. A test that writes flows gives each an `e2e-` slug, asserts
 // only on its own, never on a count, and deletes them as the tables' owner
 // when it ends, however it ends: the flows table is global, so every

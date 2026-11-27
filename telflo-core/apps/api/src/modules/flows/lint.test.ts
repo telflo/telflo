@@ -836,7 +836,7 @@ describe("pythonRegExp and pythonStrip (Python's semantics, checked against Pyth
   });
 });
 
-/** A seeded flow's health check on 0.0.0.0:13133, the local-endpoint warning ten of them carry. */
+/** A seeded flow's health check on 0.0.0.0:13133, the local-endpoint warning thirteen of them carry. */
 const HEALTH_CHECK_ANY: FlowLintFinding = {
   severity: "warn",
   code: "local-endpoint",
@@ -1020,9 +1020,29 @@ const SEEDED_ANSWERS: Record<string, FlowLintResponse> = {
     findings: [],
     destinations: [],
   },
+  "ship-otel-data-to-gigapipe": {
+    blocked: false,
+    findings: [],
+    destinations: [],
+  },
+  "ship-otel-data-to-loki": {
+    blocked: false,
+    findings: [HEALTH_CHECK_ANY],
+    destinations: [HEALTH_CHECK_ANY_DESTINATION],
+  },
+  "ship-otel-data-to-kafka": {
+    blocked: false,
+    findings: [HEALTH_CHECK_ANY],
+    destinations: [HEALTH_CHECK_ANY_DESTINATION],
+  },
+  "ship-otel-data-to-s3": {
+    blocked: false,
+    findings: [HEALTH_CHECK_ANY],
+    destinations: [HEALTH_CHECK_ANY_DESTINATION],
+  },
 };
 
-describe("lintFlowConfig: the 16 seeded flows", () => {
+describe("lintFlowConfig: the 20 seeded flows", () => {
   it("answers each exactly; six are blocked", async () => {
     const seededFlows = await loadSeededFlows();
     expect(seededFlows.map((flow) => flow.slug).sort()).toEqual(Object.keys(SEEDED_ANSWERS).sort());

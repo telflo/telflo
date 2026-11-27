@@ -28,8 +28,8 @@ import { loadSeededFlowsMigrations, SEEDED_FLOWS_MIGRATIONS } from "./seeded-flo
 /*
  * Migration 1700000000026: the flows table and its checks, the 13 seeded
  * flows, the product-admin flag and its owner-only trigger, and
- * configurations.source_flow_slug; and migration 1700000000045's three more
- * seeded flows, inserted as 026's are. Its up, down and up again are
+ * configurations.source_flow_slug; and migrations 1700000000045's three
+ * and 1700000000046's four more seeded flows, inserted as 026's are. Its up, down and up again are
  * schema.integration.test.ts's ("the flows migration …"), as are those of
  * migration 1700000000027, the signals' check, whose refusals are here.
  *
@@ -45,7 +45,7 @@ const migrationsDirectory = fileURLToPath(new URL("../migrations", import.meta.u
 const THROWAWAY_DATABASE_TIMEOUT = 30_000;
 
 /**
- * The 16 seeded flows as Postgres stores them, by slug: each text's SHA-256
+ * The 20 seeded flows as Postgres stores them, by slug: each text's SHA-256
  * (of its UTF-8) and its length in characters, derived in a throwaway Postgres
  * 18, and the pin. Every flow is otelcol-contrib, telflo, published, with no
  * author URL.
@@ -259,6 +259,58 @@ const expectedSeededFlows = [
     authorName: null,
     sourceUrl: null,
   },
+  {
+    slug: "ship-otel-data-to-gigapipe",
+    name: "Ship OTel data to Gigapipe",
+    sortOrder: 210,
+    version: "0.159.0",
+    yaml: { sha256: "6d3a2930d42d97ea880d9045f994e60eda9bafcb8da2d81cd51803e50e4f329f", length: 1389 },
+    summarySha256: "ded30454d449ed1c88f3d0e9b5b8e743d7a39f293873a2e1fc85b3afb5092f9b",
+    descriptionSha256: "6c277f3910332cd04a23f3c2b185790709db0dc1de2d5624aec20ad6a05ca0ac",
+    signals: ["logs", "traces", "metrics"],
+    tags: ["gigapipe", "otlp", "backend"],
+    authorName: null,
+    sourceUrl: null,
+  },
+  {
+    slug: "ship-otel-data-to-loki",
+    name: "Ship OTel data to Loki",
+    sortOrder: 220,
+    version: "0.159.0",
+    yaml: { sha256: "6581ba79523e1baebbbbe820d3d8252a7202b167ecc038f484c357ee725ea082", length: 1905 },
+    summarySha256: "0b9c3940381d1a1411943fefe2e9d25e83a64c4519a30ad0887bae667bc134b8",
+    descriptionSha256: "2ff95b83b8a44d55e539e9d03379ce8e52a2a076bc7d69a51dd758b2a61a8a2b",
+    signals: ["logs"],
+    tags: ["loki", "logs", "otlp"],
+    authorName: null,
+    sourceUrl: null,
+  },
+  {
+    slug: "ship-otel-data-to-kafka",
+    name: "Ship OTel data to Kafka",
+    sortOrder: 230,
+    version: "0.159.0",
+    yaml: { sha256: "1489474af57c6d720eb652330fc3c07eeac097fa29825056f5e34c6d68341a2c", length: 1875 },
+    summarySha256: "794c030c9963c760d9a01d05812cf3fea02efb594b722402ed99d0f35d06e131",
+    descriptionSha256: "24ba406b90eb7df86179ab1fb688f6c2cc983f6f3f84595dffdb25ec8c6ef8c2",
+    signals: ["logs", "metrics", "traces"],
+    tags: ["kafka", "buffer", "otlp", "logs", "metrics", "traces"],
+    authorName: null,
+    sourceUrl: null,
+  },
+  {
+    slug: "ship-otel-data-to-s3",
+    name: "Ship OTel data to S3",
+    sortOrder: 240,
+    version: "0.159.0",
+    yaml: { sha256: "82456e8f37f002cdac84d218ecfacb7f1b4e1f064919cb3efcf5d6ee4b8927e5", length: 2967 },
+    summarySha256: "61ce2e5c3801806545a5ccf7e7a004625fa98a668fb4b55927a4db1c11cb3bac",
+    descriptionSha256: "8646e408bce399582131c65f0bf2d2b15a390efc73fe735656cdc7af389b838d",
+    signals: ["logs", "metrics", "traces"],
+    tags: ["s3", "object-storage", "archive", "otlp"],
+    authorName: null,
+    sourceUrl: null,
+  },
 ];
 
 /** A Postgres error's code and constraint, to compare with toMatchObject. */
@@ -345,7 +397,7 @@ describe("the flows migration", () => {
         .orderBy("slug")
         .execute();
 
-    it("holds the 16 seeded flows by slug, each text byte for byte by SHA-256 and length, pinned to otelcol-contrib 0.162.0 (0.159.0 for clickhouse-failover-gateway-s3-overflow and migration 045's three), every other column as seeded", async () => {
+    it("holds the 20 seeded flows by slug, each text byte for byte by SHA-256 and length, pinned to otelcol-contrib 0.162.0 (0.159.0 for clickhouse-failover-gateway-s3-overflow and migrations 045's three and 046's four), every other column as seeded", async () => {
       // Hashed by Postgres, of the text it stores.
       const { rows } = await sql`
         select slug, name, sort_order as "sortOrder", collector_distribution as distribution,
@@ -383,7 +435,11 @@ describe("the flows migration", () => {
         expect.objectContaining({ slug: "clickhouse-failover-gateway-s3-overflow" }),
         expect.objectContaining({ slug: "monitor-supabase" }),
         expect.objectContaining({ slug: "otel-to-serenedb" }),
+        expect.objectContaining({ slug: "ship-otel-data-to-gigapipe" }),
         expect.objectContaining({ slug: "ship-otel-data-to-greptimedb" }),
+        expect.objectContaining({ slug: "ship-otel-data-to-kafka" }),
+        expect.objectContaining({ slug: "ship-otel-data-to-loki" }),
+        expect.objectContaining({ slug: "ship-otel-data-to-s3" }),
       ]);
     });
 
@@ -412,9 +468,9 @@ describe("the flows migration", () => {
       expect(rows).toEqual([{ same: true, whole: true }]);
     });
 
-    it("freezes each migration's constant (026's 13 flows, 045's three), each flow and its lists", async () => {
+    it("freezes each migration's constant (026's 13 flows, 045's three, 046's four), each flow and its lists", async () => {
       const migrations = await loadSeededFlowsMigrations();
-      expect(migrations.map((seeding) => seeding.seededFlows.length)).toEqual([13, 3]);
+      expect(migrations.map((seeding) => seeding.seededFlows.length)).toEqual([13, 3, 4]);
       expect(migrations[0]!.seededFlows).toBe(migration.seededFlows);
       for (const seeding of migrations) {
         expect(Object.isFrozen(seeding.seededFlows)).toBe(true);
@@ -428,7 +484,7 @@ describe("the flows migration", () => {
       }
     });
 
-    it("lists every migration that exports seededFlows, in the order they run; their flows, so read, are in the gallery's order, each slug once; 045's insert is 026's flowsInsert of its flows", async () => {
+    it("lists every migration that exports seededFlows, in the order they run; their flows, so read, are in the gallery's order, each slug once; 045's and 046's inserts are 026's flowsInsert of their flows", async () => {
       const exporting = readdirSync(migrationsDirectory)
         .filter((file) => file.endsWith(".js"))
         .sort()
@@ -436,14 +492,17 @@ describe("the flows migration", () => {
       expect(exporting).toEqual([...SEEDED_FLOWS_MIGRATIONS]);
 
       const seededFlows = await loadSeededFlows();
-      expect(seededFlows).toHaveLength(16);
-      expect(new Set(seededFlows.map((flow) => flow.slug)).size).toBe(16);
+      expect(seededFlows).toHaveLength(20);
+      expect(new Set(seededFlows.map((flow) => flow.slug)).size).toBe(20);
       const gallery = [...seededFlows].sort((a, b) => a.sort_order - b.sort_order || a.name.localeCompare(b.name));
       expect(seededFlows.map((flow) => flow.slug)).toEqual(gallery.map((flow) => flow.slug));
-      expect(new Set(seededFlows.map((flow) => flow.sort_order)).size).toBe(16);
+      expect(new Set(seededFlows.map((flow) => flow.sort_order)).size).toBe(20);
 
-      const [, later] = (await loadSeededFlowsMigrations()) as [unknown, SeededFlowsMigration];
-      expect(later.seededFlowsInsert()).toBe(migration.flowsInsert(later.seededFlows));
+      const [, ...later] = (await loadSeededFlowsMigrations()) as [unknown, ...SeededFlowsMigration[]];
+      expect(later).toHaveLength(2);
+      for (const seeding of later) {
+        expect(seeding.seededFlowsInsert()).toBe(migration.flowsInsert(seeding.seededFlows));
+      }
     });
 
     it("the insert's dollar quoting refuses a text holding its tag, or ending with all of it but its last $, and writes any other text as it is", async () => {
@@ -501,7 +560,7 @@ describe("the flows migration", () => {
       expect(await throwaway.selectFrom("flows").selectAll().orderBy("slug").execute()).toEqual(edited);
 
       // One flow of each migration deleted; each migration's insert puts back its own.
-      const deleted = ["log-volume-cost-control", "ship-otel-data-to-greptimedb"];
+      const deleted = ["log-volume-cost-control", "ship-otel-data-to-greptimedb", "ship-otel-data-to-kafka"];
       await throwaway.deleteFrom("flows").where("slug", "in", deleted).execute();
       for (const seeding of migrations) {
         const result = await sql.raw(seeding.seededFlowsInsert()).execute(throwaway);
@@ -762,10 +821,10 @@ describe("the flows migration", () => {
         ).rejects.toMatchObject(refusal("23514", "ck_flows_signals"));
       });
 
-      it("passes the 16 seeded flows through ck_flows_signals: they insert, and rewriting every row's signals rechecks them", async () => {
+      it("passes the 20 seeded flows through ck_flows_signals: they insert, and rewriting every row's signals rechecks them", async () => {
         await insertSeededFlows(ownerDb);
         const rewritten = await sql`update flows set signals = signals`.execute(ownerDb);
-        expect(Number(rewritten.numAffectedRows)).toBe(16);
+        expect(Number(rewritten.numAffectedRows)).toBe(20);
         const { rows } = await sql<{ validated: boolean }>`
           select convalidated as validated from pg_constraint
            where conrelid = to_regclass('flows') and conname = 'ck_flows_signals'
@@ -813,7 +872,7 @@ describe("the flows migration", () => {
         ]);
       });
 
-      it("insertSeededFlows puts the migrations' 16 flows back after truncateAll, and a second call inserts nothing", async () => {
+      it("insertSeededFlows puts the migrations' 20 flows back after truncateAll, and a second call inserts nothing", async () => {
         expect(await ownerDb.selectFrom("flows").select("slug").execute()).toEqual([]);
         await insertSeededFlows(ownerDb);
         await insertSeededFlows(ownerDb);

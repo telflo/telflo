@@ -20,7 +20,7 @@ import { assertNoFakeOttlEvaluatorViolations } from "./support/fake-ottl-evaluat
  * one's users, as the tables' owner: the API's own role can't truncate. Tests
  * don't truncate between themselves: each seeds its own users, and they run in
  * parallel. The truncation empties the flows table too, so the seeded flows
- * (migrations 1700000000026 and 1700000000045) are put back after it; a test
+ * (migrations 1700000000026, 1700000000045 and 1700000000046) are put back after it; a test
  * that writes flows uses its own `e2e-` slugs. So too the regex library's 35
  * seeded entries (migration 1700000000031). The truncation also turns the product admins'
  * switch "Only product admins can create organizations" off (`everyone`): the

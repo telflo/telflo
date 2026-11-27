@@ -214,7 +214,7 @@ describe("the expected-warnings table", () => {
   });
 
   it("covers every seeded flow once, on the version a copy of it gets, and lists none of them", () => {
-    expect(SEEDED_FLOWS).toHaveLength(16);
+    expect(SEEDED_FLOWS).toHaveLength(20);
     const catalogued = (CATALOGUE_VERSIONS[DISTRIBUTION] ?? []).map((entry) => entry.version);
     for (const flow of SEEDED_FLOWS) {
       // A pin is the catalog's, offered or deprecated (it never deletes one); the checked version is offered.

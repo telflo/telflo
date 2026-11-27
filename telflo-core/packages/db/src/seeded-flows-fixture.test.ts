@@ -16,8 +16,8 @@ import { loadSeededFlows } from "./testing.js";
 /*
  * The seeded flows' fixture the validator's binary tests and the web's
  * schema tests read: the committed file is what seeded-flows-fixture.ts
- * makes of the seeding migrations' `seededFlows` (1700000000026's and
- * 1700000000045's) today. This test reads it and never writes it (but for
+ * makes of the seeding migrations' `seededFlows` (1700000000026's,
+ * 1700000000045's and 1700000000046's) today. This test reads it and never writes it (but for
  * a temporary directory's copy).
  */
 
@@ -40,7 +40,7 @@ describe("the seeded flows' fixture", () => {
     const fixture = JSON.parse(committedFixture()) as SeededFlowsFixture;
     expect(fixture.script).toBe(SEEDED_FLOWS_SCRIPT);
     expect(fixture.flows.map((flow) => flow.slug)).toEqual(seededFlows.map((flow) => flow.slug));
-    expect(new Set(fixture.flows.map((flow) => flow.slug)).size).toBe(16);
+    expect(new Set(fixture.flows.map((flow) => flow.slug)).size).toBe(20);
     for (const [index, flow] of fixture.flows.entries()) {
       const seeded = seededFlows[index]!;
       expect(flow, flow.slug).toEqual({

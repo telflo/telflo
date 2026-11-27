@@ -4,7 +4,8 @@ import { fileURLToPath } from "node:url";
 /*
  * The seeded flows as the collector checks see them: each flow's slug, its
  * pin and its YAML, from the `seededFlows` of every migration that seeds
- * flows (1700000000026 and 1700000000045, seeded-flows-migrations.ts),
+ * flows (1700000000026, 1700000000045 and 1700000000046,
+ * seeded-flows-migrations.ts),
  * committed as `services/otelcol-validator/tests/fixtures/seeded-flows.json`.
  * The validator's binary tests run each flow's pin over it
  * (`tests/test_binary_flows.py`), and the web's schema tests read it
@@ -56,7 +57,7 @@ export interface SeededFlowsFixture {
 export function seededFlowsFixture(flows: readonly FixtureSourceFlow[]): SeededFlowsFixture {
   return {
     description:
-      "The seeded flows' slugs, pins and YAML, from the seededFlows of migrations 1700000000026 and 1700000000045. " +
+      "The seeded flows' slugs, pins and YAML, from the seededFlows of migrations 1700000000026, 1700000000045 and 1700000000046. " +
       "Generated: never edit by hand.",
     script: SEEDED_FLOWS_SCRIPT,
     flows: flows.map((flow) => ({

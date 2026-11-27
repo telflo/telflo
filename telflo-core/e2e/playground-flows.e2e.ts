@@ -20,8 +20,8 @@ import { waitForHydration } from "./support/session.js";
 // Every request stays within the playground's request allowlist, the open
 // reads read from the browser.
 //
-// The seeded flows are global setup's (migrations 1700000000026's and
-// 1700000000045's rows), read here from the migrations' constants and never
+// The seeded flows are global setup's (migrations 1700000000026's,
+// 1700000000045's and 1700000000046's rows), read here from the migrations' constants and never
 // written; a flow's YAML is Telflo's published catalog, fine to compare. The
 // one hidden flow is this spec's own `e2e-` flow, deleted when its test ends
 // (the flows table is global: other specs' flows may be listed too, so
