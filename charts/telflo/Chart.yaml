@@ -5,8 +5,8 @@ type: application
 # The chart's version and appVersion are the platform release's, always the
 # same version, which is also every platform image's tag. A published
 # version is never overwritten.
-version: 0.2.4
-appVersion: "0.2.4"
+version: 0.2.5
+appVersion: "0.2.5"
 # 1.22 or later: the gateway's pod sets the sysctl
 # net.ipv4.ip_unprivileged_port_start, on the safe list from 1.22. The
 # opamp-server chart needs 1.25.
