@@ -7645,5 +7645,161 @@ describe("schema", () => {
         expect(await rows()).toEqual(rowsBefore);
       });
     }, THROWAWAY_DATABASE_DROP_TIMEOUT);
+
+    it("the four more seeded flows migration inserts its four flows exactly as its constant holds them (both timestamps its own, to the millisecond) and names them in the flows table's comment, and changes no other object or row, an admin's edit and an admin's flow included; its down deletes exactly those four and restores migration 045's catalog exactly; and it applies again", async () => {
+      await withThrowawayDatabase(async ({ throwaway, migrate, migrateDown }) => {
+        /** Rows of a catalog query, each as one comparable JSON text, sorted. */
+        const listed = async (query: ReturnType<typeof sql<Record<string, unknown>>>) =>
+          (await query.execute(throwaway)).rows.map((row) => JSON.stringify(row)).sort();
+        /** Everything in the platform schema a migration can add or change, as the site settings migration's test reads it. */
+        const catalog = async () => ({
+          relations: await listed(sql`
+            select c.relname::text as name, c.relkind::text as kind, c.relrowsecurity as rls,
+                   c.relforcerowsecurity as force, c.relacl::text[] as acl, obj_description(c.oid, 'pg_class') as comment
+              from pg_class c where c.relnamespace = 'platform'::regnamespace`),
+          columns: await listed(sql`
+            select a.attrelid::regclass::text as relation, a.attname::text as name,
+                   format_type(a.atttypid, a.atttypmod) as type, a.attnotnull as "notNull",
+                   pg_get_expr(d.adbin, d.adrelid) as default, col_description(a.attrelid, a.attnum) as comment,
+                   a.attacl::text[] as acl
+              from pg_attribute a
+              join pg_class c on c.oid = a.attrelid
+              left join pg_attrdef d on d.adrelid = a.attrelid and d.adnum = a.attnum
+             where c.relnamespace = 'platform'::regnamespace and c.relkind in ('r', 'p', 'v')
+               and a.attnum > 0 and not a.attisdropped`),
+          constraints: await listed(sql`
+            select conrelid::regclass::text as relation, conname::text as name, contype::text as type,
+                   pg_get_constraintdef(oid) as definition, condeferrable as deferrable, condeferred as deferred,
+                   obj_description(oid, 'pg_constraint') as comment
+              from pg_constraint where connamespace = 'platform'::regnamespace`),
+          indexes: await listed(sql`
+            select i.indexname::text as name, i.indexdef as definition,
+                   obj_description(to_regclass(i.indexname::text), 'pg_class') as comment
+              from pg_indexes i where i.schemaname = 'platform'`),
+          policies: await listed(sql`
+            select p.tablename::text as relation, p.policyname::text as name, p.cmd, p.roles::text[] as roles,
+                   p.qual, p.with_check as "withCheck", obj_description(pp.oid, 'pg_policy') as comment
+              from pg_policies p
+              join pg_policy pp on pp.polname = p.policyname and pp.polrelid = to_regclass(p.tablename::text)
+             where p.schemaname = 'platform'`),
+          functions: await listed(sql`
+            select p.oid::regprocedure::text as signature, p.prosecdef as "isDefiner", p.provolatile::text as volatility,
+                   p.proconfig as config, p.proacl::text[] as acl, md5(p.prosrc) as source,
+                   pg_get_function_result(p.oid) as result, obj_description(p.oid, 'pg_proc') as comment
+              from pg_proc p where p.pronamespace = 'platform'::regnamespace`),
+          triggers: await listed(sql`
+            select tgrelid::regclass::text as relation, tgname::text as name, pg_get_triggerdef(oid) as definition,
+                   tgenabled::text as enabled, obj_description(oid, 'pg_trigger') as comment
+              from pg_trigger where not tgisinternal`),
+          types: await listed(sql`
+            select t.typname::text as name, t.typtype::text as type,
+                   (select array_agg(e.enumlabel::text order by e.enumsortorder) from pg_enum e where e.enumtypid = t.oid) as labels,
+                   t.typacl::text[] as acl, obj_description(t.oid, 'pg_type') as comment
+              from pg_type t
+             where t.typnamespace = 'platform'::regnamespace and t.typtype in ('e', 'd', 'c')
+               and not exists (select 1 from pg_class c where c.reltype = t.oid)`),
+          defaultPrivileges: await listed(sql`
+            select defaclrole::regrole::text as role, defaclobjtype::text as type, defaclacl::text[] as acl
+              from pg_default_acl`),
+        });
+        type Catalog = Awaited<ReturnType<typeof catalog>>;
+        /** What `from` holds that `to` doesn't, by section, parsed back. */
+        const only = (from: Catalog, to: Catalog) =>
+          Object.fromEntries(
+            Object.entries(from).map(([section, items]) => [
+              section,
+              items
+                .filter((item) => !to[section as keyof Catalog].includes(item))
+                .map((item) => JSON.parse(item) as Record<string, unknown>),
+            ]),
+          ) as Record<keyof Catalog, Record<string, unknown>[]>;
+        const nothing = {
+          relations: [],
+          columns: [],
+          constraints: [],
+          indexes: [],
+          policies: [],
+          functions: [],
+          triggers: [],
+          types: [],
+          defaultPrivileges: [],
+        };
+        const [, , later] = await loadSeededFlowsMigrations();
+        const added = [...later!.seededFlows].sort((a, b) => a.slug.localeCompare(b.slug));
+        const slugs = added.map((flow) => flow.slug);
+        /** Every flow's row, by slug. */
+        const flows = () => throwaway.selectFrom("flows").selectAll().orderBy("slug").execute();
+        /** The table's comment. */
+        const tableComment = async () =>
+          (await sql<{ comment: string }>`select obj_description(to_regclass('flows'), 'pg_class') as comment`.execute(throwaway))
+            .rows[0]!.comment;
+
+        // Through 1700000000045_more_seeded_flows, with migrations 026's and 045's flows, one an admin edited, and an admin's own.
+        await migrate(46);
+        await throwaway
+          .updateTable("flows")
+          .set({ name: "PII Redaction Gateway (edited)", updated_at: new Date("2030-01-02T03:04:05.678Z") })
+          .where("slug", "=", "pii-redaction-gateway")
+          .execute();
+        await sql`
+          insert into flows (slug, name, summary, description, source, yaml_content, collector_distribution,
+                             collector_version, created_at, updated_at)
+          values ('an-admins-flow', 'An Admin''s Flow', 'Does one thing.', 'Does one thing, well.', 'telflo',
+                  'receivers: {}\n', 'otelcol-contrib', '0.162.0', now(), now())
+        `.execute(throwaway);
+        const before = await catalog();
+        const flowsBefore = await flows();
+        expect(flowsBefore).toHaveLength(17);
+        const commentBefore = await tableComment();
+        expect(commentBefore).toContain("Seeded\n       with 13 flows by migration 1700000000026 and 3 more by migration\n       1700000000045.");
+        const rows = async () => ({
+          users: await throwaway.selectFrom("users").selectAll().orderBy("id").execute(),
+          configurations: await throwaway.selectFrom("configurations").selectAll().orderBy("id").execute(),
+          catalogue: await throwaway.selectFrom("collector_versions").selectAll().orderBy("version").execute(),
+        });
+        const rowsBefore = await rows();
+
+        await migrate(1);
+        const after = await catalog();
+        // The table's comment alone changed: it names this migration's four.
+        const changed = only(before, after);
+        expect(changed.relations.map((relation) => relation.name)).toEqual(["flows"]);
+        expect({ ...changed, relations: [] }).toEqual(nothing);
+        expect(only(after, before).relations.map((relation) => relation.name)).toEqual(["flows"]);
+        expect({ ...only(after, before), relations: [] }).toEqual(nothing);
+        expect(await tableComment()).toBe(
+          commentBefore.replace(
+            "with 13 flows by migration 1700000000026 and 3 more by migration\n       1700000000045.",
+            "with 13 flows by migration 1700000000026, 3 more by migration\n       1700000000045 and 4 more by migration 1700000000046.",
+          ),
+        );
+        // The rows that were there are as they were; the four are the constant's, every column.
+        const flowsAfter = await flows();
+        expect(flowsAfter.filter((flow) => !slugs.includes(flow.slug))).toEqual(flowsBefore);
+        const inserted = flowsAfter.filter((flow) => slugs.includes(flow.slug));
+        expect(inserted.map(({ id: _id, created_at: _created, updated_at: _updated, ...columns }) => columns)).toEqual(
+          added.map((flow) => ({ ...flow, signals: [...flow.signals], tags: [...flow.tags] })),
+        );
+        const { rows: stamps } = await sql<{ times: number; same: boolean; whole: boolean }>`
+          select count(distinct created_at)::int as times, bool_and(created_at = updated_at) as same,
+                 bool_and(created_at = date_trunc('milliseconds', created_at)) as whole
+            from flows where slug = any(${slugs})
+        `.execute(throwaway);
+        expect(stamps).toEqual([{ times: 1, same: true, whole: true }]);
+        expect(await rows()).toEqual(rowsBefore);
+
+        // down: migration 045's catalog exactly, the four gone and every other flow as it was; up again.
+        await migrateDown(1);
+        expect(await catalog()).toEqual(before);
+        expect(await flows()).toEqual(flowsBefore);
+        expect(await rows()).toEqual(rowsBefore);
+
+        await migrate(1);
+        expect(await catalog()).toEqual(after);
+        expect((await flows()).filter((flow) => !slugs.includes(flow.slug))).toEqual(flowsBefore);
+        expect((await flows()).filter((flow) => slugs.includes(flow.slug)).map((flow) => flow.slug)).toEqual(slugs);
+        expect(await rows()).toEqual(rowsBefore);
+      });
+    }, THROWAWAY_DATABASE_DROP_TIMEOUT);
   });
 });

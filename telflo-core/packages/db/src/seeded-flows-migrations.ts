@@ -1,6 +1,6 @@
 /*
- * The migrations that seed flows, in order: 1700000000026 seeds 13 and
- * 1700000000045 three more. Each exports `seededFlows`, its flows frozen in
+ * The migrations that seed flows, in order: 1700000000026 seeds 13,
+ * 1700000000045 three more and 1700000000046 four more. Each exports `seededFlows`, its flows frozen in
  * their sort order, and `seededFlowsInsert`, their insert on conflict (slug)
  * do nothing, as its up runs it. Read in this order, their flows are every
  * seeded flow in the gallery's order: each migration's flows sort after
@@ -14,7 +14,11 @@
  */
 
 /** The migrations that seed flows, by file name, in the order they run. */
-export const SEEDED_FLOWS_MIGRATIONS = ["1700000000026_flows.js", "1700000000045_more_seeded_flows.js"] as const;
+export const SEEDED_FLOWS_MIGRATIONS = [
+  "1700000000026_flows.js",
+  "1700000000045_more_seeded_flows.js",
+  "1700000000046_four_more_seeded_flows.js",
+] as const;
 
 /**
  * A seeded flow as its migration holds it: its row, pinned, in the flows

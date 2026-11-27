@@ -5,8 +5,9 @@ import { fileURLToPath } from "node:url";
  * The seeded flows as the schema tests read them:
  * `services/otelcol-validator/tests/fixtures/seeded-flows.json`, each
  * flow's slug, pin and YAML, which the db workspace writes from the
- * `seededFlows` of migrations 1700000000026 and 1700000000045 and whose
- * staleness its suite checks (packages/db/src/seeded-flows-fixture.ts).
+ * `seededFlows` of migrations 1700000000026, 1700000000045 and
+ * 1700000000046 and whose staleness its suite checks
+ * (packages/db/src/seeded-flows-fixture.ts).
  *
  * The fixture, not the constants: the web doesn't depend on @telflo/db, and
  * the constants are reached only by a dynamic import of the migration

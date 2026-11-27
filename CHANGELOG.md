@@ -9,6 +9,17 @@ release's images, Helm chart and Compose install are on its
 
 ## 0.2.5 - 2026-11-27
 
+### Added
+
+- Four more flows in the seeded library: Ship OTel data to Gigapipe, Ship
+  OTel data to Loki, Ship OTel data to Kafka and Ship OTel data to S3, each
+  on otelcol-contrib 0.159.0. A migration adds them to an installed
+  database; a flow an admin already made with one of their slugs stays as
+  it is. Until their environment variables are set, the collector check
+  reports one error on each of the Kafka and S3 flows: the SASL
+  `mechanism` must be one of the collector's names, and
+  `s3_force_path_style` must be true or false.
+
 ### Changed
 
 - The opamp-server is 0.3.2 (was 0.3.1), in the Helm chart, the Compose

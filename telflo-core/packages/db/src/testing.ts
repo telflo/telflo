@@ -162,8 +162,8 @@ export const singletonTables = ["otelcol_testing_state", "ottl_evaluator_state",
  * references run the other way: configurations, configuration_versions and
  * flows reference the catalog's), so the cascade never reaches them.
  *
- * It empties `flows` too, the seeded flows (migrations 1700000000026 and
- * 1700000000045) included: a test that needs them calls
+ * It empties `flows` too, the seeded flows (migrations 1700000000026,
+ * 1700000000045 and 1700000000046) included: a test that needs them calls
  * `insertSeededFlows` afterwards. So too `test_regex` and its 35 seeded
  * entries (migration 1700000000031): `insertSeededTestRegexes` puts them
  * back. And it marks the tester and the
