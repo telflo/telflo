@@ -7,6 +7,16 @@ release's images, Helm chart and Compose install are on its
 
 ## Unreleased
 
+## 0.2.6 - 2026-11-27
+
+### Fixed
+
+- New configuration: once Create (or Enter) has created the configuration,
+  the dialog stays on Creating…, with Create and Back disabled, until the
+  editor opens. Before, it closed and offered Create again while it faded
+  out, so a click or an Enter in that time created a second configuration,
+  and the editor then moved to it.
+
 ## 0.2.5 - 2026-11-27
 
 ### Added
