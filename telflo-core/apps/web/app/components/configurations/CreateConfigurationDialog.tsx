@@ -69,7 +69,12 @@ import { findDistribution, useCollectorDistributions } from "~/lib/stores/collec
  * - Create is enabled once the trimmed name isn't empty, checked after each
  *   keystroke lands, so the first character enables it and deleting the
  *   last one disables it;
- * - after a create the dialog closes and the editor opens at `/editor/{id}`;
+ * - after a create the editor opens at `/editor/{id}`, and the dialog stays
+ *   as it is, saying Creating… with Create and Back disabled, until the
+ *   editor replaces the page, as the flow and playground dialogs do. Opening
+ *   the editor can take seconds on a slow connection; were the dialog to
+ *   close, or to offer Create again, in that time, a click or an Enter would
+ *   create a second configuration, and the editor would move to it;
  * - a refusal says the API's message, anything else "Failed to create
  *   configuration"; a flow whose YAML can't be read says "This flow could not
  *   be loaded: …". A 404 `organization_not_found` closes the dialog and
@@ -77,8 +82,8 @@ import { findDistribution, useCollectorDistributions } from "~/lib/stores/collec
  *   organization. So does a 403 `terms_acceptance_required`, with no toast:
  *   the layout's terms dialog opens, and the list reloads after Accept;
  * - Back, Cancel, Escape, an outside click and the close button do nothing
- *   while the create is under way, as in the delete dialog, so a second
- *   create can't be started beside it;
+ *   while the create is under way, or once it has succeeded, as in the
+ *   delete dialog, so a second create can't be started beside it;
  * - a create that answers after the dialog has unmounted, or after the
  *   organization changed, does nothing: it closes, navigates, toasts and
  *   captures nothing, so a fresh dialog open meanwhile keeps its text.
@@ -212,11 +217,13 @@ export function CreateConfigurationDialog({ open, onOpenChange, organizationId }
       );
       return;
     }
-    creatingRef.current = false;
-    setCreating(false);
-    if (!isStillCurrent(sentIn)) return;
+    // Still creating: the editor replaces this page, and with it the dialog.
+    if (!isStillCurrent(sentIn)) {
+      creatingRef.current = false;
+      setCreating(false);
+      return;
+    }
     captureEvent("config_created");
-    onOpenChange(false);
     void navigate(`/editor/${created.id}`);
   };
 

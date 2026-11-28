@@ -33,9 +33,11 @@ function Landed() {
 
 /**
  * The dialog on a page that can close and reopen it, with a loader to count
- * revalidations; at the blank path's name step unless `atStart`.
+ * revalidations; at the blank path's name step unless `atStart`. The editor
+ * opens at once, or, given `editorOpens`, once it settles, as on a slow
+ * connection: until then the page and its dialog stay.
  */
-async function renderDialog({ atStart = false } = {}) {
+async function renderDialog({ atStart = false, editorOpens }: { atStart?: boolean; editorOpens?: Promise<void> } = {}) {
   const onOpenChange = vi.fn();
   const loader = vi.fn(() => null);
 
@@ -64,7 +66,11 @@ async function renderDialog({ atStart = false } = {}) {
 
   const Stub = createRoutesStub([
     { path: "/app", Component: Page, loader, HydrateFallback: () => null },
-    { path: "/editor/:configurationId", Component: Landed },
+    {
+      path: "/editor/:configurationId",
+      Component: Landed,
+      ...(editorOpens === undefined ? {} : { loader: () => editorOpens.then(() => null) }),
+    },
   ]);
   render(<Stub initialEntries={["/app"]} />);
   const user = userEvent.setup();
@@ -197,7 +203,7 @@ describe("CreateConfigurationDialog", () => {
     expect(create).toBeDisabled();
   });
 
-  it("creates with the trimmed name and description, captures config_created with no properties, closes and opens the editor", async () => {
+  it("creates with the trimmed name and description, captures config_created with no properties, and opens the editor", async () => {
     const createConfiguration = vi.spyOn(apiClient, "createConfiguration").mockResolvedValue({ configuration: MINE });
     const captureEvent = vi.spyOn(analytics, "captureEvent");
     const success = vi.spyOn(toast, "success");
@@ -216,7 +222,8 @@ describe("CreateConfigurationDialog", () => {
     });
     expect(captureEvent).toHaveBeenCalledTimes(1);
     expect(captureEvent.mock.calls[0]).toEqual(["config_created"]);
-    expect(onOpenChange).toHaveBeenCalledWith(false);
+    // Not closed by the dialog: it went with the page the editor replaced.
+    expect(onOpenChange).not.toHaveBeenCalled();
     expect(success).not.toHaveBeenCalled();
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   });
@@ -252,6 +259,40 @@ describe("CreateConfigurationDialog", () => {
 
     expect(await screen.findByText(`landed on /editor/${MINE.id}`)).toBeInTheDocument();
     expect(createConfiguration).toHaveBeenCalledTimes(1);
+  });
+
+  it("stays on Creating… once the create has succeeded, until the editor opens, and a click or an Enter meanwhile creates nothing more", async () => {
+    const createConfiguration = vi.spyOn(apiClient, "createConfiguration").mockResolvedValue({ configuration: MINE });
+    const captureEvent = vi.spyOn(analytics, "captureEvent");
+    let openEditor!: () => void;
+    const editorOpens = new Promise<void>((resolve) => (openEditor = resolve));
+    const { user, onOpenChange } = await renderDialog({ editorOpens });
+    const name = await screen.findByLabelText("Configuration Name");
+    await user.type(name, "Once only");
+    await user.click(screen.getByRole("button", { name: "Create" }));
+
+    // The create has answered and the editor is opening, slowly.
+    await waitFor(() => expect(captureEvent).toHaveBeenCalledWith("config_created"));
+    expect(landed()).toBeNull();
+    const dialog = screen.getByRole("dialog", { name: "Name Your Configuration" });
+    const creating = within(dialog).getByRole("button", { name: "Creating…" });
+    expect(creating).toBeDisabled();
+    expect(within(dialog).getByRole("button", { name: "Back" })).toBeDisabled();
+    expect(within(dialog).queryByRole("button", { name: "Create" })).toBeNull();
+
+    // Every way on: Enter in the name (twice, before a re-render), Create, and
+    // Escape, which stands for the other ways out.
+    fireEvent.keyDown(name, { key: "Enter" });
+    fireEvent.keyDown(name, { key: "Enter" });
+    await user.click(creating);
+    await user.keyboard("{Escape}");
+    expect(screen.getByRole("dialog", { name: "Name Your Configuration" })).toBeInTheDocument();
+    expect(onOpenChange).not.toHaveBeenCalled();
+
+    await act(async () => openEditor());
+    expect(await screen.findByText(`landed on /editor/${MINE.id}`)).toBeInTheDocument();
+    expect(createConfiguration).toHaveBeenCalledTimes(1);
+    expect(captureEvent).toHaveBeenCalledTimes(1);
   });
 
   it("resets both fields when reopened", async () => {
@@ -694,7 +735,7 @@ describe("CreateConfigurationDialog", () => {
       expect(request.nodes!.length).toBeGreaterThan(0);
       // config_created as on the blank path: no properties, so no flow's name or text.
       expect(captureEvent.mock.calls).toEqual([["config_created"]]);
-      expect(onOpenChange).toHaveBeenCalledWith(false);
+      expect(onOpenChange).not.toHaveBeenCalled();
     });
 
     it("goes Back from a flow's name step to the start step, and a blank configuration then offers the dropdown, keeping the flow's name and summary", async () => {
